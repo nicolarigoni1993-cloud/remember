@@ -104,7 +104,7 @@ const K_CURR = "scadenze_current_user";
 const kVoci = (userId: string) => `voci_scadenze__${userId}`;
 const kIncassi = (userId: string) => `incassi_mese__${userId}`;
 const kTurni = (userId: string) => `turni_mese__${userId}`;
-
+const K_FAB_POS = "remember_fab_position";
 function caricaUtenti(): User[] {
   const raw = localStorage.getItem(K_USERS);
   if (!raw) return [];
@@ -366,66 +366,285 @@ function RememberLogo({ size = 44, centered = false }: { size?: number; centered
   return (
     <div
       style={{
+        width: "100%",
         display: "flex",
         alignItems: "center",
         justifyContent: centered ? "center" : "flex-start",
-        gap: 14,
-        width: "100%",
-        textAlign: centered ? "center" : "left",
       }}
     >
-      <svg
-        width={size}
-        height={size}
-        viewBox="0 0 72 72"
-        style={{ filter: "drop-shadow(0 16px 28px rgba(0,0,0,0.18))", flexShrink: 0 }}
+      <div
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 14,
+          textAlign: centered ? "center" : "left",
+        }}
       >
-        <defs>
-          <linearGradient id="rmA" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#4f46e5" />
-            <stop offset="0.52" stopColor="#7c3aed" />
-            <stop offset="1" stopColor="#ef4444" />
-          </linearGradient>
-          <linearGradient id="rmB" x1="0" y1="1" x2="1" y2="0">
-            <stop offset="0" stopColor="rgba(255,255,255,0.18)" />
-            <stop offset="1" stopColor="rgba(255,255,255,0.00)" />
-          </linearGradient>
-        </defs>
-
-        <rect x="6" y="6" width="60" height="60" rx="20" fill="url(#rmA)" />
-        <path d="M22 44V24h8l6 9 6-9h8v20h-7V34l-7 10-7-10v10z" fill="rgba(255,255,255,0.96)" />
-        <path d="M14 16c14-12 32-12 44 0" fill="none" stroke="url(#rmB)" strokeWidth="6" strokeLinecap="round" />
-      </svg>
-
-      <div>
-        <div
-          style={{
-            fontSize: centered ? 40 : 32,
-            fontWeight: 1000,
-            letterSpacing: centered ? -1.4 : -1.15,
-            lineHeight: 1,
-            background: "linear-gradient(90deg, #4338ca 0%, #7c3aed 45%, #ef4444 100%)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-          }}
+        <svg
+          width={size}
+          height={size}
+          viewBox="0 0 72 72"
+          style={{ filter: "drop-shadow(0 16px 28px rgba(0,0,0,0.18))", flexShrink: 0 }}
         >
-          REMEMBER
-        </div>
-        <div
-          style={{
-            marginTop: 5,
-            fontSize: centered ? 13 : 12,
-            fontWeight: 900,
-            opacity: 0.66,
-            letterSpacing: 0.25,
-          }}
-        >
-          agenda smart • scadenze • appuntamenti • denaro
+          <defs>
+            <linearGradient id="rmA" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stopColor="#4f46e5" />
+              <stop offset="0.52" stopColor="#7c3aed" />
+              <stop offset="1" stopColor="#ef4444" />
+            </linearGradient>
+            <linearGradient id="rmB" x1="0" y1="1" x2="1" y2="0">
+              <stop offset="0" stopColor="rgba(255,255,255,0.18)" />
+              <stop offset="1" stopColor="rgba(255,255,255,0.00)" />
+            </linearGradient>
+          </defs>
+
+          <rect x="6" y="6" width="60" height="60" rx="20" fill="url(#rmA)" />
+          <path d="M22 44V24h8l6 9 6-9h8v20h-7V34l-7 10-7-10v10z" fill="rgba(255,255,255,0.96)" />
+          <path d="M14 16c14-12 32-12 44 0" fill="none" stroke="url(#rmB)" strokeWidth="6" strokeLinecap="round" />
+        </svg>
+
+        <div style={{ display: "grid", justifyItems: centered ? "center" : "start" }}>
+          <div
+            style={{
+              fontSize: centered ? 40 : 32,
+              fontWeight: 1000,
+              letterSpacing: centered ? -1.4 : -1.15,
+              lineHeight: 1,
+              background: "linear-gradient(90deg, #4338ca 0%, #7c3aed 45%, #ef4444 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            REMEMBER
+          </div>
+
+          <div
+            style={{
+              marginTop: 5,
+              fontSize: centered ? 13 : 12,
+              fontWeight: 900,
+              opacity: 0.66,
+              letterSpacing: 0.25,
+              textAlign: centered ? "center" : "left",
+            }}
+          >
+            agenda smart • scadenze • appuntamenti • denaro
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
+
+
+type FabPos = {
+  x: number;
+  y: number;
+};
+
+function DraggableFab({
+  onClick,
+  label = "Aggiungi",
+}: {
+  onClick: () => void;
+  label?: string;
+}) {
+  const defaultPos: FabPos = {
+    x: window.innerWidth - 110,
+    y: window.innerHeight - 150,
+  };
+
+  const [pos, setPos] = useState<FabPos>(() => {
+    try {
+      const raw = localStorage.getItem(K_FAB_POS);
+      if (!raw) return defaultPos;
+      const parsed = JSON.parse(raw);
+      if (typeof parsed?.x === "number" && typeof parsed?.y === "number") {
+        return parsed as FabPos;
+      }
+      return defaultPos;
+    } catch {
+      return defaultPos;
+    }
+  });
+
+  const dragRef = useRef<{
+    dragging: boolean;
+    startX: number;
+    startY: number;
+    originX: number;
+    originY: number;
+    moved: boolean;
+  }>({
+    dragging: false,
+    startX: 0,
+    startY: 0,
+    originX: 0,
+    originY: 0,
+    moved: false,
+  });
+
+  useEffect(() => {
+    localStorage.setItem(K_FAB_POS, JSON.stringify(pos));
+  }, [pos]);
+
+  useEffect(() => {
+    const onResize = () => {
+      setPos((prev: FabPos) => {
+        const maxX = Math.max(16, window.innerWidth - 94);
+        const maxY = Math.max(16, window.innerHeight - 94);
+        return {
+          x: Math.max(16, Math.min(prev.x, maxX)),
+          y: Math.max(16, Math.min(prev.y, maxY)),
+        };
+      });
+    };
+
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  function clampPos(x: number, y: number): FabPos {
+    const maxX = Math.max(16, window.innerWidth - 94);
+    const maxY = Math.max(16, window.innerHeight - 94);
+
+    return {
+      x: Math.max(16, Math.min(x, maxX)),
+      y: Math.max(16, Math.min(y, maxY)),
+    };
+  }
+
+  function startDrag(clientX: number, clientY: number) {
+    dragRef.current = {
+      dragging: true,
+      startX: clientX,
+      startY: clientY,
+      originX: pos.x,
+      originY: pos.y,
+      moved: false,
+    };
+  }
+
+  function moveDrag(clientX: number, clientY: number) {
+    if (!dragRef.current.dragging) return;
+
+    const dx = clientX - dragRef.current.startX;
+    const dy = clientY - dragRef.current.startY;
+
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+      dragRef.current.moved = true;
+    }
+
+    const next = clampPos(dragRef.current.originX + dx, dragRef.current.originY + dy);
+    setPos(next);
+  }
+
+  function endDrag() {
+    if (!dragRef.current.dragging) return;
+    dragRef.current.dragging = false;
+  }
+
+  useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => moveDrag(e.clientX, e.clientY);
+    const onMouseUp = () => endDrag();
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches[0]) moveDrag(e.touches[0].clientX, e.touches[0].clientY);
+    };
+    const onTouchEnd = () => endDrag();
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
+    window.addEventListener("touchend", onTouchEnd);
+
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
+    };
+  }, []);
+
+  return (
+    <>
+      <div
+        style={{
+          position: "fixed",
+          left: pos.x - 13,
+          top: pos.y - 13,
+          width: 104,
+          height: 104,
+          borderRadius: 999,
+          background: "radial-gradient(circle, rgba(16,185,129,0.20), transparent 58%)",
+          zIndex: 49,
+          pointerEvents: "none",
+        }}
+      />
+
+      <div
+        style={{
+          position: "fixed",
+          left: pos.x - 6,
+          top: pos.y - 46,
+          padding: "10px 14px",
+          borderRadius: 999,
+          background: "rgba(255,255,255,0.90)",
+          border: "1px solid rgba(15,23,42,0.08)",
+          boxShadow: "0 14px 30px rgba(15,23,42,0.12)",
+          fontSize: 12,
+          fontWeight: 900,
+          color: "rgba(15,23,42,0.72)",
+          zIndex: 50,
+          pointerEvents: "none",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {label}
+      </div>
+
+      <button
+        type="button"
+        data-chip="1"
+        onMouseDown={(e) => startDrag(e.clientX, e.clientY)}
+        onTouchStart={(e) => {
+          const t = e.touches[0];
+          if (t) startDrag(t.clientX, t.clientY);
+        }}
+        onClick={() => {
+          if (dragRef.current.moved) return;
+          onClick();
+        }}
+        style={{
+          position: "fixed",
+          left: pos.x,
+          top: pos.y,
+          width: 78,
+          height: 78,
+          borderRadius: 999,
+          border: "1px solid rgba(16,185,129,0.30)",
+          background: "linear-gradient(180deg, rgba(16,185,129,0.96), rgba(5,150,105,0.92))",
+          color: "rgba(255,255,255,0.98)",
+          fontSize: 34,
+          cursor: "grab",
+          fontWeight: 1000,
+          boxShadow: "0 30px 80px rgba(16,185,129,0.28), 0 18px 40px rgba(15,23,42,0.18)",
+          display: "grid",
+          placeItems: "center",
+          zIndex: 51,
+          touchAction: "none",
+          userSelect: "none",
+        }}
+        title="Aggiungi"
+      >
+        +
+      </button>
+    </>
+  );
+}
+
+
 
 export default function App() {
   const [users, setUsers] = useState<User[]>([]);
@@ -1047,54 +1266,6 @@ function salvaTurno() {
     boxSizing: "border-box",
   });
 
-  const fab: React.CSSProperties = {
-    position: "fixed",
-    left: "50%",
-    bottom: 24,
-    transform: "translateX(-50%)",
-    width: 78,
-    height: 78,
-    borderRadius: 999,
-    border: "1px solid rgba(16,185,129,0.30)",
-    background: "linear-gradient(180deg, rgba(16,185,129,0.96), rgba(5,150,105,0.92))",
-    color: "rgba(255,255,255,0.98)",
-    fontSize: 34,
-    cursor: "pointer",
-    fontWeight: 1000,
-    boxShadow: "0 30px 80px rgba(16,185,129,0.28), 0 18px 40px rgba(15,23,42,0.18)",
-    display: "grid",
-    placeItems: "center",
-    zIndex: 50,
-  };
-
-  const fabRing: React.CSSProperties = {
-    position: "fixed",
-    left: "50%",
-    bottom: 24,
-    transform: "translateX(-50%)",
-    width: 104,
-    height: 104,
-    borderRadius: 999,
-    background: "radial-gradient(circle, rgba(16,185,129,0.20), transparent 58%)",
-    zIndex: 49,
-    pointerEvents: "none",
-  };
-
-  const fabHint: React.CSSProperties = {
-    position: "fixed",
-    left: "50%",
-    bottom: 112,
-    transform: "translateX(-50%)",
-    padding: "10px 14px",
-    borderRadius: 999,
-    background: "rgba(255,255,255,0.88)",
-    border: "1px solid rgba(15,23,42,0.08)",
-    boxShadow: "0 14px 30px rgba(15,23,42,0.12)",
-    fontSize: 12,
-    fontWeight: 900,
-    color: "rgba(15,23,42,0.72)",
-    zIndex: 48,
-  };
 
   const sx = useMemo(() => {
     const overlay: React.CSSProperties = {
@@ -1284,726 +1455,771 @@ function salvaTurno() {
     toggleNotificaOre(ore);
   }
 
-  function MiniCalendario({
-    mese,
-    vociDelMese,
-    turniDelMese,
-    onPrevMonth,
-    onNextMonth,
-  }: {
-    mese: Date;
-    vociDelMese: Voce[];
-    turniDelMese: Turno[];
-    onPrevMonth: () => void;
-    onNextMonth: () => void;
-  }) {
-    const [pinnedDate, setPinnedDate] = useState<string | null>(null);
-    const [isTouchDevice, setIsTouchDevice] = useState(false);
 
-    useEffect(() => {
-      const checkTouch = () => {
-        const touch =
-          window.matchMedia("(hover: none)").matches ||
-          window.matchMedia("(pointer: coarse)").matches ||
-          "ontouchstart" in window;
-        setIsTouchDevice(touch);
-      };
 
-      checkTouch();
-      window.addEventListener("resize", checkTouch);
-      return () => window.removeEventListener("resize", checkTouch);
-    }, []);
 
-    const y = mese.getFullYear();
-    const m0 = mese.getMonth();
-    const first = new Date(y, m0, 1);
-    const offset = weekdayMon0(first);
-    const dim = daysInMonth(y, m0);
 
-    const oggi = new Date();
-    const oggiKey = ymd(oggi.getFullYear(), oggi.getMonth(), oggi.getDate());
+function MiniCalendario({
+  mese,
+  vociDelMese,
+  turniDelMese,
+  onPrevMonth,
+  onNextMonth,
+}: {
+  mese: Date;
+  vociDelMese: Voce[];
+  turniDelMese: Turno[];
+  onPrevMonth: () => void;
+  onNextMonth: () => void;
+}) {
+  const [pinnedDate, setPinnedDate] = useState<string | null>(null);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
 
-    const stats = useMemo(() => {
-      const map = new Map<
-        string,
-        { count: number; urgent: boolean; hasScadenza: boolean; hasAppuntamento: boolean; turniCount: number }
-      >();
+  useEffect(() => {
+    const checkTouch = () => {
+      const touch =
+        window.matchMedia("(hover: none)").matches ||
+        window.matchMedia("(pointer: coarse)").matches ||
+        "ontouchstart" in window;
 
-      for (const v of vociDelMese) {
-        const prev = map.get(v.data) ?? {
-          count: 0,
-          urgent: false,
-          hasScadenza: false,
-          hasAppuntamento: false,
-          turniCount: 0,
-        };
-
-        prev.count += 1;
-        if (v.urgente) prev.urgent = true;
-        if (v.tipo === "scadenza") prev.hasScadenza = true;
-        if (v.tipo === "appuntamento") prev.hasAppuntamento = true;
-
-        map.set(v.data, prev);
-      }
-
-      for (const t of turniDelMese) {
-        const prev = map.get(t.data) ?? {
-          count: 0,
-          urgent: false,
-          hasScadenza: false,
-          hasAppuntamento: false,
-          turniCount: 0,
-        };
-        prev.turniCount += 1;
-        map.set(t.data, prev);
-      }
-
-      return map;
-    }, [vociDelMese, turniDelMese]);
-
-    const giorni: Array<string | null> = [];
-    for (let i = 0; i < offset; i++) giorni.push(null);
-    for (let d = 1; d <= dim; d++) giorni.push(ymd(y, m0, d));
-
-    const titoloMese = mese.toLocaleDateString("it-IT", {
-      month: "long",
-      year: "numeric",
-    });
-
-    const oggiTesto = oggi.toLocaleDateString("it-IT", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-    });
-
-    const navBtnStyle: React.CSSProperties = {
-      width: 46,
-      height: 46,
-      borderRadius: 16,
-      border: "1px solid rgba(15,23,42,0.08)",
-      background: "rgba(255,255,255,0.86)",
-      boxShadow: "0 10px 22px rgba(15,23,42,0.08)",
-      display: "grid",
-      placeItems: "center",
-      cursor: "pointer",
-      fontSize: 20,
-      fontWeight: 1000,
-      color: "rgba(15,23,42,0.88)",
+      setIsTouchDevice(touch || window.innerWidth <= 820);
     };
 
-    return (
-      <div style={{ maxWidth: 1060, margin: "0 auto", marginTop: 14 }}>
-        <div style={{ ...ui.card, padding: 18, overflow: "visible" }}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr auto",
-              gap: 12,
-              alignItems: "center",
-              marginBottom: 16,
-            }}
-          >
-            <div>
-              <div
-                style={{
-                  fontSize: 20,
-                  fontWeight: 1000,
-                  letterSpacing: -0.45,
-                  background: "linear-gradient(90deg, #4338ca 0%, #7c3aed 48%, #ef4444 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                }}
-              >
-                Smemorario
-              </div>
-              <div
-                style={{
-                  marginTop: 4,
-                  fontSize: 12,
-                  fontWeight: 850,
-                  opacity: 0.66,
-                }}
-              >
-                calendario, scadenze e turni
-              </div>
-            </div>
+    checkTouch();
+    window.addEventListener("resize", checkTouch);
+    return () => window.removeEventListener("resize", checkTouch);
+  }, []);
 
+  const y = mese.getFullYear();
+  const m0 = mese.getMonth();
+  const first = new Date(y, m0, 1);
+  const offset = weekdayMon0(first);
+  const dim = daysInMonth(y, m0);
+
+  const oggi = new Date();
+  const oggiKey = ymd(oggi.getFullYear(), oggi.getMonth(), oggi.getDate());
+
+  const stats = useMemo(() => {
+    const map = new Map<
+      string,
+      { count: number; urgent: boolean; hasScadenza: boolean; hasAppuntamento: boolean; turniCount: number }
+    >();
+
+    for (const v of vociDelMese) {
+      const prev = map.get(v.data) ?? {
+        count: 0,
+        urgent: false,
+        hasScadenza: false,
+        hasAppuntamento: false,
+        turniCount: 0,
+      };
+
+      prev.count += 1;
+      if (v.urgente) prev.urgent = true;
+      if (v.tipo === "scadenza") prev.hasScadenza = true;
+      if (v.tipo === "appuntamento") prev.hasAppuntamento = true;
+
+      map.set(v.data, prev);
+    }
+
+    for (const t of turniDelMese) {
+      const prev = map.get(t.data) ?? {
+        count: 0,
+        urgent: false,
+        hasScadenza: false,
+        hasAppuntamento: false,
+        turniCount: 0,
+      };
+
+      prev.turniCount += 1;
+      map.set(t.data, prev);
+    }
+
+    return map;
+  }, [vociDelMese, turniDelMese]);
+
+  const giorni: Array<string | null> = [];
+  for (let i = 0; i < offset; i++) giorni.push(null);
+  for (let d = 1; d <= dim; d++) giorni.push(ymd(y, m0, d));
+
+  while (giorni.length % 7 !== 0) giorni.push(null);
+
+  const titoloMese = mese.toLocaleDateString("it-IT", {
+    month: "long",
+    year: "numeric",
+  });
+
+  const oggiTesto = oggi.toLocaleDateString("it-IT", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+
+  const navBtnStyle: React.CSSProperties = {
+    width: isTouchDevice ? 42 : 46,
+    height: isTouchDevice ? 42 : 46,
+    borderRadius: 16,
+    border: "1px solid rgba(15,23,42,0.08)",
+    background: "rgba(255,255,255,0.86)",
+    boxShadow: "0 10px 22px rgba(15,23,42,0.08)",
+    display: "grid",
+    placeItems: "center",
+    cursor: "pointer",
+    fontSize: 20,
+    fontWeight: 1000,
+    color: "rgba(15,23,42,0.88)",
+  };
+
+  const weekdayHeader = ["LUN", "MAR", "MER", "GIO", "VEN", "SAB", "DOM"];
+
+  return (
+    <div style={{ maxWidth: 1060, margin: "0 auto", marginTop: 14 }}>
+      <div style={{ ...ui.card, padding: isTouchDevice ? 12 : 18, overflow: "visible" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr auto",
+            gap: 12,
+            alignItems: "center",
+            marginBottom: 16,
+          }}
+        >
+          <div style={{ minWidth: 0 }}>
             <div
               style={{
-                padding: "10px 14px",
-                borderRadius: 999,
-                border: "1px solid rgba(255,59,48,0.20)",
-                background: "linear-gradient(180deg, rgba(255,59,48,0.10), rgba(255,59,48,0.05))",
-                color: "rgba(160,20,16,0.94)",
-                fontWeight: 950,
-                fontSize: 13,
-                textTransform: "capitalize",
-                boxShadow: "0 10px 24px rgba(255,59,48,0.10)",
-              }}
-            >
-              {oggiTesto}
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "46px 1fr 46px",
-              alignItems: "center",
-              gap: 14,
-              marginBottom: 18,
-            }}
-          >
-            <button type="button" onClick={onPrevMonth} style={navBtnStyle} title="Mese precedente">
-              ←
-            </button>
-
-            <div
-              style={{
-                textAlign: "center",
-                fontSize: isTouchDevice ? 22 : 28,
+                fontSize: isTouchDevice ? 18 : 20,
                 fontWeight: 1000,
-                letterSpacing: -0.6,
-                textTransform: "capitalize",
-                color: "rgba(15,23,42,0.94)",
+                letterSpacing: -0.45,
+                background: "linear-gradient(90deg, #4338ca 0%, #7c3aed 48%, #ef4444 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
               }}
             >
-              {titoloMese}
+              Smemorario
             </div>
-
-            <button type="button" onClick={onNextMonth} style={navBtnStyle} title="Mese successivo">
-              →
-            </button>
+            <div
+              style={{
+                marginTop: 4,
+                fontSize: 12,
+                fontWeight: 850,
+                opacity: 0.66,
+              }}
+            >
+              calendario, scadenze e turni
+            </div>
           </div>
-
-          <style>{`
-            @media (hover: hover) and (pointer: fine) {
-              [data-calday="1"] [data-preview="1"] {
-                opacity: 0;
-                visibility: hidden;
-                pointer-events: none;
-                transition: opacity .14s ease, transform .14s ease;
-              }
-
-              [data-calday="1"]:hover [data-preview="1"] {
-                opacity: 1;
-                visibility: visible;
-                pointer-events: auto;
-              }
-            }
-          `}</style>
 
           <div
             style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
-              gap: isTouchDevice ? 8 : 12,
-              padding: 4,
-              overflow: "visible",
+              padding: isTouchDevice ? "8px 12px" : "10px 14px",
+              borderRadius: 999,
+              border: "1px solid rgba(255,59,48,0.20)",
+              background: "linear-gradient(180deg, rgba(255,59,48,0.10), rgba(255,59,48,0.05))",
+              color: "rgba(160,20,16,0.94)",
+              fontWeight: 950,
+              fontSize: isTouchDevice ? 11 : 13,
+              textTransform: "capitalize",
+              boxShadow: "0 10px 24px rgba(255,59,48,0.10)",
+              whiteSpace: "nowrap",
             }}
           >
-            {giorni.map((key, idx) => {
-              if (!key) return <div key={`e_${idx}`} />;
+            {oggiTesto}
+          </div>
+        </div>
 
-              const d = Number(key.slice(-2));
-              const info = stats.get(key);
-              const count = info?.count ?? 0;
-              const turniCount = info?.turniCount ?? 0;
-              const isToday = key === oggiKey;
-              const isPinnedOpen = isTouchDevice && pinnedDate === key;
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "42px 1fr 42px",
+            alignItems: "center",
+            gap: isTouchDevice ? 8 : 14,
+            marginBottom: 14,
+          }}
+        >
+          <button type="button" onClick={onPrevMonth} style={navBtnStyle} title="Mese precedente">
+            ←
+          </button>
 
-              const cellDate = new Date(y, m0, d);
-              const jsDay = cellDate.getDay();
-              const isWeekend = jsDay === 0 || jsDay === 6;
+          <div
+            style={{
+              textAlign: "center",
+              fontSize: isTouchDevice ? 18 : 28,
+              fontWeight: 1000,
+              letterSpacing: -0.6,
+              textTransform: "capitalize",
+              color: "rgba(15,23,42,0.94)",
+              lineHeight: 1.1,
+            }}
+          >
+            {titoloMese}
+          </div>
 
-              const giornoLabel = cellDate.toLocaleDateString("it-IT", {
-                weekday: "short",
-              });
+          <button type="button" onClick={onNextMonth} style={navBtnStyle} title="Mese successivo">
+            →
+          </button>
+        </div>
 
-              const numeroColor = isWeekend ? "rgba(200,20,16,0.98)" : "rgba(18,140,48,0.98)";
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
+            gap: isTouchDevice ? 4 : 10,
+            marginBottom: isTouchDevice ? 8 : 12,
+          }}
+        >
+          {weekdayHeader.map((w, i) => {
+            const weekend = i === 5 || i === 6;
+            return (
+              <div
+                key={w}
+                style={{
+                  textAlign: "center",
+                  fontSize: isTouchDevice ? 10 : 11,
+                  fontWeight: 1000,
+                  letterSpacing: 0.4,
+                  color: weekend ? "rgba(185,28,28,0.86)" : "rgba(22,101,52,0.80)",
+                  textTransform: "uppercase",
+                  paddingBottom: 2,
+                }}
+              >
+                {w}
+              </div>
+            );
+          })}
+        </div>
 
-              let previewAccent = "rgba(79,70,229,0.95)";
-              if (info?.hasScadenza && !info?.hasAppuntamento) previewAccent = "rgba(5,150,105,0.96)";
-              if (!info?.hasScadenza && info?.hasAppuntamento) previewAccent = "rgba(147,51,234,0.96)";
-              if (info?.urgent) previewAccent = "rgba(239,68,68,0.96)";
+        <style>{`
+          @media (hover: hover) and (pointer: fine) {
+            [data-calday="1"] [data-preview="1"] {
+              opacity: 0;
+              visibility: hidden;
+              pointer-events: none;
+              transition: opacity .14s ease, transform .14s ease;
+            }
 
-              const previewItems = vociDelMese
-                .filter((v) => v.data === key)
-                .slice()
-                .sort((a, b) => {
-                  if (a.urgente !== b.urgente) return a.urgente ? -1 : 1;
-                  const o = a.ora.localeCompare(b.ora);
-                  if (o !== 0) return o;
-                  return a.titolo.localeCompare(b.titolo);
-                })
-                .slice(0, 4);
+            [data-calday="1"]:hover [data-preview="1"] {
+              opacity: 1;
+              visibility: visible;
+              pointer-events: auto;
+            }
+          }
+        `}</style>
 
-              const previewTurni = turniDelMese
-                .filter((t) => t.data === key)
-                .slice()
-                .sort((a, b) => a.inizio.localeCompare(b.inizio))
-                .slice(0, 3);
-
-              const col = idx % 7;
-              const previewStyle: React.CSSProperties =
-                col <= 1
-                  ? { left: 0, transform: "translateY(0)" }
-                  : col >= 5
-                  ? { right: 0, left: "auto", transform: "translateY(0)" }
-                  : { left: "50%", transform: "translateX(-50%)" };
-
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
+            gap: isTouchDevice ? 6 : 12,
+            overflow: "visible",
+          }}
+        >
+          {giorni.map((key, idx) => {
+            if (!key) {
               return (
                 <div
-                  key={key}
-                  data-calday="1"
+                  key={`e_${idx}`}
                   style={{
-                    position: "relative",
-                    overflow: "visible",
-                    minWidth: 0,
+                    minHeight: isTouchDevice ? 78 : 118,
+                    borderRadius: 18,
+                    background: "transparent",
                   }}
+                />
+              );
+            }
+
+            const d = Number(key.slice(-2));
+            const info = stats.get(key);
+            const count = info?.count ?? 0;
+            const turniCount = info?.turniCount ?? 0;
+            const isToday = key === oggiKey;
+            const isPinnedOpen = isTouchDevice && pinnedDate === key;
+
+            const cellDate = new Date(y, m0, d);
+            const jsDay = cellDate.getDay();
+            const isWeekend = jsDay === 0 || jsDay === 6;
+
+            const numeroColor = isWeekend ? "rgba(200,20,16,0.98)" : "rgba(18,140,48,0.98)";
+
+            let previewAccent = "rgba(79,70,229,0.95)";
+            if (info?.hasScadenza && !info?.hasAppuntamento) previewAccent = "rgba(5,150,105,0.96)";
+            if (!info?.hasScadenza && info?.hasAppuntamento) previewAccent = "rgba(147,51,234,0.96)";
+            if (info?.urgent) previewAccent = "rgba(239,68,68,0.96)";
+
+            const previewItems = vociDelMese
+              .filter((v) => v.data === key)
+              .slice()
+              .sort((a, b) => {
+                if (a.urgente !== b.urgente) return a.urgente ? -1 : 1;
+                const o = a.ora.localeCompare(b.ora);
+                if (o !== 0) return o;
+                return a.titolo.localeCompare(b.titolo);
+              })
+              .slice(0, 4);
+
+            const previewTurni = turniDelMese
+              .filter((t) => t.data === key)
+              .slice()
+              .sort((a, b) => a.inizio.localeCompare(b.inizio))
+              .slice(0, 3);
+
+            const col = idx % 7;
+            const previewStyle: React.CSSProperties =
+              col <= 1
+                ? { left: 0, transform: "translateY(0)" }
+                : col >= 5
+                ? { right: 0, left: "auto", transform: "translateY(0)" }
+                : { left: "50%", transform: "translateX(-50%)" };
+
+            return (
+              <div
+                key={key}
+                data-calday="1"
+                style={{
+                  position: "relative",
+                  overflow: "visible",
+                  minWidth: 0,
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (!isTouchDevice || count + turniCount <= 0) return;
+                    setPinnedDate((prev) => (prev === key ? null : key));
+                  }}
+                  style={{
+                    width: "100%",
+                    minHeight: isTouchDevice ? 88 : 134,
+                    borderRadius: isTouchDevice ? 18 : 24,
+                    border: info?.urgent
+                      ? "2px solid rgba(239,68,68,0.44)"
+                      : isToday
+                      ? "2px solid rgba(255,59,48,0.40)"
+                      : "1px solid rgba(15,23,42,0.08)",
+                    background: isToday
+                      ? "linear-gradient(180deg, rgba(255,245,244,0.98), rgba(255,251,251,0.96))"
+                      : "linear-gradient(180deg, rgba(255,255,255,0.92), rgba(248,250,252,0.86))",
+                    boxShadow: info?.urgent
+                      ? "0 18px 36px rgba(239,68,68,0.14)"
+                      : isToday
+                      ? "0 18px 32px rgba(255,59,48,0.12)"
+                      : "0 14px 28px rgba(15,23,42,0.08)",
+                    cursor: count + turniCount > 0 ? "pointer" : "default",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 6,
+                    position: "relative",
+                    padding: isTouchDevice ? "8px 4px 8px" : "12px 8px 10px",
+                    transition:
+                      "transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease",
+                  }}
+                  title={`${d} ${titoloMese}`}
                 >
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (!isTouchDevice || count + turniCount <= 0) return;
-                      setPinnedDate((prev) => (prev === key ? null : key));
-                    }}
+                  {info?.urgent && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: isTouchDevice ? 6 : 8,
+                        right: isTouchDevice ? 6 : 8,
+                        width: isTouchDevice ? 8 : 10,
+                        height: isTouchDevice ? 8 : 10,
+                        borderRadius: 999,
+                        background: "rgba(239,68,68,0.96)",
+                        boxShadow: "0 0 0 4px rgba(239,68,68,0.12)",
+                      }}
+                    />
+                  )}
+
+                  <div
                     style={{
-                      width: "100%",
-                      minHeight: isTouchDevice ? 108 : 134,
-                      borderRadius: 24,
-                      border: info?.urgent
-                        ? "2px solid rgba(239,68,68,0.44)"
-                        : isToday
-                        ? "2px solid rgba(255,59,48,0.40)"
-                        : "1px solid rgba(15,23,42,0.08)",
-                      background: isToday
-                        ? "linear-gradient(180deg, rgba(255,245,244,0.98), rgba(255,251,251,0.96))"
-                        : "linear-gradient(180deg, rgba(255,255,255,0.92), rgba(248,250,252,0.86))",
-                      boxShadow: info?.urgent
-                        ? "0 18px 36px rgba(239,68,68,0.14)"
-                        : isToday
-                        ? "0 18px 32px rgba(255,59,48,0.12)"
-                        : "0 14px 28px rgba(15,23,42,0.08)",
-                      cursor: count + turniCount > 0 ? "pointer" : "default",
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      gap: 6,
-                      position: "relative",
-                      padding: isTouchDevice ? "10px 6px 10px" : "12px 8px 10px",
-                      transition:
-                        "transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease",
+                      fontWeight: 1000,
+                      fontSize: isTouchDevice ? (isToday ? 24 : 20) : isToday ? 34 : 28,
+                      lineHeight: 1,
+                      color: numeroColor,
+                      textAlign: "center",
+                      textShadow: isToday ? "0 4px 18px rgba(255,59,48,0.18)" : "none",
                     }}
-                    title={`${d} ${titoloMese}`}
                   >
-                    {info?.urgent && (
-                      <div
-                        style={{
-                          position: "absolute",
-                          top: 8,
-                          right: 8,
-                          width: 10,
-                          height: 10,
-                          borderRadius: 999,
-                          background: "rgba(239,68,68,0.96)",
-                          boxShadow: "0 0 0 4px rgba(239,68,68,0.12)",
-                        }}
-                      />
-                    )}
+                    {d}
+                  </div>
 
-                    <div
-                      style={{
-                        fontSize: isTouchDevice ? 10 : 11,
-                        fontWeight: 950,
-                        letterSpacing: 0.45,
-                        textTransform: "uppercase",
-                        color: isWeekend ? "rgba(185,28,28,0.86)" : "rgba(22,101,52,0.80)",
-                        opacity: 0.92,
-                      }}
-                    >
-                      {giornoLabel}
-                    </div>
-
-                    <div
-                      style={{
-                        fontWeight: 1000,
-                        fontSize: isTouchDevice ? (isToday ? 28 : 23) : isToday ? 34 : 28,
-                        lineHeight: 1,
-                        color: numeroColor,
-                        textAlign: "center",
-                        textShadow: isToday ? "0 4px 18px rgba(255,59,48,0.18)" : "none",
-                      }}
-                    >
-                      {d}
-                    </div>
-
-                    <div style={{ display: "grid", gap: 6, width: "100%", justifyItems: "center" }}>
-                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>
-                        {count > 0 && (
-                          <div
-                            style={{
-                              padding: "4px 10px",
-                              borderRadius: 999,
-                              fontSize: 12,
-                              fontWeight: 950,
-                              color: "rgba(255,255,255,0.98)",
-                              background: info?.urgent
-                                ? "linear-gradient(180deg, rgba(239,68,68,0.96), rgba(220,38,38,0.94))"
-                                : info?.hasScadenza && !info?.hasAppuntamento
-                                ? "linear-gradient(180deg, rgba(16,185,129,0.96), rgba(5,150,105,0.92))"
-                                : !info?.hasScadenza && info?.hasAppuntamento
-                                ? "linear-gradient(180deg, rgba(168,85,247,0.96), rgba(147,51,234,0.92))"
-                                : "linear-gradient(180deg, rgba(79,70,229,0.96), rgba(124,58,237,0.92))",
-                              boxShadow: "0 10px 18px rgba(15,23,42,0.12)",
-                            }}
-                          >
-                            {count}
-                          </div>
-                        )}
-
-                       {turniCount > 0 && (
-  <div
-    style={{
-      padding: "4px 10px",
-      borderRadius: 999,
-      fontSize: 12,
-      fontWeight: 950,
-      color: "rgba(255,255,255,0.98)",
-      background: "linear-gradient(180deg, rgba(59,130,246,0.96), rgba(37,99,235,0.92))",
-      boxShadow: "0 10px 18px rgba(15,23,42,0.12)",
-    }}
-    title={`${turniCount} turno${turniCount > 1 ? "i" : ""}`}
-  >
-    T
-  </div>
-)}
-
-                        {count === 0 && turniCount === 0 && (
-                          <div
-                            style={{
-                              fontSize: 11,
-                              fontWeight: 850,
-                              opacity: 0.22,
-                              minHeight: 18,
-                            }}
-                          >
-                            —
-                          </div>
-                        )}
-                      </div>
-
-              <button
-  type="button"
-  onClick={(e) => {
-    e.stopPropagation();
-    e.preventDefault();
-    apriTurnoForm(key);
-  }}
-  style={{
-    padding: "5px 10px",
-    borderRadius: 999,
-    border: "1px solid rgba(59,130,246,0.22)",
-    background: "rgba(239,246,255,0.95)",
-    color: "rgba(30,64,175,0.95)",
-    fontSize: 10,
-    fontWeight: 1000,
-    cursor: "pointer",
-    textTransform: "uppercase",
-  }}
-  title="Turno"
->
-  turno
-</button>
-
-                      {isToday && (
+                  <div style={{ display: "grid", gap: 5, width: "100%", justifyItems: "center" }}>
+                    <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "center" }}>
+                      {count > 0 && (
                         <div
                           style={{
-                            fontSize: 10,
-                            fontWeight: 1000,
-                            letterSpacing: 0.35,
-                            textTransform: "uppercase",
-                            color: "rgba(255,59,48,0.95)",
+                            minWidth: isTouchDevice ? 20 : 24,
+                            padding: isTouchDevice ? "2px 6px" : "4px 10px",
+                            borderRadius: 999,
+                            fontSize: isTouchDevice ? 10 : 12,
+                            fontWeight: 950,
+                            color: "rgba(255,255,255,0.98)",
+                            background: info?.urgent
+                              ? "linear-gradient(180deg, rgba(239,68,68,0.96), rgba(220,38,38,0.94))"
+                              : info?.hasScadenza && !info?.hasAppuntamento
+                              ? "linear-gradient(180deg, rgba(16,185,129,0.96), rgba(5,150,105,0.92))"
+                              : !info?.hasScadenza && info?.hasAppuntamento
+                              ? "linear-gradient(180deg, rgba(168,85,247,0.96), rgba(147,51,234,0.92))"
+                              : "linear-gradient(180deg, rgba(79,70,229,0.96), rgba(124,58,237,0.92))",
+                            boxShadow: "0 10px 18px rgba(15,23,42,0.12)",
                           }}
                         >
-                          Oggi
+                          {count}
+                        </div>
+                      )}
+
+                      {turniCount > 0 && (
+                        <div
+                          style={{
+                            minWidth: isTouchDevice ? 20 : 24,
+                            padding: isTouchDevice ? "2px 6px" : "4px 10px",
+                            borderRadius: 999,
+                            fontSize: isTouchDevice ? 10 : 12,
+                            fontWeight: 950,
+                            color: "rgba(255,255,255,0.98)",
+                            background: "linear-gradient(180deg, rgba(59,130,246,0.96), rgba(37,99,235,0.92))",
+                            boxShadow: "0 10px 18px rgba(15,23,42,0.12)",
+                          }}
+                          title={`${turniCount} turno${turniCount > 1 ? "i" : ""}`}
+                        >
+                          T
+                        </div>
+                      )}
+
+                      {count === 0 && turniCount === 0 && (
+                        <div
+                          style={{
+                            fontSize: isTouchDevice ? 9 : 11,
+                            fontWeight: 850,
+                            opacity: 0.22,
+                            minHeight: 14,
+                          }}
+                        >
+                          —
                         </div>
                       )}
                     </div>
-                  </button>
 
-                  {!isTouchDevice && (previewItems.length > 0 || previewTurni.length > 0) && (
-                    <div
-                      data-preview="1"
-                      style={{
-                        position: "absolute",
-                        top: "calc(100% + 10px)",
-                        width: 300,
-                        maxWidth: 300,
-                        padding: 12,
-                        borderRadius: 24,
-                        border: `1px solid ${previewAccent.replace("0.96", "0.18")}`,
-                        background: "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.98))",
-                        boxShadow: "0 30px 60px rgba(15,23,42,0.18)",
-                        backdropFilter: "blur(16px)",
-                        zIndex: 50,
-                        ...previewStyle,
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        apriTurnoForm(key);
                       }}
-                    >
-                      <div
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 950,
-                          opacity: 0.72,
-                          marginBottom: 10,
-                          textTransform: "capitalize",
-                        }}
-                      >
-                        {new Date(y, m0, d).toLocaleDateString("it-IT", {
-                          weekday: "long",
-                          day: "numeric",
-                          month: "long",
-                        })}
-                      </div>
-
-                      <div style={{ display: "grid", gap: 8 }}>
-                        {previewItems.map((v) => {
-                          const typeStyle =
-                            v.tipo === "scadenza"
-                              ? {
-                                  bg: "rgba(16,185,129,0.10)",
-                                  bd: "rgba(5,150,105,0.16)",
-                                  tx: "rgba(6,95,70,0.96)",
-                                }
-                              : {
-                                  bg: "rgba(168,85,247,0.10)",
-                                  bd: "rgba(147,51,234,0.16)",
-                                  tx: "rgba(91,33,182,0.96)",
-                                };
-
-                          return (
-                            <div
-                              key={v.id}
-                              style={{
-                                padding: 11,
-                                borderRadius: 18,
-                                background: typeStyle.bg,
-                                border: `1px solid ${typeStyle.bd}`,
-                                display: "grid",
-                                gap: 5,
-                              }}
-                            >
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "space-between",
-                                  gap: 8,
-                                  flexWrap: "wrap",
-                                }}
-                              >
-                                <span
-                                  style={{
-                                    fontSize: 12,
-                                    fontWeight: 950,
-                                    color: "rgba(15,23,42,0.82)",
-                                  }}
-                                >
-                                  {v.ora}
-                                </span>
-
-                                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                                  <span
-                                    style={{
-                                      fontSize: 11,
-                                      fontWeight: 900,
-                                      padding: "4px 8px",
-                                      borderRadius: 999,
-                                      background: typeStyle.bg,
-                                      color: typeStyle.tx,
-                                      border: `1px solid ${typeStyle.bd}`,
-                                    }}
-                                  >
-                                    {v.tipo === "scadenza" ? "Scadenza" : "Appuntamento"}
-                                  </span>
-
-                                  {v.urgente && (
-                                    <span
-                                      style={{
-                                        fontSize: 11,
-                                        fontWeight: 950,
-                                        padding: "4px 8px",
-                                        borderRadius: 999,
-                                        background: "rgba(239,68,68,0.14)",
-                                        color: "rgba(185,28,28,0.98)",
-                                        border: "1px solid rgba(239,68,68,0.20)",
-                                      }}
-                                    >
-                                      Urgente
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-
-                              <div
-                                style={{
-                                  fontSize: 14,
-                                  fontWeight: 950,
-                                  lineHeight: 1.25,
-                                  color: "rgba(15,23,42,0.92)",
-                                }}
-                              >
-                                {v.titolo}
-                              </div>
-                            </div>
-                          );
-                        })}
-
-                        {previewTurni.map((t) => (
-                          <div
-                            key={t.id}
-                            style={{
-                              padding: 11,
-                              borderRadius: 18,
-                              background: "rgba(59,130,246,0.08)",
-                              border: "1px solid rgba(59,130,246,0.14)",
-                              display: "grid",
-                              gap: 5,
-                            }}
-                          >
-                            <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
-                              <span style={{ fontSize: 12, fontWeight: 950, color: "rgba(30,64,175,0.95)" }}>
-                                Turno {t.inizio} - {t.fine}
-                              </span>
-                              <span style={{ fontSize: 11, fontWeight: 900, color: "rgba(30,64,175,0.82)" }}>
-                                {formatNumeroOre(t.oreOrdinarie + t.oreStraordinarie)}h
-                              </span>
-                            </div>
-                            <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.78 }}>
-                              Ord: {formatNumeroOre(t.oreOrdinarie)}h • Straord: {formatNumeroOre(t.oreStraordinarie)}h
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {isTouchDevice && isPinnedOpen && (previewItems.length > 0 || previewTurni.length > 0) && (
-                    <div
                       style={{
-                        position: "absolute",
-                        left: 0,
-                        right: 0,
-                        top: "calc(100% + 8px)",
                         width: "100%",
-                        maxWidth: "calc(100vw - 48px)",
-                        padding: 12,
-                        borderRadius: 24,
-                        border: `1px solid ${previewAccent.replace("0.96", "0.18")}`,
-                        background: "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.98))",
-                        boxShadow: "0 30px 60px rgba(15,23,42,0.18)",
-                        backdropFilter: "blur(16px)",
-                        zIndex: 50,
+                        maxWidth: isTouchDevice ? 54 : 72,
+                        padding: isTouchDevice ? "4px 0" : "5px 10px",
+                        borderRadius: 999,
+                        border: "1px solid rgba(59,130,246,0.22)",
+                        background: "rgba(239,246,255,0.95)",
+                        color: "rgba(30,64,175,0.95)",
+                        fontSize: isTouchDevice ? 9 : 10,
+                        fontWeight: 1000,
+                        cursor: "pointer",
+                        textTransform: "uppercase",
+                        overflow: "hidden",
+                        whiteSpace: "nowrap",
                       }}
+                      title="Turno"
                     >
+                      turno
+                    </button>
+
+                    {isToday && (
                       <div
                         style={{
-                          fontSize: 12,
-                          fontWeight: 950,
-                          opacity: 0.72,
-                          marginBottom: 10,
-                          textTransform: "capitalize",
+                          fontSize: isTouchDevice ? 9 : 10,
+                          fontWeight: 1000,
+                          letterSpacing: 0.35,
+                          textTransform: "uppercase",
+                          color: "rgba(255,59,48,0.95)",
+                          lineHeight: 1,
                         }}
                       >
-                        {new Date(y, m0, d).toLocaleDateString("it-IT", {
-                          weekday: "long",
-                          day: "numeric",
-                          month: "long",
-                        })}
+                        Oggi
                       </div>
+                    )}
+                  </div>
+                </button>
 
-                      <div style={{ display: "grid", gap: 8 }}>
-                        {previewItems.map((v) => (
+                {!isTouchDevice && (previewItems.length > 0 || previewTurni.length > 0) && (
+                  <div
+                    data-preview="1"
+                    style={{
+                      position: "absolute",
+                      top: "calc(100% + 10px)",
+                      width: 300,
+                      maxWidth: 300,
+                      padding: 12,
+                      borderRadius: 24,
+                      border: `1px solid ${previewAccent.replace("0.96", "0.18")}`,
+                      background: "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.98))",
+                      boxShadow: "0 30px 60px rgba(15,23,42,0.18)",
+                      backdropFilter: "blur(16px)",
+                      zIndex: 50,
+                      ...previewStyle,
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 950,
+                        opacity: 0.72,
+                        marginBottom: 10,
+                        textTransform: "capitalize",
+                      }}
+                    >
+                      {new Date(y, m0, d).toLocaleDateString("it-IT", {
+                        weekday: "long",
+                        day: "numeric",
+                        month: "long",
+                      })}
+                    </div>
+
+                    <div style={{ display: "grid", gap: 8 }}>
+                      {previewItems.map((v) => {
+                        const typeStyle =
+                          v.tipo === "scadenza"
+                            ? {
+                                bg: "rgba(16,185,129,0.10)",
+                                bd: "rgba(5,150,105,0.16)",
+                                tx: "rgba(6,95,70,0.96)",
+                              }
+                            : {
+                                bg: "rgba(168,85,247,0.10)",
+                                bd: "rgba(147,51,234,0.16)",
+                                tx: "rgba(91,33,182,0.96)",
+                              };
+
+                        return (
                           <div
                             key={v.id}
                             style={{
                               padding: 11,
                               borderRadius: 18,
-                              background: "rgba(255,255,255,0.9)",
-                              border: "1px solid rgba(15,23,42,0.08)",
+                              background: typeStyle.bg,
+                              border: `1px solid ${typeStyle.bd}`,
                               display: "grid",
                               gap: 5,
                             }}
                           >
-                            <div style={{ fontSize: 12, fontWeight: 950 }}>{v.ora}</div>
-                            <div style={{ fontSize: 14, fontWeight: 950 }}>{v.titolo}</div>
-                          </div>
-                        ))}
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                gap: 8,
+                                flexWrap: "wrap",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontSize: 12,
+                                  fontWeight: 950,
+                                  color: "rgba(15,23,42,0.82)",
+                                }}
+                              >
+                                {v.ora}
+                              </span>
 
-                        {previewTurni.map((t) => (
-                          <div
-                            key={t.id}
-                            style={{
-                              padding: 11,
-                              borderRadius: 18,
-                              background: "rgba(59,130,246,0.08)",
-                              border: "1px solid rgba(59,130,246,0.14)",
-                              display: "grid",
-                              gap: 5,
-                            }}
-                          >
-                            <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(30,64,175,0.95)" }}>
-                              Turno {t.inizio} - {t.fine}
+                              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                                <span
+                                  style={{
+                                    fontSize: 11,
+                                    fontWeight: 900,
+                                    padding: "4px 8px",
+                                    borderRadius: 999,
+                                    background: typeStyle.bg,
+                                    color: typeStyle.tx,
+                                    border: `1px solid ${typeStyle.bd}`,
+                                  }}
+                                >
+                                  {v.tipo === "scadenza" ? "Scadenza" : "Appuntamento"}
+                                </span>
+
+                                {v.urgente && (
+                                  <span
+                                    style={{
+                                      fontSize: 11,
+                                      fontWeight: 950,
+                                      padding: "4px 8px",
+                                      borderRadius: 999,
+                                      background: "rgba(239,68,68,0.14)",
+                                      color: "rgba(185,28,28,0.98)",
+                                      border: "1px solid rgba(239,68,68,0.20)",
+                                    }}
+                                  >
+                                    Urgente
+                                  </span>
+                                )}
+                              </div>
                             </div>
-                            <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.78 }}>
-                              Ord: {formatNumeroOre(t.oreOrdinarie)}h • Straord: {formatNumeroOre(t.oreStraordinarie)}h
+
+                            <div
+                              style={{
+                                fontSize: 14,
+                                fontWeight: 950,
+                                lineHeight: 1.25,
+                                color: "rgba(15,23,42,0.92)",
+                              }}
+                            >
+                              {v.titolo}
                             </div>
                           </div>
-                        ))}
-                      </div>
+                        );
+                      })}
 
-                      <div style={{ marginTop: 10, display: "flex", justifyContent: "flex-end" }}>
-                        <button
-                          type="button"
-                          onClick={() => setPinnedDate(null)}
+                      {previewTurni.map((t) => (
+                        <div
+                          key={t.id}
                           style={{
-                            padding: "8px 10px",
-                            borderRadius: 999,
-                            border: "1px solid rgba(15,23,42,0.10)",
-                            background: "rgba(255,255,255,0.92)",
-                            fontSize: 12,
-                            fontWeight: 900,
-                            cursor: "pointer",
-                            color: "rgba(15,23,42,0.82)",
+                            padding: 11,
+                            borderRadius: 18,
+                            background: "rgba(59,130,246,0.08)",
+                            border: "1px solid rgba(59,130,246,0.14)",
+                            display: "grid",
+                            gap: 5,
                           }}
                         >
-                          Chiudi
-                        </button>
-                      </div>
+                          <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+                            <span style={{ fontSize: 12, fontWeight: 950, color: "rgba(30,64,175,0.95)" }}>
+                              Turno {t.inizio} - {t.fine}
+                            </span>
+                            <span style={{ fontSize: 11, fontWeight: 900, color: "rgba(30,64,175,0.82)" }}>
+                              {formatNumeroOre(t.oreOrdinarie + t.oreStraordinarie)}h
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.78 }}>
+                            Ord: {formatNumeroOre(t.oreOrdinarie)}h • Straord: {formatNumeroOre(t.oreStraordinarie)}h
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                  </div>
+                )}
 
-          <div
-            style={{
-              marginTop: 12,
-              fontSize: 12,
-              fontWeight: 850,
-              opacity: 0.75,
-              lineHeight: 1.35,
-            }}
-          >
-            Desktop: passa col mouse sulle caselle. Mobile: tocca un giorno con voci o turni. Usa il mini pulsante “+ turno” per registrare il turno giornaliero.
-          </div>
+                {isTouchDevice && isPinnedOpen && (previewItems.length > 0 || previewTurni.length > 0) && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      top: "calc(100% + 8px)",
+                      width: "calc(100vw - 32px)",
+                      maxWidth: 360,
+                      padding: 12,
+                      borderRadius: 20,
+                      border: `1px solid ${previewAccent.replace("0.96", "0.18")}`,
+                      background: "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.98))",
+                      boxShadow: "0 30px 60px rgba(15,23,42,0.18)",
+                      backdropFilter: "blur(16px)",
+                      zIndex: 60,
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 950,
+                        opacity: 0.72,
+                        marginBottom: 10,
+                        textTransform: "capitalize",
+                      }}
+                    >
+                      {new Date(y, m0, d).toLocaleDateString("it-IT", {
+                        weekday: "long",
+                        day: "numeric",
+                        month: "long",
+                      })}
+                    </div>
+
+                    <div style={{ display: "grid", gap: 8 }}>
+                      {previewItems.map((v) => (
+                        <div
+                          key={v.id}
+                          style={{
+                            padding: 11,
+                            borderRadius: 16,
+                            background: "rgba(255,255,255,0.9)",
+                            border: "1px solid rgba(15,23,42,0.08)",
+                            display: "grid",
+                            gap: 5,
+                          }}
+                        >
+                          <div style={{ fontSize: 12, fontWeight: 950 }}>{v.ora}</div>
+                          <div style={{ fontSize: 14, fontWeight: 950 }}>{v.titolo}</div>
+                        </div>
+                      ))}
+
+                      {previewTurni.map((t) => (
+                        <div
+                          key={t.id}
+                          style={{
+                            padding: 11,
+                            borderRadius: 16,
+                            background: "rgba(59,130,246,0.08)",
+                            border: "1px solid rgba(59,130,246,0.14)",
+                            display: "grid",
+                            gap: 5,
+                          }}
+                        >
+                          <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(30,64,175,0.95)" }}>
+                            Turno {t.inizio} - {t.fine}
+                          </div>
+                          <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.78 }}>
+                            Ord: {formatNumeroOre(t.oreOrdinarie)}h • Straord: {formatNumeroOre(t.oreStraordinarie)}h
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div style={{ marginTop: 10, display: "flex", justifyContent: "flex-end" }}>
+                      <button
+                        type="button"
+                        onClick={() => setPinnedDate(null)}
+                        style={{
+                          padding: "8px 10px",
+                          borderRadius: 999,
+                          border: "1px solid rgba(15,23,42,0.10)",
+                          background: "rgba(255,255,255,0.92)",
+                          fontSize: 12,
+                          fontWeight: 900,
+                          cursor: "pointer",
+                          color: "rgba(15,23,42,0.82)",
+                        }}
+                      >
+                        Chiudi
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div
+          style={{
+            marginTop: 12,
+            fontSize: 12,
+            fontWeight: 850,
+            opacity: 0.75,
+            lineHeight: 1.35,
+          }}
+        >
+          Desktop: passa col mouse sui giorni. Mobile: tocca il giorno per vedere dettagli. Il pulsante turno resta sempre dentro la casella senza sovrapporsi.
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
+
+
+
+
 
   function renderAreaControllo() {
     const controlloCardStyle: React.CSSProperties = {
@@ -3083,15 +3299,7 @@ function salvaTurno() {
         )}
       </div>
 
-      {pagina !== "controllo" && (
-        <>
-          <div style={fabRing} />
-          <div style={fabHint}>Aggiungi</div>
-          <button data-chip="1" onClick={apriNuova} style={fab} title="Aggiungi">
-            +
-          </button>
-        </>
-      )}
+       {pagina !== "controllo" && <DraggableFab onClick={apriNuova} label="Aggiungi" />}
 
       {mostraForm && (
         <div
