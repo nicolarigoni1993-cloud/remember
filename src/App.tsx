@@ -75,7 +75,6 @@ function formattaDataLunga(d: Date) {
   const ora = d.toLocaleTimeString("it-IT", {
     hour: "2-digit",
     minute: "2-digit",
-    second: "2-digit",
   });
 
   return `${data} • ore ${ora}`;
@@ -664,8 +663,8 @@ export default function App() {
   const [tipo, setTipo] = useState<Voce["tipo"]>("scadenza");
   const [urgente, setUrgente] = useState(false);
   const [nota, setNota] = useState("");
-  const [importo, setImporto] = useState<string>("");
-  const [movimento, setMovimento] = useState<Movimento>("uscita");
+  
+  
 
   const [notificheMinutiPrima, setNotificheMinutiPrima] = useState<number[]>([]);
   const [customNotificaOre, setCustomNotificaOre] = useState<string>("");
@@ -749,7 +748,7 @@ export default function App() {
   }
 
   useEffect(() => {
-    const timer = setInterval(() => setAdesso(new Date()), 1000);
+    const timer = setInterval(() => setAdesso(new Date()), 30000);
     return () => clearInterval(timer);
   }, []);
 
@@ -846,8 +845,6 @@ export default function App() {
     setTipo("scadenza");
     setUrgente(false);
     setNota("");
-    setImporto("");
-    setMovimento("uscita");
     setNotificheMinutiPrima([]);
     setCustomNotificaOre("");
   }
@@ -857,7 +854,7 @@ export default function App() {
     setMostraForm(true);
   }
 
-  function apriModifica(v: Voce) {
+   function apriModifica(v: Voce) {
     setIdInModifica(v.id);
     setTitolo(v.titolo);
     setData(v.data);
@@ -865,8 +862,6 @@ export default function App() {
     setTipo(v.tipo);
     setUrgente(v.urgente);
     setNota(v.nota ?? "");
-    setImporto(v.importo === null ? "" : String(v.importo));
-    setMovimento(v.movimento ?? "uscita");
     setNotificheMinutiPrima(v.notificheMinutiPrima ?? []);
     setMostraForm(true);
   }
@@ -876,14 +871,6 @@ export default function App() {
       alert("Compila titolo, data e ora");
       return;
     }
-
-    const importoNum = importo.trim() === "" ? null : Number(importo.replace(",", "."));
-    if (importo.trim() !== "" && (importoNum === null || Number.isNaN(importoNum))) {
-      alert("Importo non valido");
-      return;
-    }
-
-    const mov: Movimento = importoNum === null ? "uscita" : movimento;
 
     const notiUniq = Array.from(new Set(notificheMinutiPrima))
       .filter((n) => Number.isFinite(n) && n > 0)
@@ -901,8 +888,8 @@ export default function App() {
                 tipo,
                 urgente,
                 nota: nota.trim(),
-                importo: importoNum,
-                movimento: mov,
+                importo: null,
+                movimento: "uscita",
                 notificheMinutiPrima: notiUniq,
               }
             : x
@@ -917,8 +904,8 @@ export default function App() {
         tipo,
         urgente,
         nota: nota.trim(),
-        importo: importoNum,
-        movimento: mov,
+        importo: null,
+        movimento: "uscita",
         fatto: false,
         notificheMinutiPrima: notiUniq,
       };
@@ -3372,41 +3359,21 @@ function MiniCalendario({
                     <input type="time" value={ora} onChange={(e) => setOra(e.target.value)} style={inputLight(false)} />
                   </div>
                 </div>
-
-                <div>
-                  <div style={sx.sectionLabel}>Importo (€)</div>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    value={importo}
-                    onChange={(e) => setImporto(e.target.value)}
-                    placeholder="Es: 650"
-                    style={inputLight(false)}
-                  />
-
-                  {importo.trim() !== "" && (
-                    <div style={{ marginTop: 10 }}>
-                      <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Movimento</div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                        <button
-                          type="button"
-                          data-chip="1"
-                          onClick={() => setMovimento("uscita")}
-                          style={chipSmall(movimento === "uscita")}
-                        >
-                          Uscita
-                        </button>
-                        <button
-                          type="button"
-                          data-chip="1"
-                          onClick={() => setMovimento("entrata")}
-                          style={chipSmall(movimento === "entrata")}
-                        >
-                          Entrata
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                <div
+                  style={{
+                    padding: 14,
+                    borderRadius: 18,
+                    border: "1px solid rgba(59,130,246,0.14)",
+                    background: "linear-gradient(180deg, rgba(239,246,255,0.86), rgba(239,246,255,0.56))",
+                    boxShadow: "0 10px 22px rgba(59,130,246,0.06)",
+                  }}
+                >
+                  <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>
+                    Entrate e uscite
+                  </div>
+                  <div style={{ marginTop: 6, fontSize: 13, fontWeight: 850, opacity: 0.82, lineHeight: 1.4 }}>
+                    Le entrate del mese si inseriscono solo nell’area Controllo, così non si sovrappongono alle scadenze e agli appuntamenti.
+                  </div>
                 </div>
 
                 <div>
@@ -3449,7 +3416,7 @@ function MiniCalendario({
 
                     {urgente && badgeUrgente()}
                     {badgeTipo(tipo)}
-                    {importo.trim() !== "" && badgeMov(movimento)}
+                    
                   </div>
                 </div>
 
