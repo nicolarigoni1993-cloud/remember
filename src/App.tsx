@@ -98,6 +98,37 @@ function formatNumeroOre(n: number) {
   return n.toLocaleString("it-IT", { maximumFractionDigits: 2 });
 }
 
+
+function normalizeTurnoLabel(inizio: string, fine: string, note?: string) {
+  const i = (inizio || "").trim();
+  const f = (fine || "").trim();
+  const n = (note || "").trim().toUpperCase();
+
+  if (n === "RIPOSO" || i === "RIPOSO" || f === "RIPOSO") return "R";
+
+  const key = `${i}-${f}`;
+
+  if (key === "22:00-06:00" || key === "00:00-06:00") return "N";
+  if (key === "06:00-12:00" || key === "06:00-14:00") return "M";
+  if (key === "12:00-18:00" || key === "14:00-22:00") return "P";
+  if (key === "18:00-00:00") return "S";
+
+  return "T";
+}
+
+function descrizioneTurnoBreve(inizio: string, fine: string, note?: string) {
+  const sigla = normalizeTurnoLabel(inizio, fine, note);
+
+  if (sigla === "R") return "Riposo";
+  if (sigla === "N") return "Notte";
+  if (sigla === "M") return "Mattina";
+  if (sigla === "P") return "Pomeriggio";
+  if (sigla === "S") return "Sera";
+
+  return "Turno";
+}
+
+
 const K_USERS = "scadenze_users";
 const K_CURR = "scadenze_current_user";
 const kVoci = (userId: string) => `voci_scadenze__${userId}`;
@@ -696,7 +727,7 @@ export default function App() {
   const [turnoOreStraord, setTurnoOreStraord] = useState("");
   const [turnoNote, setTurnoNote] = useState("");
   const [turnoPreset, setTurnoPreset] = useState("");
-  const presetTurni = ["00-06", "06-12", "12-18", "18-24", "6-14", "14-22", "22-06", "8-18", "8-17"];
+  const presetTurni = ["RIPOSO", "00-06", "06-12", "12-18", "18-24", "6-14", "14-22", "22-06", "8-18", "8-17"];
 
   const meseKey = useMemo(() => yyyymmFromDate(meseCorrente), [meseCorrente]);
   const [hoverClose, setHoverClose] = useState(false);
@@ -975,6 +1006,23 @@ function salvaTurno() {
     return;
   }
 
+  const isRiposo = turnoPreset === "RIPOSO";
+
+  if (isRiposo) {
+    const nuovo: Turno = {
+      id: safeUUID(),
+      data: turnoData,
+      inizio: "RIPOSO",
+      fine: "RIPOSO",
+      oreOrdinarie: 0,
+      oreStraordinarie: 0,
+      note: turnoNote.trim() ? `RIPOSO • ${turnoNote.trim()}` : "RIPOSO",
+    };
+
+    setTurni((prev) => [nuovo, ...prev]);
+    chiudiTurnoForm();
+    return;
+  }
 
   const oreOrd = parseOreItaliane(turnoOreOrd);
   const oreStra = turnoOreStraord.trim() === "" ? 0 : parseOreItaliane(turnoOreStraord);
@@ -983,6 +1031,7 @@ function salvaTurno() {
     alert("Inserisci ore ordinarie valide.");
     return;
   }
+
   if (oreStra === null) {
     alert("Inserisci ore straordinarie valide.");
     return;
@@ -1881,23 +1930,44 @@ function MiniCalendario({
                         </div>
                       )}
 
-                      {turniCount > 0 && (
-                        <div
-                          style={{
-                            minWidth: isTouchDevice ? 20 : 24,
-                            padding: isTouchDevice ? "2px 6px" : "4px 10px",
-                            borderRadius: 999,
-                            fontSize: isTouchDevice ? 10 : 12,
-                            fontWeight: 950,
-                            color: "rgba(255,255,255,0.98)",
-                            background: "linear-gradient(180deg, rgba(59,130,246,0.96), rgba(37,99,235,0.92))",
-                            boxShadow: "0 10px 18px rgba(15,23,42,0.12)",
-                          }}
-                          title={`${turniCount} turno${turniCount > 1 ? "i" : ""}`}
-                        >
-                          T
-                        </div>
-                      )}
+                   {turniCount > 0 && (() => {
+  const primoTurno = turniDelMese
+    .filter((t) => t.data === key)
+    .slice()
+    .sort((a, b) => a.inizio.localeCompare(b.inizio))[0];
+
+  const siglaTurno = primoTurno ? normalizeTurnoLabel(primoTurno.inizio, primoTurno.fine, primoTurno.note) : "T";
+  const descTurno = primoTurno ? descrizioneTurnoBreve(primoTurno.inizio, primoTurno.fine, primoTurno.note) : "Turno";
+
+  return (
+    <div
+      style={{
+        minWidth: isTouchDevice ? 20 : 24,
+        padding: isTouchDevice ? "2px 6px" : "4px 10px",
+        borderRadius: 999,
+        fontSize: isTouchDevice ? 10 : 12,
+        fontWeight: 950,
+        color: "rgba(255,255,255,0.98)",
+        background:
+          siglaTurno === "R"
+            ? "linear-gradient(180deg, rgba(107,114,128,0.96), rgba(75,85,99,0.92))"
+            : siglaTurno === "N"
+            ? "linear-gradient(180deg, rgba(67,56,202,0.96), rgba(49,46,129,0.92))"
+            : siglaTurno === "M"
+            ? "linear-gradient(180deg, rgba(245,158,11,0.96), rgba(217,119,6,0.92))"
+            : siglaTurno === "P"
+            ? "linear-gradient(180deg, rgba(249,115,22,0.96), rgba(234,88,12,0.92))"
+            : siglaTurno === "S"
+            ? "linear-gradient(180deg, rgba(168,85,247,0.96), rgba(126,34,206,0.92))"
+            : "linear-gradient(180deg, rgba(59,130,246,0.96), rgba(37,99,235,0.92))",
+        boxShadow: "0 10px 18px rgba(15,23,42,0.12)",
+      }}
+      title={turniCount > 1 ? `${descTurno} + altri ${turniCount - 1} turno${turniCount - 1 > 1 ? "i" : ""}` : descTurno}
+    >
+      {siglaTurno}
+    </div>
+  );
+})()}
 
                       {count === 0 && turniCount === 0 && (
                         <div
@@ -2084,31 +2154,50 @@ function MiniCalendario({
                         );
                       })}
 
-                      {previewTurni.map((t) => (
-                        <div
-                          key={t.id}
-                          style={{
-                            padding: 11,
-                            borderRadius: 18,
-                            background: "rgba(59,130,246,0.08)",
-                            border: "1px solid rgba(59,130,246,0.14)",
-                            display: "grid",
-                            gap: 5,
-                          }}
-                        >
-                          <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
-                            <span style={{ fontSize: 12, fontWeight: 950, color: "rgba(30,64,175,0.95)" }}>
-                              Turno {t.inizio} - {t.fine}
-                            </span>
-                            <span style={{ fontSize: 11, fontWeight: 900, color: "rgba(30,64,175,0.82)" }}>
-                              {formatNumeroOre(t.oreOrdinarie + t.oreStraordinarie)}h
-                            </span>
-                          </div>
-                          <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.78 }}>
-                            Ord: {formatNumeroOre(t.oreOrdinarie)}h • Straord: {formatNumeroOre(t.oreStraordinarie)}h
-                          </div>
-                        </div>
-                      ))}
+                   {previewTurni.map((t) => {
+  const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
+  const descr = descrizioneTurnoBreve(t.inizio, t.fine, t.note);
+  const isRiposo = sigla === "R";
+
+  return (
+    <div
+      key={t.id}
+      style={{
+        padding: 11,
+        borderRadius: 18,
+        background: isRiposo ? "rgba(107,114,128,0.08)" : "rgba(59,130,246,0.08)",
+        border: isRiposo ? "1px solid rgba(107,114,128,0.18)" : "1px solid rgba(59,130,246,0.14)",
+        display: "grid",
+        gap: 5,
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+        <span
+          style={{
+            fontSize: 12,
+            fontWeight: 950,
+            color: isRiposo ? "rgba(55,65,81,0.95)" : "rgba(30,64,175,0.95)",
+          }}
+        >
+          {sigla} • {descr}
+          {!isRiposo ? ` ${t.inizio} - ${t.fine}` : ""}
+        </span>
+
+        {!isRiposo && (
+          <span style={{ fontSize: 11, fontWeight: 900, color: "rgba(30,64,175,0.82)" }}>
+            {formatNumeroOre(t.oreOrdinarie + t.oreStraordinarie)}h
+          </span>
+        )}
+      </div>
+
+      <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.78 }}>
+        {isRiposo
+          ? "Giornata di riposo"
+          : `Ord: ${formatNumeroOre(t.oreOrdinarie)}h • Straord: ${formatNumeroOre(t.oreStraordinarie)}h`}
+      </div>
+    </div>
+  );
+})}
                     </div>
                   </div>
                 )}
@@ -2165,26 +2254,42 @@ function MiniCalendario({
                         </div>
                       ))}
 
-                      {previewTurni.map((t) => (
-                        <div
-                          key={t.id}
-                          style={{
-                            padding: 11,
-                            borderRadius: 16,
-                            background: "rgba(59,130,246,0.08)",
-                            border: "1px solid rgba(59,130,246,0.14)",
-                            display: "grid",
-                            gap: 5,
-                          }}
-                        >
-                          <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(30,64,175,0.95)" }}>
-                            Turno {t.inizio} - {t.fine}
-                          </div>
-                          <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.78 }}>
-                            Ord: {formatNumeroOre(t.oreOrdinarie)}h • Straord: {formatNumeroOre(t.oreStraordinarie)}h
-                          </div>
-                        </div>
-                      ))}
+                    {previewTurni.map((t) => {
+  const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
+  const descr = descrizioneTurnoBreve(t.inizio, t.fine, t.note);
+  const isRiposo = sigla === "R";
+
+  return (
+    <div
+      key={t.id}
+      style={{
+        padding: 11,
+        borderRadius: 16,
+        background: isRiposo ? "rgba(107,114,128,0.08)" : "rgba(59,130,246,0.08)",
+        border: isRiposo ? "1px solid rgba(107,114,128,0.18)" : "1px solid rgba(59,130,246,0.14)",
+        display: "grid",
+        gap: 5,
+      }}
+    >
+      <div
+        style={{
+          fontSize: 12,
+          fontWeight: 950,
+          color: isRiposo ? "rgba(55,65,81,0.95)" : "rgba(30,64,175,0.95)",
+        }}
+      >
+        {sigla} • {descr}
+        {!isRiposo ? ` ${t.inizio} - ${t.fine}` : ""}
+      </div>
+
+      <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.78 }}>
+        {isRiposo
+          ? "Giornata di riposo"
+          : `Ord: ${formatNumeroOre(t.oreOrdinarie)}h • Straord: ${formatNumeroOre(t.oreStraordinarie)}h`}
+      </div>
+    </div>
+  );
+})}
                     </div>
 
                     <div style={{ marginTop: 10, display: "flex", justifyContent: "flex-end" }}>
@@ -2212,17 +2317,43 @@ function MiniCalendario({
           })}
         </div>
 
-        <div
-          style={{
-            marginTop: 12,
-            fontSize: 12,
-            fontWeight: 850,
-            opacity: 0.75,
-            lineHeight: 1.35,
-          }}
-        >
-          Desktop: passa col mouse sui giorni. Mobile: tocca il giorno per vedere dettagli. Il pulsante turno resta sempre dentro la casella senza sovrapporsi.
-        </div>
+     <div
+  style={{
+    marginTop: 12,
+    display: "grid",
+    gap: 10,
+  }}
+>
+  <div
+    style={{
+      display: "flex",
+      gap: 8,
+      flexWrap: "wrap",
+      alignItems: "center",
+      fontSize: 11,
+      fontWeight: 900,
+      opacity: 0.82,
+    }}
+  >
+    <span style={{ padding: "6px 10px", borderRadius: 999, background: "rgba(255,255,255,0.85)", border: "1px solid rgba(15,23,42,0.08)" }}>N = Notte</span>
+    <span style={{ padding: "6px 10px", borderRadius: 999, background: "rgba(255,255,255,0.85)", border: "1px solid rgba(15,23,42,0.08)" }}>M = Mattina</span>
+    <span style={{ padding: "6px 10px", borderRadius: 999, background: "rgba(255,255,255,0.85)", border: "1px solid rgba(15,23,42,0.08)" }}>P = Pomeriggio</span>
+    <span style={{ padding: "6px 10px", borderRadius: 999, background: "rgba(255,255,255,0.85)", border: "1px solid rgba(15,23,42,0.08)" }}>S = Sera</span>
+    <span style={{ padding: "6px 10px", borderRadius: 999, background: "rgba(255,255,255,0.85)", border: "1px solid rgba(15,23,42,0.08)" }}>R = Riposo</span>
+    <span style={{ padding: "6px 10px", borderRadius: 999, background: "rgba(255,255,255,0.85)", border: "1px solid rgba(15,23,42,0.08)" }}>T = Altro turno</span>
+  </div>
+
+  <div
+    style={{
+      fontSize: 12,
+      fontWeight: 850,
+      opacity: 0.75,
+      lineHeight: 1.35,
+    }}
+  >
+    Desktop: passa col mouse sui giorni. Mobile: tocca il giorno per vedere dettagli. Il pulsante turno resta sempre dentro la casella senza sovrapporsi.
+  </div>
+</div>
       </div>
     </div>
   );
@@ -3544,27 +3675,34 @@ function MiniCalendario({
                     <div style={sx.sectionLabel}>Turno predefinito</div>
 
                     <select
-                      value={turnoPreset || ""}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setTurnoPreset(val);
+                onChange={(e) => {
+  const val = e.target.value;
+  setTurnoPreset(val);
 
-                        if (!val) return;
+  if (!val) return;
 
-                        const parti = val.split("-");
-                        if (parti.length !== 2) return;
+  if (val === "RIPOSO") {
+    setTurnoInizio("RIPOSO");
+    setTurnoFine("RIPOSO");
+    setTurnoOreOrd("0");
+    setTurnoOreStraord("");
+    return;
+  }
 
-                        let start = parti[0].trim();
-                        let end = parti[1].trim();
+  const parti = val.split("-");
+  if (parti.length !== 2) return;
 
-                        if (/^\d$/.test(start)) start = `0${start}`;
-                        if (/^\d$/.test(end)) end = `0${end}`;
+  let start = parti[0].trim();
+  let end = parti[1].trim();
 
-                        if (end === "24") end = "00";
+  if (/^\d$/.test(start)) start = `0${start}`;
+  if (/^\d$/.test(end)) end = `0${end}`;
 
-                        setTurnoInizio(`${start}:00`);
-                        setTurnoFine(`${end}:00`);
-                      }}
+  if (end === "24") end = "00";
+
+  setTurnoInizio(`${start}:00`);
+  setTurnoFine(`${end}:00`);
+}}
                       style={{
                         ...inputLight(false),
                         background: "rgba(255,255,255,0.90)",
