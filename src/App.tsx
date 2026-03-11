@@ -270,6 +270,12 @@ function giorniMancanti(dataStr: string) {
   return Math.round(ms / (1000 * 60 * 60 * 24));
 }
 
+
+function vocePassata(data: string, ora: string) {
+  const dt = buildDateTime(data, ora);
+  return dt.getTime() < Date.now();
+}
+
 function clamp(n: number, a: number, b: number) {
   return Math.max(a, Math.min(b, n));
 }
@@ -663,6 +669,7 @@ export default function App() {
   const [tipo, setTipo] = useState<Voce["tipo"]>("scadenza");
   const [urgente, setUrgente] = useState(false);
   const [nota, setNota] = useState("");
+  const [importo, setImporto] = useState<string>("");
   
   
 
@@ -802,6 +809,25 @@ export default function App() {
   }, [voci, currentUserId]);
 
   useEffect(() => {
+  setVoci((prev) => {
+    let changed = false;
+
+    const next = prev.map((v) => {
+      if (!v.fatto && vocePassata(v.data, v.ora)) {
+        changed = true;
+        return { ...v, fatto: true };
+      }
+      return v;
+    });
+
+    return changed ? next : prev;
+  });
+}, [adesso]);
+
+
+
+
+  useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         if (mostraForm) chiudiForm();
@@ -837,83 +863,92 @@ export default function App() {
     resetForm();
   }
 
-  function resetForm() {
-    setIdInModifica(null);
-    setTitolo("");
-    setData("");
-    setOra("09:00");
-    setTipo("scadenza");
-    setUrgente(false);
-    setNota("");
-    setNotificheMinutiPrima([]);
-    setCustomNotificaOre("");
-  }
-
+ function resetForm() {
+  setIdInModifica(null);
+  setTitolo("");
+  setData("");
+  setOra("09:00");
+  setTipo("scadenza");
+  setUrgente(false);
+  setNota("");
+  setImporto("");
+  setNotificheMinutiPrima([]);
+  setCustomNotificaOre("");
+}
   function apriNuova() {
     resetForm();
     setMostraForm(true);
   }
 
-   function apriModifica(v: Voce) {
-    setIdInModifica(v.id);
-    setTitolo(v.titolo);
-    setData(v.data);
-    setOra(v.ora);
-    setTipo(v.tipo);
-    setUrgente(v.urgente);
-    setNota(v.nota ?? "");
-    setNotificheMinutiPrima(v.notificheMinutiPrima ?? []);
-    setMostraForm(true);
+  function apriModifica(v: Voce) {
+  setIdInModifica(v.id);
+  setTitolo(v.titolo);
+  setData(v.data);
+  setOra(v.ora);
+  setTipo(v.tipo);
+  setUrgente(v.urgente);
+  setNota(v.nota ?? "");
+  setImporto(v.movimento === "uscita" && v.importo !== null ? String(v.importo) : "");
+  setNotificheMinutiPrima(v.notificheMinutiPrima ?? []);
+  setMostraForm(true);
+}
+
+ function salva() {
+  if (classNameIsEmpty(titolo) || classNameIsEmpty(data) || classNameIsEmpty(ora)) {
+    alert("Compila titolo, data e ora");
+    return;
   }
 
-  function salva() {
-    if (classNameIsEmpty(titolo) || classNameIsEmpty(data) || classNameIsEmpty(ora)) {
-      alert("Compila titolo, data e ora");
-      return;
-    }
+  const importoNum = importo.trim() === "" ? null : Number(importo.replace(",", "."));
 
-    const notiUniq = Array.from(new Set(notificheMinutiPrima))
-      .filter((n) => Number.isFinite(n) && n > 0)
-      .sort((a, b) => b - a);
-
-    if (idInModifica) {
-      setVoci((prev) =>
-        prev.map((x) =>
-          x.id === idInModifica
-            ? {
-                ...x,
-                titolo: titolo.trim(),
-                data,
-                ora,
-                tipo,
-                urgente,
-                nota: nota.trim(),
-                importo: null,
-                movimento: "uscita",
-                notificheMinutiPrima: notiUniq,
-              }
-            : x
-        )
-      );
-    } else {
-      const nuova: Voce = {
-        id: safeUUID(),
-        titolo: titolo.trim(),
-        data,
-        ora,
-        tipo,
-        urgente,
-        nota: nota.trim(),
-        importo: null,
-        movimento: "uscita",
-        fatto: false,
-        notificheMinutiPrima: notiUniq,
-      };
-      setVoci((prev) => [nuova, ...prev]);
-    }
-
-    chiudiForm();
+  if (importo.trim() !== "" && (!Number.isFinite(importoNum) || importoNum === null || importoNum < 0)) {
+    alert("Importo non valido");
+    return;
   }
+
+  const notiUniq = Array.from(new Set(notificheMinutiPrima))
+    .filter((n) => Number.isFinite(n) && n > 0)
+    .sort((a, b) => b - a);
+
+  if (idInModifica) {
+    setVoci((prev) =>
+      prev.map((x) =>
+        x.id === idInModifica
+          ? {
+              ...x,
+              titolo: titolo.trim(),
+              data,
+              ora,
+              tipo,
+              urgente,
+              nota: nota.trim(),
+              importo: importoNum,
+              movimento: "uscita" as Movimento,
+              notificheMinutiPrima: notiUniq,
+            }
+          : x
+      )
+    );
+  } else {
+    const nuova: Voce = {
+      id: safeUUID(),
+      titolo: titolo.trim(),
+      data,
+      ora,
+      tipo,
+      urgente,
+      nota: nota.trim(),
+      importo: importoNum,
+      movimento: "uscita",
+      fatto: vocePassata(data, ora),
+      notificheMinutiPrima: notiUniq,
+    };
+
+    setVoci((prev) => [nuova, ...prev]);
+  }
+
+  chiudiForm();
+}
 
 function apriTurnoForm(dataSelezionata?: string) {
   setTurnoData(dataSelezionata || new Date().toISOString().slice(0, 10));
@@ -973,13 +1008,6 @@ function salvaTurno() {
     setTurni((prev) => prev.filter((t) => t.id !== id));
   }
 
-  function toggleFatto(id: string) {
-    setVoci((prev) => prev.map((v) => (v.id === id ? { ...v, fatto: true } : v)));
-  }
-
-  function ripristina(id: string) {
-    setVoci((prev) => prev.map((v) => (v.id === id ? { ...v, fatto: false } : v)));
-  }
 
   function elimina(id: string) {
     const ok = confirm("Vuoi eliminare questa voce?");
@@ -1059,30 +1087,26 @@ function salvaTurno() {
   const oreStraMese = useMemo(() => turniMese.reduce((s, t) => s + t.oreStraordinarie, 0), [turniMese]);
   const oreTotMese = useMemo(() => oreOrdMese + oreStraMese, [oreOrdMese, oreStraMese]);
 
-  const vociMeseNonFatte = useMemo(
-    () => voci.filter((v) => !v.fatto && stessoMeseSelezionato(v.data)),
-    [voci, meseCorrente]
-  );
+ const vociMese = useMemo(
+  () => voci.filter((v) => stessoMeseSelezionato(v.data)),
+  [voci, meseCorrente]
+);
 
-  const uscitePrevisteNonFatte = useMemo(
-    () =>
-      vociMeseNonFatte
-        .filter((v) => v.importo !== null && v.movimento === "uscita")
-        .reduce((s, v) => s + (v.importo ?? 0), 0),
-    [vociMeseNonFatte]
-  );
+const vociMeseAttive = useMemo(
+  () => vociMese.filter((v) => !v.fatto),
+  [vociMese]
+);
 
-  const entrateVociNonFatte = useMemo(
-    () =>
-      vociMeseNonFatte
-        .filter((v) => v.importo !== null && v.movimento === "entrata")
-        .reduce((s, v) => s + (v.importo ?? 0), 0),
-    [vociMeseNonFatte]
-  );
+const usciteTotMese = useMemo(
+  () =>
+    vociMese
+      .filter((v) => v.importo !== null && v.movimento === "uscita")
+      .reduce((s, v) => s + (v.importo ?? 0), 0),
+  [vociMese]
+);
 
-  const entrateTotMese = totaleEntrateExtra + entrateVociNonFatte;
-  const usciteTotMese = uscitePrevisteNonFatte;
-  const saldoMese = entrateTotMese - usciteTotMese;
+const entrateTotMese = totaleEntrateExtra;
+const saldoMese = entrateTotMese - usciteTotMese;
 
   const vociDelMesePerCalendario = useMemo(() => {
     const base = pagina === "archivio" ? voci.filter((v) => v.fatto) : voci.filter((v) => !v.fatto);
@@ -2360,7 +2384,7 @@ function MiniCalendario({
 
               <div style={statBox("violet")}>
                 <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Voci attive</div>
-                <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000 }}>{vociMeseNonFatte.length}</div>
+                <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000 }}>{vociMeseAttive.length}</div>
               </div>
             </div>
 
@@ -3148,6 +3172,10 @@ function MiniCalendario({
           </div>
         </div>
 
+
+
+
+
         {pagina === "controllo" ? (
           renderAreaControllo()
         ) : (
@@ -3211,7 +3239,9 @@ function MiniCalendario({
                         </div>
                       </div>
 
-                      <div style={{ marginTop: 10, fontSize: 19, fontWeight: 950, letterSpacing: -0.24 }}>{v.titolo}</div>
+                      <div style={{ marginTop: 10, fontSize: 19, fontWeight: 950, letterSpacing: -0.24 }}>
+                        {v.titolo}
+                      </div>
 
                       <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
                         {v.importo !== null && (
@@ -3256,9 +3286,6 @@ function MiniCalendario({
                       <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
                         {pagina === "home" ? (
                           <>
-                            <button data-chip="1" onClick={() => toggleFatto(v.id)} style={chip(true)}>
-                              Segna fatto
-                            </button>
                             <button data-chip="1" onClick={() => apriModifica(v)} style={chip(false)}>
                               Modifica
                             </button>
@@ -3268,9 +3295,6 @@ function MiniCalendario({
                           </>
                         ) : (
                           <>
-                            <button data-chip="1" onClick={() => ripristina(v.id)} style={chip(true)}>
-                              Ripristina
-                            </button>
                             <button data-chip="1" onClick={() => elimina(v.id)} style={chip(false)}>
                               Elimina
                             </button>
@@ -3286,7 +3310,7 @@ function MiniCalendario({
         )}
       </div>
 
-       {pagina !== "controllo" && <DraggableFab onClick={apriNuova} label="Aggiungi" />}
+      {pagina !== "controllo" && <DraggableFab onClick={apriNuova} label="Aggiungi" />}
 
       {mostraForm && (
         <div
@@ -3359,20 +3383,20 @@ function MiniCalendario({
                     <input type="time" value={ora} onChange={(e) => setOra(e.target.value)} style={inputLight(false)} />
                   </div>
                 </div>
-                <div
-                  style={{
-                    padding: 14,
-                    borderRadius: 18,
-                    border: "1px solid rgba(59,130,246,0.14)",
-                    background: "linear-gradient(180deg, rgba(239,246,255,0.86), rgba(239,246,255,0.56))",
-                    boxShadow: "0 10px 22px rgba(59,130,246,0.06)",
-                  }}
-                >
-                  <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>
-                    Entrate e uscite
-                  </div>
-                  <div style={{ marginTop: 6, fontSize: 13, fontWeight: 850, opacity: 0.82, lineHeight: 1.4 }}>
-                    Le entrate del mese si inseriscono solo nell’area Controllo, così non si sovrappongono alle scadenze e agli appuntamenti.
+
+                <div>
+                  <div style={sx.sectionLabel}>Importo uscita (€) facoltativo</div>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={importo}
+                    onChange={(e) => setImporto(e.target.value)}
+                    placeholder="Es: 650"
+                    style={inputLight(false)}
+                  />
+
+                  <div style={{ marginTop: 8, fontSize: 12, fontWeight: 850, opacity: 0.72, lineHeight: 1.35 }}>
+                    Qui inserisci solo eventuali uscite collegate a scadenze o appuntamenti. Le entrate si inseriscono solo nell’area Controllo.
                   </div>
                 </div>
 
@@ -3416,7 +3440,6 @@ function MiniCalendario({
 
                     {urgente && badgeUrgente()}
                     {badgeTipo(tipo)}
-                    
                   </div>
                 </div>
 
@@ -3516,72 +3539,70 @@ function MiniCalendario({
                   <input type="date" value={turnoData} onChange={(e) => setTurnoData(e.target.value)} style={inputLight(false)} />
                 </div>
 
-               <div style={{ display: "grid", gap: 12 }}>
-  <div>
-    <div style={sx.sectionLabel}>Turno predefinito</div>
-    
-<select
-  value={turnoPreset || ""}
-  onChange={(e) => {
-    const val = e.target.value;
-    setTurnoPreset(val);
+                <div style={{ display: "grid", gap: 12 }}>
+                  <div>
+                    <div style={sx.sectionLabel}>Turno predefinito</div>
 
-    if (!val) return;
+                    <select
+                      value={turnoPreset || ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setTurnoPreset(val);
 
-    const parti = val.split("-");
-    if (parti.length !== 2) return;
+                        if (!val) return;
 
-    let start = parti[0].trim();
-    let end = parti[1].trim();
+                        const parti = val.split("-");
+                        if (parti.length !== 2) return;
 
-    if (/^\d$/.test(start)) start = `0${start}`;
-    if (/^\d$/.test(end)) end = `0${end}`;
+                        let start = parti[0].trim();
+                        let end = parti[1].trim();
 
-    if (end === "24") end = "00";
+                        if (/^\d$/.test(start)) start = `0${start}`;
+                        if (/^\d$/.test(end)) end = `0${end}`;
 
-    setTurnoInizio(`${start}:00`);
-    setTurnoFine(`${end}:00`);
-  }}
-  style={{
-    ...inputLight(false),
-    background: "rgba(255,255,255,0.90)",
-    fontWeight: 850,
-  }}
-  title="Seleziona turno predefinito"
->
-  <option value="">Seleziona turno preset…</option>
-  {presetTurni.map((p) => (
-    <option key={p} value={p}>
-      {p}
-    </option>
-  ))}
-</select>
+                        if (end === "24") end = "00";
 
-  </div>
+                        setTurnoInizio(`${start}:00`);
+                        setTurnoFine(`${end}:00`);
+                      }}
+                      style={{
+                        ...inputLight(false),
+                        background: "rgba(255,255,255,0.90)",
+                        fontWeight: 850,
+                      }}
+                      title="Seleziona turno predefinito"
+                    >
+                      <option value="">Seleziona turno preset…</option>
+                      {presetTurni.map((p) => (
+                        <option key={p} value={p}>
+                          {p}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
+                  <div style={sx.row2}>
+                    <div>
+                      <div style={sx.sectionLabel}>Inizio turno</div>
+                      <input
+                        type="time"
+                        value={turnoInizio}
+                        onChange={(e) => setTurnoInizio(e.target.value)}
+                        style={inputLight(false)}
+                      />
+                    </div>
 
-  <div style={sx.row2}>
-    <div>
-      <div style={sx.sectionLabel}>Inizio turno</div>
-      <input
-        type="time"
-        value={turnoInizio}
-        onChange={(e) => setTurnoInizio(e.target.value)}
-        style={inputLight(false)}
-      />
-    </div>
-
-    <div>
-      <div style={sx.sectionLabel}>Fine turno</div>
-      <input
-        type="time"
-        value={turnoFine}
-        onChange={(e) => setTurnoFine(e.target.value)}
-        style={inputLight(false)}
-      />
-    </div>
-  </div>
-</div>
+                    <div>
+                      <div style={sx.sectionLabel}>Fine turno</div>
+                      <input
+                        type="time"
+                        value={turnoFine}
+                        onChange={(e) => setTurnoFine(e.target.value)}
+                        style={inputLight(false)}
+                      />
+                    </div>
+                  </div>
+                </div>
 
                 <div style={sx.row2}>
                   <div>
@@ -3639,3 +3660,6 @@ function MiniCalendario({
     </div>
   );
 }
+
+
+
