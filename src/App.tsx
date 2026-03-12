@@ -98,7 +98,6 @@ function formatNumeroOre(n: number) {
   return n.toLocaleString("it-IT", { maximumFractionDigits: 2 });
 }
 
-
 function normalizeTurnoLabel(inizio: string, fine: string, note?: string) {
   const i = (inizio || "").trim();
   const f = (fine || "").trim();
@@ -128,16 +127,17 @@ function descrizioneTurnoBreve(inizio: string, fine: string, note?: string) {
   return "Turno";
 }
 
-
 const K_USERS = "scadenze_users";
 const K_CURR = "scadenze_current_user";
 const kVoci = (userId: string) => `voci_scadenze__${userId}`;
 const kIncassi = (userId: string) => `incassi_mese__${userId}`;
 const kTurni = (userId: string) => `turni_mese__${userId}`;
 const K_FAB_POS = "remember_fab_position";
+
 function caricaUtenti(): User[] {
   const raw = localStorage.getItem(K_USERS);
   if (!raw) return [];
+
   try {
     const arr = JSON.parse(raw) as any[];
     return arr
@@ -203,6 +203,7 @@ function normalizeVoce(x: any): Voce {
 function caricaVociDaMemoria(userId: string): Voce[] {
   const testo = localStorage.getItem(kVoci(userId));
   if (!testo) return [];
+
   try {
     const arr = JSON.parse(testo) as any[];
     return arr.map(normalizeVoce);
@@ -251,6 +252,7 @@ function salvaIncassi(userId: string, m: Record<string, IncassiMese>) {
 function caricaTurni(userId: string): Turno[] {
   const raw = localStorage.getItem(kTurni(userId));
   if (!raw) return [];
+
   try {
     const arr = JSON.parse(raw) as any[];
     return arr.map((x) => ({
@@ -300,7 +302,6 @@ function giorniMancanti(dataStr: string) {
   const ms = d.getTime() - inizioOggi.getTime();
   return Math.round(ms / (1000 * 60 * 60 * 24));
 }
-
 
 function vocePassata(data: string, ora: string) {
   const dt = buildDateTime(data, ora);
@@ -472,8 +473,6 @@ function RememberLogo({ size = 44, centered = false }: { size?: number; centered
     </div>
   );
 }
-
-
 
 type FabPos = {
   x: number;
@@ -680,8 +679,6 @@ function DraggableFab({
   );
 }
 
-
-
 export default function App() {
   const [users, setUsers] = useState<User[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -690,7 +687,7 @@ export default function App() {
   const [loginNome, setLoginNome] = useState("");
   const [loginPick, setLoginPick] = useState<string | null>(null);
 
-  const [pagina, setPagina] = useState<"home" | "archivio" | "controllo">("home");
+  const [pagina, setPagina] = useState<"home" | "agenda" | "controllo" | "archivio">("home");
   const [mostraForm, setMostraForm] = useState(false);
   const [idInModifica, setIdInModifica] = useState<string | null>(null);
 
@@ -701,8 +698,6 @@ export default function App() {
   const [urgente, setUrgente] = useState(false);
   const [nota, setNota] = useState("");
   const [importo, setImporto] = useState<string>("");
-  
-  
 
   const [notificheMinutiPrima, setNotificheMinutiPrima] = useState<number[]>([]);
   const [customNotificaOre, setCustomNotificaOre] = useState<string>("");
@@ -840,23 +835,20 @@ export default function App() {
   }, [voci, currentUserId]);
 
   useEffect(() => {
-  setVoci((prev) => {
-    let changed = false;
+    setVoci((prev) => {
+      let changed = false;
 
-    const next = prev.map((v) => {
-      if (!v.fatto && vocePassata(v.data, v.ora)) {
-        changed = true;
-        return { ...v, fatto: true };
-      }
-      return v;
+      const next = prev.map((v) => {
+        if (!v.fatto && vocePassata(v.data, v.ora)) {
+          changed = true;
+          return { ...v, fatto: true };
+        }
+        return v;
+      });
+
+      return changed ? next : prev;
     });
-
-    return changed ? next : prev;
-  });
-}, [adesso]);
-
-
-
+  }, [adesso]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -865,6 +857,7 @@ export default function App() {
         if (mostraTurnoForm) chiudiTurnoForm();
       }
     };
+
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [mostraForm, mostraTurnoForm]);
@@ -894,169 +887,169 @@ export default function App() {
     resetForm();
   }
 
- function resetForm() {
-  setIdInModifica(null);
-  setTitolo("");
-  setData("");
-  setOra("09:00");
-  setTipo("scadenza");
-  setUrgente(false);
-  setNota("");
-  setImporto("");
-  setNotificheMinutiPrima([]);
-  setCustomNotificaOre("");
-}
+  function resetForm() {
+    setIdInModifica(null);
+    setTitolo("");
+    setData("");
+    setOra("09:00");
+    setTipo("scadenza");
+    setUrgente(false);
+    setNota("");
+    setImporto("");
+    setNotificheMinutiPrima([]);
+    setCustomNotificaOre("");
+  }
+
   function apriNuova() {
     resetForm();
     setMostraForm(true);
   }
 
   function apriModifica(v: Voce) {
-  setIdInModifica(v.id);
-  setTitolo(v.titolo);
-  setData(v.data);
-  setOra(v.ora);
-  setTipo(v.tipo);
-  setUrgente(v.urgente);
-  setNota(v.nota ?? "");
-  setImporto(v.movimento === "uscita" && v.importo !== null ? String(v.importo) : "");
-  setNotificheMinutiPrima(v.notificheMinutiPrima ?? []);
-  setMostraForm(true);
-}
-
- function salva() {
-  if (classNameIsEmpty(titolo) || classNameIsEmpty(data) || classNameIsEmpty(ora)) {
-    alert("Compila titolo, data e ora");
-    return;
+    setIdInModifica(v.id);
+    setTitolo(v.titolo);
+    setData(v.data);
+    setOra(v.ora);
+    setTipo(v.tipo);
+    setUrgente(v.urgente);
+    setNota(v.nota ?? "");
+    setImporto(v.movimento === "uscita" && v.importo !== null ? String(v.importo) : "");
+    setNotificheMinutiPrima(v.notificheMinutiPrima ?? []);
+    setMostraForm(true);
   }
 
-  const importoNum = importo.trim() === "" ? null : Number(importo.replace(",", "."));
+  function salva() {
+    if (classNameIsEmpty(titolo) || classNameIsEmpty(data) || classNameIsEmpty(ora)) {
+      alert("Compila titolo, data e ora");
+      return;
+    }
 
-  if (importo.trim() !== "" && (!Number.isFinite(importoNum) || importoNum === null || importoNum < 0)) {
-    alert("Importo non valido");
-    return;
+    const importoNum = importo.trim() === "" ? null : Number(importo.replace(",", "."));
+
+    if (importo.trim() !== "" && (!Number.isFinite(importoNum) || importoNum === null || importoNum < 0)) {
+      alert("Importo non valido");
+      return;
+    }
+
+    const notiUniq = Array.from(new Set(notificheMinutiPrima))
+      .filter((n) => Number.isFinite(n) && n > 0)
+      .sort((a, b) => b - a);
+
+    if (idInModifica) {
+      setVoci((prev) =>
+        prev.map((x) =>
+          x.id === idInModifica
+            ? {
+                ...x,
+                titolo: titolo.trim(),
+                data,
+                ora,
+                tipo,
+                urgente,
+                nota: nota.trim(),
+                importo: importoNum,
+                movimento: "uscita" as Movimento,
+                notificheMinutiPrima: notiUniq,
+              }
+            : x
+        )
+      );
+    } else {
+      const nuova: Voce = {
+        id: safeUUID(),
+        titolo: titolo.trim(),
+        data,
+        ora,
+        tipo,
+        urgente,
+        nota: nota.trim(),
+        importo: importoNum,
+        movimento: "uscita",
+        fatto: vocePassata(data, ora),
+        notificheMinutiPrima: notiUniq,
+      };
+
+      setVoci((prev) => [nuova, ...prev]);
+    }
+
+    chiudiForm();
   }
 
-  const notiUniq = Array.from(new Set(notificheMinutiPrima))
-    .filter((n) => Number.isFinite(n) && n > 0)
-    .sort((a, b) => b - a);
-
-  if (idInModifica) {
-    setVoci((prev) =>
-      prev.map((x) =>
-        x.id === idInModifica
-          ? {
-              ...x,
-              titolo: titolo.trim(),
-              data,
-              ora,
-              tipo,
-              urgente,
-              nota: nota.trim(),
-              importo: importoNum,
-              movimento: "uscita" as Movimento,
-              notificheMinutiPrima: notiUniq,
-            }
-          : x
-      )
-    );
-  } else {
-    const nuova: Voce = {
-      id: safeUUID(),
-      titolo: titolo.trim(),
-      data,
-      ora,
-      tipo,
-      urgente,
-      nota: nota.trim(),
-      importo: importoNum,
-      movimento: "uscita",
-      fatto: vocePassata(data, ora),
-      notificheMinutiPrima: notiUniq,
-    };
-
-    setVoci((prev) => [nuova, ...prev]);
+  function apriTurnoForm(dataSelezionata?: string) {
+    setTurnoData(dataSelezionata || new Date().toISOString().slice(0, 10));
+    setTurnoInizio("08:00");
+    setTurnoFine("16:00");
+    setTurnoOreOrd("");
+    setTurnoOreStraord("");
+    setTurnoNote("");
+    setTurnoPreset("");
+    setMostraTurnoForm(true);
   }
 
-  chiudiForm();
-}
-
-function apriTurnoForm(dataSelezionata?: string) {
-  setTurnoData(dataSelezionata || new Date().toISOString().slice(0, 10));
-  setTurnoInizio("08:00");
-  setTurnoFine("16:00");
-  setTurnoOreOrd("");
-  setTurnoOreStraord("");
-  setTurnoNote("");
-  setTurnoPreset("");
-  setMostraTurnoForm(true);
-}
-
-function chiudiTurnoForm() {
-  setMostraTurnoForm(false);
-  setTurnoOreOrd("");
-  setTurnoOreStraord("");
-  setTurnoNote("");
-  setTurnoPreset("");
-}
-
-function salvaTurno() {
-  if (!turnoData) {
-    alert("Inserisci la data del turno.");
-    return;
+  function chiudiTurnoForm() {
+    setMostraTurnoForm(false);
+    setTurnoOreOrd("");
+    setTurnoOreStraord("");
+    setTurnoNote("");
+    setTurnoPreset("");
   }
 
-  const isRiposo = turnoPreset === "RIPOSO";
+  function salvaTurno() {
+    if (!turnoData) {
+      alert("Inserisci la data del turno.");
+      return;
+    }
 
-  if (isRiposo) {
+    const isRiposo = turnoPreset === "RIPOSO";
+
+    if (isRiposo) {
+      const nuovo: Turno = {
+        id: safeUUID(),
+        data: turnoData,
+        inizio: "RIPOSO",
+        fine: "RIPOSO",
+        oreOrdinarie: 0,
+        oreStraordinarie: 0,
+        note: turnoNote.trim() ? `RIPOSO • ${turnoNote.trim()}` : "RIPOSO",
+      };
+
+      setTurni((prev) => [nuovo, ...prev]);
+      chiudiTurnoForm();
+      return;
+    }
+
+    const oreOrd = parseOreItaliane(turnoOreOrd);
+    const oreStra = turnoOreStraord.trim() === "" ? 0 : parseOreItaliane(turnoOreStraord);
+
+    if (oreOrd === null) {
+      alert("Inserisci ore ordinarie valide.");
+      return;
+    }
+
+    if (oreStra === null) {
+      alert("Inserisci ore straordinarie valide.");
+      return;
+    }
+
     const nuovo: Turno = {
       id: safeUUID(),
       data: turnoData,
-      inizio: "RIPOSO",
-      fine: "RIPOSO",
-      oreOrdinarie: 0,
-      oreStraordinarie: 0,
-      note: turnoNote.trim() ? `RIPOSO • ${turnoNote.trim()}` : "RIPOSO",
+      inizio: turnoInizio,
+      fine: turnoFine,
+      oreOrdinarie: oreOrd,
+      oreStraordinarie: oreStra,
+      note: turnoNote.trim(),
     };
 
     setTurni((prev) => [nuovo, ...prev]);
     chiudiTurnoForm();
-    return;
   }
-
-  const oreOrd = parseOreItaliane(turnoOreOrd);
-  const oreStra = turnoOreStraord.trim() === "" ? 0 : parseOreItaliane(turnoOreStraord);
-
-  if (oreOrd === null) {
-    alert("Inserisci ore ordinarie valide.");
-    return;
-  }
-
-  if (oreStra === null) {
-    alert("Inserisci ore straordinarie valide.");
-    return;
-  }
-
-  const nuovo: Turno = {
-    id: safeUUID(),
-    data: turnoData,
-    inizio: turnoInizio,
-    fine: turnoFine,
-    oreOrdinarie: oreOrd,
-    oreStraordinarie: oreStra,
-    note: turnoNote.trim(),
-  };
-
-  setTurni((prev) => [nuovo, ...prev]);
-  chiudiTurnoForm();
-}
 
   function eliminaTurno(id: string) {
     const ok = confirm("Vuoi eliminare questo turno?");
     if (!ok) return;
     setTurni((prev) => prev.filter((t) => t.id !== id));
   }
-
 
   function elimina(id: string) {
     const ok = confirm("Vuoi eliminare questa voce?");
@@ -1136,32 +1129,25 @@ function salvaTurno() {
   const oreStraMese = useMemo(() => turniMese.reduce((s, t) => s + t.oreStraordinarie, 0), [turniMese]);
   const oreTotMese = useMemo(() => oreOrdMese + oreStraMese, [oreOrdMese, oreStraMese]);
 
- const vociMese = useMemo(
-  () => voci.filter((v) => stessoMeseSelezionato(v.data)),
-  [voci, meseCorrente]
-);
+  const vociMese = useMemo(() => voci.filter((v) => stessoMeseSelezionato(v.data)), [voci, meseCorrente]);
 
-const vociMeseAttive = useMemo(
-  () => vociMese.filter((v) => !v.fatto),
-  [vociMese]
-);
+  const vociMeseAttive = useMemo(() => vociMese.filter((v) => !v.fatto), [vociMese]);
 
-const usciteTotMese = useMemo(
-  () =>
-    vociMese
-      .filter((v) => v.importo !== null && v.movimento === "uscita")
-      .reduce((s, v) => s + (v.importo ?? 0), 0),
-  [vociMese]
-);
+  const usciteTotMese = useMemo(
+    () =>
+      vociMese
+        .filter((v) => v.importo !== null && v.movimento === "uscita")
+        .reduce((s, v) => s + (v.importo ?? 0), 0),
+    [vociMese]
+  );
 
-const entrateTotMese = totaleEntrateExtra;
-const saldoMese = entrateTotMese - usciteTotMese;
+  const entrateTotMese = totaleEntrateExtra;
+  const saldoMese = entrateTotMese - usciteTotMese;
 
   const vociDelMesePerCalendario = useMemo(() => {
     const base = pagina === "archivio" ? voci.filter((v) => v.fatto) : voci.filter((v) => !v.fatto);
     return base.filter((v) => stessoMeseSelezionato(v.data));
   }, [voci, meseCorrente, pagina]);
-
   function vociFiltrate() {
     const base = pagina === "archivio" ? voci.filter((v) => v.fatto) : voci.filter((v) => !v.fatto);
     const nelMese = base.filter((v) => stessoMeseSelezionato(v.data));
@@ -1170,6 +1156,17 @@ const saldoMese = entrateTotMese - usciteTotMese;
 
     const oggi = new Date();
     const inizioOggi = new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDate());
+
+    if (filtro === "oggi") {
+      const filtrateOggi = nelMese.filter((v) => {
+        const [a, m, g] = v.data.split("-").map(Number);
+        const dataVoce = new Date(a, (m ?? 1) - 1, g ?? 1);
+        return dataVoce.getTime() === inizioOggi.getTime();
+      });
+
+      return ordinaIntelligente(filtrateOggi);
+    }
+
     const fine = new Date(inizioOggi);
 
     if (filtro === "7giorni") fine.setDate(fine.getDate() + 7);
@@ -1325,7 +1322,6 @@ const saldoMese = entrateTotMese - usciteTotMese;
     boxShadow: focused ? "0 0 0 4px rgba(79,70,229,0.12)" : "none",
     boxSizing: "border-box",
   });
-
 
   const sx = useMemo(() => {
     const overlay: React.CSSProperties = {
@@ -1515,780 +1511,803 @@ const saldoMese = entrateTotMese - usciteTotMese;
     toggleNotificaOre(ore);
   }
 
+  function MiniCalendario({
+    mese,
+    vociDelMese,
+    turniDelMese,
+    onPrevMonth,
+    onNextMonth,
+  }: {
+    mese: Date;
+    vociDelMese: Voce[];
+    turniDelMese: Turno[];
+    onPrevMonth: () => void;
+    onNextMonth: () => void;
+  }) {
+    const [pinnedDate, setPinnedDate] = useState<string | null>(null);
+    const [isTouchDevice, setIsTouchDevice] = useState(false);
 
+    useEffect(() => {
+      const checkTouch = () => {
+        const touch =
+          window.matchMedia("(hover: none)").matches ||
+          window.matchMedia("(pointer: coarse)").matches ||
+          "ontouchstart" in window;
 
+        setIsTouchDevice(touch || window.innerWidth <= 820);
+      };
 
+      checkTouch();
+      window.addEventListener("resize", checkTouch);
+      return () => window.removeEventListener("resize", checkTouch);
+    }, []);
 
-function MiniCalendario({
-  mese,
-  vociDelMese,
-  turniDelMese,
-  onPrevMonth,
-  onNextMonth,
-}: {
-  mese: Date;
-  vociDelMese: Voce[];
-  turniDelMese: Turno[];
-  onPrevMonth: () => void;
-  onNextMonth: () => void;
-}) {
-  const [pinnedDate, setPinnedDate] = useState<string | null>(null);
-  const [isTouchDevice, setIsTouchDevice] = useState(false);
+    const y = mese.getFullYear();
+    const m0 = mese.getMonth();
+    const first = new Date(y, m0, 1);
+    const offset = weekdayMon0(first);
+    const dim = daysInMonth(y, m0);
 
-  useEffect(() => {
-    const checkTouch = () => {
-      const touch =
-        window.matchMedia("(hover: none)").matches ||
-        window.matchMedia("(pointer: coarse)").matches ||
-        "ontouchstart" in window;
+    const oggi = new Date();
+    const oggiKey = ymd(oggi.getFullYear(), oggi.getMonth(), oggi.getDate());
 
-      setIsTouchDevice(touch || window.innerWidth <= 820);
+    const stats = useMemo(() => {
+      const map = new Map<
+        string,
+        { count: number; urgent: boolean; hasScadenza: boolean; hasAppuntamento: boolean; turniCount: number }
+      >();
+
+      for (const v of vociDelMese) {
+        const prev = map.get(v.data) ?? {
+          count: 0,
+          urgent: false,
+          hasScadenza: false,
+          hasAppuntamento: false,
+          turniCount: 0,
+        };
+
+        prev.count += 1;
+        if (v.urgente) prev.urgent = true;
+        if (v.tipo === "scadenza") prev.hasScadenza = true;
+        if (v.tipo === "appuntamento") prev.hasAppuntamento = true;
+
+        map.set(v.data, prev);
+      }
+
+      for (const t of turniDelMese) {
+        const prev = map.get(t.data) ?? {
+          count: 0,
+          urgent: false,
+          hasScadenza: false,
+          hasAppuntamento: false,
+          turniCount: 0,
+        };
+
+        prev.turniCount += 1;
+        map.set(t.data, prev);
+      }
+
+      return map;
+    }, [vociDelMese, turniDelMese]);
+
+    const giorni: Array<string | null> = [];
+    for (let i = 0; i < offset; i++) giorni.push(null);
+    for (let d = 1; d <= dim; d++) giorni.push(ymd(y, m0, d));
+
+    while (giorni.length % 7 !== 0) giorni.push(null);
+
+    const titoloMese = mese.toLocaleDateString("it-IT", {
+      month: "long",
+      year: "numeric",
+    });
+
+    const oggiTesto = oggi.toLocaleDateString("it-IT", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    });
+
+    const navBtnStyle: React.CSSProperties = {
+      width: isTouchDevice ? 42 : 46,
+      height: isTouchDevice ? 42 : 46,
+      borderRadius: 16,
+      border: "1px solid rgba(15,23,42,0.08)",
+      background: "rgba(255,255,255,0.86)",
+      boxShadow: "0 10px 22px rgba(15,23,42,0.08)",
+      display: "grid",
+      placeItems: "center",
+      cursor: "pointer",
+      fontSize: 20,
+      fontWeight: 1000,
+      color: "rgba(15,23,42,0.88)",
     };
 
-    checkTouch();
-    window.addEventListener("resize", checkTouch);
-    return () => window.removeEventListener("resize", checkTouch);
-  }, []);
+    const weekdayHeader = ["LUN", "MAR", "MER", "GIO", "VEN", "SAB", "DOM"];
 
-  const y = mese.getFullYear();
-  const m0 = mese.getMonth();
-  const first = new Date(y, m0, 1);
-  const offset = weekdayMon0(first);
-  const dim = daysInMonth(y, m0);
-
-  const oggi = new Date();
-  const oggiKey = ymd(oggi.getFullYear(), oggi.getMonth(), oggi.getDate());
-
-  const stats = useMemo(() => {
-    const map = new Map<
-      string,
-      { count: number; urgent: boolean; hasScadenza: boolean; hasAppuntamento: boolean; turniCount: number }
-    >();
-
-    for (const v of vociDelMese) {
-      const prev = map.get(v.data) ?? {
-        count: 0,
-        urgent: false,
-        hasScadenza: false,
-        hasAppuntamento: false,
-        turniCount: 0,
-      };
-
-      prev.count += 1;
-      if (v.urgente) prev.urgent = true;
-      if (v.tipo === "scadenza") prev.hasScadenza = true;
-      if (v.tipo === "appuntamento") prev.hasAppuntamento = true;
-
-      map.set(v.data, prev);
-    }
-
-    for (const t of turniDelMese) {
-      const prev = map.get(t.data) ?? {
-        count: 0,
-        urgent: false,
-        hasScadenza: false,
-        hasAppuntamento: false,
-        turniCount: 0,
-      };
-
-      prev.turniCount += 1;
-      map.set(t.data, prev);
-    }
-
-    return map;
-  }, [vociDelMese, turniDelMese]);
-
-  const giorni: Array<string | null> = [];
-  for (let i = 0; i < offset; i++) giorni.push(null);
-  for (let d = 1; d <= dim; d++) giorni.push(ymd(y, m0, d));
-
-  while (giorni.length % 7 !== 0) giorni.push(null);
-
-  const titoloMese = mese.toLocaleDateString("it-IT", {
-    month: "long",
-    year: "numeric",
-  });
-
-  const oggiTesto = oggi.toLocaleDateString("it-IT", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
-
-  const navBtnStyle: React.CSSProperties = {
-    width: isTouchDevice ? 42 : 46,
-    height: isTouchDevice ? 42 : 46,
-    borderRadius: 16,
-    border: "1px solid rgba(15,23,42,0.08)",
-    background: "rgba(255,255,255,0.86)",
-    boxShadow: "0 10px 22px rgba(15,23,42,0.08)",
-    display: "grid",
-    placeItems: "center",
-    cursor: "pointer",
-    fontSize: 20,
-    fontWeight: 1000,
-    color: "rgba(15,23,42,0.88)",
-  };
-
-  const weekdayHeader = ["LUN", "MAR", "MER", "GIO", "VEN", "SAB", "DOM"];
-
-  return (
-    <div style={{ maxWidth: 1060, margin: "0 auto", marginTop: 14 }}>
-      <div style={{ ...ui.card, padding: isTouchDevice ? 12 : 18, overflow: "visible" }}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr auto",
-            gap: 12,
-            alignItems: "center",
-            marginBottom: 16,
-          }}
-        >
-          <div style={{ minWidth: 0 }}>
-            <div
-              style={{
-                fontSize: isTouchDevice ? 18 : 20,
-                fontWeight: 1000,
-                letterSpacing: -0.45,
-                background: "linear-gradient(90deg, #4338ca 0%, #7c3aed 48%, #ef4444 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}
-            >
-              Smemorario
-            </div>
-            <div
-              style={{
-                marginTop: 4,
-                fontSize: 12,
-                fontWeight: 850,
-                opacity: 0.66,
-              }}
-            >
-              calendario, scadenze e turni
-            </div>
-          </div>
-
+    return (
+      <div style={{ maxWidth: 1060, margin: "0 auto", marginTop: 14 }}>
+        <div style={{ ...ui.card, padding: isTouchDevice ? 12 : 18, overflow: "visible" }}>
           <div
             style={{
-              padding: isTouchDevice ? "8px 12px" : "10px 14px",
-              borderRadius: 999,
-              border: "1px solid rgba(255,59,48,0.20)",
-              background: "linear-gradient(180deg, rgba(255,59,48,0.10), rgba(255,59,48,0.05))",
-              color: "rgba(160,20,16,0.94)",
-              fontWeight: 950,
-              fontSize: isTouchDevice ? 11 : 13,
-              textTransform: "capitalize",
-              boxShadow: "0 10px 24px rgba(255,59,48,0.10)",
-              whiteSpace: "nowrap",
+              display: "grid",
+              gridTemplateColumns: "1fr auto",
+              gap: 12,
+              alignItems: "center",
+              marginBottom: 16,
             }}
           >
-            {oggiTesto}
-          </div>
-        </div>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "42px 1fr 42px",
-            alignItems: "center",
-            gap: isTouchDevice ? 8 : 14,
-            marginBottom: 14,
-          }}
-        >
-          <button type="button" onClick={onPrevMonth} style={navBtnStyle} title="Mese precedente">
-            ←
-          </button>
-
-          <div
-            style={{
-              textAlign: "center",
-              fontSize: isTouchDevice ? 18 : 28,
-              fontWeight: 1000,
-              letterSpacing: -0.6,
-              textTransform: "capitalize",
-              color: "rgba(15,23,42,0.94)",
-              lineHeight: 1.1,
-            }}
-          >
-            {titoloMese}
-          </div>
-
-          <button type="button" onClick={onNextMonth} style={navBtnStyle} title="Mese successivo">
-            →
-          </button>
-        </div>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
-            gap: isTouchDevice ? 4 : 10,
-            marginBottom: isTouchDevice ? 8 : 12,
-          }}
-        >
-          {weekdayHeader.map((w, i) => {
-            const weekend = i === 5 || i === 6;
-            return (
+            <div style={{ minWidth: 0 }}>
               <div
-                key={w}
                 style={{
-                  textAlign: "center",
-                  fontSize: isTouchDevice ? 10 : 11,
+                  fontSize: isTouchDevice ? 18 : 20,
                   fontWeight: 1000,
-                  letterSpacing: 0.4,
-                  color: weekend ? "rgba(185,28,28,0.86)" : "rgba(22,101,52,0.80)",
-                  textTransform: "uppercase",
-                  paddingBottom: 2,
+                  letterSpacing: -0.45,
+                  background: "linear-gradient(90deg, #4338ca 0%, #7c3aed 48%, #ef4444 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
                 }}
               >
-                {w}
+                Smemorario
               </div>
-            );
-          })}
-        </div>
+              <div
+                style={{
+                  marginTop: 4,
+                  fontSize: 12,
+                  fontWeight: 850,
+                  opacity: 0.66,
+                }}
+              >
+                calendario, scadenze e turni
+              </div>
+            </div>
 
-        <style>{`
-          @media (hover: hover) and (pointer: fine) {
-            [data-calday="1"] [data-preview="1"] {
-              opacity: 0;
-              visibility: hidden;
-              pointer-events: none;
-              transition: opacity .14s ease, transform .14s ease;
-            }
+            <div
+              style={{
+                padding: isTouchDevice ? "8px 12px" : "10px 14px",
+                borderRadius: 999,
+                border: "1px solid rgba(255,59,48,0.20)",
+                background: "linear-gradient(180deg, rgba(255,59,48,0.10), rgba(255,59,48,0.05))",
+                color: "rgba(160,20,16,0.94)",
+                fontWeight: 950,
+                fontSize: isTouchDevice ? 11 : 13,
+                textTransform: "capitalize",
+                boxShadow: "0 10px 24px rgba(255,59,48,0.10)",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {oggiTesto}
+            </div>
+          </div>
 
-            [data-calday="1"]:hover [data-preview="1"] {
-              opacity: 1;
-              visibility: visible;
-              pointer-events: auto;
-            }
-          }
-        `}</style>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "42px 1fr 42px",
+              alignItems: "center",
+              gap: isTouchDevice ? 8 : 14,
+              marginBottom: 14,
+            }}
+          >
+            <button type="button" onClick={onPrevMonth} style={navBtnStyle} title="Mese precedente">
+              ←
+            </button>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
-            gap: isTouchDevice ? 6 : 12,
-            overflow: "visible",
-          }}
-        >
-          {giorni.map((key, idx) => {
-            if (!key) {
+            <div
+              style={{
+                textAlign: "center",
+                fontSize: isTouchDevice ? 18 : 28,
+                fontWeight: 1000,
+                letterSpacing: -0.6,
+                textTransform: "capitalize",
+                color: "rgba(15,23,42,0.94)",
+                lineHeight: 1.1,
+              }}
+            >
+              {titoloMese}
+            </div>
+
+            <button type="button" onClick={onNextMonth} style={navBtnStyle} title="Mese successivo">
+              →
+            </button>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
+              gap: isTouchDevice ? 4 : 10,
+              marginBottom: isTouchDevice ? 8 : 12,
+            }}
+          >
+            {weekdayHeader.map((w, i) => {
+              const weekend = i === 5 || i === 6;
               return (
                 <div
-                  key={`e_${idx}`}
+                  key={w}
                   style={{
-                    minHeight: isTouchDevice ? 78 : 118,
-                    borderRadius: 18,
-                    background: "transparent",
+                    textAlign: "center",
+                    fontSize: isTouchDevice ? 10 : 11,
+                    fontWeight: 1000,
+                    letterSpacing: 0.4,
+                    color: weekend ? "rgba(185,28,28,0.86)" : "rgba(22,101,52,0.80)",
+                    textTransform: "uppercase",
+                    paddingBottom: 2,
                   }}
-                />
-              );
-            }
-
-            const d = Number(key.slice(-2));
-            const info = stats.get(key);
-            const count = info?.count ?? 0;
-            const turniCount = info?.turniCount ?? 0;
-            const isToday = key === oggiKey;
-            const isPinnedOpen = isTouchDevice && pinnedDate === key;
-
-            const cellDate = new Date(y, m0, d);
-            const jsDay = cellDate.getDay();
-            const isWeekend = jsDay === 0 || jsDay === 6;
-
-            const numeroColor = isWeekend ? "rgba(200,20,16,0.98)" : "rgba(18,140,48,0.98)";
-
-            let previewAccent = "rgba(79,70,229,0.95)";
-            if (info?.hasScadenza && !info?.hasAppuntamento) previewAccent = "rgba(5,150,105,0.96)";
-            if (!info?.hasScadenza && info?.hasAppuntamento) previewAccent = "rgba(147,51,234,0.96)";
-            if (info?.urgent) previewAccent = "rgba(239,68,68,0.96)";
-
-            const previewItems = vociDelMese
-              .filter((v) => v.data === key)
-              .slice()
-              .sort((a, b) => {
-                if (a.urgente !== b.urgente) return a.urgente ? -1 : 1;
-                const o = a.ora.localeCompare(b.ora);
-                if (o !== 0) return o;
-                return a.titolo.localeCompare(b.titolo);
-              })
-              .slice(0, 4);
-
-            const previewTurni = turniDelMese
-              .filter((t) => t.data === key)
-              .slice()
-              .sort((a, b) => a.inizio.localeCompare(b.inizio))
-              .slice(0, 3);
-
-            const col = idx % 7;
-            const previewStyle: React.CSSProperties =
-              col <= 1
-                ? { left: 0, transform: "translateY(0)" }
-                : col >= 5
-                ? { right: 0, left: "auto", transform: "translateY(0)" }
-                : { left: "50%", transform: "translateX(-50%)" };
-
-            return (
-              <div
-                key={key}
-                data-calday="1"
-                style={{
-                  position: "relative",
-                  overflow: "visible",
-                  minWidth: 0,
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (!isTouchDevice || count + turniCount <= 0) return;
-                    setPinnedDate((prev) => (prev === key ? null : key));
-                  }}
-                  style={{
-                    width: "100%",
-                    minHeight: isTouchDevice ? 88 : 134,
-                    borderRadius: isTouchDevice ? 18 : 24,
-                    border: info?.urgent
-                      ? "2px solid rgba(239,68,68,0.44)"
-                      : isToday
-                      ? "2px solid rgba(255,59,48,0.40)"
-                      : "1px solid rgba(15,23,42,0.08)",
-                    background: isToday
-                      ? "linear-gradient(180deg, rgba(255,245,244,0.98), rgba(255,251,251,0.96))"
-                      : "linear-gradient(180deg, rgba(255,255,255,0.92), rgba(248,250,252,0.86))",
-                    boxShadow: info?.urgent
-                      ? "0 18px 36px rgba(239,68,68,0.14)"
-                      : isToday
-                      ? "0 18px 32px rgba(255,59,48,0.12)"
-                      : "0 14px 28px rgba(15,23,42,0.08)",
-                    cursor: count + turniCount > 0 ? "pointer" : "default",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 6,
-                    position: "relative",
-                    padding: isTouchDevice ? "8px 4px 8px" : "12px 8px 10px",
-                    transition:
-                      "transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease",
-                  }}
-                  title={`${d} ${titoloMese}`}
                 >
-                  {info?.urgent && (
+                  {w}
+                </div>
+              );
+            })}
+          </div>
+
+          <style>{`
+            @media (hover: hover) and (pointer: fine) {
+              [data-calday="1"] [data-preview="1"] {
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transition: opacity .14s ease, transform .14s ease;
+              }
+
+              [data-calday="1"]:hover [data-preview="1"] {
+                opacity: 1;
+                visibility: visible;
+                pointer-events: auto;
+              }
+            }
+          `}</style>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
+              gap: isTouchDevice ? 6 : 12,
+              overflow: "visible",
+            }}
+          >
+            {giorni.map((key, idx) => {
+              if (!key) {
+                return (
+                  <div
+                    key={`e_${idx}`}
+                    style={{
+                      minHeight: isTouchDevice ? 78 : 118,
+                      borderRadius: 18,
+                      background: "transparent",
+                    }}
+                  />
+                );
+              }
+
+              const d = Number(key.slice(-2));
+              const info = stats.get(key);
+              const count = info?.count ?? 0;
+              const turniCount = info?.turniCount ?? 0;
+              const isToday = key === oggiKey;
+              const isPinnedOpen = isTouchDevice && pinnedDate === key;
+
+              const cellDate = new Date(y, m0, d);
+              const jsDay = cellDate.getDay();
+              const isWeekend = jsDay === 0 || jsDay === 6;
+
+              const numeroColor = isWeekend ? "rgba(200,20,16,0.98)" : "rgba(18,140,48,0.98)";
+
+              let previewAccent = "rgba(79,70,229,0.95)";
+              if (info?.hasScadenza && !info?.hasAppuntamento) previewAccent = "rgba(5,150,105,0.96)";
+              if (!info?.hasScadenza && info?.hasAppuntamento) previewAccent = "rgba(147,51,234,0.96)";
+              if (info?.urgent) previewAccent = "rgba(239,68,68,0.96)";
+
+              const previewItems = vociDelMese
+                .filter((v) => v.data === key)
+                .slice()
+                .sort((a, b) => {
+                  if (a.urgente !== b.urgente) return a.urgente ? -1 : 1;
+                  const o = a.ora.localeCompare(b.ora);
+                  if (o !== 0) return o;
+                  return a.titolo.localeCompare(b.titolo);
+                })
+                .slice(0, 4);
+
+              const previewTurni = turniDelMese
+                .filter((t) => t.data === key)
+                .slice()
+                .sort((a, b) => a.inizio.localeCompare(b.inizio))
+                .slice(0, 3);
+
+              const col = idx % 7;
+              const previewStyle: React.CSSProperties =
+                col <= 1
+                  ? { left: 0, transform: "translateY(0)" }
+                  : col >= 5
+                  ? { right: 0, left: "auto", transform: "translateY(0)" }
+                  : { left: "50%", transform: "translateX(-50%)" };
+
+              return (
+                <div
+                  key={key}
+                  data-calday="1"
+                  style={{
+                    position: "relative",
+                    overflow: "visible",
+                    minWidth: 0,
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (!isTouchDevice || count + turniCount <= 0) return;
+                      setPinnedDate((prev) => (prev === key ? null : key));
+                    }}
+                    style={{
+                      width: "100%",
+                      minHeight: isTouchDevice ? 88 : 134,
+                      borderRadius: isTouchDevice ? 18 : 24,
+                      border: info?.urgent
+                        ? "2px solid rgba(239,68,68,0.44)"
+                        : isToday
+                        ? "2px solid rgba(255,59,48,0.40)"
+                        : "1px solid rgba(15,23,42,0.08)",
+                      background: isToday
+                        ? "linear-gradient(180deg, rgba(255,245,244,0.98), rgba(255,251,251,0.96))"
+                        : "linear-gradient(180deg, rgba(255,255,255,0.92), rgba(248,250,252,0.86))",
+                      boxShadow: info?.urgent
+                        ? "0 18px 36px rgba(239,68,68,0.14)"
+                        : isToday
+                        ? "0 18px 32px rgba(255,59,48,0.12)"
+                        : "0 14px 28px rgba(15,23,42,0.08)",
+                      cursor: count + turniCount > 0 ? "pointer" : "default",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 6,
+                      position: "relative",
+                      padding: isTouchDevice ? "8px 4px 8px" : "12px 8px 10px",
+                      transition:
+                        "transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease",
+                    }}
+                    title={`${d} ${titoloMese}`}
+                  >
+                    {info?.urgent && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: isTouchDevice ? 6 : 8,
+                          right: isTouchDevice ? 6 : 8,
+                          width: isTouchDevice ? 8 : 10,
+                          height: isTouchDevice ? 8 : 10,
+                          borderRadius: 999,
+                          background: "rgba(239,68,68,0.96)",
+                          boxShadow: "0 0 0 4px rgba(239,68,68,0.12)",
+                        }}
+                      />
+                    )}
+
+                    <div
+                      style={{
+                        fontWeight: 1000,
+                        fontSize: isTouchDevice ? (isToday ? 24 : 20) : isToday ? 34 : 28,
+                        lineHeight: 1,
+                        color: numeroColor,
+                        textAlign: "center",
+                        textShadow: isToday ? "0 4px 18px rgba(255,59,48,0.18)" : "none",
+                      }}
+                    >
+                      {d}
+                    </div>
+
+                    <div style={{ display: "grid", gap: 5, width: "100%", justifyItems: "center" }}>
+                      <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "center" }}>
+                        {count > 0 && (
+                          <div
+                            style={{
+                              minWidth: isTouchDevice ? 20 : 24,
+                              padding: isTouchDevice ? "2px 6px" : "4px 10px",
+                              borderRadius: 999,
+                              fontSize: isTouchDevice ? 10 : 12,
+                              fontWeight: 950,
+                              color: "rgba(255,255,255,0.98)",
+                              background: info?.urgent
+                                ? "linear-gradient(180deg, rgba(239,68,68,0.96), rgba(220,38,38,0.94))"
+                                : info?.hasScadenza && !info?.hasAppuntamento
+                                ? "linear-gradient(180deg, rgba(16,185,129,0.96), rgba(5,150,105,0.92))"
+                                : !info?.hasScadenza && info?.hasAppuntamento
+                                ? "linear-gradient(180deg, rgba(168,85,247,0.96), rgba(147,51,234,0.92))"
+                                : "linear-gradient(180deg, rgba(79,70,229,0.96), rgba(124,58,237,0.92))",
+                              boxShadow: "0 10px 18px rgba(15,23,42,0.12)",
+                            }}
+                          >
+                            {count}
+                          </div>
+                        )}
+
+                        {turniCount > 0 &&
+                          (() => {
+                            const primoTurno = turniDelMese
+                              .filter((t) => t.data === key)
+                              .slice()
+                              .sort((a, b) => a.inizio.localeCompare(b.inizio))[0];
+
+                            const siglaTurno = primoTurno
+                              ? normalizeTurnoLabel(primoTurno.inizio, primoTurno.fine, primoTurno.note)
+                              : "T";
+                            const descTurno = primoTurno
+                              ? descrizioneTurnoBreve(primoTurno.inizio, primoTurno.fine, primoTurno.note)
+                              : "Turno";
+
+                            return (
+                              <div
+                                style={{
+                                  minWidth: isTouchDevice ? 20 : 24,
+                                  padding: isTouchDevice ? "2px 6px" : "4px 10px",
+                                  borderRadius: 999,
+                                  fontSize: isTouchDevice ? 10 : 12,
+                                  fontWeight: 950,
+                                  color: "rgba(255,255,255,0.98)",
+                                  background:
+                                    siglaTurno === "R"
+                                      ? "linear-gradient(180deg, rgba(107,114,128,0.96), rgba(75,85,99,0.92))"
+                                      : siglaTurno === "N"
+                                      ? "linear-gradient(180deg, rgba(67,56,202,0.96), rgba(49,46,129,0.92))"
+                                      : siglaTurno === "M"
+                                      ? "linear-gradient(180deg, rgba(245,158,11,0.96), rgba(217,119,6,0.92))"
+                                      : siglaTurno === "P"
+                                      ? "linear-gradient(180deg, rgba(249,115,22,0.96), rgba(234,88,12,0.92))"
+                                      : siglaTurno === "S"
+                                      ? "linear-gradient(180deg, rgba(168,85,247,0.96), rgba(126,34,206,0.92))"
+                                      : "linear-gradient(180deg, rgba(59,130,246,0.96), rgba(37,99,235,0.92))",
+                                  boxShadow: "0 10px 18px rgba(15,23,42,0.12)",
+                                }}
+                                title={
+                                  turniCount > 1
+                                    ? `${descTurno} + altri ${turniCount - 1} turno${turniCount - 1 > 1 ? "i" : ""}`
+                                    : descTurno
+                                }
+                              >
+                                {siglaTurno}
+                              </div>
+                            );
+                          })()}
+
+                        {count === 0 && turniCount === 0 && (
+                          <div
+                            style={{
+                              fontSize: isTouchDevice ? 9 : 11,
+                              fontWeight: 850,
+                              opacity: 0.22,
+                              minHeight: 14,
+                            }}
+                          >
+                            —
+                          </div>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          apriTurnoForm(key);
+                        }}
+                        style={{
+                          width: "100%",
+                          maxWidth: isTouchDevice ? 54 : 72,
+                          padding: isTouchDevice ? "4px 0" : "5px 10px",
+                          borderRadius: 999,
+                          border: "1px solid rgba(59,130,246,0.22)",
+                          background: "rgba(239,246,255,0.95)",
+                          color: "rgba(30,64,175,0.95)",
+                          fontSize: isTouchDevice ? 11 : 12,
+                          fontWeight: 1000,
+                          cursor: "pointer",
+                          overflow: "hidden",
+                          whiteSpace: "nowrap",
+                        }}
+                        title="Aggiungi turno"
+                      >
+                        +
+                      </button>
+
+                      {isToday && (
+                        <div
+                          style={{
+                            fontSize: isTouchDevice ? 9 : 10,
+                            fontWeight: 1000,
+                            letterSpacing: 0.35,
+                            textTransform: "uppercase",
+                            color: "rgba(255,59,48,0.95)",
+                            lineHeight: 1,
+                          }}
+                        >
+                          Oggi
+                        </div>
+                      )}
+                    </div>
+                  </button>
+
+                  {!isTouchDevice && (previewItems.length > 0 || previewTurni.length > 0) && (
+                    <div
+                      data-preview="1"
+                      style={{
+                        position: "absolute",
+                        top: "calc(100% + 10px)",
+                        width: 300,
+                        maxWidth: 300,
+                        padding: 12,
+                        borderRadius: 24,
+                        border: `1px solid ${previewAccent.replace("0.96", "0.18")}`,
+                        background: "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.98))",
+                        boxShadow: "0 30px 60px rgba(15,23,42,0.18)",
+                        backdropFilter: "blur(16px)",
+                        zIndex: 50,
+                        ...previewStyle,
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 950,
+                          opacity: 0.72,
+                          marginBottom: 10,
+                          textTransform: "capitalize",
+                        }}
+                      >
+                        {new Date(y, m0, d).toLocaleDateString("it-IT", {
+                          weekday: "long",
+                          day: "numeric",
+                          month: "long",
+                        })}
+                      </div>
+
+                      <div style={{ display: "grid", gap: 8 }}>
+                        {previewItems.map((v) => {
+                          const typeStyle =
+                            v.tipo === "scadenza"
+                              ? {
+                                  bg: "rgba(16,185,129,0.10)",
+                                  bd: "rgba(5,150,105,0.16)",
+                                  tx: "rgba(6,95,70,0.96)",
+                                }
+                              : {
+                                  bg: "rgba(168,85,247,0.10)",
+                                  bd: "rgba(147,51,234,0.16)",
+                                  tx: "rgba(91,33,182,0.96)",
+                                };
+
+                          return (
+                            <div
+                              key={v.id}
+                              style={{
+                                padding: 11,
+                                borderRadius: 18,
+                                background: typeStyle.bg,
+                                border: `1px solid ${typeStyle.bd}`,
+                                display: "grid",
+                                gap: 5,
+                              }}
+                            >
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                  gap: 8,
+                                  flexWrap: "wrap",
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    fontSize: 12,
+                                    fontWeight: 950,
+                                    color: "rgba(15,23,42,0.82)",
+                                  }}
+                                >
+                                  {v.ora}
+                                </span>
+
+                                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                                  <span
+                                    style={{
+                                      fontSize: 11,
+                                      fontWeight: 900,
+                                      padding: "4px 8px",
+                                      borderRadius: 999,
+                                      background: typeStyle.bg,
+                                      color: typeStyle.tx,
+                                      border: `1px solid ${typeStyle.bd}`,
+                                    }}
+                                  >
+                                    {v.tipo === "scadenza" ? "Scadenza" : "Appuntamento"}
+                                  </span>
+
+                                  {v.urgente && (
+                                    <span
+                                      style={{
+                                        fontSize: 11,
+                                        fontWeight: 950,
+                                        padding: "4px 8px",
+                                        borderRadius: 999,
+                                        background: "rgba(239,68,68,0.14)",
+                                        color: "rgba(185,28,28,0.98)",
+                                        border: "1px solid rgba(239,68,68,0.20)",
+                                      }}
+                                    >
+                                      Urgente
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div
+                                style={{
+                                  fontSize: 14,
+                                  fontWeight: 950,
+                                  lineHeight: 1.25,
+                                  color: "rgba(15,23,42,0.92)",
+                                }}
+                              >
+                                {v.titolo}
+                              </div>
+                            </div>
+                          );
+                        })}
+
+                        {previewTurni.map((t) => {
+                          const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
+                          const descr = descrizioneTurnoBreve(t.inizio, t.fine, t.note);
+                          const isRiposo = sigla === "R";
+
+                          return (
+                            <div
+                              key={t.id}
+                              style={{
+                                padding: 11,
+                                borderRadius: 18,
+                                background: isRiposo ? "rgba(107,114,128,0.08)" : "rgba(59,130,246,0.08)",
+                                border: isRiposo
+                                  ? "1px solid rgba(107,114,128,0.18)"
+                                  : "1px solid rgba(59,130,246,0.14)",
+                                display: "grid",
+                                gap: 5,
+                              }}
+                            >
+                              <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+                                <span
+                                  style={{
+                                    fontSize: 12,
+                                    fontWeight: 950,
+                                    color: isRiposo ? "rgba(55,65,81,0.95)" : "rgba(30,64,175,0.95)",
+                                  }}
+                                >
+                                  {sigla} • {descr}
+                                  {!isRiposo ? ` ${t.inizio} - ${t.fine}` : ""}
+                                </span>
+
+                                {!isRiposo && (
+                                  <span style={{ fontSize: 11, fontWeight: 900, color: "rgba(30,64,175,0.82)" }}>
+                                    {formatNumeroOre(t.oreOrdinarie + t.oreStraordinarie)}h
+                                  </span>
+                                )}
+                              </div>
+
+                              <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.78 }}>
+                                {isRiposo
+                                  ? "Giornata di riposo"
+                                  : `Ord: ${formatNumeroOre(t.oreOrdinarie)}h • Straord: ${formatNumeroOre(t.oreStraordinarie)}h`}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {isTouchDevice && isPinnedOpen && (previewItems.length > 0 || previewTurni.length > 0) && (
                     <div
                       style={{
                         position: "absolute",
-                        top: isTouchDevice ? 6 : 8,
-                        right: isTouchDevice ? 6 : 8,
-                        width: isTouchDevice ? 8 : 10,
-                        height: isTouchDevice ? 8 : 10,
-                        borderRadius: 999,
-                        background: "rgba(239,68,68,0.96)",
-                        boxShadow: "0 0 0 4px rgba(239,68,68,0.12)",
+                        left: 0,
+                        right: 0,
+                        top: "calc(100% + 8px)",
+                        width: "calc(100vw - 32px)",
+                        maxWidth: 360,
+                        padding: 12,
+                        borderRadius: 20,
+                        border: `1px solid ${previewAccent.replace("0.96", "0.18")}`,
+                        background: "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.98))",
+                        boxShadow: "0 30px 60px rgba(15,23,42,0.18)",
+                        backdropFilter: "blur(16px)",
+                        zIndex: 60,
                       }}
-                    />
-                  )}
-
-                  <div
-                    style={{
-                      fontWeight: 1000,
-                      fontSize: isTouchDevice ? (isToday ? 24 : 20) : isToday ? 34 : 28,
-                      lineHeight: 1,
-                      color: numeroColor,
-                      textAlign: "center",
-                      textShadow: isToday ? "0 4px 18px rgba(255,59,48,0.18)" : "none",
-                    }}
-                  >
-                    {d}
-                  </div>
-
-                  <div style={{ display: "grid", gap: 5, width: "100%", justifyItems: "center" }}>
-                    <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "center" }}>
-                      {count > 0 && (
-                        <div
-                          style={{
-                            minWidth: isTouchDevice ? 20 : 24,
-                            padding: isTouchDevice ? "2px 6px" : "4px 10px",
-                            borderRadius: 999,
-                            fontSize: isTouchDevice ? 10 : 12,
-                            fontWeight: 950,
-                            color: "rgba(255,255,255,0.98)",
-                            background: info?.urgent
-                              ? "linear-gradient(180deg, rgba(239,68,68,0.96), rgba(220,38,38,0.94))"
-                              : info?.hasScadenza && !info?.hasAppuntamento
-                              ? "linear-gradient(180deg, rgba(16,185,129,0.96), rgba(5,150,105,0.92))"
-                              : !info?.hasScadenza && info?.hasAppuntamento
-                              ? "linear-gradient(180deg, rgba(168,85,247,0.96), rgba(147,51,234,0.92))"
-                              : "linear-gradient(180deg, rgba(79,70,229,0.96), rgba(124,58,237,0.92))",
-                            boxShadow: "0 10px 18px rgba(15,23,42,0.12)",
-                          }}
-                        >
-                          {count}
-                        </div>
-                      )}
-
-                   {turniCount > 0 && (() => {
-  const primoTurno = turniDelMese
-    .filter((t) => t.data === key)
-    .slice()
-    .sort((a, b) => a.inizio.localeCompare(b.inizio))[0];
-
-  const siglaTurno = primoTurno ? normalizeTurnoLabel(primoTurno.inizio, primoTurno.fine, primoTurno.note) : "T";
-  const descTurno = primoTurno ? descrizioneTurnoBreve(primoTurno.inizio, primoTurno.fine, primoTurno.note) : "Turno";
-
-  return (
-    <div
-      style={{
-        minWidth: isTouchDevice ? 20 : 24,
-        padding: isTouchDevice ? "2px 6px" : "4px 10px",
-        borderRadius: 999,
-        fontSize: isTouchDevice ? 10 : 12,
-        fontWeight: 950,
-        color: "rgba(255,255,255,0.98)",
-        background:
-          siglaTurno === "R"
-            ? "linear-gradient(180deg, rgba(107,114,128,0.96), rgba(75,85,99,0.92))"
-            : siglaTurno === "N"
-            ? "linear-gradient(180deg, rgba(67,56,202,0.96), rgba(49,46,129,0.92))"
-            : siglaTurno === "M"
-            ? "linear-gradient(180deg, rgba(245,158,11,0.96), rgba(217,119,6,0.92))"
-            : siglaTurno === "P"
-            ? "linear-gradient(180deg, rgba(249,115,22,0.96), rgba(234,88,12,0.92))"
-            : siglaTurno === "S"
-            ? "linear-gradient(180deg, rgba(168,85,247,0.96), rgba(126,34,206,0.92))"
-            : "linear-gradient(180deg, rgba(59,130,246,0.96), rgba(37,99,235,0.92))",
-        boxShadow: "0 10px 18px rgba(15,23,42,0.12)",
-      }}
-      title={turniCount > 1 ? `${descTurno} + altri ${turniCount - 1} turno${turniCount - 1 > 1 ? "i" : ""}` : descTurno}
-    >
-      {siglaTurno}
-    </div>
-  );
-})()}
-
-                      {count === 0 && turniCount === 0 && (
-                        <div
-                          style={{
-                            fontSize: isTouchDevice ? 9 : 11,
-                            fontWeight: 850,
-                            opacity: 0.22,
-                            minHeight: 14,
-                          }}
-                        >
-                          —
-                        </div>
-                      )}
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        apriTurnoForm(key);
-                      }}
-                      style={{
-                        width: "100%",
-                        maxWidth: isTouchDevice ? 54 : 72,
-                        padding: isTouchDevice ? "4px 0" : "5px 10px",
-                        borderRadius: 999,
-                        border: "1px solid rgba(59,130,246,0.22)",
-                        background: "rgba(239,246,255,0.95)",
-                        color: "rgba(30,64,175,0.95)",
-                        fontSize: isTouchDevice ? 9 : 10,
-                        fontWeight: 1000,
-                        cursor: "pointer",
-                        textTransform: "uppercase",
-                        overflow: "hidden",
-                        whiteSpace: "nowrap",
-                      }}
-                      title="Turno"
                     >
-                      turno
-                    </button>
-
-                    {isToday && (
                       <div
                         style={{
-                          fontSize: isTouchDevice ? 9 : 10,
-                          fontWeight: 1000,
-                          letterSpacing: 0.35,
-                          textTransform: "uppercase",
-                          color: "rgba(255,59,48,0.95)",
-                          lineHeight: 1,
+                          fontSize: 12,
+                          fontWeight: 950,
+                          opacity: 0.72,
+                          marginBottom: 10,
+                          textTransform: "capitalize",
                         }}
                       >
-                        Oggi
+                        {new Date(y, m0, d).toLocaleDateString("it-IT", {
+                          weekday: "long",
+                          day: "numeric",
+                          month: "long",
+                        })}
                       </div>
-                    )}
-                  </div>
-                </button>
 
-                {!isTouchDevice && (previewItems.length > 0 || previewTurni.length > 0) && (
-                  <div
-                    data-preview="1"
-                    style={{
-                      position: "absolute",
-                      top: "calc(100% + 10px)",
-                      width: 300,
-                      maxWidth: 300,
-                      padding: 12,
-                      borderRadius: 24,
-                      border: `1px solid ${previewAccent.replace("0.96", "0.18")}`,
-                      background: "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.98))",
-                      boxShadow: "0 30px 60px rgba(15,23,42,0.18)",
-                      backdropFilter: "blur(16px)",
-                      zIndex: 50,
-                      ...previewStyle,
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 950,
-                        opacity: 0.72,
-                        marginBottom: 10,
-                        textTransform: "capitalize",
-                      }}
-                    >
-                      {new Date(y, m0, d).toLocaleDateString("it-IT", {
-                        weekday: "long",
-                        day: "numeric",
-                        month: "long",
-                      })}
-                    </div>
-
-                    <div style={{ display: "grid", gap: 8 }}>
-                      {previewItems.map((v) => {
-                        const typeStyle =
-                          v.tipo === "scadenza"
-                            ? {
-                                bg: "rgba(16,185,129,0.10)",
-                                bd: "rgba(5,150,105,0.16)",
-                                tx: "rgba(6,95,70,0.96)",
-                              }
-                            : {
-                                bg: "rgba(168,85,247,0.10)",
-                                bd: "rgba(147,51,234,0.16)",
-                                tx: "rgba(91,33,182,0.96)",
-                              };
-
-                        return (
+                      <div style={{ display: "grid", gap: 8 }}>
+                        {previewItems.map((v) => (
                           <div
                             key={v.id}
                             style={{
                               padding: 11,
-                              borderRadius: 18,
-                              background: typeStyle.bg,
-                              border: `1px solid ${typeStyle.bd}`,
+                              borderRadius: 16,
+                              background: "rgba(255,255,255,0.9)",
+                              border: "1px solid rgba(15,23,42,0.08)",
                               display: "grid",
                               gap: 5,
                             }}
                           >
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                gap: 8,
-                                flexWrap: "wrap",
-                              }}
-                            >
-                              <span
-                                style={{
-                                  fontSize: 12,
-                                  fontWeight: 950,
-                                  color: "rgba(15,23,42,0.82)",
-                                }}
-                              >
-                                {v.ora}
-                              </span>
-
-                              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                                <span
-                                  style={{
-                                    fontSize: 11,
-                                    fontWeight: 900,
-                                    padding: "4px 8px",
-                                    borderRadius: 999,
-                                    background: typeStyle.bg,
-                                    color: typeStyle.tx,
-                                    border: `1px solid ${typeStyle.bd}`,
-                                  }}
-                                >
-                                  {v.tipo === "scadenza" ? "Scadenza" : "Appuntamento"}
-                                </span>
-
-                                {v.urgente && (
-                                  <span
-                                    style={{
-                                      fontSize: 11,
-                                      fontWeight: 950,
-                                      padding: "4px 8px",
-                                      borderRadius: 999,
-                                      background: "rgba(239,68,68,0.14)",
-                                      color: "rgba(185,28,28,0.98)",
-                                      border: "1px solid rgba(239,68,68,0.20)",
-                                    }}
-                                  >
-                                    Urgente
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-
-                            <div
-                              style={{
-                                fontSize: 14,
-                                fontWeight: 950,
-                                lineHeight: 1.25,
-                                color: "rgba(15,23,42,0.92)",
-                              }}
-                            >
-                              {v.titolo}
-                            </div>
+                            <div style={{ fontSize: 12, fontWeight: 950 }}>{v.ora}</div>
+                            <div style={{ fontSize: 14, fontWeight: 950 }}>{v.titolo}</div>
                           </div>
-                        );
-                      })}
+                        ))}
 
-                   {previewTurni.map((t) => {
-  const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
-  const descr = descrizioneTurnoBreve(t.inizio, t.fine, t.note);
-  const isRiposo = sigla === "R";
+                        {previewTurni.map((t) => {
+                          const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
+                          const descr = descrizioneTurnoBreve(t.inizio, t.fine, t.note);
+                          const isRiposo = sigla === "R";
 
-  return (
-    <div
-      key={t.id}
-      style={{
-        padding: 11,
-        borderRadius: 18,
-        background: isRiposo ? "rgba(107,114,128,0.08)" : "rgba(59,130,246,0.08)",
-        border: isRiposo ? "1px solid rgba(107,114,128,0.18)" : "1px solid rgba(59,130,246,0.14)",
-        display: "grid",
-        gap: 5,
-      }}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
-        <span
-          style={{
-            fontSize: 12,
-            fontWeight: 950,
-            color: isRiposo ? "rgba(55,65,81,0.95)" : "rgba(30,64,175,0.95)",
-          }}
-        >
-          {sigla} • {descr}
-          {!isRiposo ? ` ${t.inizio} - ${t.fine}` : ""}
-        </span>
 
-        {!isRiposo && (
-          <span style={{ fontSize: 11, fontWeight: 900, color: "rgba(30,64,175,0.82)" }}>
-            {formatNumeroOre(t.oreOrdinarie + t.oreStraordinarie)}h
-          </span>
-        )}
-      </div>
 
-      <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.78 }}>
-        {isRiposo
-          ? "Giornata di riposo"
-          : `Ord: ${formatNumeroOre(t.oreOrdinarie)}h • Straord: ${formatNumeroOre(t.oreStraordinarie)}h`}
-      </div>
-    </div>
-  );
-})}
-                    </div>
-                  </div>
-                )}
 
-                {isTouchDevice && isPinnedOpen && (previewItems.length > 0 || previewTurni.length > 0) && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: 0,
-                      right: 0,
-                      top: "calc(100% + 8px)",
-                      width: "calc(100vw - 32px)",
-                      maxWidth: 360,
-                      padding: 12,
-                      borderRadius: 20,
-                      border: `1px solid ${previewAccent.replace("0.96", "0.18")}`,
-                      background: "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.98))",
-                      boxShadow: "0 30px 60px rgba(15,23,42,0.18)",
-                      backdropFilter: "blur(16px)",
-                      zIndex: 60,
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 950,
-                        opacity: 0.72,
-                        marginBottom: 10,
-                        textTransform: "capitalize",
-                      }}
-                    >
-                      {new Date(y, m0, d).toLocaleDateString("it-IT", {
-                        weekday: "long",
-                        day: "numeric",
-                        month: "long",
-                      })}
-                    </div>
 
-                    <div style={{ display: "grid", gap: 8 }}>
-                      {previewItems.map((v) => (
-                        <div
-                          key={v.id}
-                          style={{
-                            padding: 11,
-                            borderRadius: 16,
-                            background: "rgba(255,255,255,0.9)",
-                            border: "1px solid rgba(15,23,42,0.08)",
-                            display: "grid",
-                            gap: 5,
-                          }}
-                        >
-                          <div style={{ fontSize: 12, fontWeight: 950 }}>{v.ora}</div>
-                          <div style={{ fontSize: 14, fontWeight: 950 }}>{v.titolo}</div>
-                        </div>
-                      ))}
 
-                    {previewTurni.map((t) => {
-  const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
-  const descr = descrizioneTurnoBreve(t.inizio, t.fine, t.note);
-  const isRiposo = sigla === "R";
+
+
+
+
+
+
+
+
+
+
+
 
   return (
+  <div
+    key={t.id}
+    style={{
+      padding: 11,
+      borderRadius: 16,
+      background: isRiposo ? "rgba(107,114,128,0.08)" : "rgba(59,130,246,0.08)",
+      border: isRiposo ? "1px solid rgba(107,114,128,0.18)" : "1px solid rgba(59,130,246,0.14)",
+      display: "grid",
+      gap: 5,
+    }}
+  >
     <div
-      key={t.id}
       style={{
-        padding: 11,
-        borderRadius: 16,
-        background: isRiposo ? "rgba(107,114,128,0.08)" : "rgba(59,130,246,0.08)",
-        border: isRiposo ? "1px solid rgba(107,114,128,0.18)" : "1px solid rgba(59,130,246,0.14)",
-        display: "grid",
-        gap: 5,
+        fontSize: 12,
+        fontWeight: 950,
+        color: isRiposo ? "rgba(55,65,81,0.95)" : "rgba(30,64,175,0.95)",
       }}
     >
-      <div
-        style={{
-          fontSize: 12,
-          fontWeight: 950,
-          color: isRiposo ? "rgba(55,65,81,0.95)" : "rgba(30,64,175,0.95)",
-        }}
-      >
-        {sigla} • {descr}
-        {!isRiposo ? ` ${t.inizio} - ${t.fine}` : ""}
-      </div>
-
-      <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.78 }}>
-        {isRiposo
-          ? "Giornata di riposo"
-          : `Ord: ${formatNumeroOre(t.oreOrdinarie)}h • Straord: ${formatNumeroOre(t.oreStraordinarie)}h`}
-      </div>
+      {sigla} • {descr}
+      {!isRiposo ? ` ${t.inizio} - ${t.fine}` : ""}
     </div>
-  );
+
+    <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.78 }}>
+      {isRiposo
+        ? "Giornata di riposo"
+        : `Ord: ${formatNumeroOre(t.oreOrdinarie)}h • Straord: ${formatNumeroOre(t.oreStraordinarie)}h`}
+    </div>
+  </div>
+);
 })}
                     </div>
 
@@ -2317,712 +2336,535 @@ function MiniCalendario({
           })}
         </div>
 
-     <div
-  style={{
-    marginTop: 12,
-    display: "grid",
-    gap: 10,
-  }}
->
-  <div
-    style={{
-      display: "flex",
-      gap: 8,
-      flexWrap: "wrap",
-      alignItems: "center",
-      fontSize: 11,
-      fontWeight: 900,
-      opacity: 0.82,
-    }}
-  >
-    <span style={{ padding: "6px 10px", borderRadius: 999, background: "rgba(255,255,255,0.85)", border: "1px solid rgba(15,23,42,0.08)" }}>N = Notte</span>
-    <span style={{ padding: "6px 10px", borderRadius: 999, background: "rgba(255,255,255,0.85)", border: "1px solid rgba(15,23,42,0.08)" }}>M = Mattina</span>
-    <span style={{ padding: "6px 10px", borderRadius: 999, background: "rgba(255,255,255,0.85)", border: "1px solid rgba(15,23,42,0.08)" }}>P = Pomeriggio</span>
-    <span style={{ padding: "6px 10px", borderRadius: 999, background: "rgba(255,255,255,0.85)", border: "1px solid rgba(15,23,42,0.08)" }}>S = Sera</span>
-    <span style={{ padding: "6px 10px", borderRadius: 999, background: "rgba(255,255,255,0.85)", border: "1px solid rgba(15,23,42,0.08)" }}>R = Riposo</span>
-    <span style={{ padding: "6px 10px", borderRadius: 999, background: "rgba(255,255,255,0.85)", border: "1px solid rgba(15,23,42,0.08)" }}>T = Altro turno</span>
-  </div>
+        <div
+          style={{
+            marginTop: 12,
+            display: "grid",
+            gap: 10,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              gap: 8,
+              flexWrap: "wrap",
+              alignItems: "center",
+              fontSize: 11,
+              fontWeight: 900,
+              opacity: 0.82,
+            }}
+          >
+            <span
+              style={{
+                padding: "6px 10px",
+                borderRadius: 999,
+                background: "rgba(255,255,255,0.85)",
+                border: "1px solid rgba(15,23,42,0.08)",
+              }}
+            >
+              N = Notte
+            </span>
+            <span
+              style={{
+                padding: "6px 10px",
+                borderRadius: 999,
+                background: "rgba(255,255,255,0.85)",
+                border: "1px solid rgba(15,23,42,0.08)",
+              }}
+            >
+              M = Mattina
+            </span>
+            <span
+              style={{
+                padding: "6px 10px",
+                borderRadius: 999,
+                background: "rgba(255,255,255,0.85)",
+                border: "1px solid rgba(15,23,42,0.08)",
+              }}
+            >
+              P = Pomeriggio
+            </span>
+            <span
+              style={{
+                padding: "6px 10px",
+                borderRadius: 999,
+                background: "rgba(255,255,255,0.85)",
+                border: "1px solid rgba(15,23,42,0.08)",
+              }}
+            >
+              S = Sera
+            </span>
+            <span
+              style={{
+                padding: "6px 10px",
+                borderRadius: 999,
+                background: "rgba(255,255,255,0.85)",
+                border: "1px solid rgba(15,23,42,0.08)",
+              }}
+            >
+              R = Riposo
+            </span>
+            <span
+              style={{
+                padding: "6px 10px",
+                borderRadius: 999,
+                background: "rgba(255,255,255,0.85)",
+                border: "1px solid rgba(15,23,42,0.08)",
+              }}
+            >
+              T = Altro turno
+            </span>
+          </div>
 
-  <div
-    style={{
-      fontSize: 12,
-      fontWeight: 850,
-      opacity: 0.75,
-      lineHeight: 1.35,
-    }}
-  >
-    Desktop: passa col mouse sui giorni. Mobile: tocca il giorno per vedere dettagli. Il pulsante turno resta sempre dentro la casella senza sovrapporsi.
-  </div>
-</div>
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 850,
+              opacity: 0.75,
+              lineHeight: 1.35,
+            }}
+          >
+            Desktop: passa col mouse sui giorni. Mobile: tocca il giorno per vedere dettagli. Il pulsante turno resta sempre dentro la casella senza sovrapporsi.
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
+function renderAreaControllo() {
+  const controlloCardStyle: React.CSSProperties = {
+    ...ui.card,
+    padding: 20,
+    overflow: "hidden",
+    position: "relative",
+  };
 
-
-
-
-  function renderAreaControllo() {
-    const controlloCardStyle: React.CSSProperties = {
-      ...ui.card,
-      padding: 20,
-      overflow: "hidden",
-      position: "relative",
+  const statBox = (accent: "blue" | "green" | "red" | "violet"): React.CSSProperties => {
+    const map = {
+      blue: {
+        bg: "linear-gradient(180deg, rgba(59,130,246,0.14), rgba(59,130,246,0.06))",
+        bd: "rgba(59,130,246,0.18)",
+        shadow: "0 16px 32px rgba(59,130,246,0.10)",
+      },
+      green: {
+        bg: "linear-gradient(180deg, rgba(16,185,129,0.14), rgba(16,185,129,0.06))",
+        bd: "rgba(16,185,129,0.18)",
+        shadow: "0 16px 32px rgba(16,185,129,0.10)",
+      },
+      red: {
+        bg: "linear-gradient(180deg, rgba(239,68,68,0.14), rgba(239,68,68,0.06))",
+        bd: "rgba(239,68,68,0.18)",
+        shadow: "0 16px 32px rgba(239,68,68,0.10)",
+      },
+      violet: {
+        bg: "linear-gradient(180deg, rgba(124,58,237,0.14), rgba(124,58,237,0.06))",
+        bd: "rgba(124,58,237,0.18)",
+        shadow: "0 16px 32px rgba(124,58,237,0.10)",
+      },
     };
 
-    const statBox = (accent: "blue" | "green" | "red" | "violet"): React.CSSProperties => {
-      const map = {
-        blue: {
-          bg: "linear-gradient(180deg, rgba(59,130,246,0.14), rgba(59,130,246,0.06))",
-          bd: "rgba(59,130,246,0.18)",
-          shadow: "0 16px 32px rgba(59,130,246,0.10)",
-        },
-        green: {
-          bg: "linear-gradient(180deg, rgba(16,185,129,0.14), rgba(16,185,129,0.06))",
-          bd: "rgba(16,185,129,0.18)",
-          shadow: "0 16px 32px rgba(16,185,129,0.10)",
-        },
-        red: {
-          bg: "linear-gradient(180deg, rgba(239,68,68,0.14), rgba(239,68,68,0.06))",
-          bd: "rgba(239,68,68,0.18)",
-          shadow: "0 16px 32px rgba(239,68,68,0.10)",
-        },
-        violet: {
-          bg: "linear-gradient(180deg, rgba(124,58,237,0.14), rgba(124,58,237,0.06))",
-          bd: "rgba(124,58,237,0.18)",
-          shadow: "0 16px 32px rgba(124,58,237,0.10)",
-        },
-      };
-
-      return {
-        padding: 16,
-        borderRadius: 22,
-        border: `1px solid ${map[accent].bd}`,
-        background: map[accent].bg,
-        boxShadow: map[accent].shadow,
-      };
+    return {
+      padding: 16,
+      borderRadius: 22,
+      border: `1px solid ${map[accent].bd}`,
+      background: map[accent].bg,
+      boxShadow: map[accent].shadow,
     };
+  };
 
-    const totaleGrafico = Math.max(entrateTotMese + usciteTotMese, 1);
-    const percEntrate = (entrateTotMese / totaleGrafico) * 100;
-    const percUscite = (usciteTotMese / totaleGrafico) * 100;
+  const totaleGrafico = Math.max(entrateTotMese + usciteTotMese, 1);
+  const percEntrate = (entrateTotMese / totaleGrafico) * 100;
+  const percUscite = (usciteTotMese / totaleGrafico) * 100;
 
-    const prossimeUrgenti = ordinaIntelligente(
-      voci
-        .filter((v) => !v.fatto)
-        .filter((v) => v.urgente || giorniMancanti(v.data) <= 7)
-        .slice()
-    ).slice(0, 5);
+  const prossimeUrgenti = ordinaIntelligente(
+    voci
+      .filter((v) => !v.fatto)
+      .filter((v) => v.urgente || giorniMancanti(v.data) <= 7)
+      .slice()
+  ).slice(0, 5);
 
-    return (
-      <div style={{ maxWidth: 1060, margin: "0 auto", marginTop: 8, display: "grid", gap: 14 }}>
-        <div style={controlloCardStyle}>
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background:
-                "radial-gradient(700px 240px at 0% 0%, rgba(79,70,229,0.08), transparent 60%), radial-gradient(700px 240px at 100% 0%, rgba(16,185,129,0.08), transparent 60%)",
-              pointerEvents: "none",
-            }}
-          />
+  return (
+    <div style={{ maxWidth: 1060, margin: "0 auto", marginTop: 8, display: "grid", gap: 14 }}>
+      <div style={controlloCardStyle}>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "radial-gradient(700px 240px at 0% 0%, rgba(79,70,229,0.08), transparent 60%), radial-gradient(700px 240px at 100% 0%, rgba(16,185,129,0.08), transparent 60%)",
+            pointerEvents: "none",
+          }}
+        />
 
-          <div style={{ position: "relative", zIndex: 1 }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "flex-start",
-                justifyContent: "space-between",
-                gap: 14,
-                flexWrap: "wrap",
-              }}
-            >
-              <div>
-                <div
-                  style={{
-                    fontSize: 24,
-                    fontWeight: 1000,
-                    letterSpacing: -0.6,
-                    color: "rgba(15,23,42,0.96)",
-                  }}
-                >
-                  Centro controllo
-                </div>
-                <div
-                  style={{
-                    marginTop: 6,
-                    fontSize: 13,
-                    fontWeight: 800,
-                    opacity: 0.66,
-                  }}
-                >
-                  Denaro, turni, ore mensili e scadenze sotto controllo
-                </div>
-              </div>
-
-              <div
-                style={{
-                  padding: "10px 14px",
-                  borderRadius: 999,
-                  background: "rgba(255,255,255,0.86)",
-                  border: "1px solid rgba(15,23,42,0.08)",
-                  boxShadow: "0 12px 24px rgba(15,23,42,0.08)",
-                  fontSize: 13,
-                  fontWeight: 900,
-                  textTransform: "capitalize",
-                }}
-              >
-                {nomeMese(meseCorrente)}
-              </div>
-            </div>
-
-            <div
-              style={{
-                marginTop: 18,
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                gap: 12,
-              }}
-            >
-              <div style={statBox("green")}>
-                <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Entrate totali</div>
-                <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000 }}>
-                  {entrateTotMese.toLocaleString("it-IT")} €
-                </div>
-              </div>
-
-              <div style={statBox("red")}>
-                <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Uscite totali</div>
-                <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000 }}>
-                  {usciteTotMese.toLocaleString("it-IT")} €
-                </div>
-              </div>
-
-              <div style={statBox(saldoMese >= 0 ? "blue" : "violet")}>
-                <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Saldo mese</div>
-                <div
-                  style={{
-                    marginTop: 8,
-                    fontSize: 24,
-                    fontWeight: 1000,
-                    color: saldoMese >= 0 ? "rgba(30,64,175,0.96)" : "rgba(109,40,217,0.96)",
-                  }}
-                >
-                  {saldoMese.toLocaleString("it-IT")} €
-                </div>
-              </div>
-
-              <div style={statBox("violet")}>
-                <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Voci attive</div>
-                <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000 }}>{vociMeseAttive.length}</div>
-              </div>
-            </div>
-
-            <div
-              style={{
-                marginTop: 18,
-                display: "grid",
-                gridTemplateColumns: "1.3fr 1fr",
-                gap: 14,
-              }}
-            >
-              <div
-                style={{
-                  padding: 16,
-                  borderRadius: 22,
-                  border: "1px solid rgba(15,23,42,0.08)",
-                  background: "rgba(255,255,255,0.72)",
-                  boxShadow: "0 14px 28px rgba(15,23,42,0.06)",
-                }}
-              >
-                <div style={{ fontSize: 14, fontWeight: 950, color: "rgba(15,23,42,0.92)" }}>
-                  Andamento del mese
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 12,
-                    height: 18,
-                    borderRadius: 999,
-                    overflow: "hidden",
-                    background: "rgba(226,232,240,0.9)",
-                    display: "flex",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: `${percEntrate}%`,
-                      background: "linear-gradient(90deg, rgba(16,185,129,0.95), rgba(5,150,105,0.92))",
-                    }}
-                  />
-                  <div
-                    style={{
-                      width: `${percUscite}%`,
-                      background: "linear-gradient(90deg, rgba(239,68,68,0.95), rgba(220,38,38,0.92))",
-                    }}
-                  />
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 12,
-                    display: "flex",
-                    gap: 16,
-                    flexWrap: "wrap",
-                    alignItems: "center",
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div
-                      style={{
-                        width: 12,
-                        height: 12,
-                        borderRadius: 999,
-                        background: "rgba(16,185,129,0.95)",
-                      }}
-                    />
-                    <span style={{ fontSize: 12, fontWeight: 900, opacity: 0.8 }}>
-                      Entrate: {entrateTotMese.toLocaleString("it-IT")} €
-                    </span>
-                  </div>
-
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div
-                      style={{
-                        width: 12,
-                        height: 12,
-                        borderRadius: 999,
-                        background: "rgba(239,68,68,0.95)",
-                      }}
-                    />
-                    <span style={{ fontSize: 12, fontWeight: 900, opacity: 0.8 }}>
-                      Uscite: {usciteTotMese.toLocaleString("it-IT")} €
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div
-                style={{
-                  padding: 16,
-                  borderRadius: 22,
-                  border: "1px solid rgba(15,23,42,0.08)",
-                  background: "linear-gradient(180deg, rgba(255,255,255,0.86), rgba(248,250,252,0.78))",
-                  boxShadow: "0 14px 28px rgba(15,23,42,0.06)",
-                }}
-              >
-                <div style={{ fontSize: 14, fontWeight: 950, color: "rgba(15,23,42,0.92)" }}>
-                  Focus rapido
-                </div>
-
-                <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
-                  <div
-                    style={{
-                      padding: 12,
-                      borderRadius: 18,
-                      border: "1px solid rgba(239,68,68,0.12)",
-                      background: "rgba(254,242,242,0.84)",
-                    }}
-                  >
-                    <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Scadenze/appuntamenti imminenti</div>
-                    <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>{prossimeUrgenti.length}</div>
-                  </div>
-
-                  <div
-                    style={{
-                      padding: 12,
-                      borderRadius: 18,
-                      border: "1px solid rgba(16,185,129,0.12)",
-                      background: "rgba(236,253,245,0.84)",
-                    }}
-                  >
-                    <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Entrate inserite</div>
-                    <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>{entrateExtraVal.length}</div>
-                  </div>
-
-                  <div
-                    style={{
-                      padding: 12,
-                      borderRadius: 18,
-                      border: "1px solid rgba(59,130,246,0.12)",
-                      background: "rgba(239,246,255,0.84)",
-                    }}
-                  >
-                    <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Turni nel mese</div>
-                    <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>{turniMese.length}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div style={{ ...ui.card, padding: 18 }}>
-          <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Entrate del mese</div>
-          <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
-            Aggiungi manualmente ogni entrata con data, descrizione e importo
-          </div>
-
-          <div
-            style={{
-              marginTop: 16,
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-              gap: 10,
-              alignItems: "end",
-            }}
-          >
-            <div>
-              <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Data</div>
-              <input
-                type="date"
-                value={nuovaEntrataData}
-                onChange={(e) => setNuovaEntrataData(e.target.value)}
-                style={inputLight(false)}
-              />
-            </div>
-
-            <div>
-              <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Descrizione</div>
-              <input
-                type="text"
-                value={nuovaEntrataDesc}
-                onChange={(e) => setNuovaEntrataDesc(e.target.value)}
-                placeholder="Es: Rimborso, straordinario, regalo..."
-                style={inputLight(false)}
-              />
-            </div>
-
-            <div>
-              <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Importo</div>
-              <input
-                type="text"
-                inputMode="decimal"
-                value={nuovaEntrataImporto}
-                onChange={(e) => setNuovaEntrataImporto(e.target.value)}
-                placeholder="Es: 150"
-                style={inputLight(false)}
-              />
-            </div>
-
-            <button
-              data-chip="1"
-              onClick={aggiungiEntrataExtra}
-              style={{
-                ...chip(true),
-                height: 48,
-                background: "linear-gradient(180deg, rgba(16,185,129,0.24), rgba(5,150,105,0.14))",
-                border: "1px solid rgba(16,185,129,0.34)",
-                color: "rgba(6,95,70,0.98)",
-                boxShadow: "0 16px 30px rgba(16,185,129,0.16)",
-              }}
-            >
-              Aggiungi
-            </button>
-          </div>
-
-          <div
-            style={{
-              marginTop: 16,
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-              gap: 10,
-            }}
-          >
-            <div
-              style={{
-                padding: 14,
-                borderRadius: 18,
-                border: "1px solid rgba(16,185,129,0.12)",
-                background: "linear-gradient(180deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03))",
-              }}
-            >
-              <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Entrate</div>
-              <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
-                {totaleEntrateExtra.toLocaleString("it-IT")} €
-              </div>
-            </div>
-
-            <div
-              style={{
-                padding: 14,
-                borderRadius: 18,
-                border: "1px solid rgba(124,58,237,0.12)",
-                background: "linear-gradient(180deg, rgba(124,58,237,0.08), rgba(124,58,237,0.03))",
-              }}
-            >
-              <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Numero entrate</div>
-              <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>{entrateExtraVal.length}</div>
-            </div>
-          </div>
-
-          <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
-            {entrateExtraVal.length === 0 ? (
-              <div
-                style={{
-                  padding: 12,
-                  borderRadius: 16,
-                  border: "1px solid rgba(15,23,42,0.08)",
-                  background: "rgba(255,255,255,0.72)",
-                  fontSize: 13,
-                  fontWeight: 800,
-                  opacity: 0.65,
-                }}
-              >
-                Nessuna entrata inserita.
-              </div>
-            ) : (
-              entrateExtraVal
-                .slice()
-                .sort((a, b) => a.data.localeCompare(b.data))
-                .map((x) => (
-                  <div
-                    key={x.id}
-                    style={{
-                      padding: 14,
-                      borderRadius: 18,
-                      border: "1px solid rgba(16,185,129,0.16)",
-                      background: "linear-gradient(180deg, rgba(16,185,129,0.08), rgba(16,185,129,0.04))",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      gap: 12,
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.65 }}>{formattaDataBreve(x.data)}</div>
-                      <div style={{ marginTop: 3, fontSize: 14, fontWeight: 950 }}>{x.descrizione}</div>
-                      <div
-                        style={{
-                          marginTop: 4,
-                          fontSize: 12,
-                          fontWeight: 900,
-                          color: "rgba(5,150,105,0.96)",
-                        }}
-                      >
-                        {x.importo.toLocaleString("it-IT")} €
-                      </div>
-                    </div>
-
-                    <button data-chip="1" onClick={() => eliminaEntrataExtra(x.id)} style={chip(false)}>
-                      Elimina
-                    </button>
-                  </div>
-                ))
-            )}
-          </div>
-        </div>
-
-        <div style={{ ...ui.card, padding: 18 }}>
-          <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Ore e turni del mese</div>
-          <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
-            Monitoraggio mensile di ore ordinarie, straordinarie e totale
-          </div>
-
-          <div
-            style={{
-              marginTop: 16,
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-              gap: 10,
-            }}
-          >
-            <div
-              style={{
-                padding: 14,
-                borderRadius: 18,
-                border: "1px solid rgba(59,130,246,0.12)",
-                background: "linear-gradient(180deg, rgba(59,130,246,0.08), rgba(59,130,246,0.03))",
-              }}
-            >
-              <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Turni</div>
-              <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>{turniMese.length}</div>
-            </div>
-
-            <div
-              style={{
-                padding: 14,
-                borderRadius: 18,
-                border: "1px solid rgba(16,185,129,0.12)",
-                background: "linear-gradient(180deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03))",
-              }}
-            >
-              <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Ore ordinarie</div>
-              <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>{formatNumeroOre(oreOrdMese)} h</div>
-            </div>
-
-            <div
-              style={{
-                padding: 14,
-                borderRadius: 18,
-                border: "1px solid rgba(249,115,22,0.16)",
-                background: "linear-gradient(180deg, rgba(249,115,22,0.08), rgba(249,115,22,0.03))",
-              }}
-            >
-              <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Ore straordinarie</div>
-              <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>{formatNumeroOre(oreStraMese)} h</div>
-            </div>
-
-            <div
-              style={{
-                padding: 14,
-                borderRadius: 18,
-                border: "1px solid rgba(124,58,237,0.12)",
-                background: "linear-gradient(180deg, rgba(124,58,237,0.08), rgba(124,58,237,0.03))",
-              }}
-            >
-              <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Ore totali</div>
-              <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>{formatNumeroOre(oreTotMese)} h</div>
-            </div>
-          </div>
-
-          <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
-            {turniMese.length === 0 ? (
-              <div
-                style={{
-                  padding: 12,
-                  borderRadius: 16,
-                  border: "1px solid rgba(15,23,42,0.08)",
-                  background: "rgba(255,255,255,0.72)",
-                  fontSize: 13,
-                  fontWeight: 800,
-                  opacity: 0.65,
-                }}
-              >
-                Nessun turno inserito nel mese.
-              </div>
-            ) : (
-              turniMese
-                .slice()
-                .sort((a, b) => a.data.localeCompare(b.data) || a.inizio.localeCompare(b.inizio))
-                .map((t) => (
-                  <div
-                    key={t.id}
-                    style={{
-                      padding: 14,
-                      borderRadius: 18,
-                      border: "1px solid rgba(59,130,246,0.16)",
-                      background: "linear-gradient(180deg, rgba(59,130,246,0.08), rgba(59,130,246,0.04))",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      gap: 12,
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.65 }}>{formattaDataBreve(t.data)}</div>
-                      <div style={{ marginTop: 3, fontSize: 14, fontWeight: 950 }}>
-                        Turno {t.inizio} - {t.fine}
-                      </div>
-                      <div style={{ marginTop: 4, fontSize: 12, fontWeight: 900, color: "rgba(30,64,175,0.95)" }}>
-                        Ord: {formatNumeroOre(t.oreOrdinarie)}h • Straord: {formatNumeroOre(t.oreStraordinarie)}h • Tot:{" "}
-                        {formatNumeroOre(t.oreOrdinarie + t.oreStraordinarie)}h
-                      </div>
-                      {t.note && <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, opacity: 0.72 }}>{t.note}</div>}
-                    </div>
-
-                    <button data-chip="1" onClick={() => eliminaTurno(t.id)} style={chip(false)}>
-                      Elimina
-                    </button>
-                  </div>
-                ))
-            )}
-          </div>
-        </div>
-
-        <div style={{ ...ui.card, padding: 18 }}>
+        <div style={{ position: "relative", zIndex: 1 }}>
           <div
             style={{
               display: "flex",
-              alignItems: "center",
+              alignItems: "flex-start",
               justifyContent: "space-between",
-              gap: 12,
+              gap: 14,
               flexWrap: "wrap",
             }}
           >
             <div>
-              <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Filtri rapidi</div>
-              <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
-                Applica filtri alla lista della Home e dell’Archivio
+              <div
+                style={{
+                  fontSize: 24,
+                  fontWeight: 1000,
+                  letterSpacing: -0.6,
+                  color: "rgba(15,23,42,0.96)",
+                }}
+              >
+                Centro controllo
+              </div>
+              <div
+                style={{
+                  marginTop: 6,
+                  fontSize: 13,
+                  fontWeight: 800,
+                  opacity: 0.66,
+                }}
+              >
+                Denaro, turni, ore mensili e scadenze sotto controllo
               </div>
             </div>
 
-            <button
-              data-chip="1"
-              onClick={() => setFiltro(null)}
+            <div
               style={{
-                ...chip(false),
-                opacity: 0.92,
+                padding: "10px 14px",
+                borderRadius: 999,
+                background: "rgba(255,255,255,0.86)",
+                border: "1px solid rgba(15,23,42,0.08)",
+                boxShadow: "0 12px 24px rgba(15,23,42,0.08)",
+                fontSize: 13,
+                fontWeight: 900,
+                textTransform: "capitalize",
               }}
             >
-              Reset filtri
-            </button>
+              {nomeMese(meseCorrente)}
+            </div>
           </div>
 
-          <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <button
-              data-chip="1"
-              onClick={() => setFiltro((p) => (p === "oggi" ? null : "oggi"))}
-              style={chip(filtro === "oggi")}
-            >
-              Oggi
-            </button>
+          <div
+            style={{
+              marginTop: 18,
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+              gap: 12,
+            }}
+          >
+            <div style={statBox("green")}>
+              <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Entrate totali</div>
+              <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000 }}>
+                {entrateTotMese.toLocaleString("it-IT")} €
+              </div>
+            </div>
 
-            <button
-              data-chip="1"
-              onClick={() => setFiltro((p) => (p === "7giorni" ? null : "7giorni"))}
-              style={chip(filtro === "7giorni")}
-            >
-              7 giorni
-            </button>
+            <div style={statBox("red")}>
+              <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Uscite totali</div>
+              <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000 }}>
+                {usciteTotMese.toLocaleString("it-IT")} €
+              </div>
+            </div>
 
-            <button
-              data-chip="1"
-              onClick={() => setFiltro((p) => (p === "30giorni" ? null : "30giorni"))}
-              style={chip(filtro === "30giorni")}
-            >
-              30 giorni
-            </button>
+            <div style={statBox(saldoMese >= 0 ? "blue" : "violet")}>
+              <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Saldo mese</div>
+              <div
+                style={{
+                  marginTop: 8,
+                  fontSize: 24,
+                  fontWeight: 1000,
+                  color: saldoMese >= 0 ? "rgba(30,64,175,0.96)" : "rgba(109,40,217,0.96)",
+                }}
+              >
+                {saldoMese.toLocaleString("it-IT")} €
+              </div>
+            </div>
 
-            <button data-chip="1" onClick={() => setFiltro(null)} style={chip(filtro === null)}>
-              Tutte
-            </button>
+            <div style={statBox("violet")}>
+              <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Voci attive</div>
+              <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000 }}>
+                {vociMeseAttive.length}
+              </div>
+            </div>
+          </div>
+
+          <div
+            style={{
+              marginTop: 18,
+              display: "grid",
+              gridTemplateColumns: "1.3fr 1fr",
+              gap: 14,
+            }}
+          >
+            <div
+              style={{
+                padding: 16,
+                borderRadius: 22,
+                border: "1px solid rgba(15,23,42,0.08)",
+                background: "rgba(255,255,255,0.72)",
+                boxShadow: "0 14px 28px rgba(15,23,42,0.06)",
+              }}
+            >
+              <div style={{ fontSize: 14, fontWeight: 950, color: "rgba(15,23,42,0.92)" }}>
+                Andamento del mese
+              </div>
+
+              <div
+                style={{
+                  marginTop: 12,
+                  height: 18,
+                  borderRadius: 999,
+                  overflow: "hidden",
+                  background: "rgba(226,232,240,0.9)",
+                  display: "flex",
+                }}
+              >
+                <div
+                  style={{
+                    width: `${percEntrate}%`,
+                    background: "linear-gradient(90deg, rgba(16,185,129,0.95), rgba(5,150,105,0.92))",
+                  }}
+                />
+                <div
+                  style={{
+                    width: `${percUscite}%`,
+                    background: "linear-gradient(90deg, rgba(239,68,68,0.95), rgba(220,38,38,0.92))",
+                  }}
+                />
+              </div>
+
+              <div
+                style={{
+                  marginTop: 12,
+                  display: "flex",
+                  gap: 16,
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div
+                    style={{
+                      width: 12,
+                      height: 12,
+                      borderRadius: 999,
+                      background: "rgba(16,185,129,0.95)",
+                    }}
+                  />
+                  <span style={{ fontSize: 12, fontWeight: 900, opacity: 0.8 }}>
+                    Entrate: {entrateTotMese.toLocaleString("it-IT")} €
+                  </span>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div
+                    style={{
+                      width: 12,
+                      height: 12,
+                      borderRadius: 999,
+                      background: "rgba(239,68,68,0.95)",
+                    }}
+                  />
+                  <span style={{ fontSize: 12, fontWeight: 900, opacity: 0.8 }}>
+                    Uscite: {usciteTotMese.toLocaleString("it-IT")} €
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div
+              style={{
+                padding: 16,
+                borderRadius: 22,
+                border: "1px solid rgba(15,23,42,0.08)",
+                background: "linear-gradient(180deg, rgba(255,255,255,0.86), rgba(248,250,252,0.78))",
+                boxShadow: "0 14px 28px rgba(15,23,42,0.06)",
+              }}
+            >
+              <div style={{ fontSize: 14, fontWeight: 950, color: "rgba(15,23,42,0.92)" }}>
+                Riepilogo mese
+              </div>
+
+              <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
+                <div
+                  style={{
+                    padding: 12,
+                    borderRadius: 18,
+                    border: "1px solid rgba(239,68,68,0.12)",
+                    background: "rgba(254,242,242,0.84)",
+                  }}
+                >
+                  <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>
+                    Scadenze/appuntamenti imminenti
+                  </div>
+                  <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+                    {prossimeUrgenti.length}
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    padding: 12,
+                    borderRadius: 18,
+                    border: "1px solid rgba(16,185,129,0.12)",
+                    background: "rgba(236,253,245,0.84)",
+                  }}
+                >
+                  <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Entrate inserite</div>
+                  <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+                    {entrateExtraVal.length}
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    padding: 12,
+                    borderRadius: 18,
+                    border: "1px solid rgba(59,130,246,0.12)",
+                    background: "rgba(239,246,255,0.84)",
+                  }}
+                >
+                  <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Turni nel mese</div>
+                  <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+                    {turniMese.length}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ ...ui.card, padding: 18 }}>
+        <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Entrate del mese</div>
+        <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
+          Aggiungi manualmente ogni entrata con data, descrizione e importo
+        </div>
+
+        <div
+          style={{
+            marginTop: 16,
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: 10,
+            alignItems: "end",
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Data</div>
+            <input
+              type="date"
+              value={nuovaEntrataData}
+              onChange={(e) => setNuovaEntrataData(e.target.value)}
+              style={inputLight(false)}
+            />
+          </div>
+
+          <div>
+            <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Descrizione</div>
+            <input
+              type="text"
+              value={nuovaEntrataDesc}
+              onChange={(e) => setNuovaEntrataDesc(e.target.value)}
+              placeholder="Es: Rimborso, straordinario, regalo..."
+              style={inputLight(false)}
+            />
+          </div>
+
+          <div>
+            <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Importo</div>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={nuovaEntrataImporto}
+              onChange={(e) => setNuovaEntrataImporto(e.target.value)}
+              placeholder="Es: 150"
+              style={inputLight(false)}
+            />
+          </div>
+
+          <button
+            data-chip="1"
+            onClick={aggiungiEntrataExtra}
+            style={{
+              ...chip(true),
+              height: 48,
+              background: "linear-gradient(180deg, rgba(16,185,129,0.24), rgba(5,150,105,0.14))",
+              border: "1px solid rgba(16,185,129,0.34)",
+              color: "rgba(6,95,70,0.98)",
+              boxShadow: "0 16px 30px rgba(16,185,129,0.16)",
+            }}
+          >
+            Aggiungi
+          </button>
+        </div>
+
+        <div
+          style={{
+            marginTop: 16,
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: 10,
+          }}
+        >
+          <div
+            style={{
+              padding: 14,
+              borderRadius: 18,
+              border: "1px solid rgba(16,185,129,0.12)",
+              background: "linear-gradient(180deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03))",
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Entrate</div>
+            <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+              {totaleEntrateExtra.toLocaleString("it-IT")} €
+            </div>
+          </div>
+
+          <div
+            style={{
+              padding: 14,
+              borderRadius: 18,
+              border: "1px solid rgba(124,58,237,0.12)",
+              background: "linear-gradient(180deg, rgba(124,58,237,0.08), rgba(124,58,237,0.03))",
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Numero entrate</div>
+            <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+              {entrateExtraVal.length}
+            </div>
           </div>
         </div>
 
-        <div style={{ ...ui.card, padding: 18 }}>
-          <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Scadenze da tenere d’occhio</div>
-          <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
-            Le prossime voci urgenti o vicine
-          </div>
-
-          <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
-            {prossimeUrgenti.length === 0 ? (
-              <div
-                style={{
-                  padding: 12,
-                  borderRadius: 16,
-                  border: "1px solid rgba(15,23,42,0.08)",
-                  background: "rgba(255,255,255,0.72)",
-                  fontSize: 13,
-                  fontWeight: 800,
-                  opacity: 0.65,
-                }}
-              >
-                Nessuna voce urgente o imminente.
-              </div>
-            ) : (
-              prossimeUrgenti.map((v) => (
+        <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
+          {entrateExtraVal.length === 0 ? (
+            <div
+              style={{
+                padding: 12,
+                borderRadius: 16,
+                border: "1px solid rgba(15,23,42,0.08)",
+                background: "rgba(255,255,255,0.72)",
+                fontSize: 13,
+                fontWeight: 800,
+                opacity: 0.65,
+              }}
+            >
+              Nessuna entrata inserita.
+            </div>
+          ) : (
+            entrateExtraVal
+              .slice()
+              .sort((a, b) => a.data.localeCompare(b.data))
+              .map((x) => (
                 <div
-                  key={v.id}
+                  key={x.id}
                   style={{
                     padding: 14,
                     borderRadius: 18,
-                    border: "1px solid rgba(15,23,42,0.08)",
-                    background: "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.88))",
+                    border: "1px solid rgba(16,185,129,0.16)",
+                    background: "linear-gradient(180deg, rgba(16,185,129,0.08), rgba(16,185,129,0.04))",
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
@@ -3030,774 +2872,1037 @@ function MiniCalendario({
                     flexWrap: "wrap",
                   }}
                 >
-                  <div style={{ display: "grid", gap: 5 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      {badgeTipo(v.tipo)}
-                      {v.urgente && badgeUrgente()}
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.65 }}>
+                      {formattaDataBreve(x.data)}
                     </div>
-                    <div style={{ fontSize: 15, fontWeight: 950 }}>{v.titolo}</div>
-                    <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72 }}>
-                      {formattaDataBreve(v.data)} • {v.ora}
+                    <div style={{ marginTop: 3, fontSize: 14, fontWeight: 950 }}>
+                      {x.descrizione}
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 4,
+                        fontSize: 12,
+                        fontWeight: 900,
+                        color: "rgba(5,150,105,0.96)",
+                      }}
+                    >
+                      {x.importo.toLocaleString("it-IT")} €
                     </div>
                   </div>
 
-                  <span style={styleBadgeScadenza(giorniMancanti(v.data), v.urgente)}>
-                    {v.urgente ? "URGENTE" : labelGiorni(giorniMancanti(v.data))}
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const GlobalStyle = (
-    <style>{`
-      @keyframes popIn {
-        from { opacity: 0; transform: translateY(10px) scale(0.985); }
-        to   { opacity: 1; transform: translateY(0) scale(1); }
-      }
-
-      @keyframes cardIn {
-        from { opacity: 0; transform: translateY(8px) scale(0.985); }
-        to   { opacity: 1; transform: translateY(0) scale(1); }
-      }
-
-      @keyframes pulseUrgent {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.025); }
-      }
-
-      @keyframes softGlow {
-        0%, 100% { box-shadow: 0 16px 32px rgba(79,70,229,0.12); }
-        50% { box-shadow: 0 24px 44px rgba(124,58,237,0.18); }
-      }
-
-      button[data-chip="1"]{
-        transform: translateY(0);
-        transition: transform .12s ease, filter .12s ease;
-      }
-
-      button[data-chip="1"]:hover{
-        transform: translateY(-1px);
-        filter: brightness(1.02);
-      }
-
-      button[data-chip="1"]:active{
-        transform: translateY(0px) scale(0.985);
-        filter: brightness(0.985);
-      }
-
-      @media (max-width: 820px) {
-        .remember-hide-mobile-fab {
-          display: none !important;
-        }
-      }
-
-      @media (max-width: 760px) {
-        .remember-grid-2 {
-          grid-template-columns: 1fr !important;
-        }
-      }
-    `}</style>
-  );
-
-  if (!currentUser) {
-    return (
-      <div style={pageBg}>
-        {GlobalStyle}
-        <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 18 }}>
-          <div style={{ width: "min(520px, 100%)" }}>
-            <div style={{ ...ui.card, padding: 26 }}>
-              <RememberLogo size={52} centered />
-
-              <div
-                style={{
-                  opacity: 0.72,
-                  fontWeight: 850,
-                  marginTop: 18,
-                  textAlign: "center",
-                  fontSize: 14,
-                }}
-              >
-                Il tuo spazio personale per ricordare tutto, in modo bello.
-              </div>
-
-              <div
-                style={{
-                  marginTop: 22,
-                  fontSize: 16,
-                  fontWeight: 950,
-                  letterSpacing: -0.2,
-                }}
-              >
-                Accedi
-              </div>
-
-              {users.length === 0 ? (
-                <div style={{ marginTop: 10, opacity: 0.75, fontWeight: 800, fontSize: 13 }}>
-                  Nessun utente creato su questo dispositivo.
-                </div>
-              ) : (
-                <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
-                  <select
-                    value={loginPick ?? ""}
-                    onChange={(e) => setLoginPick(e.target.value || null)}
-                    style={{
-                      ...inputLight(false),
-                      height: 48,
-                      background: "rgba(255,255,255,0.90)",
-                      fontWeight: 850,
-                    }}
-                  >
-                    <option value="">Seleziona utente…</option>
-                    {users.map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.nome}
-                      </option>
-                    ))}
-                  </select>
-
-                  <button
-                    data-chip="1"
-                    onClick={() => {
-                      if (!loginPick) {
-                        alert("Seleziona un utente.");
-                        return;
-                      }
-                      entraCome(loginPick);
-                    }}
-                    style={chip(true)}
-                  >
-                    Entra
+                  <button data-chip="1" onClick={() => eliminaEntrataExtra(x.id)} style={chip(false)}>
+                    Elimina
                   </button>
                 </div>
-              )}
+              ))
+          )}
+        </div>
+      </div>
 
-              <div style={{ height: 1, background: "rgba(15,23,42,0.08)", margin: "18px 0" }} />
+      <div style={{ ...ui.card, padding: 18 }}>
+        <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Ore e turni del mese</div>
+        <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
+          Monitoraggio mensile di ore ordinarie, straordinarie e totale
+        </div>
 
-              <div style={{ fontSize: 16, fontWeight: 950, letterSpacing: -0.2 }}>Crea nuovo utente</div>
+        <div
+          style={{
+            marginTop: 16,
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: 10,
+          }}
+        >
+          <div
+            style={{
+              padding: 14,
+              borderRadius: 18,
+              border: "1px solid rgba(59,130,246,0.12)",
+              background: "linear-gradient(180deg, rgba(59,130,246,0.08), rgba(59,130,246,0.03))",
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Turni</div>
+            <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>{turniMese.length}</div>
+          </div>
 
-              <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
-                <input
-                  value={loginNome}
-                  onChange={(e) => setLoginNome(e.target.value)}
-                  placeholder="Nome utente"
-                  style={inputLight(false)}
-                />
-                <button data-chip="1" onClick={creaEUentra} style={chip(true)}>
-                  Crea & Entra
-                </button>
+          <div
+            style={{
+              padding: 14,
+              borderRadius: 18,
+              border: "1px solid rgba(16,185,129,0.12)",
+              background: "linear-gradient(180deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03))",
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Ore ordinarie</div>
+            <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+              {formatNumeroOre(oreOrdMese)} h
+            </div>
+          </div>
 
-                <div style={{ fontSize: 12, opacity: 0.65, fontWeight: 800, lineHeight: 1.35 }}>
-                  Profilo locale sul dispositivo.
-                </div>
-              </div>
+          <div
+            style={{
+              padding: 14,
+              borderRadius: 18,
+              border: "1px solid rgba(249,115,22,0.16)",
+              background: "linear-gradient(180deg, rgba(249,115,22,0.08), rgba(249,115,22,0.03))",
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Ore straordinarie</div>
+            <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+              {formatNumeroOre(oreStraMese)} h
+            </div>
+          </div>
+
+          <div
+            style={{
+              padding: 14,
+              borderRadius: 18,
+              border: "1px solid rgba(124,58,237,0.12)",
+              background: "linear-gradient(180deg, rgba(124,58,237,0.08), rgba(124,58,237,0.03))",
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Ore totali</div>
+            <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+              {formatNumeroOre(oreTotMese)} h
             </div>
           </div>
         </div>
-      </div>
-    );
-  }
 
+        <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
+          {turniMese.length === 0 ? (
+            <div
+              style={{
+                padding: 12,
+                borderRadius: 16,
+                border: "1px solid rgba(15,23,42,0.08)",
+                background: "rgba(255,255,255,0.72)",
+                fontSize: 13,
+                fontWeight: 800,
+                opacity: 0.65,
+              }}
+            >
+              Nessun turno inserito nel mese.
+            </div>
+          ) : (
+            turniMese
+              .slice()
+              .sort((a, b) => a.data.localeCompare(b.data) || a.inizio.localeCompare(b.inizio))
+              .map((t) => (
+                <div
+                  key={t.id}
+                  style={{
+                    padding: 14,
+                    borderRadius: 18,
+                    border: "1px solid rgba(59,130,246,0.16)",
+                    background: "linear-gradient(180deg, rgba(59,130,246,0.08), rgba(59,130,246,0.04))",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 12,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.65 }}>
+                      {formattaDataBreve(t.data)}
+                    </div>
+                    <div style={{ marginTop: 3, fontSize: 14, fontWeight: 950 }}>
+                      Turno {t.inizio} - {t.fine}
+                    </div>
+                    <div style={{ marginTop: 4, fontSize: 12, fontWeight: 900, color: "rgba(30,64,175,0.95)" }}>
+                      Ord: {formatNumeroOre(t.oreOrdinarie)}h • Straord: {formatNumeroOre(t.oreStraordinarie)}h • Tot:{" "}
+                      {formatNumeroOre(t.oreOrdinarie + t.oreStraordinarie)}h
+                    </div>
+                    {t.note && (
+                      <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, opacity: 0.72 }}>
+                        {t.note}
+                      </div>
+                    )}
+                  </div>
+
+                  <button data-chip="1" onClick={() => eliminaTurno(t.id)} style={chip(false)}>
+                    Elimina
+                  </button>
+                </div>
+              ))
+          )}
+        </div>
+      </div>
+
+      <div style={{ ...ui.card, padding: 18 }}>
+        <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>
+          Scadenze da tenere d’occhio
+        </div>
+        <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
+          Le prossime voci urgenti o vicine
+        </div>
+
+        <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
+          {prossimeUrgenti.length === 0 ? (
+            <div
+              style={{
+                padding: 12,
+                borderRadius: 16,
+                border: "1px solid rgba(15,23,42,0.08)",
+                background: "rgba(255,255,255,0.72)",
+                fontSize: 13,
+                fontWeight: 800,
+                opacity: 0.65,
+              }}
+            >
+              Nessuna voce urgente o imminente.
+            </div>
+          ) : (
+            prossimeUrgenti.map((v) => (
+              <div
+                key={v.id}
+                style={{
+                  padding: 14,
+                  borderRadius: 18,
+                  border: "1px solid rgba(15,23,42,0.08)",
+                  background: "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.88))",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 12,
+                  flexWrap: "wrap",
+                }}
+              >
+                <div style={{ display: "grid", gap: 5 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    {badgeTipo(v.tipo)}
+                    {v.urgente && badgeUrgente()}
+                  </div>
+                  <div style={{ fontSize: 15, fontWeight: 950 }}>{v.titolo}</div>
+                  <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72 }}>
+                    {formattaDataBreve(v.data)} • {v.ora}
+                  </div>
+                </div>
+
+                <span style={styleBadgeScadenza(giorniMancanti(v.data), v.urgente)}>
+                  {v.urgente ? "URGENTE" : labelGiorni(giorniMancanti(v.data))}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const GlobalStyle = (
+  <style>{`
+    @keyframes popIn {
+      from { opacity: 0; transform: translateY(10px) scale(0.985); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(8px) scale(0.985); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes pulseUrgent {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.025); }
+    }
+
+    @keyframes softGlow {
+      0%, 100% { box-shadow: 0 16px 32px rgba(79,70,229,0.12); }
+      50% { box-shadow: 0 24px 44px rgba(124,58,237,0.18); }
+    }
+
+    button[data-chip="1"]{
+      transform: translateY(0);
+      transition: transform .12s ease, filter .12s ease;
+    }
+
+    button[data-chip="1"]:hover{
+      transform: translateY(-1px);
+      filter: brightness(1.02);
+    }
+
+    button[data-chip="1"]:active{
+      transform: translateY(0px) scale(0.985);
+      filter: brightness(0.985);
+    }
+
+    @media (max-width: 820px) {
+      .remember-hide-mobile-fab {
+        display: none !important;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .remember-grid-2 {
+        grid-template-columns: 1fr !important;
+      }
+    }
+  `}</style>
+);
+
+if (!currentUser) {
   return (
     <div style={pageBg}>
       {GlobalStyle}
-
-      <div style={topBar}>
-        <div style={{ ...ui.glass, padding: 22 }}>
-          <div style={{ display: "grid", gap: 18 }}>
-            <RememberLogo size={54} centered />
-
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                gap: 10,
-                flexWrap: "wrap",
-              }}
-            >
-              <div
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 10,
-                  padding: "11px 14px",
-                  borderRadius: 999,
-                  border: "1px solid rgba(79,70,229,0.12)",
-                  background: "rgba(255,255,255,0.82)",
-                  boxShadow: "0 18px 34px rgba(79,70,229,0.10)",
-                  fontSize: 13,
-                  fontWeight: 950,
-                  letterSpacing: -0.2,
-                  animation: "softGlow 2.4s ease-in-out infinite",
-                }}
-              >
-                <span style={{ opacity: 0.8 }}>🕒</span>
-                <span style={{ opacity: 0.88 }}>{formattaDataLunga(adesso)}</span>
-              </div>
-            </div>
+      <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 18 }}>
+        <div style={{ width: "min(520px, 100%)" }}>
+          <div style={{ ...ui.card, padding: 26 }}>
+            <RememberLogo size={52} centered />
 
             <div
               style={{
-                textAlign: "center",
-                fontSize: 13,
-                fontWeight: 900,
                 opacity: 0.72,
+                fontWeight: 850,
+                marginTop: 18,
+                textAlign: "center",
+                fontSize: 14,
               }}
             >
-              Utente attivo: <span style={{ opacity: 1 }}>{currentUser.nome}</span>
+              Il tuo spazio personale per ricordare tutto, in modo bello.
             </div>
 
             <div
               style={{
-                display: "flex",
-                gap: 10,
-                flexWrap: "wrap",
-                justifyContent: "center",
+                marginTop: 22,
+                fontSize: 16,
+                fontWeight: 950,
+                letterSpacing: -0.2,
               }}
             >
-              <button data-chip="1" onClick={() => setPagina("home")} style={pagina === "home" ? chip(true) : chip(false)}>
-                Home
-              </button>
-
-              <button
-                data-chip="1"
-                onClick={() => setPagina("archivio")}
-                style={pagina === "archivio" ? chip(true) : chip(false)}
-              >
-                Archivio
-              </button>
-
-              <button
-                data-chip="1"
-                onClick={() => setPagina("controllo")}
-                style={pagina === "controllo" ? chip(true) : chip(false)}
-              >
-                Controllo
-              </button>
-
-              <button
-                data-chip="1"
-                onClick={apriNuova}
-                title="Nuova voce"
-                style={{
-                  ...chip(false),
-                  background: "linear-gradient(180deg, rgba(16,185,129,0.28), rgba(5,150,105,0.16))",
-                  border: "1px solid rgba(16,185,129,0.36)",
-                  boxShadow: "0 16px 34px rgba(16,185,129,0.22)",
-                  color: "rgba(6,95,70,0.98)",
-                  fontWeight: 1000,
-                }}
-              >
-                + Nuova
-              </button>
-
-              <button data-chip="1" onClick={esci} style={chip(false)}>
-                Esci
-              </button>
+              Accedi
             </div>
-          </div>
-        </div>
 
-
-
-
-
-        {pagina === "controllo" ? (
-          renderAreaControllo()
-        ) : (
-          <>
-            <MiniCalendario
-              mese={meseCorrente}
-              vociDelMese={vociDelMesePerCalendario}
-              turniDelMese={turniMese}
-              onPrevMonth={mesePrecedente}
-              onNextMonth={meseSuccessivo}
-            />
-
-            <div style={{ maxWidth: 1060, margin: "0 auto", marginTop: 14 }}>
-              {lista.length === 0 ? (
-                <div style={{ ...ui.card, padding: 18, opacity: 0.85 }}>Nessuna voce in questo periodo.</div>
-              ) : (
-                <div style={{ display: "grid", gap: 12 }}>
-                  {lista.map((v, idx) => (
-                    <div
-                      key={v.id}
-                      style={{
-                        ...ui.card,
-                        padding: 18,
-                        animation: "cardIn .18s ease both",
-                        animationDelay: `${Math.min(idx, 10) * 35}ms`,
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          gap: 10,
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-                          {badgeTipo(v.tipo)}
-                          {v.urgente && badgeUrgente()}
-                          {v.importo !== null && badgeMov(v.movimento)}
-
-                          <button
-                            type="button"
-                            style={{
-                              ...chipSmall(false),
-                              cursor: "default",
-                              opacity: 0.92,
-                              boxShadow: "0 10px 20px rgba(15,23,42,0.08)",
-                            }}
-                            title="Data e ora"
-                            onClick={(e) => e.preventDefault()}
-                          >
-                            {formattaDataBreve(v.data)} • {v.ora}
-                          </button>
-                        </div>
-
-                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                          <span style={styleBadgeScadenza(giorniMancanti(v.data), v.urgente)}>
-                            {v.urgente ? "URGENTE" : labelGiorni(giorniMancanti(v.data))}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div style={{ marginTop: 10, fontSize: 19, fontWeight: 950, letterSpacing: -0.24 }}>
-                        {v.titolo}
-                      </div>
-
-                      <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                        {v.importo !== null && (
-                          <span
-                            style={{
-                              padding: "7px 11px",
-                              borderRadius: 999,
-                              border:
-                                v.movimento === "entrata"
-                                  ? "2px solid rgba(16,185,129,0.28)"
-                                  : "2px solid rgba(239,68,68,0.28)",
-                              background:
-                                v.movimento === "entrata"
-                                  ? "rgba(236,253,245,0.96)"
-                                  : "rgba(254,242,242,0.96)",
-                              fontSize: 12,
-                              fontWeight: 950,
-                              color:
-                                v.movimento === "entrata"
-                                  ? "rgba(5,150,105,0.96)"
-                                  : "rgba(185,28,28,0.96)",
-                            }}
-                          >
-                            {v.importo.toLocaleString("it-IT")} €
-                          </span>
-                        )}
-
-                        {v.nota && <span style={{ fontSize: 13, fontWeight: 800, opacity: 0.72 }}>{v.nota}</span>}
-
-                        {v.notificheMinutiPrima.length > 0 && (
-                          <span style={{ fontSize: 14, fontWeight: 900, opacity: 0.8 }}>
-                            Notifiche:{" "}
-                            {v.notificheMinutiPrima
-                              .slice()
-                              .sort((a, b) => b - a)
-                              .map((m) => `${formatOreItalianeFromMin(m)}h`)
-                              .join(", ")}
-                          </span>
-                        )}
-                      </div>
-
-                      <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
-                        {pagina === "home" ? (
-                          <>
-                            <button data-chip="1" onClick={() => apriModifica(v)} style={chip(false)}>
-                              Modifica
-                            </button>
-                            <button data-chip="1" onClick={() => elimina(v.id)} style={chip(false)}>
-                              Elimina
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button data-chip="1" onClick={() => elimina(v.id)} style={chip(false)}>
-                              Elimina
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </div>
+            {users.length === 0 ? (
+              <div style={{ marginTop: 10, opacity: 0.75, fontWeight: 800, fontSize: 13 }}>
+                Nessun utente creato su questo dispositivo.
+              </div>
+            ) : (
+              <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
+                <select
+                  value={loginPick ?? ""}
+                  onChange={(e) => setLoginPick(e.target.value || null)}
+                  style={{
+                    ...inputLight(false),
+                    height: 48,
+                    background: "rgba(255,255,255,0.90)",
+                    fontWeight: 850,
+                  }}
+                >
+                  <option value="">Seleziona utente…</option>
+                  {users.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.nome}
+                    </option>
                   ))}
-                </div>
-              )}
+                </select>
+
+                <button
+                  data-chip="1"
+                  onClick={() => {
+                    if (!loginPick) {
+                      alert("Seleziona un utente.");
+                      return;
+                    }
+                    entraCome(loginPick);
+                  }}
+                  style={chip(true)}
+                >
+                  Entra
+                </button>
+              </div>
+            )}
+
+            <div style={{ height: 1, background: "rgba(15,23,42,0.08)", margin: "18px 0" }} />
+
+            <div style={{ fontSize: 16, fontWeight: 950, letterSpacing: -0.2 }}>Crea nuovo utente</div>
+
+            <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
+              <input
+                value={loginNome}
+                onChange={(e) => setLoginNome(e.target.value)}
+                placeholder="Nome utente"
+                style={inputLight(false)}
+              />
+              <button data-chip="1" onClick={creaEUentra} style={chip(true)}>
+                Crea & Entra
+              </button>
+
+              <div style={{ fontSize: 12, opacity: 0.65, fontWeight: 800, lineHeight: 1.35 }}>
+                Profilo locale sul dispositivo.
+              </div>
             </div>
-          </>
-        )}
+          </div>
+        </div>
       </div>
-
-      {pagina !== "controllo" && <DraggableFab onClick={apriNuova} label="Aggiungi" />}
-
-      {mostraForm && (
-        <div
-          style={sx.overlay}
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget) chiudiForm();
-          }}
-        >
-          <div style={sx.modal}>
-            <div style={sx.header}>
-              <div>
-                <div style={{ fontSize: 18, fontWeight: 950, letterSpacing: -0.2 }}>
-                  {idInModifica ? "Modifica voce" : "Nuova voce"}
-                </div>
-                <div style={{ fontSize: 12, opacity: 0.65, marginTop: 4, fontWeight: 800 }}>
-                  Inserisci i dati e salva
-                </div>
-              </div>
-
-              <button
-                type="button"
-                data-chip="1"
-                onMouseEnter={() => setHoverClose(true)}
-                onMouseLeave={() => setHoverClose(false)}
-                onClick={chiudiForm}
-                style={{ ...sx.closeBtn, ...(hoverClose ? sx.closeBtnHover : {}) }}
-                title="Chiudi"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div style={sx.body}>
-              <div style={sx.content}>
-                <div>
-                  <div style={sx.sectionLabel}>Tipo</div>
-                  <div style={sx.pills2}>
-                    <button type="button" data-chip="1" onClick={() => setTipo("scadenza")} style={chipSmall(tipo === "scadenza")}>
-                      Scadenza
-                    </button>
-                    <button
-                      type="button"
-                      data-chip="1"
-                      onClick={() => setTipo("appuntamento")}
-                      style={chipSmall(tipo === "appuntamento")}
-                    >
-                      Appuntamento
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <div style={sx.sectionLabel}>Titolo</div>
-                  <input
-                    value={titolo}
-                    onChange={(e) => setTitolo(e.target.value)}
-                    placeholder="Es: Affitto / Dentista"
-                    style={inputLight(false)}
-                  />
-                </div>
-
-                <div style={sx.row2}>
-                  <div>
-                    <div style={sx.sectionLabel}>Data</div>
-                    <input type="date" value={data} onChange={(e) => setData(e.target.value)} style={inputLight(false)} />
-                  </div>
-
-                  <div>
-                    <div style={sx.sectionLabel}>Ora</div>
-                    <input type="time" value={ora} onChange={(e) => setOra(e.target.value)} style={inputLight(false)} />
-                  </div>
-                </div>
-
-                <div>
-                  <div style={sx.sectionLabel}>Importo uscita (€) facoltativo</div>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    value={importo}
-                    onChange={(e) => setImporto(e.target.value)}
-                    placeholder="Es: 650"
-                    style={inputLight(false)}
-                  />
-
-                  <div style={{ marginTop: 8, fontSize: 12, fontWeight: 850, opacity: 0.72, lineHeight: 1.35 }}>
-                    Qui inserisci solo eventuali uscite collegate a scadenze o appuntamenti. Le entrate si inseriscono solo nell’area Controllo.
-                  </div>
-                </div>
-
-                <div>
-                  <div style={sx.sectionLabel}>Nota</div>
-                  <textarea
-                    value={nota}
-                    onChange={(e) => setNota(e.target.value)}
-                    rows={4}
-                    placeholder="Scrivi una nota..."
-                    style={{
-                      ...inputLight(false),
-                      height: "auto",
-                      minHeight: 110,
-                      resize: "vertical",
-                      lineHeight: 1.4,
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <div style={sx.sectionLabel}>Stato</div>
-                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                    <button
-                      type="button"
-                      data-chip="1"
-                      onClick={() => setUrgente((v) => !v)}
-                      style={{
-                        ...chipSmall(urgente),
-                        background: urgente
-                          ? "linear-gradient(180deg, rgba(239,68,68,0.22), rgba(220,38,38,0.12))"
-                          : "rgba(255,255,255,0.82)",
-                        border: urgente ? "1px solid rgba(239,68,68,0.30)" : "1px solid rgba(15,23,42,0.08)",
-                        boxShadow: urgente
-                          ? "0 14px 28px rgba(239,68,68,0.18)"
-                          : "0 10px 18px rgba(15,23,42,0.06)",
-                      }}
-                    >
-                      {urgente ? "Urgente attivo" : "Segna come urgente"}
-                    </button>
-
-                    {urgente && badgeUrgente()}
-                    {badgeTipo(tipo)}
-                  </div>
-                </div>
-
-                <div>
-                  <div style={sx.sectionLabel}>Notifiche (ore prima)</div>
-
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    {presetOre.map((p) => {
-                      const min = Math.max(1, Math.round(p.ore * 60));
-                      const active = notificheMinutiPrima.includes(min);
-                      return (
-                        <button
-                          type="button"
-                          data-chip="1"
-                          key={p.label}
-                          onClick={() => toggleNotificaOre(p.ore)}
-                          style={chipSmall(active)}
-                          title={`${p.ore} ore prima`}
-                        >
-                          {p.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: "1fr auto", gap: 10 }}>
-                    <input
-                      value={customNotificaOre}
-                      onChange={(e) => setCustomNotificaOre(e.target.value)}
-                      placeholder="Ore custom (es: 1,5)"
-                      style={inputLight(false)}
-                      inputMode="decimal"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          addCustomNotificaOre();
-                        }
-                      }}
-                    />
-                    <button type="button" data-chip="1" onClick={addCustomNotificaOre} style={chip(true)}>
-                      Aggiungi
-                    </button>
-                  </div>
-
-                  <div style={{ marginTop: 10, fontSize: 12, fontWeight: 850, opacity: 0.7, lineHeight: 1.35 }}>
-                    Le notifiche sono in-app: funzionano se l’app resta aperta.
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div style={sx.footer}>
-              <button type="button" data-chip="1" onClick={chiudiForm} style={sx.actionBtn(false)}>
-                Annulla
-              </button>
-              <button type="button" data-chip="1" onClick={salva} style={sx.actionBtn(true)}>
-                Salva
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {mostraTurnoForm && (
-        <div
-          style={sx.overlay}
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget) chiudiTurnoForm();
-          }}
-        >
-          <div style={sx.modal}>
-            <div style={sx.header}>
-              <div>
-                <div style={{ fontSize: 18, fontWeight: 950, letterSpacing: -0.2 }}>Nuovo turno</div>
-                <div style={{ fontSize: 12, opacity: 0.65, marginTop: 4, fontWeight: 800 }}>
-                  Inserisci turno, ore ordinarie e straordinarie
-                </div>
-              </div>
-
-              <button
-                type="button"
-                data-chip="1"
-                onMouseEnter={() => setHoverCloseTurno(true)}
-                onMouseLeave={() => setHoverCloseTurno(false)}
-                onClick={chiudiTurnoForm}
-                style={{ ...sx.closeBtn, ...(hoverCloseTurno ? sx.closeBtnHover : {}) }}
-                title="Chiudi"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div style={sx.body}>
-              <div style={sx.content}>
-                <div>
-                  <div style={sx.sectionLabel}>Data</div>
-                  <input type="date" value={turnoData} onChange={(e) => setTurnoData(e.target.value)} style={inputLight(false)} />
-                </div>
-
-                <div style={{ display: "grid", gap: 12 }}>
-                  <div>
-                    <div style={sx.sectionLabel}>Turno predefinito</div>
-
-                    <select
-                onChange={(e) => {
-  const val = e.target.value;
-  setTurnoPreset(val);
-
-  if (!val) return;
-
-  if (val === "RIPOSO") {
-    setTurnoInizio("RIPOSO");
-    setTurnoFine("RIPOSO");
-    setTurnoOreOrd("0");
-    setTurnoOreStraord("");
-    return;
-  }
-
-  const parti = val.split("-");
-  if (parti.length !== 2) return;
-
-  let start = parti[0].trim();
-  let end = parti[1].trim();
-
-  if (/^\d$/.test(start)) start = `0${start}`;
-  if (/^\d$/.test(end)) end = `0${end}`;
-
-  if (end === "24") end = "00";
-
-  setTurnoInizio(`${start}:00`);
-  setTurnoFine(`${end}:00`);
-}}
-                      style={{
-                        ...inputLight(false),
-                        background: "rgba(255,255,255,0.90)",
-                        fontWeight: 850,
-                      }}
-                      title="Seleziona turno predefinito"
-                    >
-                      <option value="">Seleziona turno preset…</option>
-                      {presetTurni.map((p) => (
-                        <option key={p} value={p}>
-                          {p}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div style={sx.row2}>
-                    <div>
-                      <div style={sx.sectionLabel}>Inizio turno</div>
-                      <input
-                        type="time"
-                        value={turnoInizio}
-                        onChange={(e) => setTurnoInizio(e.target.value)}
-                        style={inputLight(false)}
-                      />
-                    </div>
-
-                    <div>
-                      <div style={sx.sectionLabel}>Fine turno</div>
-                      <input
-                        type="time"
-                        value={turnoFine}
-                        onChange={(e) => setTurnoFine(e.target.value)}
-                        style={inputLight(false)}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div style={sx.row2}>
-                  <div>
-                    <div style={sx.sectionLabel}>Ore ordinarie</div>
-                    <input
-                      value={turnoOreOrd}
-                      onChange={(e) => setTurnoOreOrd(e.target.value)}
-                      placeholder="Es: 8"
-                      style={inputLight(false)}
-                      inputMode="decimal"
-                    />
-                  </div>
-                  <div>
-                    <div style={sx.sectionLabel}>Ore straordinarie</div>
-                    <input
-                      value={turnoOreStraord}
-                      onChange={(e) => setTurnoOreStraord(e.target.value)}
-                      placeholder="Es: 2"
-                      style={inputLight(false)}
-                      inputMode="decimal"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <div style={sx.sectionLabel}>Note</div>
-                  <textarea
-                    value={turnoNote}
-                    onChange={(e) => setTurnoNote(e.target.value)}
-                    rows={4}
-                    placeholder="Note turno..."
-                    style={{
-                      ...inputLight(false),
-                      height: "auto",
-                      minHeight: 110,
-                      resize: "vertical",
-                      lineHeight: 1.4,
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div style={sx.footer}>
-              <button type="button" data-chip="1" onClick={chiudiTurnoForm} style={sx.actionBtn(false)}>
-                Annulla
-              </button>
-              <button type="button" data-chip="1" onClick={salvaTurno} style={sx.actionBtn(true)}>
-                Salva turno
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
 
 
 
+
+
+
+
+
+  return (
+  <div style={pageBg}>
+    {GlobalStyle}
+
+    <div style={topBar}>
+      <div style={{ ...ui.glass, padding: 22 }}>
+        <div style={{ display: "grid", gap: 18 }}>
+          <RememberLogo size={54} centered />
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: 10,
+              flexWrap: "wrap",
+            }}
+          >
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "11px 14px",
+                borderRadius: 999,
+                border: "1px solid rgba(79,70,229,0.12)",
+                background: "rgba(255,255,255,0.82)",
+                boxShadow: "0 18px 34px rgba(79,70,229,0.10)",
+                fontSize: 13,
+                fontWeight: 950,
+                letterSpacing: -0.2,
+                animation: "softGlow 2.4s ease-in-out infinite",
+              }}
+            >
+              <span style={{ opacity: 0.8 }}>🕒</span>
+              <span style={{ opacity: 0.88 }}>{formattaDataLunga(adesso)}</span>
+            </div>
+          </div>
+
+          <div
+            style={{
+              textAlign: "center",
+              fontSize: 13,
+              fontWeight: 900,
+              opacity: 0.72,
+            }}
+          >
+            Utente attivo: <span style={{ opacity: 1 }}>{currentUser.nome}</span>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              gap: 12,
+              flexWrap: "wrap",
+              justifyContent: "center",
+            }}
+          >
+            <button
+              data-chip="1"
+              onClick={() => setPagina("home")}
+              style={pagina === "home" ? chip(true) : chip(false)}
+            >
+              Home
+            </button>
+
+            <button
+              data-chip="1"
+              onClick={() => setPagina("agenda")}
+              style={pagina === "agenda" ? chip(true) : chip(false)}
+            >
+              Agenda
+            </button>
+
+            <button
+              data-chip="1"
+              onClick={() => setPagina("controllo")}
+              style={pagina === "controllo" ? chip(true) : chip(false)}
+            >
+              Controllo
+            </button>
+
+            <button
+              data-chip="1"
+              onClick={() => setPagina("archivio")}
+              style={pagina === "archivio" ? chip(true) : chip(false)}
+            >
+              Archivio Generale
+            </button>
+
+            <button
+              data-chip="1"
+              onClick={apriNuova}
+              title="Nuova voce"
+              style={{
+                ...chip(false),
+                background: "linear-gradient(180deg, rgba(16,185,129,0.28), rgba(5,150,105,0.16))",
+                border: "1px solid rgba(16,185,129,0.36)",
+                boxShadow: "0 16px 34px rgba(16,185,129,0.22)",
+                color: "rgba(6,95,70,0.98)",
+                fontWeight: 1000,
+              }}
+            >
+              + Nuova
+            </button>
+
+            <button data-chip="1" onClick={esci} style={chip(false)}>
+              Esci
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {pagina === "controllo" ? (
+        renderAreaControllo()
+      ) : (
+        <>
+          <MiniCalendario
+            mese={meseCorrente}
+            vociDelMese={vociDelMesePerCalendario}
+            turniDelMese={turniMese}
+            onPrevMonth={mesePrecedente}
+            onNextMonth={meseSuccessivo}
+          />
+
+          <div style={{ maxWidth: 1060, margin: "0 auto", marginTop: 14 }}>
+            {lista.length === 0 ? (
+              <div style={{ ...ui.card, padding: 18, opacity: 0.85 }}>
+                Nessuna voce in questo periodo.
+              </div>
+            ) : (
+              <div style={{ display: "grid", gap: 12 }}>
+                {lista.map((v, idx) => (
+                  <div
+                    key={v.id}
+                    style={{
+                      ...ui.card,
+                      padding: 18,
+                      animation: "cardIn .18s ease both",
+                      animationDelay: `${Math.min(idx, 10) * 35}ms`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 10,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 8,
+                          flexWrap: "wrap",
+                          alignItems: "center",
+                        }}
+                      >
+                        {badgeTipo(v.tipo)}
+                        {v.urgente && badgeUrgente()}
+                        {v.importo !== null && badgeMov(v.movimento)}
+
+                        <button
+                          type="button"
+                          style={{
+                            ...chipSmall(false),
+                            cursor: "default",
+                            opacity: 0.92,
+                            boxShadow: "0 10px 20px rgba(15,23,42,0.08)",
+                          }}
+                          title="Data e ora"
+                          onClick={(e) => e.preventDefault()}
+                        >
+                          {formattaDataBreve(v.data)} • {v.ora}
+                        </button>
+                      </div>
+
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <span style={styleBadgeScadenza(giorniMancanti(v.data), v.urgente)}>
+                          {v.urgente ? "URGENTE" : labelGiorni(giorniMancanti(v.data))}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 10,
+                        fontSize: 19,
+                        fontWeight: 950,
+                        letterSpacing: -0.24,
+                      }}
+                    >
+                      {v.titolo}
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 10,
+                        display: "flex",
+                        gap: 10,
+                        flexWrap: "wrap",
+                        alignItems: "center",
+                      }}
+                    >
+                      {v.importo !== null && (
+                        <span
+                          style={{
+                            padding: "7px 11px",
+                            borderRadius: 999,
+                            border:
+                              v.movimento === "entrata"
+                                ? "2px solid rgba(16,185,129,0.28)"
+                                : "2px solid rgba(239,68,68,0.28)",
+                            background:
+                              v.movimento === "entrata"
+                                ? "rgba(236,253,245,0.96)"
+                                : "rgba(254,242,242,0.96)",
+                            fontSize: 12,
+                            fontWeight: 950,
+                            color:
+                              v.movimento === "entrata"
+                                ? "rgba(5,150,105,0.96)"
+                                : "rgba(185,28,28,0.96)",
+                          }}
+                        >
+                          {v.importo.toLocaleString("it-IT")} €
+                        </span>
+                      )}
+
+                      {v.nota && (
+                        <span style={{ fontSize: 13, fontWeight: 800, opacity: 0.72 }}>
+                          {v.nota}
+                        </span>
+                      )}
+
+                      {v.notificheMinutiPrima.length > 0 && (
+                        <span style={{ fontSize: 14, fontWeight: 900, opacity: 0.8 }}>
+                          Notifiche:{" "}
+                          {v.notificheMinutiPrima
+                            .slice()
+                            .sort((a, b) => b - a)
+                            .map((m) => `${formatOreItalianeFromMin(m)}h`)
+                            .join(", ")}
+                        </span>
+                      )}
+                    </div>
+
+                    <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
+                      {pagina === "home" ? (
+                        <>
+                          <button data-chip="1" onClick={() => apriModifica(v)} style={chip(false)}>
+                            Modifica
+                          </button>
+                          <button data-chip="1" onClick={() => elimina(v.id)} style={chip(false)}>
+                            Elimina
+                          </button>
+                        </>
+                      ) : (
+                        <button data-chip="1" onClick={() => elimina(v.id)} style={chip(false)}>
+                          Elimina
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+
+    {pagina !== "controllo" && <DraggableFab onClick={apriNuova} label="Aggiungi" />}
+
+    {mostraForm && (
+      <div
+        style={sx.overlay}
+        onMouseDown={(e) => {
+          if (e.target === e.currentTarget) chiudiForm();
+        }}
+      >
+        <div style={sx.modal}>
+          <div style={sx.header}>
+            <div>
+              <div style={{ fontSize: 18, fontWeight: 950, letterSpacing: -0.2 }}>
+                {idInModifica ? "Modifica voce" : "Nuova voce"}
+              </div>
+              <div style={{ fontSize: 12, opacity: 0.65, marginTop: 4, fontWeight: 800 }}>
+                Inserisci i dati e salva
+              </div>
+            </div>
+
+            <button
+              type="button"
+              data-chip="1"
+              onMouseEnter={() => setHoverClose(true)}
+              onMouseLeave={() => setHoverClose(false)}
+              onClick={chiudiForm}
+              style={{ ...sx.closeBtn, ...(hoverClose ? sx.closeBtnHover : {}) }}
+              title="Chiudi"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div style={sx.body}>
+            <div style={sx.content}>
+              <div>
+                <div style={sx.sectionLabel}>Tipo</div>
+                <div style={sx.pills2}>
+                  <button
+                    type="button"
+                    data-chip="1"
+                    onClick={() => setTipo("scadenza")}
+                    style={chipSmall(tipo === "scadenza")}
+                  >
+                    Scadenza
+                  </button>
+                  <button
+                    type="button"
+                    data-chip="1"
+                    onClick={() => setTipo("appuntamento")}
+                    style={chipSmall(tipo === "appuntamento")}
+                  >
+                    Appuntamento
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <div style={sx.sectionLabel}>Titolo</div>
+                <input
+                  value={titolo}
+                  onChange={(e) => setTitolo(e.target.value)}
+                  placeholder="Es: Affitto / Dentista"
+                  style={inputLight(false)}
+                />
+              </div>
+
+              <div style={sx.row2}>
+                <div>
+                  <div style={sx.sectionLabel}>Data</div>
+                  <input
+                    type="date"
+                    value={data}
+                    onChange={(e) => setData(e.target.value)}
+                    style={inputLight(false)}
+                  />
+                </div>
+
+                <div>
+                  <div style={sx.sectionLabel}>Ora</div>
+                  <input
+                    type="time"
+                    value={ora}
+                    onChange={(e) => setOra(e.target.value)}
+                    style={inputLight(false)}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div style={sx.sectionLabel}>Importo uscita (€) facoltativo</div>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={importo}
+                  onChange={(e) => setImporto(e.target.value)}
+                  placeholder="Es: 650"
+                  style={inputLight(false)}
+                />
+
+                <div
+                  style={{
+                    marginTop: 8,
+                    fontSize: 12,
+                    fontWeight: 850,
+                    opacity: 0.72,
+                    lineHeight: 1.35,
+                  }}
+                >
+                  Qui inserisci solo eventuali uscite collegate a scadenze o appuntamenti. Le entrate si inseriscono solo nell’area Controllo.
+                </div>
+              </div>
+
+              <div>
+                <div style={sx.sectionLabel}>Nota</div>
+                <textarea
+                  value={nota}
+                  onChange={(e) => setNota(e.target.value)}
+                  rows={4}
+                  placeholder="Scrivi una nota..."
+                  style={{
+                    ...inputLight(false),
+                    height: "auto",
+                    minHeight: 110,
+                    resize: "vertical",
+                    lineHeight: 1.4,
+                  }}
+                />
+              </div>
+
+              <div>
+                <div style={sx.sectionLabel}>Stato</div>
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                  <button
+                    type="button"
+                    data-chip="1"
+                    onClick={() => setUrgente((v) => !v)}
+                    style={{
+                      ...chipSmall(urgente),
+                      background: urgente
+                        ? "linear-gradient(180deg, rgba(239,68,68,0.22), rgba(220,38,38,0.12))"
+                        : "rgba(255,255,255,0.82)",
+                      border: urgente ? "1px solid rgba(239,68,68,0.30)" : "1px solid rgba(15,23,42,0.08)",
+                      boxShadow: urgente
+                        ? "0 14px 28px rgba(239,68,68,0.18)"
+                        : "0 10px 18px rgba(15,23,42,0.06)",
+                    }}
+                  >
+                    {urgente ? "Urgente attivo" : "Segna come urgente"}
+                  </button>
+
+                  {urgente && badgeUrgente()}
+                  {badgeTipo(tipo)}
+                </div>
+              </div>
+
+              <div>
+                <div style={sx.sectionLabel}>Notifiche (ore prima)</div>
+
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {presetOre.map((p) => {
+                    const min = Math.max(1, Math.round(p.ore * 60));
+                    const active = notificheMinutiPrima.includes(min);
+                    return (
+                      <button
+                        type="button"
+                        data-chip="1"
+                        key={p.label}
+                        onClick={() => toggleNotificaOre(p.ore)}
+                        style={chipSmall(active)}
+                        title={`${p.ore} ore prima`}
+                      >
+                        {p.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: "1fr auto", gap: 10 }}>
+                  <input
+                    value={customNotificaOre}
+                    onChange={(e) => setCustomNotificaOre(e.target.value)}
+                    placeholder="Ore custom (es: 1,5)"
+                    style={inputLight(false)}
+                    inputMode="decimal"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addCustomNotificaOre();
+                      }
+                    }}
+                  />
+                  <button type="button" data-chip="1" onClick={addCustomNotificaOre} style={chip(true)}>
+                    Aggiungi
+                  </button>
+                </div>
+
+                <div style={{ marginTop: 10, fontSize: 12, fontWeight: 850, opacity: 0.7, lineHeight: 1.35 }}>
+                  Le notifiche sono in-app: funzionano se l’app resta aperta.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style={sx.footer}>
+            <button type="button" data-chip="1" onClick={chiudiForm} style={sx.actionBtn(false)}>
+              Annulla
+            </button>
+            <button type="button" data-chip="1" onClick={salva} style={sx.actionBtn(true)}>
+              Salva
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {mostraTurnoForm && (
+      <div
+        style={sx.overlay}
+        onMouseDown={(e) => {
+          if (e.target === e.currentTarget) chiudiTurnoForm();
+        }}
+      >
+        <div style={sx.modal}>
+          <div style={sx.header}>
+            <div>
+              <div style={{ fontSize: 18, fontWeight: 950, letterSpacing: -0.2 }}>Nuovo turno</div>
+              <div style={{ fontSize: 12, opacity: 0.65, marginTop: 4, fontWeight: 800 }}>
+                Inserisci turno, ore ordinarie e straordinarie
+              </div>
+            </div>
+
+            <button
+              type="button"
+              data-chip="1"
+              onMouseEnter={() => setHoverCloseTurno(true)}
+              onMouseLeave={() => setHoverCloseTurno(false)}
+              onClick={chiudiTurnoForm}
+              style={{ ...sx.closeBtn, ...(hoverCloseTurno ? sx.closeBtnHover : {}) }}
+              title="Chiudi"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div style={sx.body}>
+            <div style={sx.content}>
+              <div>
+                <div style={sx.sectionLabel}>Data</div>
+                <input
+                  type="date"
+                  value={turnoData}
+                  onChange={(e) => setTurnoData(e.target.value)}
+                  style={inputLight(false)}
+                />
+              </div>
+
+              <div style={{ display: "grid", gap: 12 }}>
+                <div>
+                  <div style={sx.sectionLabel}>Turno predefinito</div>
+
+                  <select
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setTurnoPreset(val);
+
+                      if (!val) return;
+
+                      if (val === "RIPOSO") {
+                        setTurnoInizio("RIPOSO");
+                        setTurnoFine("RIPOSO");
+                        setTurnoOreOrd("0");
+                        setTurnoOreStraord("");
+                        return;
+                      }
+
+                      const parti = val.split("-");
+                      if (parti.length !== 2) return;
+
+                      let start = parti[0].trim();
+                      let end = parti[1].trim();
+
+                      if (/^\d$/.test(start)) start = `0${start}`;
+                      if (/^\d$/.test(end)) end = `0${end}`;
+
+                      if (end === "24") end = "00";
+
+                      setTurnoInizio(`${start}:00`);
+                      setTurnoFine(`${end}:00`);
+                    }}
+                    style={{
+                      ...inputLight(false),
+                      background: "rgba(255,255,255,0.90)",
+                      fontWeight: 850,
+                    }}
+                    title="Seleziona turno predefinito"
+                  >
+                    <option value="">Seleziona turno preset…</option>
+                    {presetTurni.map((p) => (
+                      <option key={p} value={p}>
+                        {p}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={sx.row2}>
+                  <div>
+                    <div style={sx.sectionLabel}>Inizio turno</div>
+                    <input
+                      type="time"
+                      value={turnoInizio}
+                      onChange={(e) => setTurnoInizio(e.target.value)}
+                      style={inputLight(false)}
+                    />
+                  </div>
+
+                  <div>
+                    <div style={sx.sectionLabel}>Fine turno</div>
+                    <input
+                      type="time"
+                      value={turnoFine}
+                      onChange={(e) => setTurnoFine(e.target.value)}
+                      style={inputLight(false)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div style={sx.row2}>
+                <div>
+                  <div style={sx.sectionLabel}>Ore ordinarie</div>
+                  <input
+                    value={turnoOreOrd}
+                    onChange={(e) => setTurnoOreOrd(e.target.value)}
+                    placeholder="Es: 8"
+                    style={inputLight(false)}
+                    inputMode="decimal"
+                  />
+                </div>
+                <div>
+                  <div style={sx.sectionLabel}>Ore straordinarie</div>
+                  <input
+                    value={turnoOreStraord}
+                    onChange={(e) => setTurnoOreStraord(e.target.value)}
+                    placeholder="Es: 2"
+                    style={inputLight(false)}
+                    inputMode="decimal"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div style={sx.sectionLabel}>Note</div>
+                <textarea
+                  value={turnoNote}
+                  onChange={(e) => setTurnoNote(e.target.value)}
+                  rows={4}
+                  placeholder="Note turno..."
+                  style={{
+                    ...inputLight(false),
+                    height: "auto",
+                    minHeight: 110,
+                    resize: "vertical",
+                    lineHeight: 1.4,
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div style={sx.footer}>
+            <button type="button" data-chip="1" onClick={chiudiTurnoForm} style={sx.actionBtn(false)}>
+              Annulla
+            </button>
+            <button type="button" data-chip="1" onClick={salvaTurno} style={sx.actionBtn(true)}>
+              Salva turno
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+);
+}
