@@ -951,7 +951,7 @@ export default function App() {
     setMostraForm(true);
   }
 
-  void apriNuovaConData;
+  
 
   function apriModifica(v: Voce) {
     setIdInModifica(v.id);
@@ -2784,28 +2784,32 @@ export default function App() {
 
 
 
-function MiniCalendarioControllo({
-  mese,
-  eventi,
-  onPrevMonth,
-  onNextMonth,
-}: {
-  mese: Date;
-  eventi: Array<{
-    id: string;
-    data: string;
-    tipo: "scadenza" | "appuntamento" | "entrata" | "uscita";
-    titolo: string;
-    ora: string;
-    importo: number | null;
-    movimento: Movimento;
-    nota: string;
-    urgente: boolean;
-    sorgente: "voce" | "entrata" | "uscita-extra";
-  }>;
-  onPrevMonth: () => void;
-  onNextMonth: () => void;
-}) {
+  function MiniCalendarioControllo({
+    mese,
+    eventi,
+    onPrevMonth,
+    onNextMonth,
+    onAddScadenza,
+    onAddAppuntamento,
+  }: {
+    mese: Date;
+    eventi: Array<{
+      id: string;
+      data: string;
+      tipo: "scadenza" | "appuntamento" | "entrata" | "uscita";
+      titolo: string;
+      ora: string;
+      importo: number | null;
+      movimento: Movimento;
+      nota: string;
+      urgente: boolean;
+      sorgente: "voce" | "entrata" | "uscita-extra";
+    }>;
+    onPrevMonth: () => void;
+    onNextMonth: () => void;
+    onAddScadenza: (data: string) => void;
+    onAddAppuntamento: (data: string) => void;
+  }) {
 
 
     const y = mese.getFullYear();
@@ -3050,6 +3054,53 @@ function MiniCalendarioControllo({
                       USC {info.uscite}
                     </div>
                   ) : null}
+
+
+                                    <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: 4,
+                      marginTop: 4,
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => onAddScadenza(key)}
+                      style={{
+                        padding: "4px 6px",
+                        borderRadius: 999,
+                        border: "1px solid rgba(16,185,129,0.18)",
+                        background: "rgba(220,252,231,0.92)",
+                        fontSize: 10,
+                        fontWeight: 900,
+                        cursor: "pointer",
+                        color: "rgba(6,95,70,0.98)",
+                      }}
+                      title="Nuova scadenza"
+                    >
+                      + S
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => onAddAppuntamento(key)}
+                      style={{
+                        padding: "4px 6px",
+                        borderRadius: 999,
+                        border: "1px solid rgba(168,85,247,0.18)",
+                        background: "rgba(245,243,255,0.92)",
+                        fontSize: 10,
+                        fontWeight: 900,
+                        cursor: "pointer",
+                        color: "rgba(107,33,168,0.98)",
+                      }}
+                      title="Nuovo appuntamento"
+                    >
+                      + A
+                    </button>
+                  </div>
+
 
                   {!info && (
                     <div
@@ -3303,11 +3354,13 @@ function MiniCalendarioControllo({
           </div>
         </div>
 
-        <MiniCalendarioControllo
+           <MiniCalendarioControllo
           mese={meseCorrente}
           eventi={eventiControlloMese}
           onPrevMonth={mesePrecedente}
           onNextMonth={meseSuccessivo}
+          onAddScadenza={(dataSel) => apriNuovaConData(dataSel, "scadenza")}
+          onAddAppuntamento={(dataSel) => apriNuovaConData(dataSel, "appuntamento")}
         />
 
         <div
