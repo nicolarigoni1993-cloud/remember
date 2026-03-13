@@ -1353,8 +1353,6 @@ export default function App() {
       return ordinaIntelligente(filtrateOggi);
     }
 
-   
-  
 
     const fine = new Date(inizioOggi);
 
@@ -1369,13 +1367,7 @@ export default function App() {
 
     return ordinaIntelligente(filtrate);
   }
-
-
  void vociFiltrate;
-
-
-
-
 
 
 
@@ -5017,17 +5009,8 @@ export default function App() {
 
 
 
-        {pagina === "archivio" && (
+              {pagina === "archivio" && (
           <>
-            <MiniCalendario
-              mese={meseCorrente}
-              vociDelMese={voci.filter((v) => stessoMeseSelezionato(v.data))}
-              turniDelMese={turniArchivioMese}
-              onPrevMonth={mesePrecedente}
-              onNextMonth={meseSuccessivo}
-              onEditTurno={apriModificaTurno}
-            />
-
             <div style={{ maxWidth: 1060, margin: "0 auto", marginTop: 14, display: "grid", gap: 14 }}>
               <div
                 style={{
