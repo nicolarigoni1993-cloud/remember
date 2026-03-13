@@ -1310,6 +1310,94 @@ export default function App() {
   const appuntamentiCountHome = prossimiAppuntamentiHome.length;
   const scadenzeCountHome = prossimeScadenzeHome.length;
 
+
+    const tutteEntrateExtra = useMemo(() => {
+    return Object.entries(incassi).flatMap(([mese, dati]) =>
+      (dati.entrateExtra ?? []).map((x) => ({
+        ...x,
+        mese,
+      }))
+    );
+  }, [incassi]);
+
+  const entrateAnnoCorrente = useMemo(() => {
+    const anno = meseCorrente.getFullYear();
+    return tutteEntrateExtra
+      .filter((x) => {
+        const [a] = x.data.split("-").map(Number);
+        return a === anno;
+      })
+      .reduce((acc, x) => acc + x.importo, 0);
+  }, [tutteEntrateExtra, meseCorrente]);
+
+  const usciteAnnoCorrente = useMemo(() => {
+    const anno = meseCorrente.getFullYear();
+    return voci
+      .filter((v) => v.importo !== null && v.movimento === "uscita")
+      .filter((v) => {
+        const [a] = v.data.split("-").map(Number);
+        return a === anno;
+      })
+      .reduce((acc, v) => acc + (v.importo ?? 0), 0);
+  }, [voci, meseCorrente]);
+
+  const saldoAnno = useMemo(() => {
+    return entrateAnnoCorrente - usciteAnnoCorrente;
+  }, [entrateAnnoCorrente, usciteAnnoCorrente]);
+
+  const eventiControlloMese = useMemo(() => {
+    const eventiVoci = voci
+      .filter((v) => stessoMeseSelezionato(v.data))
+      .map((v) => ({
+        id: v.id,
+        data: v.data,
+        tipo: v.tipo,
+        titolo: v.titolo,
+        ora: v.ora,
+        importo: v.importo,
+        movimento: v.movimento,
+        nota: v.nota,
+        urgente: v.urgente,
+        sorgente: "voce" as const,
+      }));
+
+    const eventiEntrate = entrateExtraVal.map((e) => ({
+      id: e.id,
+      data: e.data,
+      tipo: "entrata" as const,
+      titolo: e.descrizione,
+      ora: "09:00",
+      importo: e.importo,
+      movimento: "entrata" as const,
+      nota: "",
+      urgente: false,
+      sorgente: "entrata" as const,
+    }));
+
+    return [...eventiVoci, ...eventiEntrate].sort((a, b) => {
+      const d = a.data.localeCompare(b.data);
+      if (d !== 0) return d;
+      return a.ora.localeCompare(b.ora);
+    });
+  }, [voci, entrateExtraVal, meseCorrente]);
+
+  const scadenzeControlloMese = useMemo(() => {
+    return eventiControlloMese.filter((x) => x.tipo === "scadenza");
+  }, [eventiControlloMese]);
+
+  const appuntamentiControlloMese = useMemo(() => {
+    return eventiControlloMese.filter((x) => x.tipo === "appuntamento");
+  }, [eventiControlloMese]);
+
+  const entrateControlloMese = useMemo(() => {
+    return eventiControlloMese.filter((x) => x.movimento === "entrata");
+  }, [eventiControlloMese]);
+
+  const usciteControlloMese = useMemo(() => {
+    return eventiControlloMese.filter((x) => x.movimento === "uscita" && x.importo !== null);
+  }, [eventiControlloMese]);
+
+
   function badgeTipo(t: Voce["tipo"]) {
     const map = {
       scadenza: {
@@ -2580,6 +2668,355 @@ export default function App() {
     );
   }           
 
+
+
+
+
+
+
+  function MiniCalendarioControllo({
+    mese,
+    eventi,
+    onPrevMonth,
+    onNextMonth,
+  }: {
+    mese: Date;
+    eventi: Array<{
+      id: string;
+      data: string;
+      tipo: "scadenza" | "appuntamento" | "entrata";
+      titolo: string;
+      ora: string;
+      importo: number | null;
+      movimento: Movimento;
+      nota: string;
+      urgente: boolean;
+      sorgente: "voce" | "entrata";
+    }>;
+    onPrevMonth: () => void;
+    onNextMonth: () => void;
+  }) {
+    const y = mese.getFullYear();
+    const m0 = mese.getMonth();
+    const first = new Date(y, m0, 1);
+    const offset = weekdayMon0(first);
+    const dim = daysInMonth(y, m0);
+
+    const oggi = new Date();
+    const oggiKey = ymd(oggi.getFullYear(), oggi.getMonth(), oggi.getDate());
+
+    const giorni: Array<string | null> = [];
+    for (let i = 0; i < offset; i++) giorni.push(null);
+    for (let d = 1; d <= dim; d++) giorni.push(ymd(y, m0, d));
+    while (giorni.length % 7 !== 0) giorni.push(null);
+
+    const titoloMese = mese.toLocaleDateString("it-IT", {
+      month: "long",
+      year: "numeric",
+    });
+
+    const stats = new Map<
+      string,
+      {
+        scadenze: number;
+        appuntamenti: number;
+        entrate: number;
+        uscite: number;
+        urgente: boolean;
+      }
+    >();
+
+    for (const ev of eventi) {
+      const prev = stats.get(ev.data) ?? {
+        scadenze: 0,
+        appuntamenti: 0,
+        entrate: 0,
+        uscite: 0,
+        urgente: false,
+      };
+
+      if (ev.tipo === "scadenza") prev.scadenze += 1;
+      if (ev.tipo === "appuntamento") prev.appuntamenti += 1;
+      if (ev.movimento === "entrata") prev.entrate += 1;
+      if (ev.movimento === "uscita" && ev.importo !== null) prev.uscite += 1;
+      if (ev.urgente) prev.urgente = true;
+
+      stats.set(ev.data, prev);
+    }
+
+    const weekdayHeader = ["LUN", "MAR", "MER", "GIO", "VEN", "SAB", "DOM"];
+
+    return (
+      <div style={{ ...ui.card, padding: 18 }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "42px 1fr 42px",
+            alignItems: "center",
+            gap: 12,
+            marginBottom: 14,
+          }}
+        >
+          <button type="button" onClick={onPrevMonth} style={chip(false)} title="Mese precedente">
+            ←
+          </button>
+
+          <div
+            style={{
+              textAlign: "center",
+              fontSize: 24,
+              fontWeight: 1000,
+              letterSpacing: -0.6,
+              textTransform: "capitalize",
+              color: "rgba(15,23,42,0.94)",
+              lineHeight: 1.1,
+            }}
+          >
+            {titoloMese}
+          </div>
+
+          <button type="button" onClick={onNextMonth} style={chip(false)} title="Mese successivo">
+            →
+          </button>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
+            gap: 8,
+            marginBottom: 10,
+          }}
+        >
+          {weekdayHeader.map((w, i) => {
+            const weekend = i === 5 || i === 6;
+            return (
+              <div
+                key={w}
+                style={{
+                  textAlign: "center",
+                  fontSize: 11,
+                  fontWeight: 1000,
+                  letterSpacing: 0.4,
+                  color: weekend ? "rgba(185,28,28,0.86)" : "rgba(22,101,52,0.80)",
+                  textTransform: "uppercase",
+                  paddingBottom: 2,
+                }}
+              >
+                {w}
+              </div>
+            );
+          })}
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
+            gap: 10,
+          }}
+        >
+          {giorni.map((key, idx) => {
+            if (!key) {
+              return (
+                <div
+                  key={`ec_${idx}`}
+                  style={{
+                    minHeight: 110,
+                    borderRadius: 18,
+                    background: "transparent",
+                  }}
+                />
+              );
+            }
+
+            const d = Number(key.slice(-2));
+            const info = stats.get(key);
+            const isToday = key === oggiKey;
+            const cellDate = new Date(y, m0, d);
+            const jsDay = cellDate.getDay();
+            const isWeekend = jsDay === 0 || jsDay === 6;
+
+            return (
+              <div
+                key={key}
+                style={{
+                  minHeight: 120,
+                  borderRadius: 20,
+                  border: info?.urgente
+                    ? "2px solid rgba(239,68,68,0.34)"
+                    : isToday
+                    ? "2px solid rgba(59,130,246,0.28)"
+                    : "1px solid rgba(15,23,42,0.08)",
+                  background: isToday
+                    ? "linear-gradient(180deg, rgba(239,246,255,0.96), rgba(248,250,252,0.92))"
+                    : "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.88))",
+                  boxShadow: "0 12px 26px rgba(15,23,42,0.08)",
+                  padding: 10,
+                  display: "grid",
+                  alignContent: "space-between",
+                  gap: 8,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: isToday ? 24 : 20,
+                    fontWeight: 1000,
+                    lineHeight: 1,
+                    color: isWeekend ? "rgba(200,20,16,0.98)" : "rgba(18,140,48,0.98)",
+                    textAlign: "center",
+                  }}
+                >
+                  {d}
+                </div>
+
+                <div style={{ display: "grid", gap: 5 }}>
+                  {info?.scadenze ? (
+                    <div
+                      style={{
+                        padding: "4px 8px",
+                        borderRadius: 999,
+                        fontSize: 11,
+                        fontWeight: 900,
+                        textAlign: "center",
+                        color: "rgba(6,95,70,0.98)",
+                        background: "rgba(220,252,231,0.95)",
+                        border: "1px solid rgba(16,185,129,0.18)",
+                      }}
+                    >
+                      SCA {info.scadenze}
+                    </div>
+                  ) : null}
+
+                  {info?.appuntamenti ? (
+                    <div
+                      style={{
+                        padding: "4px 8px",
+                        borderRadius: 999,
+                        fontSize: 11,
+                        fontWeight: 900,
+                        textAlign: "center",
+                        color: "rgba(107,33,168,0.98)",
+                        background: "rgba(245,243,255,0.95)",
+                        border: "1px solid rgba(168,85,247,0.18)",
+                      }}
+                    >
+                      APP {info.appuntamenti}
+                    </div>
+                  ) : null}
+
+                  {info?.entrate ? (
+                    <div
+                      style={{
+                        padding: "4px 8px",
+                        borderRadius: 999,
+                        fontSize: 11,
+                        fontWeight: 900,
+                        textAlign: "center",
+                        color: "rgba(5,150,105,0.98)",
+                        background: "rgba(236,253,245,0.95)",
+                        border: "1px solid rgba(16,185,129,0.18)",
+                      }}
+                    >
+                      ENT {info.entrate}
+                    </div>
+                  ) : null}
+
+                  {info?.uscite ? (
+                    <div
+                      style={{
+                        padding: "4px 8px",
+                        borderRadius: 999,
+                        fontSize: 11,
+                        fontWeight: 900,
+                        textAlign: "center",
+                        color: "rgba(185,28,28,0.98)",
+                        background: "rgba(254,242,242,0.95)",
+                        border: "1px solid rgba(239,68,68,0.18)",
+                      }}
+                    >
+                      USC {info.uscite}
+                    </div>
+                  ) : null}
+
+                  {!info && (
+                    <div
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 800,
+                        opacity: 0.25,
+                        textAlign: "center",
+                      }}
+                    >
+                      —
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div
+          style={{
+            marginTop: 14,
+            display: "flex",
+            gap: 8,
+            flexWrap: "wrap",
+            alignItems: "center",
+            fontSize: 11,
+            fontWeight: 900,
+            opacity: 0.82,
+          }}
+        >
+          <span
+            style={{
+              padding: "6px 10px",
+              borderRadius: 999,
+              background: "rgba(220,252,231,0.95)",
+              border: "1px solid rgba(16,185,129,0.18)",
+            }}
+          >
+            SCA = Scadenze
+          </span>
+          <span
+            style={{
+              padding: "6px 10px",
+              borderRadius: 999,
+              background: "rgba(245,243,255,0.95)",
+              border: "1px solid rgba(168,85,247,0.18)",
+            }}
+          >
+            APP = Appuntamenti
+          </span>
+          <span
+            style={{
+              padding: "6px 10px",
+              borderRadius: 999,
+              background: "rgba(236,253,245,0.95)",
+              border: "1px solid rgba(16,185,129,0.18)",
+            }}
+          >
+            ENT = Entrate
+          </span>
+          <span
+            style={{
+              padding: "6px 10px",
+              borderRadius: 999,
+              background: "rgba(254,242,242,0.95)",
+              border: "1px solid rgba(239,68,68,0.18)",
+            }}
+          >
+            USC = Uscite
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+
+
+
   function renderAreaControllo() {
     const controlloCardStyle: React.CSSProperties = {
       ...ui.card,
@@ -2588,7 +3025,7 @@ export default function App() {
       position: "relative",
     };
 
-    const statBox = (accent: "blue" | "green" | "red" | "violet"): React.CSSProperties => {
+    const statBox = (accent: "blue" | "green" | "red" | "violet" | "orange"): React.CSSProperties => {
       const map = {
         blue: {
           bg: "linear-gradient(180deg, rgba(59,130,246,0.14), rgba(59,130,246,0.06))",
@@ -2610,6 +3047,11 @@ export default function App() {
           bd: "rgba(124,58,237,0.18)",
           shadow: "0 16px 32px rgba(124,58,237,0.10)",
         },
+        orange: {
+          bg: "linear-gradient(180deg, rgba(249,115,22,0.14), rgba(249,115,22,0.06))",
+          bd: "rgba(249,115,22,0.18)",
+          shadow: "0 16px 32px rgba(249,115,22,0.10)",
+        },
       };
 
       return {
@@ -2620,17 +3062,6 @@ export default function App() {
         boxShadow: map[accent].shadow,
       };
     };
-
-    const totaleGrafico = Math.max(entrateTotMese + usciteTotMese, 1);
-    const percEntrate = (entrateTotMese / totaleGrafico) * 100;
-    const percUscite = (usciteTotMese / totaleGrafico) * 100;
-
-    const prossimeUrgenti = ordinaIntelligente(
-      voci
-        .filter((v) => !v.fatto)
-        .filter((v) => v.urgente || giorniMancanti(v.data) <= 7)
-        .slice()
-    ).slice(0, 5);
 
     return (
       <div style={{ maxWidth: 1060, margin: "0 auto", marginTop: 8, display: "grid", gap: 14 }}>
@@ -2664,7 +3095,7 @@ export default function App() {
                     color: "rgba(15,23,42,0.96)",
                   }}
                 >
-                  Centro controllo
+                  Controllo economico
                 </div>
                 <div
                   style={{
@@ -2674,7 +3105,7 @@ export default function App() {
                     opacity: 0.66,
                   }}
                 >
-                  Denaro, turni, ore mensili e scadenze sotto controllo
+                  Calendario economico con scadenze, appuntamenti, entrate e uscite
                 </div>
               </div>
 
@@ -2703,14 +3134,14 @@ export default function App() {
               }}
             >
               <div style={statBox("green")}>
-                <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Entrate totali</div>
+                <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Entrate mese</div>
                 <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000 }}>
                   {entrateTotMese.toLocaleString("it-IT")} €
                 </div>
               </div>
 
               <div style={statBox("red")}>
-                <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Uscite totali</div>
+                <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Uscite mese</div>
                 <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000 }}>
                   {usciteTotMese.toLocaleString("it-IT")} €
                 </div>
@@ -2730,515 +3161,384 @@ export default function App() {
                 </div>
               </div>
 
+              <div style={statBox(saldoAnno >= 0 ? "green" : "orange")}>
+                <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Saldo anno</div>
+                <div
+                  style={{
+                    marginTop: 8,
+                    fontSize: 24,
+                    fontWeight: 1000,
+                    color: saldoAnno >= 0 ? "rgba(5,150,105,0.96)" : "rgba(194,65,12,0.96)",
+                  }}
+                >
+                  {saldoAnno.toLocaleString("it-IT")} €
+                </div>
+              </div>
+
               <div style={statBox("violet")}>
-                <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Voci attive</div>
+                <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Scadenze mese</div>
                 <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000 }}>
-                  {vociMeseAttive.length}
+                  {scadenzeControlloMese.length}
                 </div>
               </div>
+
+              <div style={statBox("blue")}>
+                <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Appuntamenti mese</div>
+                <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000 }}>
+                  {appuntamentiControlloMese.length}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <MiniCalendarioControllo
+          mese={meseCorrente}
+          eventi={eventiControlloMese}
+          onPrevMonth={mesePrecedente}
+          onNextMonth={meseSuccessivo}
+        />
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 14,
+          }}
+          className="remember-grid-2"
+        >
+          <div style={{ ...ui.card, padding: 18 }}>
+            <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Entrate del mese</div>
+            <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
+              Aggiungi manualmente ogni entrata con data, descrizione e importo
             </div>
 
             <div
               style={{
-                marginTop: 18,
+                marginTop: 16,
                 display: "grid",
-                gridTemplateColumns: "1.3fr 1fr",
-                gap: 14,
+                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                gap: 10,
+                alignItems: "end",
+              }}
+            >
+              <div>
+                <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Data</div>
+                <input
+                  type="date"
+                  value={nuovaEntrataData}
+                  onChange={(e) => setNuovaEntrataData(e.target.value)}
+                  style={inputLight(false)}
+                />
+              </div>
+
+              <div>
+                <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Descrizione</div>
+                <input
+                  type="text"
+                  value={nuovaEntrataDesc}
+                  onChange={(e) => setNuovaEntrataDesc(e.target.value)}
+                  placeholder="Es: Rimborso, straordinario, regalo..."
+                  style={inputLight(false)}
+                />
+              </div>
+
+              <div>
+                <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Importo</div>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={nuovaEntrataImporto}
+                  onChange={(e) => setNuovaEntrataImporto(e.target.value)}
+                  placeholder="Es: 150"
+                  style={inputLight(false)}
+                />
+              </div>
+
+              <button
+                data-chip="1"
+                onClick={aggiungiEntrataExtra}
+                style={{
+                  ...chip(true),
+                  height: 48,
+                  background: "linear-gradient(180deg, rgba(16,185,129,0.24), rgba(5,150,105,0.14))",
+                  border: "1px solid rgba(16,185,129,0.34)",
+                  color: "rgba(6,95,70,0.98)",
+                  boxShadow: "0 16px 30px rgba(16,185,129,0.16)",
+                }}
+              >
+                Aggiungi entrata
+              </button>
+            </div>
+
+            <div
+              style={{
+                marginTop: 16,
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                gap: 10,
               }}
             >
               <div
                 style={{
-                  padding: 16,
-                  borderRadius: 22,
-                  border: "1px solid rgba(15,23,42,0.08)",
-                  background: "rgba(255,255,255,0.72)",
-                  boxShadow: "0 14px 28px rgba(15,23,42,0.06)",
+                  padding: 14,
+                  borderRadius: 18,
+                  border: "1px solid rgba(16,185,129,0.12)",
+                  background: "linear-gradient(180deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03))",
                 }}
               >
-                <div style={{ fontSize: 14, fontWeight: 950, color: "rgba(15,23,42,0.92)" }}>
-                  Andamento del mese
+                <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Entrate mese</div>
+                <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+                  {entrateControlloMese.length}
                 </div>
+              </div>
 
+              <div
+                style={{
+                  padding: 14,
+                  borderRadius: 18,
+                  border: "1px solid rgba(124,58,237,0.12)",
+                  background: "linear-gradient(180deg, rgba(124,58,237,0.08), rgba(124,58,237,0.03))",
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Totale entrate mese</div>
+                <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+                  {totaleEntrateExtra.toLocaleString("it-IT")} €
+                </div>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
+              {entrateExtraVal.length === 0 ? (
                 <div
                   style={{
-                    marginTop: 12,
-                    height: 18,
-                    borderRadius: 999,
-                    overflow: "hidden",
-                    background: "rgba(226,232,240,0.9)",
-                    display: "flex",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: `${percEntrate}%`,
-                      background: "linear-gradient(90deg, rgba(16,185,129,0.95), rgba(5,150,105,0.92))",
-                    }}
-                  />
-                  <div
-                    style={{
-                      width: `${percUscite}%`,
-                      background: "linear-gradient(90deg, rgba(239,68,68,0.95), rgba(220,38,38,0.92))",
-                    }}
-                  />
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 12,
-                    display: "flex",
-                    gap: 16,
-                    flexWrap: "wrap",
-                    alignItems: "center",
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div
-                      style={{
-                        width: 12,
-                        height: 12,
-                        borderRadius: 999,
-                        background: "rgba(16,185,129,0.95)",
-                      }}
-                    />
-                    <span style={{ fontSize: 12, fontWeight: 900, opacity: 0.8 }}>
-                      Entrate: {entrateTotMese.toLocaleString("it-IT")} €
-                    </span>
-                  </div>
-
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div
-                      style={{
-                        width: 12,
-                        height: 12,
-                        borderRadius: 999,
-                        background: "rgba(239,68,68,0.95)",
-                      }}
-                    />
-                    <span style={{ fontSize: 12, fontWeight: 900, opacity: 0.8 }}>
-                      Uscite: {usciteTotMese.toLocaleString("it-IT")} €
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div
-                style={{
-                  padding: 16,
-                  borderRadius: 22,
-                  border: "1px solid rgba(15,23,42,0.08)",
-                  background: "linear-gradient(180deg, rgba(255,255,255,0.86), rgba(248,250,252,0.78))",
-                  boxShadow: "0 14px 28px rgba(15,23,42,0.06)",
-                }}
-              >
-                <div style={{ fontSize: 14, fontWeight: 950, color: "rgba(15,23,42,0.92)" }}>
-                  Riepilogo mese
-                </div>
-
-                <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
-                  <div
-                    style={{
-                      padding: 12,
-                      borderRadius: 18,
-                      border: "1px solid rgba(239,68,68,0.12)",
-                      background: "rgba(254,242,242,0.84)",
-                    }}
-                  >
-                    <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>
-                      Scadenze/appuntamenti imminenti
-                    </div>
-                    <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
-                      {prossimeUrgenti.length}
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      padding: 12,
-                      borderRadius: 18,
-                      border: "1px solid rgba(16,185,129,0.12)",
-                      background: "rgba(236,253,245,0.84)",
-                    }}
-                  >
-                    <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Entrate inserite</div>
-                    <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
-                      {entrateExtraVal.length}
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      padding: 12,
-                      borderRadius: 18,
-                      border: "1px solid rgba(59,130,246,0.12)",
-                      background: "rgba(239,246,255,0.84)",
-                    }}
-                  >
-                    <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Turni nel mese</div>
-                    <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
-                      {turniMese.length}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div style={{ ...ui.card, padding: 18 }}>
-          <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Entrate del mese</div>
-          <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
-            Aggiungi manualmente ogni entrata con data, descrizione e importo
-          </div>
-
-          <div
-            style={{
-              marginTop: 16,
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-              gap: 10,
-              alignItems: "end",
-            }}
-          >
-            <div>
-              <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Data</div>
-              <input
-                type="date"
-                value={nuovaEntrataData}
-                onChange={(e) => setNuovaEntrataData(e.target.value)}
-                style={inputLight(false)}
-              />
-            </div>
-
-            <div>
-              <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Descrizione</div>
-              <input
-                type="text"
-                value={nuovaEntrataDesc}
-                onChange={(e) => setNuovaEntrataDesc(e.target.value)}
-                placeholder="Es: Rimborso, straordinario, regalo..."
-                style={inputLight(false)}
-              />
-            </div>
-
-            <div>
-              <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Importo</div>
-              <input
-                type="text"
-                inputMode="decimal"
-                value={nuovaEntrataImporto}
-                onChange={(e) => setNuovaEntrataImporto(e.target.value)}
-                placeholder="Es: 150"
-                style={inputLight(false)}
-              />
-            </div>
-
-            <button
-              data-chip="1"
-              onClick={aggiungiEntrataExtra}
-              style={{
-                ...chip(true),
-                height: 48,
-                background: "linear-gradient(180deg, rgba(16,185,129,0.24), rgba(5,150,105,0.14))",
-                border: "1px solid rgba(16,185,129,0.34)",
-                color: "rgba(6,95,70,0.98)",
-                boxShadow: "0 16px 30px rgba(16,185,129,0.16)",
-              }}
-            >
-              Aggiungi
-            </button>
-          </div>
-
-          <div
-            style={{
-              marginTop: 16,
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-              gap: 10,
-            }}
-          >
-            <div
-              style={{
-                padding: 14,
-                borderRadius: 18,
-                border: "1px solid rgba(16,185,129,0.12)",
-                background: "linear-gradient(180deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03))",
-              }}
-            >
-              <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Entrate</div>
-              <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
-                {totaleEntrateExtra.toLocaleString("it-IT")} €
-              </div>
-            </div>
-
-            <div
-              style={{
-                padding: 14,
-                borderRadius: 18,
-                border: "1px solid rgba(124,58,237,0.12)",
-                background: "linear-gradient(180deg, rgba(124,58,237,0.08), rgba(124,58,237,0.03))",
-              }}
-            >
-              <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Numero entrate</div>
-              <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
-                {entrateExtraVal.length}
-              </div>
-            </div>
-          </div>
-
-          <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
-            {entrateExtraVal.length === 0 ? (
-              <div
-                style={{
-                  padding: 12,
-                  borderRadius: 16,
-                  border: "1px solid rgba(15,23,42,0.08)",
-                  background: "rgba(255,255,255,0.72)",
-                  fontSize: 13,
-                  fontWeight: 800,
-                  opacity: 0.65,
-                }}
-              >
-                Nessuna entrata inserita.
-              </div>
-            ) : (
-              entrateExtraVal
-                .slice()
-                .sort((a, b) => a.data.localeCompare(b.data))
-                .map((x) => (
-                  <div
-                    key={x.id}
-                    style={{
-                      padding: 14,
-                      borderRadius: 18,
-                      border: "1px solid rgba(16,185,129,0.16)",
-                      background: "linear-gradient(180deg, rgba(16,185,129,0.08), rgba(16,185,129,0.04))",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      gap: 12,
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.65 }}>
-                        {formattaDataBreve(x.data)}
-                      </div>
-                      <div style={{ marginTop: 3, fontSize: 14, fontWeight: 950 }}>
-                        {x.descrizione}
-                      </div>
-                      <div
-                        style={{
-                          marginTop: 4,
-                          fontSize: 12,
-                          fontWeight: 900,
-                          color: "rgba(5,150,105,0.96)",
-                        }}
-                      >
-                        {x.importo.toLocaleString("it-IT")} €
-                      </div>
-                    </div>
-
-                    <button data-chip="1" onClick={() => eliminaEntrataExtra(x.id)} style={chip(false)}>
-                      Elimina
-                    </button>
-                  </div>
-                ))
-            )}
-          </div>
-        </div>
-
-        <div style={{ ...ui.card, padding: 18 }}>
-          <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Ore e turni del mese</div>
-          <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
-            Monitoraggio mensile di ore ordinarie, straordinarie e totale
-          </div>
-
-          <div
-            style={{
-              marginTop: 16,
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-              gap: 10,
-            }}
-          >
-            <div
-              style={{
-                padding: 14,
-                borderRadius: 18,
-                border: "1px solid rgba(59,130,246,0.12)",
-                background: "linear-gradient(180deg, rgba(59,130,246,0.08), rgba(59,130,246,0.03))",
-              }}
-            >
-              <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Turni</div>
-              <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>{turniMese.length}</div>
-            </div>
-
-            <div
-              style={{
-                padding: 14,
-                borderRadius: 18,
-                border: "1px solid rgba(16,185,129,0.12)",
-                background: "linear-gradient(180deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03))",
-              }}
-            >
-              <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Ore ordinarie</div>
-              <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
-                {formatNumeroOre(oreOrdMese)} h
-              </div>
-            </div>
-
-            <div
-              style={{
-                padding: 14,
-                borderRadius: 18,
-                border: "1px solid rgba(249,115,22,0.16)",
-                background: "linear-gradient(180deg, rgba(249,115,22,0.08), rgba(249,115,22,0.03))",
-              }}
-            >
-              <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Ore straordinarie</div>
-              <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
-                {formatNumeroOre(oreStraMese)} h
-              </div>
-            </div>
-
-            <div
-              style={{
-                padding: 14,
-                borderRadius: 18,
-                border: "1px solid rgba(124,58,237,0.12)",
-                background: "linear-gradient(180deg, rgba(124,58,237,0.08), rgba(124,58,237,0.03))",
-              }}
-            >
-              <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Ore totali</div>
-              <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
-                {formatNumeroOre(oreTotMese)} h
-              </div>
-            </div>
-          </div>
-
-          <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
-            {turniMese.length === 0 ? (
-              <div
-                style={{
-                  padding: 12,
-                  borderRadius: 16,
-                  border: "1px solid rgba(15,23,42,0.08)",
-                  background: "rgba(255,255,255,0.72)",
-                  fontSize: 13,
-                  fontWeight: 800,
-                  opacity: 0.65,
-                }}
-              >
-                Nessun turno inserito nel mese.
-              </div>
-            ) : (
-              turniMese
-                .slice()
-                .sort((a, b) => a.data.localeCompare(b.data) || a.inizio.localeCompare(b.inizio))
-                .map((t) => (
-                  <div
-                    key={t.id}
-                    style={{
-                      padding: 14,
-                      borderRadius: 18,
-                      border: "1px solid rgba(59,130,246,0.16)",
-                      background: "linear-gradient(180deg, rgba(59,130,246,0.08), rgba(59,130,246,0.04))",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      gap: 12,
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.65 }}>
-                        {formattaDataBreve(t.data)}
-                      </div>
-                      <div style={{ marginTop: 3, fontSize: 14, fontWeight: 950 }}>
-                        Turno {t.inizio} - {t.fine}
-                      </div>
-                      <div style={{ marginTop: 4, fontSize: 12, fontWeight: 900, color: "rgba(30,64,175,0.95)" }}>
-                        Ord: {formatNumeroOre(t.oreOrdinarie)}h • Straord: {formatNumeroOre(t.oreStraordinarie)}h • Tot:{" "}
-                        {formatNumeroOre(t.oreOrdinarie + t.oreStraordinarie)}h
-                      </div>
-                      {t.note && (
-                        <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, opacity: 0.72 }}>
-                          {t.note}
-                        </div>
-                      )}
-                    </div>
-
-                    <button data-chip="1" onClick={() => eliminaTurno(t.id)} style={chip(false)}>
-                      Elimina
-                    </button>
-                  </div>
-                ))
-            )}
-          </div>
-        </div>
-
-        <div style={{ ...ui.card, padding: 18 }}>
-          <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>
-            Scadenze da tenere d’occhio
-          </div>
-          <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
-            Le prossime voci urgenti o vicine
-          </div>
-
-          <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
-            {prossimeUrgenti.length === 0 ? (
-              <div
-                style={{
-                  padding: 12,
-                  borderRadius: 16,
-                  border: "1px solid rgba(15,23,42,0.08)",
-                  background: "rgba(255,255,255,0.72)",
-                  fontSize: 13,
-                  fontWeight: 800,
-                  opacity: 0.65,
-                }}
-              >
-                Nessuna voce urgente o imminente.
-              </div>
-            ) : (
-              prossimeUrgenti.map((v) => (
-                <div
-                  key={v.id}
-                  style={{
-                    padding: 14,
-                    borderRadius: 18,
+                    padding: 12,
+                    borderRadius: 16,
                     border: "1px solid rgba(15,23,42,0.08)",
-                    background: "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.88))",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: 12,
-                    flexWrap: "wrap",
+                    background: "rgba(255,255,255,0.72)",
+                    fontSize: 13,
+                    fontWeight: 800,
+                    opacity: 0.65,
                   }}
                 >
-                  <div style={{ display: "grid", gap: 5 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      {badgeTipo(v.tipo)}
-                      {v.urgente && badgeUrgente()}
-                    </div>
-                    <div style={{ fontSize: 15, fontWeight: 950 }}>{v.titolo}</div>
-                    <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72 }}>
-                      {formattaDataBreve(v.data)} • {v.ora}
-                    </div>
-                  </div>
-
-                  <span style={styleBadgeScadenza(giorniMancanti(v.data), v.urgente)}>
-                    {v.urgente ? "URGENTE" : labelGiorni(giorniMancanti(v.data))}
-                  </span>
+                  Nessuna entrata inserita.
                 </div>
-              ))
-            )}
+              ) : (
+                entrateExtraVal
+                  .slice()
+                  .sort((a, b) => a.data.localeCompare(b.data))
+                  .map((x) => (
+                    <div
+                      key={x.id}
+                      style={{
+                        padding: 14,
+                        borderRadius: 18,
+                        border: "1px solid rgba(16,185,129,0.16)",
+                        background: "linear-gradient(180deg, rgba(16,185,129,0.08), rgba(16,185,129,0.04))",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: 12,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.65 }}>
+                          {formattaDataBreve(x.data)}
+                        </div>
+                        <div style={{ marginTop: 3, fontSize: 14, fontWeight: 950 }}>
+                          {x.descrizione}
+                        </div>
+                        <div
+                          style={{
+                            marginTop: 4,
+                            fontSize: 12,
+                            fontWeight: 900,
+                            color: "rgba(5,150,105,0.96)",
+                          }}
+                        >
+                          {x.importo.toLocaleString("it-IT")} €
+                        </div>
+                      </div>
+
+                      <button data-chip="1" onClick={() => eliminaEntrataExtra(x.id)} style={chip(false)}>
+                        Elimina
+                      </button>
+                    </div>
+                  ))
+              )}
+            </div>
+          </div>
+
+          <div style={{ ...ui.card, padding: 18 }}>
+            <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Movimenti ed eventi del mese</div>
+            <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
+              Scadenze, appuntamenti, entrate e uscite del mese selezionato
+            </div>
+
+            <div
+              style={{
+                marginTop: 16,
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+                gap: 10,
+              }}
+            >
+              <div
+                style={{
+                  padding: 12,
+                  borderRadius: 16,
+                  border: "1px solid rgba(16,185,129,0.12)",
+                  background: "rgba(236,253,245,0.84)",
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Entrate</div>
+                <div style={{ marginTop: 6, fontSize: 18, fontWeight: 1000 }}>
+                  {entrateControlloMese.length}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  padding: 12,
+                  borderRadius: 16,
+                  border: "1px solid rgba(239,68,68,0.12)",
+                  background: "rgba(254,242,242,0.84)",
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Uscite</div>
+                <div style={{ marginTop: 6, fontSize: 18, fontWeight: 1000 }}>
+                  {usciteControlloMese.length}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  padding: 12,
+                  borderRadius: 16,
+                  border: "1px solid rgba(124,58,237,0.12)",
+                  background: "rgba(245,243,255,0.84)",
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Scadenze</div>
+                <div style={{ marginTop: 6, fontSize: 18, fontWeight: 1000 }}>
+                  {scadenzeControlloMese.length}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  padding: 12,
+                  borderRadius: 16,
+                  border: "1px solid rgba(59,130,246,0.12)",
+                  background: "rgba(239,246,255,0.84)",
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Appuntamenti</div>
+                <div style={{ marginTop: 6, fontSize: 18, fontWeight: 1000 }}>
+                  {appuntamentiControlloMese.length}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
+              {eventiControlloMese.length === 0 ? (
+                <div
+                  style={{
+                    padding: 12,
+                    borderRadius: 16,
+                    border: "1px solid rgba(15,23,42,0.08)",
+                    background: "rgba(255,255,255,0.72)",
+                    fontSize: 13,
+                    fontWeight: 800,
+                    opacity: 0.65,
+                  }}
+                >
+                  Nessun movimento o evento nel mese selezionato.
+                </div>
+              ) : (
+                eventiControlloMese.map((ev) => {
+                  const isEntrata = ev.movimento === "entrata";
+                  const isUscita = ev.movimento === "uscita" && ev.importo !== null;
+
+                  return (
+                    <div
+                      key={`${ev.sorgente}_${ev.id}`}
+                      style={{
+                        padding: 14,
+                        borderRadius: 18,
+                        border: "1px solid rgba(15,23,42,0.08)",
+                        background: "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.88))",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: 12,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <div style={{ display: "grid", gap: 5 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                          {ev.tipo === "scadenza" || ev.tipo === "appuntamento" ? (
+                            badgeTipo(ev.tipo)
+                          ) : (
+                            badgeMov("entrata")
+                          )}
+
+                          {isUscita && badgeMov("uscita")}
+                          {ev.urgente && badgeUrgente()}
+                        </div>
+
+                        <div style={{ fontSize: 15, fontWeight: 950 }}>{ev.titolo}</div>
+
+                        <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72 }}>
+                          {formattaDataBreve(ev.data)} • {ev.ora}
+                        </div>
+
+                        {ev.nota && (
+                          <div style={{ fontSize: 12, fontWeight: 800, opacity: 0.68 }}>
+                            {ev.nota}
+                          </div>
+                        )}
+                      </div>
+
+                      <div style={{ display: "grid", gap: 6, justifyItems: "end" }}>
+                        {ev.importo !== null && (
+                          <div
+                            style={{
+                              padding: "7px 11px",
+                              borderRadius: 999,
+                              border: isEntrata
+                                ? "2px solid rgba(16,185,129,0.28)"
+                                : "2px solid rgba(239,68,68,0.28)",
+                              background: isEntrata ? "rgba(236,253,245,0.96)" : "rgba(254,242,242,0.96)",
+                              fontSize: 12,
+                              fontWeight: 950,
+                              color: isEntrata ? "rgba(5,150,105,0.96)" : "rgba(185,28,28,0.96)",
+                            }}
+                          >
+                            {ev.importo.toLocaleString("it-IT")} €
+                          </div>
+                        )}
+
+                        {ev.tipo === "scadenza" || ev.tipo === "appuntamento" ? (
+                          <span style={styleBadgeScadenza(giorniMancanti(ev.data), ev.urgente)}>
+                            {ev.urgente ? "URGENTE" : labelGiorni(giorniMancanti(ev.data))}
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>
         </div>
       </div>
     );
   }
+
+
+
 
   const GlobalStyle = (
     <style>{`
