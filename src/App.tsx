@@ -1638,18 +1638,28 @@ export default function App() {
     toggleNotificaOre(ore);
   }
 
+
+
+
+
+
+
+
+
   function MiniCalendario({
     mese,
     vociDelMese,
     turniDelMese,
     onPrevMonth,
     onNextMonth,
+    onEditTurno,
   }: {
     mese: Date;
     vociDelMese: Voce[];
     turniDelMese: Turno[];
     onPrevMonth: () => void;
     onNextMonth: () => void;
+    onEditTurno: (turno: Turno) => void;
   }) {
     const [pinnedDate, setPinnedDate] = useState<string | null>(null);
     const [isTouchDevice, setIsTouchDevice] = useState(false);
@@ -2281,14 +2291,19 @@ export default function App() {
                           );
                         })}
 
-                        {previewTurni.map((t) => {
+                                   {previewTurni.map((t) => {
                           const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
                           const descr = descrizioneTurnoBreve(t.inizio, t.fine, t.note);
                           const isRiposo = sigla === "R";
 
                           return (
-                            <div
+                            <button
                               key={t.id}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onEditTurno(t);
+                              }}
                               style={{
                                 padding: 11,
                                 borderRadius: 18,
@@ -2298,7 +2313,11 @@ export default function App() {
                                   : "1px solid rgba(59,130,246,0.14)",
                                 display: "grid",
                                 gap: 5,
+                                width: "100%",
+                                textAlign: "left",
+                                cursor: "pointer",
                               }}
+                              title="Modifica turno"
                             >
                               <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
                                 <span
@@ -2324,31 +2343,16 @@ export default function App() {
                                   ? "Giornata di riposo"
                                   : `Ord: ${formatNumeroOre(t.oreOrdinarie)}h • Straord: ${formatNumeroOre(t.oreStraordinarie)}h`}
                               </div>
-                            </div>
+
+                              <div style={{ fontSize: 11, fontWeight: 900, opacity: 0.62 }}>
+                                Tocca/clicca per modificare
+                              </div>
+                            </button>
                           );
                         })}
                       </div>
                     </div>
                   )}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
                   {isTouchDevice && isPinnedOpen && (previewItems.length > 0 || previewTurni.length > 0) && (
                     <div
@@ -2408,8 +2412,13 @@ export default function App() {
                           const isRiposo = sigla === "R";
 
                           return (
-                            <div
+                            <button
                               key={t.id}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onEditTurno(t);
+                              }}
                               style={{
                                 padding: 11,
                                 borderRadius: 16,
@@ -2419,7 +2428,11 @@ export default function App() {
                                   : "1px solid rgba(59,130,246,0.14)",
                                 display: "grid",
                                 gap: 5,
+                                width: "100%",
+                                textAlign: "left",
+                                cursor: "pointer",
                               }}
+                              title="Modifica turno"
                             >
                               <div
                                 style={{
@@ -2437,7 +2450,11 @@ export default function App() {
                                   ? "Giornata di riposo"
                                   : `Ord: ${formatNumeroOre(t.oreOrdinarie)}h • Straord: ${formatNumeroOre(t.oreStraordinarie)}h`}
                               </div>
-                            </div>
+
+                              <div style={{ fontSize: 11, fontWeight: 900, opacity: 0.62 }}>
+                                Tocca per modificare
+                              </div>
+                            </button>
                           );
                         })}
                       </div>
@@ -2555,13 +2572,13 @@ export default function App() {
                 lineHeight: 1.35,
               }}
             >
-              Desktop: passa col mouse sui giorni. Mobile: tocca il giorno per vedere dettagli. Il pulsante turno resta sempre dentro la casella senza sovrapporsi.
+              Desktop: passa col mouse sui giorni. Mobile: tocca il giorno per vedere dettagli. Tocca/clicca un turno per modificarlo. Il pulsante turno resta sempre dentro la casella senza sovrapporsi.
             </div>
           </div>
         </div>
       </div>
     );
-  }
+  }           
 
   function renderAreaControllo() {
     const controlloCardStyle: React.CSSProperties = {
@@ -4033,13 +4050,83 @@ export default function App() {
 
         {pagina === "agenda" && (
           <>
-            <MiniCalendario
+                        <MiniCalendario
               mese={meseCorrente}
-              vociDelMese={voci.filter((v) => !v.fatto).filter((v) => stessoMeseSelezionato(v.data))}
+              vociDelMese={[]}
               turniDelMese={turniMese}
               onPrevMonth={mesePrecedente}
               onNextMonth={meseSuccessivo}
+              onEditTurno={apriModificaTurno}
             />
+
+                      <div style={{ maxWidth: 1060, margin: "0 auto", marginTop: 14, display: "grid", gap: 14 }}>
+              <div
+                style={{
+                  ...ui.card,
+                  padding: 18,
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                  gap: 12,
+                }}
+              >
+                <div
+                  style={{
+                    padding: 14,
+                    borderRadius: 18,
+                    border: "1px solid rgba(59,130,246,0.12)",
+                    background: "linear-gradient(180deg, rgba(59,130,246,0.08), rgba(59,130,246,0.03))",
+                  }}
+                >
+                  <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Turni mese</div>
+                  <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>{turniMese.length}</div>
+                </div>
+
+                <div
+                  style={{
+                    padding: 14,
+                    borderRadius: 18,
+                    border: "1px solid rgba(16,185,129,0.12)",
+                    background: "linear-gradient(180deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03))",
+                  }}
+                >
+                  <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Ore ordinarie</div>
+                  <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+                    {formatNumeroOre(oreOrdMese)} h
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    padding: 14,
+                    borderRadius: 18,
+                    border: "1px solid rgba(249,115,22,0.12)",
+                    background: "linear-gradient(180deg, rgba(249,115,22,0.08), rgba(249,115,22,0.03))",
+                  }}
+                >
+                  <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Ore straordinarie</div>
+                  <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+                    {formatNumeroOre(oreStraMese)} h
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    padding: 14,
+                    borderRadius: 18,
+                    border: "1px solid rgba(124,58,237,0.12)",
+                    background: "linear-gradient(180deg, rgba(124,58,237,0.08), rgba(124,58,237,0.03))",
+                  }}
+                >
+                  <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Ore totali</div>
+                  <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+                    {formatNumeroOre(oreTotMese)} h
+                  </div>
+                </div>
+              </div>
+            </div>
+
+
+
 
             <div style={{ maxWidth: 1060, margin: "0 auto", marginTop: 14 }}>
               {turniMese.length === 0 ? (
@@ -4134,13 +4221,17 @@ export default function App() {
                               )}
                             </div>
 
-                            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                              <button data-chip="1" onClick={() => eliminaTurno(t.id)} style={chip(false)}>
-                                Elimina
-                              </button>
-                            </div>
-                          </div>
-                        </div>
+                         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                        <button data-chip="1" onClick={() => apriModificaTurno(t)} style={chip(true)}>
+                          Modifica
+                        </button>
+
+                        <button data-chip="1" onClick={() => eliminaTurno(t.id)} style={chip(false)}>
+                          Elimina
+                        </button>
+                      </div>
+                   </div>
+                  </div>
                       );
                     })}
                 </div>
@@ -4153,12 +4244,13 @@ export default function App() {
 
         {pagina === "archivio" && (
           <>
-            <MiniCalendario
+                      <MiniCalendario
               mese={meseCorrente}
               vociDelMese={voci.filter((v) => v.fatto).filter((v) => stessoMeseSelezionato(v.data))}
               turniDelMese={turniMese}
               onPrevMonth={mesePrecedente}
               onNextMonth={meseSuccessivo}
+              onEditTurno={apriModificaTurno}
             />
 
             <div style={{ maxWidth: 1060, margin: "0 auto", marginTop: 14, display: "grid", gap: 14 }}>
@@ -4578,10 +4670,14 @@ export default function App() {
           <div style={sx.modal}>
             <div style={sx.header}>
               <div>
-                <div style={{ fontSize: 18, fontWeight: 950, letterSpacing: -0.2 }}>Nuovo turno</div>
-                <div style={{ fontSize: 12, opacity: 0.65, marginTop: 4, fontWeight: 800 }}>
-                  Inserisci turno, ore ordinarie e straordinarie
-                </div>
+               <div style={{ fontSize: 18, fontWeight: 950, letterSpacing: -0.2 }}>
+                {turnoIdInModifica ? "Modifica turno" : "Nuovo turno"}
+              </div>
+               <div style={{ fontSize: 12, opacity: 0.65, marginTop: 4, fontWeight: 800 }}>
+                {turnoIdInModifica
+                  ? "Modifica turno, ore ordinarie e straordinarie"
+                  : "Inserisci turno, ore ordinarie e straordinarie"}
+              </div>
               </div>
 
               <button
@@ -4728,9 +4824,9 @@ export default function App() {
               <button type="button" data-chip="1" onClick={chiudiTurnoForm} style={sx.actionBtn(false)}>
                 Annulla
               </button>
-              <button type="button" data-chip="1" onClick={salvaTurno} style={sx.actionBtn(true)}>
-                Salva turno
-              </button>
+             <button type="button" data-chip="1" onClick={salvaTurno} style={sx.actionBtn(true)}>
+              {turnoIdInModifica ? "Salva modifiche" : "Salva turno"}
+            </button>
             </div>
           </div>
         </div>
