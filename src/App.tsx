@@ -26,8 +26,20 @@ type EntrataExtra = {
   importo: number;
 };
 
+
+type UscitaExtra = {
+  id: string;
+  data: string;
+  descrizione: string;
+  importo: number;
+  nota: string;
+};
+
+
+
 type IncassiMese = {
   entrateExtra: EntrataExtra[];
+  usciteExtra: UscitaExtra[];
 };
 
 type Turno = {
@@ -231,7 +243,10 @@ function caricaIncassi(userId: string): Record<string, IncassiMese> {
     const out: Record<string, IncassiMese> = {};
 
     for (const [k, v] of Object.entries(obj ?? {})) {
-      const extrasRaw = Array.isArray((v as any)?.entrateExtra) ? (v as any).entrateExtra : [];
+      const vv = v as any;
+
+      const extrasRaw = Array.isArray(vv?.entrateExtra) ? vv.entrateExtra : [];
+      const usciteRaw = Array.isArray(vv?.usciteExtra) ? vv.usciteExtra : [];
 
       out[k] = {
         entrateExtra: extrasRaw
@@ -242,6 +257,16 @@ function caricaIncassi(userId: string): Record<string, IncassiMese> {
             importo: Number(x?.importo ?? 0) || 0,
           }))
           .filter((x: EntrataExtra) => x.descrizione.length > 0 && x.importo > 0),
+
+        usciteExtra: usciteRaw
+          .map((x: any) => ({
+            id: String(x?.id ?? safeUUID()),
+            data: String(x?.data ?? ""),
+            descrizione: String(x?.descrizione ?? "").trim(),
+            importo: Number(x?.importo ?? 0) || 0,
+            nota: String(x?.nota ?? "").trim(),
+          }))
+          .filter((x: UscitaExtra) => x.descrizione.length > 0 && x.importo > 0),
       };
     }
 
@@ -719,6 +744,10 @@ export default function App() {
   const [nuovaEntrataData, setNuovaEntrataData] = useState(new Date().toISOString().slice(0, 10));
   const [nuovaEntrataDesc, setNuovaEntrataDesc] = useState("");
   const [nuovaEntrataImporto, setNuovaEntrataImporto] = useState("");
+ const [nuovaUscitaData, setNuovaUscitaData] = useState(new Date().toISOString().slice(0, 10));
+  const [nuovaUscitaDesc, setNuovaUscitaDesc] = useState("");
+  const [nuovaUscitaImporto, setNuovaUscitaImporto] = useState("");
+  const [nuovaUscitaNota, setNuovaUscitaNota] = useState("");
 
   const [mostraTurnoForm, setMostraTurnoForm] = useState(false);
   const [turnoData, setTurnoData] = useState(new Date().toISOString().slice(0, 10));
@@ -912,6 +941,17 @@ export default function App() {
     resetForm();
     setMostraForm(true);
   }
+
+
+  function apriNuovaConData(dataSelezionata: string, tipoDefault: Voce["tipo"]) {
+    resetForm();
+    setData(dataSelezionata);
+    setOra("09:00");
+    setTipo(tipoDefault);
+    setMostraForm(true);
+  }
+
+  void apriNuovaConData;
 
   function apriModifica(v: Voce) {
     setIdInModifica(v.id);
@@ -1130,6 +1170,7 @@ export default function App() {
   }
 
   const entrateExtraVal = incassi[meseKey]?.entrateExtra ?? [];
+    const usciteExtraVal = incassi[meseKey]?.usciteExtra ?? [];
 
   function aggiungiEntrataExtra() {
     const descrizione = nuovaEntrataDesc.trim();
@@ -1159,6 +1200,7 @@ export default function App() {
       ...prev,
       [meseKey]: {
         entrateExtra: [...(prev[meseKey]?.entrateExtra ?? []), nuova],
+        usciteExtra: prev[meseKey]?.usciteExtra ?? [],
       },
     }));
 
@@ -1171,9 +1213,64 @@ export default function App() {
       ...prev,
       [meseKey]: {
         entrateExtra: (prev[meseKey]?.entrateExtra ?? []).filter((x) => x.id !== id),
+        usciteExtra: prev[meseKey]?.usciteExtra ?? [],
       },
     }));
   }
+
+
+
+
+  function aggiungiUscitaExtra() {
+    const descrizione = nuovaUscitaDesc.trim();
+    const importoNum = Number(nuovaUscitaImporto.replace(",", "."));
+
+    if (!nuovaUscitaData) {
+      alert("Inserisci una data.");
+      return;
+    }
+    if (!descrizione) {
+      alert("Scrivi la descrizione dell’uscita.");
+      return;
+    }
+    if (!Number.isFinite(importoNum) || importoNum <= 0) {
+      alert("Inserisci un importo valido.");
+      return;
+    }
+
+    const nuova: UscitaExtra = {
+      id: safeUUID(),
+      data: nuovaUscitaData,
+      descrizione,
+      importo: importoNum,
+      nota: nuovaUscitaNota.trim(),
+    };
+
+    setIncassi((prev) => ({
+      ...prev,
+      [meseKey]: {
+        entrateExtra: prev[meseKey]?.entrateExtra ?? [],
+        usciteExtra: [...(prev[meseKey]?.usciteExtra ?? []), nuova],
+      },
+    }));
+
+    setNuovaUscitaDesc("");
+    setNuovaUscitaImporto("");
+    setNuovaUscitaNota("");
+  }
+
+  function eliminaUscitaExtra(id: string) {
+    setIncassi((prev) => ({
+      ...prev,
+      [meseKey]: {
+        entrateExtra: prev[meseKey]?.entrateExtra ?? [],
+        usciteExtra: (prev[meseKey]?.usciteExtra ?? []).filter((x) => x.id !== id),
+      },
+    }));
+  }
+
+
+
 
   const totaleEntrateExtra = useMemo(() => entrateExtraVal.reduce((s, x) => s + x.importo, 0), [entrateExtraVal]);
 
@@ -1186,13 +1283,15 @@ export default function App() {
 
 
 
-  const usciteTotMese = useMemo(
-    () =>
-      vociMese
-        .filter((v) => v.importo !== null && v.movimento === "uscita")
-        .reduce((s, v) => s + (v.importo ?? 0), 0),
-    [vociMese]
-  );
+   const usciteTotMese = useMemo(() => {
+    const usciteDaVoci = vociMese
+      .filter((v) => v.importo !== null && v.movimento === "uscita")
+      .reduce((s, v) => s + (v.importo ?? 0), 0);
+
+    const usciteDaExtra = usciteExtraVal.reduce((s, x) => s + x.importo, 0);
+
+    return usciteDaVoci + usciteDaExtra;
+  }, [vociMese, usciteExtraVal]);
 
   const entrateTotMese = totaleEntrateExtra;
   const saldoMese = entrateTotMese - usciteTotMese;
@@ -1329,17 +1428,31 @@ export default function App() {
       })
       .reduce((acc, x) => acc + x.importo, 0);
   }, [tutteEntrateExtra, meseCorrente]);
-
   const usciteAnnoCorrente = useMemo(() => {
     const anno = meseCorrente.getFullYear();
-    return voci
+
+    const usciteDaVoci = voci
       .filter((v) => v.importo !== null && v.movimento === "uscita")
       .filter((v) => {
         const [a] = v.data.split("-").map(Number);
         return a === anno;
       })
       .reduce((acc, v) => acc + (v.importo ?? 0), 0);
-  }, [voci, meseCorrente]);
+
+    const usciteDaExtra = Object.values(incassi).reduce((acc, mese) => {
+      return (
+        acc +
+        (mese.usciteExtra ?? [])
+          .filter((x) => {
+            const [a] = x.data.split("-").map(Number);
+            return a === anno;
+          })
+          .reduce((s, x) => s + x.importo, 0)
+      );
+    }, 0);
+
+    return usciteDaVoci + usciteDaExtra;
+  }, [voci, incassi, meseCorrente]);
 
   const saldoAnno = useMemo(() => {
     return entrateAnnoCorrente - usciteAnnoCorrente;
@@ -2671,31 +2784,30 @@ export default function App() {
 
 
 
+function MiniCalendarioControllo({
+  mese,
+  eventi,
+  onPrevMonth,
+  onNextMonth,
+}: {
+  mese: Date;
+  eventi: Array<{
+    id: string;
+    data: string;
+    tipo: "scadenza" | "appuntamento" | "entrata" | "uscita";
+    titolo: string;
+    ora: string;
+    importo: number | null;
+    movimento: Movimento;
+    nota: string;
+    urgente: boolean;
+    sorgente: "voce" | "entrata" | "uscita-extra";
+  }>;
+  onPrevMonth: () => void;
+  onNextMonth: () => void;
+}) {
 
 
-
-  function MiniCalendarioControllo({
-    mese,
-    eventi,
-    onPrevMonth,
-    onNextMonth,
-  }: {
-    mese: Date;
-    eventi: Array<{
-      id: string;
-      data: string;
-      tipo: "scadenza" | "appuntamento" | "entrata";
-      titolo: string;
-      ora: string;
-      importo: number | null;
-      movimento: Movimento;
-      nota: string;
-      urgente: boolean;
-      sorgente: "voce" | "entrata";
-    }>;
-    onPrevMonth: () => void;
-    onNextMonth: () => void;
-  }) {
     const y = mese.getFullYear();
     const m0 = mese.getMonth();
     const first = new Date(y, m0, 1);
@@ -3016,7 +3128,6 @@ export default function App() {
 
 
 
-
   function renderAreaControllo() {
     const controlloCardStyle: React.CSSProperties = {
       ...ui.card,
@@ -3202,7 +3313,7 @@ export default function App() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "1fr 1fr",
+            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
             gap: 14,
           }}
           className="remember-grid-2"
@@ -3371,6 +3482,185 @@ export default function App() {
           </div>
 
           <div style={{ ...ui.card, padding: 18 }}>
+            <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Uscite extra del mese</div>
+            <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
+              Inserisci spese extra con data, descrizione, importo e nota
+            </div>
+
+            <div
+              style={{
+                marginTop: 16,
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                gap: 10,
+                alignItems: "end",
+              }}
+            >
+              <div>
+                <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Data</div>
+                <input
+                  type="date"
+                  value={nuovaUscitaData}
+                  onChange={(e) => setNuovaUscitaData(e.target.value)}
+                  style={inputLight(false)}
+                />
+              </div>
+
+              <div>
+                <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Descrizione</div>
+                <input
+                  type="text"
+                  value={nuovaUscitaDesc}
+                  onChange={(e) => setNuovaUscitaDesc(e.target.value)}
+                  placeholder="Es: Spesa extra, benzina, regalo..."
+                  style={inputLight(false)}
+                />
+              </div>
+
+              <div>
+                <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Importo</div>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={nuovaUscitaImporto}
+                  onChange={(e) => setNuovaUscitaImporto(e.target.value)}
+                  placeholder="Es: 35"
+                  style={inputLight(false)}
+                />
+              </div>
+
+              <div>
+                <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Nota</div>
+                <input
+                  type="text"
+                  value={nuovaUscitaNota}
+                  onChange={(e) => setNuovaUscitaNota(e.target.value)}
+                  placeholder="Facoltativa"
+                  style={inputLight(false)}
+                />
+              </div>
+
+              <button
+                data-chip="1"
+                onClick={aggiungiUscitaExtra}
+                style={{
+                  ...chip(true),
+                  height: 48,
+                  background: "linear-gradient(180deg, rgba(239,68,68,0.22), rgba(220,38,38,0.12))",
+                  border: "1px solid rgba(239,68,68,0.30)",
+                  color: "rgba(127,29,29,0.98)",
+                  boxShadow: "0 16px 30px rgba(239,68,68,0.14)",
+                }}
+              >
+                Aggiungi uscita
+              </button>
+            </div>
+
+            <div
+              style={{
+                marginTop: 16,
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                gap: 10,
+              }}
+            >
+              <div
+                style={{
+                  padding: 14,
+                  borderRadius: 18,
+                  border: "1px solid rgba(239,68,68,0.12)",
+                  background: "linear-gradient(180deg, rgba(239,68,68,0.08), rgba(239,68,68,0.03))",
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Uscite extra mese</div>
+                <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+                  {usciteExtraVal.length}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  padding: 14,
+                  borderRadius: 18,
+                  border: "1px solid rgba(249,115,22,0.12)",
+                  background: "linear-gradient(180deg, rgba(249,115,22,0.08), rgba(249,115,22,0.03))",
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Totale uscite extra</div>
+                <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+                  {usciteExtraVal.reduce((s, x) => s + x.importo, 0).toLocaleString("it-IT")} €
+                </div>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
+              {usciteExtraVal.length === 0 ? (
+                <div
+                  style={{
+                    padding: 12,
+                    borderRadius: 16,
+                    border: "1px solid rgba(15,23,42,0.08)",
+                    background: "rgba(255,255,255,0.72)",
+                    fontSize: 13,
+                    fontWeight: 800,
+                    opacity: 0.65,
+                  }}
+                >
+                  Nessuna uscita extra inserita.
+                </div>
+              ) : (
+                usciteExtraVal
+                  .slice()
+                  .sort((a, b) => a.data.localeCompare(b.data))
+                  .map((x) => (
+                    <div
+                      key={x.id}
+                      style={{
+                        padding: 14,
+                        borderRadius: 18,
+                        border: "1px solid rgba(239,68,68,0.16)",
+                        background: "linear-gradient(180deg, rgba(239,68,68,0.08), rgba(239,68,68,0.04))",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: 12,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.65 }}>
+                          {formattaDataBreve(x.data)}
+                        </div>
+                        <div style={{ marginTop: 3, fontSize: 14, fontWeight: 950 }}>
+                          {x.descrizione}
+                        </div>
+                        <div
+                          style={{
+                            marginTop: 4,
+                            fontSize: 12,
+                            fontWeight: 900,
+                            color: "rgba(185,28,28,0.96)",
+                          }}
+                        >
+                          {x.importo.toLocaleString("it-IT")} €
+                        </div>
+                        {x.nota && (
+                          <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, opacity: 0.72 }}>
+                            {x.nota}
+                          </div>
+                        )}
+                      </div>
+
+                      <button data-chip="1" onClick={() => eliminaUscitaExtra(x.id)} style={chip(false)}>
+                        Elimina
+                      </button>
+                    </div>
+                  ))
+              )}
+            </div>
+          </div>
+
+          <div style={{ ...ui.card, padding: 18 }}>
             <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Movimenti ed eventi del mese</div>
             <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
               Scadenze, appuntamenti, entrate e uscite del mese selezionato
@@ -3459,7 +3749,6 @@ export default function App() {
               ) : (
                 eventiControlloMese.map((ev) => {
                   const isEntrata = ev.movimento === "entrata";
-                  const isUscita = ev.movimento === "uscita" && ev.importo !== null;
 
                   return (
                     <div
@@ -3480,11 +3769,12 @@ export default function App() {
                         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                           {ev.tipo === "scadenza" || ev.tipo === "appuntamento" ? (
                             badgeTipo(ev.tipo)
-                          ) : (
+                          ) : isEntrata ? (
                             badgeMov("entrata")
+                          ) : (
+                            badgeMov("uscita")
                           )}
 
-                          {isUscita && badgeMov("uscita")}
                           {ev.urgente && badgeUrgente()}
                         </div>
 
@@ -3516,7 +3806,6 @@ export default function App() {
                               color: isEntrata ? "rgba(5,150,105,0.96)" : "rgba(185,28,28,0.96)",
                             }}
                           >
-                      
                             {ev.importo.toLocaleString("it-IT")} €
                           </div>
                         )}
@@ -3539,8 +3828,7 @@ export default function App() {
   }
 
 
-
-
+ 
   const GlobalStyle = (
     <style>{`
       @keyframes popIn {
@@ -3661,50 +3949,40 @@ export default function App() {
                   >
                     Entra
                   </button>
-              </div>
-            )}
+                </div>
+              )}
 
+              <div style={{ height: 1, background: "rgba(15,23,42,0.08)", margin: "18px 0" }} />
 
+              <div style={{ fontSize: 16, fontWeight: 950, letterSpacing: -0.2 }}>Crea nuovo utente</div>
 
+              <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
+                <input
+                  value={loginNome}
+                  onChange={(e) => setLoginNome(e.target.value)}
+                  placeholder="Nome utente"
+                  style={inputLight(false)}
+                />
+                <button data-chip="1" onClick={creaEUentra} style={chip(true)}>
+                  Crea & Entra
+                </button>
 
-
-
-
-
-
-
-
-            <div style={{ height: 1, background: "rgba(15,23,42,0.08)", margin: "18px 0" }} />
-
-            <div style={{ fontSize: 16, fontWeight: 950, letterSpacing: -0.2 }}>Crea nuovo utente</div>
-
-            <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
-              <input
-                value={loginNome}
-                onChange={(e) => setLoginNome(e.target.value)}
-                placeholder="Nome utente"
-                style={inputLight(false)}
-              />
-              <button data-chip="1" onClick={creaEUentra} style={chip(true)}>
-                Crea & Entra
-              </button>
-
-              <div style={{ fontSize: 12, opacity: 0.65, fontWeight: 800, lineHeight: 1.35 }}>
-                Profilo locale sul dispositivo.
+                <div style={{ fontSize: 12, opacity: 0.65, fontWeight: 800, lineHeight: 1.35 }}>
+                  Profilo locale sul dispositivo.
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   return (
     <div style={pageBg}>
       {GlobalStyle}
 
-      <div style={topBar}>
+            <div style={topBar}>
         <div style={{ ...ui.glass, padding: 22 }}>
           <div style={{ display: "grid", gap: 18 }}>
             <RememberLogo size={54} centered />
@@ -3812,6 +4090,10 @@ export default function App() {
             </div>
           </div>
         </div>
+
+
+
+
 
 
 
