@@ -1353,7 +1353,7 @@ export default function App() {
       return ordinaIntelligente(filtrateOggi);
     }
 
-    void vociFiltrate;
+   
   
 
     const fine = new Date(inizioOggi);
@@ -1371,7 +1371,7 @@ export default function App() {
   }
 
 
-
+ void vociFiltrate;
 
 
 
