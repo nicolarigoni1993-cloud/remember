@@ -5009,7 +5009,7 @@ export default function App() {
 
 
 
-              {pagina === "archivio" && (
+                     {pagina === "archivio" && (
           <>
             <div style={{ maxWidth: 1060, margin: "0 auto", marginTop: 14, display: "grid", gap: 14 }}>
               <div
@@ -5383,6 +5383,19 @@ export default function App() {
           </>
         )}
       </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
 
       {pagina !== "controllo" && <DraggableFab onClick={apriNuova} label="Aggiungi" />}
 
