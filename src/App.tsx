@@ -1184,7 +1184,7 @@ export default function App() {
 
   const vociMese = useMemo(() => voci.filter((v) => stessoMeseSelezionato(v.data)), [voci, meseCorrente]);
 
-  const vociMeseAttive = useMemo(() => vociMese.filter((v) => !v.fatto), [vociMese]);
+
 
   const usciteTotMese = useMemo(
     () =>
@@ -3516,6 +3516,7 @@ export default function App() {
                               color: isEntrata ? "rgba(5,150,105,0.96)" : "rgba(185,28,28,0.96)",
                             }}
                           >
+                      
                             {ev.importo.toLocaleString("it-IT")} €
                           </div>
                         )}
