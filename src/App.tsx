@@ -1960,7 +1960,7 @@ export default function App() {
       color: "rgba(15,23,42,0.88)",
     };
 
-    const weekdayHeader = ["LUN", "MAR", "MER", "GIO", "VEN", "SAB", "DOM"];
+   
 
     return (
       <div style={{ maxWidth: 1060, margin: "0 auto", marginTop: 14 }}>
@@ -2855,7 +2855,7 @@ export default function App() {
       stats.set(ev.data, prev);
     }
 
-    const weekdayHeader = ["LUN", "MAR", "MER", "GIO", "VEN", "SAB", "DOM"];
+ 
 
     return (
       <div style={{ ...ui.card, padding: 18 }}>
