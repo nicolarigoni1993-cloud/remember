@@ -1151,6 +1151,8 @@ export default function App() {
     setVoci((prev) => prev.filter((v) => v.id !== id));
   }
 
+  void elimina;
+
   function mesePrecedente() {
     setMeseCorrente((d) => new Date(d.getFullYear(), d.getMonth() - 1, 1));
   }
@@ -1371,7 +1373,6 @@ export default function App() {
 
 
 
-  const lista = vociFiltrate();
 
     const vociAttiveOrdinate = useMemo(() => {
     return ordinaIntelligente(voci.filter((v) => !v.fatto));
@@ -1509,6 +1510,142 @@ export default function App() {
   const usciteControlloMese = useMemo(() => {
     return eventiControlloMese.filter((x) => x.movimento === "uscita" && x.importo !== null);
   }, [eventiControlloMese]);
+
+
+
+  const annoCorrenteArchivio = meseCorrente.getFullYear();
+
+  const entrateArchivioMese = useMemo(() => {
+    return entrateExtraVal.reduce((s, x) => s + x.importo, 0);
+  }, [entrateExtraVal]);
+
+  const usciteArchivioMese = useMemo(() => {
+    const usciteVoci = voci
+      .filter((v) => stessoMeseSelezionato(v.data))
+      .filter((v) => v.importo !== null && v.movimento === "uscita")
+      .reduce((s, v) => s + (v.importo ?? 0), 0);
+
+    const usciteExtra = usciteExtraVal.reduce((s, x) => s + x.importo, 0);
+
+    return usciteVoci + usciteExtra;
+  }, [voci, usciteExtraVal, meseCorrente]);
+
+  const saldoArchivioMese = useMemo(() => {
+    return entrateArchivioMese - usciteArchivioMese;
+  }, [entrateArchivioMese, usciteArchivioMese]);
+
+  const turniArchivioMese = useMemo(() => {
+    return turni.filter((t) => stessoMeseSelezionato(t.data));
+  }, [turni, meseCorrente]);
+
+  const turniStatsArchivioMese = useMemo(() => {
+    const stats = { N: 0, M: 0, P: 0, S: 0, R: 0, T: 0 };
+
+    for (const t of turniArchivioMese) {
+      const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
+      stats[sigla as keyof typeof stats] += 1;
+    }
+
+    return stats;
+  }, [turniArchivioMese]);
+
+  const oreArchivioMese = useMemo(() => {
+    return turniArchivioMese.reduce((s, t) => s + t.oreOrdinarie + t.oreStraordinarie, 0);
+  }, [turniArchivioMese]);
+
+  const entrateArchivioAnno = useMemo(() => {
+    return Object.values(incassi).reduce((acc, mese) => {
+      return (
+        acc +
+        (mese.entrateExtra ?? [])
+          .filter((x) => {
+            const [a] = x.data.split("-").map(Number);
+            return a === annoCorrenteArchivio;
+          })
+          .reduce((s, x) => s + x.importo, 0)
+      );
+    }, 0);
+  }, [incassi, annoCorrenteArchivio]);
+
+  const usciteArchivioAnno = useMemo(() => {
+    const usciteDaVoci = voci
+      .filter((v) => v.importo !== null && v.movimento === "uscita")
+      .filter((v) => {
+        const [a] = v.data.split("-").map(Number);
+        return a === annoCorrenteArchivio;
+      })
+      .reduce((s, v) => s + (v.importo ?? 0), 0);
+
+    const usciteDaExtra = Object.values(incassi).reduce((acc, mese) => {
+      return (
+        acc +
+        (mese.usciteExtra ?? [])
+          .filter((x) => {
+            const [a] = x.data.split("-").map(Number);
+            return a === annoCorrenteArchivio;
+          })
+          .reduce((s, x) => s + x.importo, 0)
+      );
+    }, 0);
+
+    return usciteDaVoci + usciteDaExtra;
+  }, [voci, incassi, annoCorrenteArchivio]);
+
+  const saldoArchivioAnno = useMemo(() => {
+    return entrateArchivioAnno - usciteArchivioAnno;
+  }, [entrateArchivioAnno, usciteArchivioAnno]);
+
+  const eventiArchivioMese = useMemo(() => {
+    const vociArchiviateMese = voci
+      .filter((v) => stessoMeseSelezionato(v.data))
+      .map((v) => ({
+        id: v.id,
+        data: v.data,
+        ora: v.ora,
+        titolo: v.titolo,
+        tipo: v.tipo,
+        importo: v.importo,
+        movimento: v.movimento,
+        nota: v.nota,
+        urgente: v.urgente,
+        origine: "voce" as const,
+      }));
+
+    const entrateMese = entrateExtraVal.map((x) => ({
+      id: x.id,
+      data: x.data,
+      ora: "09:00",
+      titolo: x.descrizione,
+      tipo: "entrata" as const,
+      importo: x.importo,
+      movimento: "entrata" as const,
+      nota: "",
+      urgente: false,
+      origine: "entrata" as const,
+    }));
+
+    const usciteMese = usciteExtraVal.map((x) => ({
+      id: x.id,
+      data: x.data,
+      ora: "09:00",
+      titolo: x.descrizione,
+      tipo: "uscita" as const,
+      importo: x.importo,
+      movimento: "uscita" as const,
+      nota: x.nota,
+      urgente: false,
+      origine: "uscita-extra" as const,
+    }));
+
+    return [...vociArchiviateMese, ...entrateMese, ...usciteMese].sort((a, b) => {
+      const d = a.data.localeCompare(b.data);
+      if (d !== 0) return d;
+      return a.ora.localeCompare(b.ora);
+    });
+  }, [voci, entrateExtraVal, usciteExtraVal, meseCorrente]);
+
+
+
 
 
   function badgeTipo(t: Voce["tipo"]) {
@@ -4866,12 +5003,18 @@ export default function App() {
 
         {pagina === "controllo" && renderAreaControllo()}
 
+
+
+
+
+
+
         {pagina === "archivio" && (
           <>
-                      <MiniCalendario
+            <MiniCalendario
               mese={meseCorrente}
-              vociDelMese={voci.filter((v) => v.fatto).filter((v) => stessoMeseSelezionato(v.data))}
-              turniDelMese={turniMese}
+              vociDelMese={voci.filter((v) => stessoMeseSelezionato(v.data))}
+              turniDelMese={turniArchivioMese}
               onPrevMonth={mesePrecedente}
               onNextMonth={meseSuccessivo}
               onEditTurno={apriModificaTurno}
@@ -4883,24 +5026,10 @@ export default function App() {
                   ...ui.card,
                   padding: 18,
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
                   gap: 12,
                 }}
               >
-                <div
-                  style={{
-                    padding: 14,
-                    borderRadius: 18,
-                    border: "1px solid rgba(124,58,237,0.12)",
-                    background: "linear-gradient(180deg, rgba(124,58,237,0.08), rgba(124,58,237,0.03))",
-                  }}
-                >
-                  <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Archiviate nel mese</div>
-                  <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
-                    {voci.filter((v) => v.fatto).filter((v) => stessoMeseSelezionato(v.data)).length}
-                  </div>
-                </div>
-
                 <div
                   style={{
                     padding: 14,
@@ -4911,7 +5040,7 @@ export default function App() {
                 >
                   <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Entrate mese</div>
                   <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
-                    {entrateTotMese.toLocaleString("it-IT")} €
+                    {entrateArchivioMese.toLocaleString("it-IT")} €
                   </div>
                 </div>
 
@@ -4925,7 +5054,7 @@ export default function App() {
                 >
                   <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Uscite mese</div>
                   <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
-                    {usciteTotMese.toLocaleString("it-IT")} €
+                    {usciteArchivioMese.toLocaleString("it-IT")} €
                   </div>
                 </div>
 
@@ -4937,131 +5066,327 @@ export default function App() {
                     background: "linear-gradient(180deg, rgba(59,130,246,0.08), rgba(59,130,246,0.03))",
                   }}
                 >
-                  <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Turni mese</div>
-                  <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>{turniMese.length}</div>
+                  <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Saldo mese</div>
+                  <div
+                    style={{
+                      marginTop: 6,
+                      fontSize: 20,
+                      fontWeight: 1000,
+                      color: saldoArchivioMese >= 0 ? "rgba(30,64,175,0.96)" : "rgba(185,28,28,0.96)",
+                    }}
+                  >
+                    {saldoArchivioMese.toLocaleString("it-IT")} €
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    padding: 14,
+                    borderRadius: 18,
+                    border: "1px solid rgba(124,58,237,0.12)",
+                    background: "linear-gradient(180deg, rgba(124,58,237,0.08), rgba(124,58,237,0.03))",
+                  }}
+                >
+                  <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Ore mese</div>
+                  <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+                    {formatNumeroOre(oreArchivioMese)} h
+                  </div>
                 </div>
               </div>
 
-              <div>
-                {lista.length === 0 ? (
-                  <div style={{ ...ui.card, padding: 18, opacity: 0.85 }}>
-                    Nessuna voce archiviata in questo periodo.
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+                  gap: 14,
+                }}
+                className="remember-grid-2"
+              >
+                <div style={{ ...ui.card, padding: 18 }}>
+                  <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Riepilogo anno</div>
+                  <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
+                    Totali annuali dell’anno selezionato
                   </div>
-                ) : (
-                  <div style={{ display: "grid", gap: 12 }}>
-                    {lista.map((v, idx) => (
+
+                  <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
+                    <div
+                      style={{
+                        padding: 14,
+                        borderRadius: 18,
+                        border: "1px solid rgba(16,185,129,0.12)",
+                        background: "linear-gradient(180deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03))",
+                      }}
+                    >
+                      <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Entrate anno</div>
+                      <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+                        {entrateArchivioAnno.toLocaleString("it-IT")} €
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        padding: 14,
+                        borderRadius: 18,
+                        border: "1px solid rgba(239,68,68,0.12)",
+                        background: "linear-gradient(180deg, rgba(239,68,68,0.08), rgba(239,68,68,0.03))",
+                      }}
+                    >
+                      <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Uscite anno</div>
+                      <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+                        {usciteArchivioAnno.toLocaleString("it-IT")} €
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        padding: 14,
+                        borderRadius: 18,
+                        border: "1px solid rgba(59,130,246,0.12)",
+                        background: "linear-gradient(180deg, rgba(59,130,246,0.08), rgba(59,130,246,0.03))",
+                      }}
+                    >
+                      <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Saldo anno</div>
                       <div
-                        key={v.id}
                         style={{
-                          ...ui.card,
-                          padding: 18,
-                          animation: "cardIn .18s ease both",
-                          animationDelay: `${Math.min(idx, 10) * 35}ms`,
+                          marginTop: 6,
+                          fontSize: 20,
+                          fontWeight: 1000,
+                          color: saldoArchivioAnno >= 0 ? "rgba(30,64,175,0.96)" : "rgba(185,28,28,0.96)",
                         }}
                       >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            gap: 10,
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          <div
-                            style={{
-                              display: "flex",
-                              gap: 8,
-                              flexWrap: "wrap",
-                              alignItems: "center",
-                            }}
-                          >
-                            {badgeTipo(v.tipo)}
-                            {v.importo !== null && badgeMov(v.movimento)}
+                        {saldoArchivioAnno.toLocaleString("it-IT")} €
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-                            <button
-                              type="button"
-                              style={{
-                                ...chipSmall(false),
-                                cursor: "default",
-                                opacity: 0.92,
-                                boxShadow: "0 10px 20px rgba(15,23,42,0.08)",
-                              }}
-                              title="Data e ora"
-                              onClick={(e) => e.preventDefault()}
-                            >
-                              {formattaDataBreve(v.data)} • {v.ora}
-                            </button>
-                          </div>
+                <div style={{ ...ui.card, padding: 18 }}>
+                  <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Statistiche turni mese</div>
+                  <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
+                    Distribuzione sigle turni del mese selezionato
+                  </div>
 
-                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                            <span style={styleBadgeScadenza(giorniMancanti(v.data), v.urgente)}>
-                              ARCHIVIATA
-                            </span>
-                          </div>
-                        </div>
-
-                        <div
-                          style={{
-                            marginTop: 10,
-                            fontSize: 19,
-                            fontWeight: 950,
-                            letterSpacing: -0.24,
-                          }}
-                        >
-                          {v.titolo}
-                        </div>
-
-                        <div
-                          style={{
-                            marginTop: 10,
-                            display: "flex",
-                            gap: 10,
-                            flexWrap: "wrap",
-                            alignItems: "center",
-                          }}
-                        >
-                          {v.importo !== null && (
-                            <span
-                              style={{
-                                padding: "7px 11px",
-                                borderRadius: 999,
-                                border:
-                                  v.movimento === "entrata"
-                                    ? "2px solid rgba(16,185,129,0.28)"
-                                    : "2px solid rgba(239,68,68,0.28)",
-                                background:
-                                  v.movimento === "entrata"
-                                    ? "rgba(236,253,245,0.96)"
-                                    : "rgba(254,242,242,0.96)",
-                                fontSize: 12,
-                                fontWeight: 950,
-                                color:
-                                  v.movimento === "entrata"
-                                    ? "rgba(5,150,105,0.96)"
-                                    : "rgba(185,28,28,0.96)",
-                              }}
-                            >
-                              {v.importo.toLocaleString("it-IT")} €
-                            </span>
-                          )}
-
-                          {v.nota && (
-                            <span style={{ fontSize: 13, fontWeight: 800, opacity: 0.72 }}>
-                              {v.nota}
-                            </span>
-                          )}
-                        </div>
-
-                        <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
-                          <button data-chip="1" onClick={() => elimina(v.id)} style={chip(false)}>
-                            Elimina
-                          </button>
+                  <div
+                    style={{
+                      marginTop: 16,
+                      display: "grid",
+                      gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                      gap: 10,
+                    }}
+                  >
+                    {(["N", "M", "P", "S", "R", "T"] as const).map((sigla) => (
+                      <div
+                        key={sigla}
+                        style={{
+                          padding: 14,
+                          borderRadius: 18,
+                          border: "1px solid rgba(15,23,42,0.08)",
+                          background: "rgba(255,255,255,0.76)",
+                          textAlign: "center",
+                        }}
+                      >
+                        <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>{sigla}</div>
+                        <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+                          {turniStatsArchivioMese[sigla]}
                         </div>
                       </div>
                     ))}
                   </div>
-                )}
+                </div>
+              </div>
+
+              <div style={{ ...ui.card, padding: 18 }}>
+                <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Storico del mese</div>
+                <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
+                  Eventi, entrate, uscite e voci registrate nel mese selezionato
+                </div>
+
+                <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
+                  {eventiArchivioMese.length === 0 ? (
+                    <div
+                      style={{
+                        padding: 12,
+                        borderRadius: 16,
+                        border: "1px solid rgba(15,23,42,0.08)",
+                        background: "rgba(255,255,255,0.72)",
+                        fontSize: 13,
+                        fontWeight: 800,
+                        opacity: 0.65,
+                      }}
+                    >
+                      Nessun elemento registrato nel mese selezionato.
+                    </div>
+                  ) : (
+                    eventiArchivioMese.map((ev) => {
+                      const isEntrata = ev.movimento === "entrata";
+
+                      return (
+                        <div
+                          key={`${ev.origine}_${ev.id}`}
+                          style={{
+                            padding: 14,
+                            borderRadius: 18,
+                            border: "1px solid rgba(15,23,42,0.08)",
+                            background: "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.88))",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            gap: 12,
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <div style={{ display: "grid", gap: 5 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                              {ev.tipo === "scadenza" || ev.tipo === "appuntamento" ? (
+                                badgeTipo(ev.tipo)
+                              ) : isEntrata ? (
+                                badgeMov("entrata")
+                              ) : (
+                                badgeMov("uscita")
+                              )}
+
+                              {ev.urgente && badgeUrgente()}
+                            </div>
+
+                            <div style={{ fontSize: 15, fontWeight: 950 }}>{ev.titolo}</div>
+
+                            <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72 }}>
+                              {formattaDataBreve(ev.data)} • {ev.ora}
+                            </div>
+
+                            {ev.nota && (
+                              <div style={{ fontSize: 12, fontWeight: 800, opacity: 0.68 }}>
+                                {ev.nota}
+                              </div>
+                            )}
+                          </div>
+
+                          <div style={{ display: "grid", gap: 6, justifyItems: "end" }}>
+                            {ev.importo !== null && (
+                              <div
+                                style={{
+                                  padding: "7px 11px",
+                                  borderRadius: 999,
+                                  border: isEntrata
+                                    ? "2px solid rgba(16,185,129,0.28)"
+                                    : "2px solid rgba(239,68,68,0.28)",
+                                  background: isEntrata ? "rgba(236,253,245,0.96)" : "rgba(254,242,242,0.96)",
+                                  fontSize: 12,
+                                  fontWeight: 950,
+                                  color: isEntrata ? "rgba(5,150,105,0.96)" : "rgba(185,28,28,0.96)",
+                                }}
+                              >
+                                {ev.importo.toLocaleString("it-IT")} €
+                              </div>
+                            )}
+
+                            {ev.tipo === "scadenza" || ev.tipo === "appuntamento" ? (
+                              <span style={styleBadgeScadenza(giorniMancanti(ev.data), ev.urgente)}>
+                                {ev.urgente ? "URGENTE" : labelGiorni(giorniMancanti(ev.data))}
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+
+              <div style={{ ...ui.card, padding: 18 }}>
+                <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Turni del mese</div>
+                <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
+                  Elenco turni registrati nel mese selezionato
+                </div>
+
+                <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
+                  {turniArchivioMese.length === 0 ? (
+                    <div
+                      style={{
+                        padding: 12,
+                        borderRadius: 16,
+                        border: "1px solid rgba(15,23,42,0.08)",
+                        background: "rgba(255,255,255,0.72)",
+                        fontSize: 13,
+                        fontWeight: 800,
+                        opacity: 0.65,
+                      }}
+                    >
+                      Nessun turno registrato nel mese selezionato.
+                    </div>
+                  ) : (
+                    turniArchivioMese
+                      .slice()
+                      .sort((a, b) => a.data.localeCompare(b.data) || a.inizio.localeCompare(b.inizio))
+                      .map((t) => {
+                        const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
+                        const descr = descrizioneTurnoBreve(t.inizio, t.fine, t.note);
+                        const isRiposo = sigla === "R";
+
+                        return (
+                          <div
+                            key={t.id}
+                            style={{
+                              padding: 14,
+                              borderRadius: 18,
+                              border: "1px solid rgba(15,23,42,0.08)",
+                              background: "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.88))",
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              gap: 12,
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            <div style={{ display: "grid", gap: 5 }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                                <span
+                                  style={{
+                                    padding: "6px 10px",
+                                    borderRadius: 999,
+                                    fontSize: 12,
+                                    fontWeight: 950,
+                                    color: "rgba(255,255,255,0.98)",
+                                    background:
+                                      sigla === "R"
+                                        ? "linear-gradient(180deg, rgba(107,114,128,0.96), rgba(75,85,99,0.92))"
+                                        : sigla === "N"
+                                        ? "linear-gradient(180deg, rgba(67,56,202,0.96), rgba(49,46,129,0.92))"
+                                        : sigla === "M"
+                                        ? "linear-gradient(180deg, rgba(245,158,11,0.96), rgba(217,119,6,0.92))"
+                                        : sigla === "P"
+                                        ? "linear-gradient(180deg, rgba(249,115,22,0.96), rgba(234,88,12,0.92))"
+                                        : sigla === "S"
+                                        ? "linear-gradient(180deg, rgba(168,85,247,0.96), rgba(126,34,206,0.92))"
+                                        : "linear-gradient(180deg, rgba(59,130,246,0.96), rgba(37,99,235,0.92))",
+                                  }}
+                                >
+                                  {sigla}
+                                </span>
+
+                                <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72 }}>
+                                  {formattaDataBreve(t.data)}
+                                </div>
+                              </div>
+
+                              <div style={{ fontSize: 15, fontWeight: 950 }}>
+                                {descr}
+                                {!isRiposo ? ` • ${t.inizio} - ${t.fine}` : ""}
+                              </div>
+
+                              <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72 }}>
+                                {isRiposo
+                                  ? "Giornata di riposo"
+                                  : `Ord: ${formatNumeroOre(t.oreOrdinarie)}h • Straord: ${formatNumeroOre(
+                                      t.oreStraordinarie
+                                    )}h • Tot: ${formatNumeroOre(t.oreOrdinarie + t.oreStraordinarie)}h`}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                  )}
+                </div>
               </div>
             </div>
           </>
@@ -5294,14 +5619,14 @@ export default function App() {
           <div style={sx.modal}>
             <div style={sx.header}>
               <div>
-               <div style={{ fontSize: 18, fontWeight: 950, letterSpacing: -0.2 }}>
-                {turnoIdInModifica ? "Modifica turno" : "Nuovo turno"}
-              </div>
-               <div style={{ fontSize: 12, opacity: 0.65, marginTop: 4, fontWeight: 800 }}>
-                {turnoIdInModifica
-                  ? "Modifica turno, ore ordinarie e straordinarie"
-                  : "Inserisci turno, ore ordinarie e straordinarie"}
-              </div>
+                <div style={{ fontSize: 18, fontWeight: 950, letterSpacing: -0.2 }}>
+                  {turnoIdInModifica ? "Modifica turno" : "Nuovo turno"}
+                </div>
+                <div style={{ fontSize: 12, opacity: 0.65, marginTop: 4, fontWeight: 800 }}>
+                  {turnoIdInModifica
+                    ? "Modifica turno, ore ordinarie e straordinarie"
+                    : "Inserisci turno, ore ordinarie e straordinarie"}
+                </div>
               </div>
 
               <button
@@ -5448,9 +5773,9 @@ export default function App() {
               <button type="button" data-chip="1" onClick={chiudiTurnoForm} style={sx.actionBtn(false)}>
                 Annulla
               </button>
-             <button type="button" data-chip="1" onClick={salvaTurno} style={sx.actionBtn(true)}>
-              {turnoIdInModifica ? "Salva modifiche" : "Salva turno"}
-            </button>
+              <button type="button" data-chip="1" onClick={salvaTurno} style={sx.actionBtn(true)}>
+                {turnoIdInModifica ? "Salva modifiche" : "Salva turno"}
+              </button>
             </div>
           </div>
         </div>
@@ -5458,3 +5783,7 @@ export default function App() {
     </div>
   );
 }
+
+
+
+        
