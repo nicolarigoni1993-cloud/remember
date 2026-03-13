@@ -1329,9 +1329,14 @@ export default function App() {
   }, [voci, meseCorrente, pagina]);
   void vociDelMesePerCalendario;
 
+
+
+
+
   function vociFiltrate() {
     const base = pagina === "archivio" ? voci.filter((v) => v.fatto) : voci.filter((v) => !v.fatto);
     const nelMese = base.filter((v) => stessoMeseSelezionato(v.data));
+
 
     if (filtro === null) return ordinaIntelligente(nelMese);
 
@@ -1347,6 +1352,9 @@ export default function App() {
 
       return ordinaIntelligente(filtrateOggi);
     }
+
+    void vociFiltrate;
+  
 
     const fine = new Date(inizioOggi);
 
