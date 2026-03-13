@@ -2049,34 +2049,7 @@ export default function App() {
             </button>
           </div>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
-              gap: isTouchDevice ? 4 : 10,
-              marginBottom: isTouchDevice ? 8 : 12,
-            }}
-          >
-            {weekdayHeader.map((w, i) => {
-              const weekend = i === 5 || i === 6;
-              return (
-                <div
-                  key={w}
-                  style={{
-                    textAlign: "center",
-                    fontSize: isTouchDevice ? 10 : 11,
-                    fontWeight: 1000,
-                    letterSpacing: 0.4,
-                    color: weekend ? "rgba(185,28,28,0.86)" : "rgba(22,101,52,0.80)",
-                    textTransform: "uppercase",
-                    paddingBottom: 2,
-                  }}
-                >
-                  {w}
-                </div>
-              );
-            })}
-          </div>
+
 
           <style>{`
             @media (hover: hover) and (pointer: fine) {
@@ -2224,15 +2197,37 @@ export default function App() {
 
                     <div
                       style={{
-                        fontWeight: 1000,
-                        fontSize: isTouchDevice ? (isToday ? 24 : 20) : isToday ? 34 : 28,
-                        lineHeight: 1,
-                        color: numeroColor,
-                        textAlign: "center",
-                        textShadow: isToday ? "0 4px 18px rgba(255,59,48,0.18)" : "none",
+                        display: "grid",
+                        justifyItems: "center",
+                        gap: 4,
                       }}
                     >
-                      {d}
+                      <div
+                        style={{
+                          fontSize: isTouchDevice ? 10 : 11,
+                          fontWeight: 1000,
+                          letterSpacing: 0.35,
+                          textTransform: "uppercase",
+                          color: isWeekend ? "rgba(185,28,28,0.86)" : "rgba(22,101,52,0.80)",
+                          lineHeight: 1,
+                        }}
+                      >
+                        {cellDate.toLocaleDateString("it-IT", { weekday: "short" }).replace(".", "")}
+                      
+                      </div>
+
+                      <div
+                        style={{
+                          fontWeight: 1000,
+                          fontSize: isTouchDevice ? (isToday ? 24 : 20) : isToday ? 34 : 28,
+                          lineHeight: 1,
+                          color: numeroColor,
+                          textAlign: "center",
+                          textShadow: isToday ? "0 4px 18px rgba(255,59,48,0.18)" : "none",
+                        }}
+                      >
+                        {d}
+                      </div>
                     </div>
 
                     <div style={{ display: "grid", gap: 5, width: "100%", justifyItems: "center" }}>
@@ -2896,34 +2891,6 @@ export default function App() {
           </button>
         </div>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
-            gap: 8,
-            marginBottom: 10,
-          }}
-        >
-          {weekdayHeader.map((w, i) => {
-            const weekend = i === 5 || i === 6;
-            return (
-              <div
-                key={w}
-                style={{
-                  textAlign: "center",
-                  fontSize: 11,
-                  fontWeight: 1000,
-                  letterSpacing: 0.4,
-                  color: weekend ? "rgba(185,28,28,0.86)" : "rgba(22,101,52,0.80)",
-                  textTransform: "uppercase",
-                  paddingBottom: 2,
-                }}
-              >
-                {w}
-              </div>
-            );
-          })}
-        </div>
 
         <div
           style={{
@@ -2976,14 +2943,35 @@ export default function App() {
               >
                 <div
                   style={{
-                    fontSize: isToday ? 24 : 20,
-                    fontWeight: 1000,
-                    lineHeight: 1,
-                    color: isWeekend ? "rgba(200,20,16,0.98)" : "rgba(18,140,48,0.98)",
-                    textAlign: "center",
+                    display: "grid",
+                    justifyItems: "center",
+                    gap: 4,
                   }}
                 >
-                  {d}
+                  <div
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 1000,
+                      letterSpacing: 0.35,
+                      textTransform: "uppercase",
+                      color: isWeekend ? "rgba(185,28,28,0.86)" : "rgba(22,101,52,0.80)",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {cellDate.toLocaleDateString("it-IT", { weekday: "short" }).replace(".", "")}
+                  </div>
+
+                  <div
+                    style={{
+                      fontSize: isToday ? 24 : 20,
+                      fontWeight: 1000,
+                      lineHeight: 1,
+                      color: isWeekend ? "rgba(200,20,16,0.98)" : "rgba(18,140,48,0.98)",
+                      textAlign: "center",
+                    }}
+                  >
+                    {d}
+                  </div>
                 </div>
 
                 <div style={{ display: "grid", gap: 5 }}>
