@@ -3125,29 +3125,38 @@ function MiniCalendarioControllo({
   }, [previewData]);
 
   const navBtnStyle: React.CSSProperties = {
-    width: isTouchDevice ? 40 : 46,
-    height: isTouchDevice ? 40 : 46,
-    borderRadius: 16,
+    width: isTouchDevice ? 36 : 46,
+    height: isTouchDevice ? 36 : 46,
+    borderRadius: isTouchDevice ? 14 : 16,
     border: "1px solid rgba(15,23,42,0.08)",
     background: "rgba(255,255,255,0.86)",
     boxShadow: "0 10px 22px rgba(15,23,42,0.08)",
     display: "grid",
     placeItems: "center",
     cursor: "pointer",
-    fontSize: 20,
+    fontSize: isTouchDevice ? 18 : 20,
     fontWeight: 1000,
     color: "rgba(15,23,42,0.88)",
   };
 
   return (
-    <div style={{ ...ui.card, padding: isTouchDevice ? 10 : 18, overflow: "visible" }}>
+    <div
+      style={{
+        ...ui.card,
+        width: "100%",
+        maxWidth: "100%",
+        boxSizing: "border-box",
+        padding: isTouchDevice ? 8 : 18,
+        overflow: "visible",
+      }}
+    >
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "42px 1fr 42px",
+          gridTemplateColumns: isTouchDevice ? "36px minmax(0, 1fr) 36px" : "42px 1fr 42px",
           alignItems: "center",
-          gap: isTouchDevice ? 8 : 12,
-          marginBottom: 14,
+          gap: isTouchDevice ? 6 : 12,
+          marginBottom: isTouchDevice ? 10 : 14,
         }}
       >
         <button type="button" onClick={onPrevMonth} style={navBtnStyle} title="Mese precedente">
@@ -3157,12 +3166,13 @@ function MiniCalendarioControllo({
         <div
           style={{
             textAlign: "center",
-            fontSize: isTouchDevice ? 18 : 24,
+            fontSize: isTouchDevice ? 17 : 24,
             fontWeight: 1000,
             letterSpacing: -0.6,
             textTransform: "capitalize",
             color: "rgba(15,23,42,0.94)",
             lineHeight: 1.1,
+            minWidth: 0,
           }}
         >
           {titoloMese}
@@ -3177,7 +3187,10 @@ function MiniCalendarioControllo({
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
-          gap: isTouchDevice ? 4 : 10,
+          gap: isTouchDevice ? 3 : 10,
+          width: "100%",
+          maxWidth: "100%",
+          boxSizing: "border-box",
         }}
       >
         {giorni.map((key, idx) => {
@@ -3186,7 +3199,7 @@ function MiniCalendarioControllo({
               <div
                 key={`ec_${idx}`}
                 style={{
-                  minHeight: isTouchDevice ? 84 : 124,
+                  minHeight: isTouchDevice ? 78 : 124,
                   borderRadius: 16,
                   background: "transparent",
                 }}
@@ -3206,8 +3219,8 @@ function MiniCalendarioControllo({
             <div
               key={key}
               style={{
-                minHeight: isTouchDevice ? 96 : 128,
-                borderRadius: isTouchDevice ? 16 : 20,
+                minHeight: isTouchDevice ? 88 : 128,
+                borderRadius: isTouchDevice ? 15 : 20,
                 border: info?.urgente
                   ? "2px solid rgba(239,68,68,0.34)"
                   : isToday
@@ -3217,25 +3230,27 @@ function MiniCalendarioControllo({
                   ? "linear-gradient(180deg, rgba(239,246,255,0.96), rgba(248,250,252,0.92))"
                   : "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.88))",
                 boxShadow: "0 10px 20px rgba(15,23,42,0.07)",
-                padding: isTouchDevice ? 6 : 10,
+                padding: isTouchDevice ? "5px 2px 6px" : "10px",
                 display: "grid",
                 alignContent: "space-between",
-                gap: isTouchDevice ? 5 : 8,
+                gap: isTouchDevice ? 4 : 8,
                 overflow: "hidden",
+                minWidth: 0,
+                boxSizing: "border-box",
               }}
             >
               <div
                 style={{
                   display: "grid",
                   justifyItems: "center",
-                  gap: 3,
+                  gap: isTouchDevice ? 2 : 3,
                 }}
               >
                 <div
                   style={{
-                    fontSize: isTouchDevice ? 9 : 11,
+                    fontSize: isTouchDevice ? 8 : 11,
                     fontWeight: 1000,
-                    letterSpacing: 0.3,
+                    letterSpacing: 0.2,
                     textTransform: "uppercase",
                     color: isWeekend ? "rgba(185,28,28,0.86)" : "rgba(22,101,52,0.80)",
                     lineHeight: 1,
@@ -3246,7 +3261,7 @@ function MiniCalendarioControllo({
 
                 <div
                   style={{
-                    fontSize: isTouchDevice ? (isToday ? 18 : 16) : isToday ? 24 : 20,
+                    fontSize: isTouchDevice ? (isToday ? 16 : 15) : isToday ? 24 : 20,
                     fontWeight: 1000,
                     lineHeight: 1,
                     color: isWeekend ? "rgba(200,20,16,0.98)" : "rgba(18,140,48,0.98)",
@@ -3257,7 +3272,7 @@ function MiniCalendarioControllo({
                 </div>
               </div>
 
-              <div style={{ display: "grid", gap: 4 }}>
+              <div style={{ display: "grid", gap: isTouchDevice ? 3 : 4, minWidth: 0 }}>
                 {isTouchDevice ? (
                   <>
                     {totalEvents > 0 ? (
@@ -3265,35 +3280,43 @@ function MiniCalendarioControllo({
                         type="button"
                         onClick={() => onOpenDayDetails(key)}
                         style={{
-                          width: "calc(100% - 8px)",
-                          margin: "0 auto",
-                          padding: "5px 8px",
+                          justifySelf: "center",
+                          width: "auto",
+                          minWidth: 36,
+                          maxWidth: "90%",
+                          padding: "3px 6px",
                           borderRadius: 999,
-                          fontSize: 9,
+                          fontSize: 7,
                           fontWeight: 950,
                           textAlign: "center",
-                          color: info?.urgente ? "rgba(185,28,28,0.98)" : "rgba(15,23,42,0.86)",
+                          color: info?.urgente
+                            ? "rgba(185,28,28,0.98)"
+                            : "rgba(15,23,42,0.82)",
                           background: info?.urgente
                             ? "rgba(254,226,226,0.95)"
-                            : "rgba(241,245,249,0.95)",
+                            : "rgba(241,245,249,0.92)",
                           border: info?.urgente
                             ? "1px solid rgba(239,68,68,0.18)"
-                            : "1px solid rgba(148,163,184,0.18)",
+                            : "1px solid rgba(148,163,184,0.16)",
                           cursor: "pointer",
-                          lineHeight: 1.1,
-                          minHeight: 30,
+                          lineHeight: 1.05,
+                          minHeight: 22,
                           display: "grid",
                           placeItems: "center",
                           boxSizing: "border-box",
+                          whiteSpace: "normal",
                         }}
                         title="Apri dettagli del giorno"
                       >
-                        {totalEvents} {totalEvents === 1 ? "evento" : "eventi"}
+                        {totalEvents}
+                        <span style={{ display: "block", lineHeight: 1 }}>
+                          {totalEvents === 1 ? "evento" : "eventi"}
+                        </span>
                       </button>
                     ) : (
                       <div
                         style={{
-                          fontSize: 9,
+                          fontSize: 8,
                           fontWeight: 800,
                           opacity: 0.25,
                           textAlign: "center",
@@ -3368,26 +3391,26 @@ function MiniCalendarioControllo({
                   style={{
                     display: "grid",
                     gridTemplateColumns: "1fr 1fr",
-                    gap: 4,
-                    marginTop: 2,
+                    gap: isTouchDevice ? 2 : 4,
+                    marginTop: isTouchDevice ? 1 : 2,
                     width: "100%",
-                    paddingLeft: 4,
-                    paddingRight: 4,
                     boxSizing: "border-box",
                     justifyItems: "center",
+                    alignItems: "center",
                   }}
                 >
                   <button
                     type="button"
                     onClick={() => onAddScadenza(key)}
                     style={{
-                      width: "100%",
-                      maxWidth: 44,
-                      padding: isTouchDevice ? "4px 0" : "4px 6px",
+                      width: isTouchDevice ? 28 : "100%",
+                      maxWidth: isTouchDevice ? 28 : 44,
+                      minWidth: 0,
+                      padding: isTouchDevice ? "3px 0" : "4px 6px",
                       borderRadius: 999,
                       border: "1px solid rgba(16,185,129,0.18)",
                       background: "rgba(220,252,231,0.92)",
-                      fontSize: isTouchDevice ? 8 : 10,
+                      fontSize: isTouchDevice ? 7 : 10,
                       fontWeight: 900,
                       cursor: "pointer",
                       color: "rgba(6,95,70,0.98)",
@@ -3403,13 +3426,14 @@ function MiniCalendarioControllo({
                     type="button"
                     onClick={() => onAddAppuntamento(key)}
                     style={{
-                      width: "100%",
-                      maxWidth: 44,
-                      padding: isTouchDevice ? "4px 0" : "4px 6px",
+                      width: isTouchDevice ? 28 : "100%",
+                      maxWidth: isTouchDevice ? 28 : 44,
+                      minWidth: 0,
+                      padding: isTouchDevice ? "3px 0" : "4px 6px",
                       borderRadius: 999,
                       border: "1px solid rgba(168,85,247,0.18)",
                       background: "rgba(245,243,255,0.92)",
-                      fontSize: isTouchDevice ? 8 : 10,
+                      fontSize: isTouchDevice ? 7 : 10,
                       fontWeight: 900,
                       cursor: "pointer",
                       color: "rgba(107,33,168,0.98)",
