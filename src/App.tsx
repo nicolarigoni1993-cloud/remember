@@ -2921,361 +2921,406 @@ export default function App() {
 
 
 
-  function MiniCalendarioControllo({
-    mese,
-    eventi,
-    onPrevMonth,
-    onNextMonth,
-    onAddScadenza,
-    onAddAppuntamento,
-  }: {
-    mese: Date;
-    eventi: Array<{
-      id: string;
-      data: string;
-      tipo: "scadenza" | "appuntamento" | "entrata" | "uscita";
-      titolo: string;
-      ora: string;
-      importo: number | null;
-      movimento: Movimento;
-      nota: string;
-      urgente: boolean;
-      sorgente: "voce" | "entrata" | "uscita-extra";
-    }>;
-    onPrevMonth: () => void;
-    onNextMonth: () => void;
-    onAddScadenza: (data: string) => void;
-    onAddAppuntamento: (data: string) => void;
-  }) {
-    const [isTouchDevice, setIsTouchDevice] = useState(false);
+function MiniCalendarioControllo({
+  mese,
+  eventi,
+  onPrevMonth,
+  onNextMonth,
+  onAddScadenza,
+  onAddAppuntamento,
+}: {
+  mese: Date;
+  eventi: Array<{
+    id: string;
+    data: string;
+    tipo: "scadenza" | "appuntamento" | "entrata" | "uscita";
+    titolo: string;
+    ora: string;
+    importo: number | null;
+    movimento: Movimento;
+    nota: string;
+    urgente: boolean;
+    sorgente: "voce" | "entrata" | "uscita-extra";
+  }>;
+  onPrevMonth: () => void;
+  onNextMonth: () => void;
+  onAddScadenza: (data: string) => void;
+  onAddAppuntamento: (data: string) => void;
+}) {
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
 
-    useEffect(() => {
-      const checkTouch = () => {
-        const touch =
-          window.matchMedia("(hover: none)").matches ||
-          window.matchMedia("(pointer: coarse)").matches ||
-          "ontouchstart" in window;
+  useEffect(() => {
+    const checkTouch = () => {
+      const touch =
+        window.matchMedia("(hover: none)").matches ||
+        window.matchMedia("(pointer: coarse)").matches ||
+        "ontouchstart" in window;
 
-        setIsTouchDevice(touch || window.innerWidth <= 820);
-      };
-
-      checkTouch();
-      window.addEventListener("resize", checkTouch);
-      return () => window.removeEventListener("resize", checkTouch);
-    }, []);
-
-    const y = mese.getFullYear();
-    const m0 = mese.getMonth();
-    const first = new Date(y, m0, 1);
-    const offset = weekdayMon0(first);
-    const dim = daysInMonth(y, m0);
-
-    const oggi = new Date();
-    const oggiKey = ymd(oggi.getFullYear(), oggi.getMonth(), oggi.getDate());
-
-    const giorni: Array<string | null> = [];
-    for (let i = 0; i < offset; i++) giorni.push(null);
-    for (let d = 1; d <= dim; d++) giorni.push(ymd(y, m0, d));
-    while (giorni.length % 7 !== 0) giorni.push(null);
-
-    const titoloMese = mese.toLocaleDateString("it-IT", {
-      month: "long",
-      year: "numeric",
-    });
-
-    const stats = new Map<
-      string,
-      {
-        scadenze: number;
-        appuntamenti: number;
-        entrate: number;
-        uscite: number;
-        urgente: boolean;
-      }
-    >();
-
-    for (const ev of eventi) {
-      const prev = stats.get(ev.data) ?? {
-        scadenze: 0,
-        appuntamenti: 0,
-        entrate: 0,
-        uscite: 0,
-        urgente: false,
-      };
-
-      if (ev.tipo === "scadenza") prev.scadenze += 1;
-      if (ev.tipo === "appuntamento") prev.appuntamenti += 1;
-      if (ev.movimento === "entrata") prev.entrate += 1;
-      if (ev.movimento === "uscita" && ev.importo !== null) prev.uscite += 1;
-      if (ev.urgente) prev.urgente = true;
-
-      stats.set(ev.data, prev);
-    }
-
-    const navBtnStyle: React.CSSProperties = {
-      width: isTouchDevice ? 42 : 46,
-      height: isTouchDevice ? 42 : 46,
-      borderRadius: 16,
-      border: "1px solid rgba(15,23,42,0.08)",
-      background: "rgba(255,255,255,0.86)",
-      boxShadow: "0 10px 22px rgba(15,23,42,0.08)",
-      display: "grid",
-      placeItems: "center",
-      cursor: "pointer",
-      fontSize: 20,
-      fontWeight: 1000,
-      color: "rgba(15,23,42,0.88)",
+      setIsTouchDevice(touch || window.innerWidth <= 820);
     };
 
-    return (
-      <div style={{ ...ui.card, padding: isTouchDevice ? 12 : 18, overflow: "visible" }}>
+    checkTouch();
+    window.addEventListener("resize", checkTouch);
+    return () => window.removeEventListener("resize", checkTouch);
+  }, []);
+
+  const y = mese.getFullYear();
+  const m0 = mese.getMonth();
+  const first = new Date(y, m0, 1);
+  const offset = weekdayMon0(first);
+  const dim = daysInMonth(y, m0);
+
+  const oggi = new Date();
+  const oggiKey = ymd(oggi.getFullYear(), oggi.getMonth(), oggi.getDate());
+
+  const giorni: Array<string | null> = [];
+  for (let i = 0; i < offset; i++) giorni.push(null);
+  for (let d = 1; d <= dim; d++) giorni.push(ymd(y, m0, d));
+  while (giorni.length % 7 !== 0) giorni.push(null);
+
+  const titoloMese = mese.toLocaleDateString("it-IT", {
+    month: "long",
+    year: "numeric",
+  });
+
+  const stats = new Map<
+    string,
+    {
+      scadenze: number;
+      appuntamenti: number;
+      entrate: number;
+      uscite: number;
+      urgente: boolean;
+    }
+  >();
+
+  for (const ev of eventi) {
+    const prev = stats.get(ev.data) ?? {
+      scadenze: 0,
+      appuntamenti: 0,
+      entrate: 0,
+      uscite: 0,
+      urgente: false,
+    };
+
+    if (ev.tipo === "scadenza") prev.scadenze += 1;
+    if (ev.tipo === "appuntamento") prev.appuntamenti += 1;
+    if (ev.movimento === "entrata") prev.entrate += 1;
+    if (ev.movimento === "uscita" && ev.importo !== null) prev.uscite += 1;
+    if (ev.urgente) prev.urgente = true;
+
+    stats.set(ev.data, prev);
+  }
+
+  const navBtnStyle: React.CSSProperties = {
+    width: isTouchDevice ? 40 : 46,
+    height: isTouchDevice ? 40 : 46,
+    borderRadius: 16,
+    border: "1px solid rgba(15,23,42,0.08)",
+    background: "rgba(255,255,255,0.86)",
+    boxShadow: "0 10px 22px rgba(15,23,42,0.08)",
+    display: "grid",
+    placeItems: "center",
+    cursor: "pointer",
+    fontSize: 20,
+    fontWeight: 1000,
+    color: "rgba(15,23,42,0.88)",
+  };
+
+  return (
+    <div style={{ ...ui.card, padding: isTouchDevice ? 10 : 18, overflow: "visible" }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "42px 1fr 42px",
+          alignItems: "center",
+          gap: isTouchDevice ? 8 : 12,
+          marginBottom: 14,
+        }}
+      >
+        <button type="button" onClick={onPrevMonth} style={navBtnStyle} title="Mese precedente">
+          ←
+        </button>
+
         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: "42px 1fr 42px",
-            alignItems: "center",
-            gap: isTouchDevice ? 8 : 12,
-            marginBottom: 14,
+            textAlign: "center",
+            fontSize: isTouchDevice ? 18 : 24,
+            fontWeight: 1000,
+            letterSpacing: -0.6,
+            textTransform: "capitalize",
+            color: "rgba(15,23,42,0.94)",
+            lineHeight: 1.1,
           }}
         >
-          <button type="button" onClick={onPrevMonth} style={navBtnStyle} title="Mese precedente">
-            ←
-          </button>
-
-          <div
-            style={{
-              textAlign: "center",
-              fontSize: isTouchDevice ? 18 : 24,
-              fontWeight: 1000,
-              letterSpacing: -0.6,
-              textTransform: "capitalize",
-              color: "rgba(15,23,42,0.94)",
-              lineHeight: 1.1,
-            }}
-          >
-            {titoloMese}
-          </div>
-
-          <button type="button" onClick={onNextMonth} style={navBtnStyle} title="Mese successivo">
-            →
-          </button>
+          {titoloMese}
         </div>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
-            gap: isTouchDevice ? 6 : 10,
-          }}
-        >
-          {giorni.map((key, idx) => {
-            if (!key) {
-              return (
-                <div
-                  key={`ec_${idx}`}
-                  style={{
-                    minHeight: isTouchDevice ? 88 : 120,
-                    borderRadius: 18,
-                    background: "transparent",
-                  }}
-                />
-              );
-            }
+        <button type="button" onClick={onNextMonth} style={navBtnStyle} title="Mese successivo">
+          →
+        </button>
+      </div>
 
-            const d = Number(key.slice(-2));
-            const info = stats.get(key);
-            const isToday = key === oggiKey;
-            const cellDate = new Date(y, m0, d);
-            const jsDay = cellDate.getDay();
-            const isWeekend = jsDay === 0 || jsDay === 6;
-
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
+          gap: isTouchDevice ? 4 : 10,
+        }}
+      >
+        {giorni.map((key, idx) => {
+          if (!key) {
             return (
               <div
-                key={key}
+                key={`ec_${idx}`}
                 style={{
-                  minHeight: isTouchDevice ? 112 : 128,
-                  borderRadius: isTouchDevice ? 18 : 20,
-                  border: info?.urgente
-                    ? "2px solid rgba(239,68,68,0.34)"
-                    : isToday
-                    ? "2px solid rgba(59,130,246,0.28)"
-                    : "1px solid rgba(15,23,42,0.08)",
-                  background: isToday
-                    ? "linear-gradient(180deg, rgba(239,246,255,0.96), rgba(248,250,252,0.92))"
-                    : "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.88))",
-                  boxShadow: "0 12px 26px rgba(15,23,42,0.08)",
-                  padding: isTouchDevice ? 8 : 10,
+                  minHeight: isTouchDevice ? 84 : 124,
+                  borderRadius: 16,
+                  background: "transparent",
+                }}
+              />
+            );
+          }
+
+          const d = Number(key.slice(-2));
+          const info = stats.get(key);
+          const isToday = key === oggiKey;
+          const cellDate = new Date(y, m0, d);
+          const jsDay = cellDate.getDay();
+          const isWeekend = jsDay === 0 || jsDay === 6;
+
+          const totalEvents =
+            (info?.scadenze ?? 0) +
+            (info?.appuntamenti ?? 0) +
+            (info?.entrate ?? 0) +
+            (info?.uscite ?? 0);
+
+          return (
+            <div
+              key={key}
+              style={{
+                minHeight: isTouchDevice ? 96 : 128,
+                borderRadius: isTouchDevice ? 16 : 20,
+                border: info?.urgente
+                  ? "2px solid rgba(239,68,68,0.34)"
+                  : isToday
+                  ? "2px solid rgba(59,130,246,0.28)"
+                  : "1px solid rgba(15,23,42,0.08)",
+                background: isToday
+                  ? "linear-gradient(180deg, rgba(239,246,255,0.96), rgba(248,250,252,0.92))"
+                  : "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.88))",
+                boxShadow: "0 10px 20px rgba(15,23,42,0.07)",
+                padding: isTouchDevice ? 6 : 10,
+                display: "grid",
+                alignContent: "space-between",
+                gap: isTouchDevice ? 5 : 8,
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
                   display: "grid",
-                  alignContent: "space-between",
-                  gap: isTouchDevice ? 6 : 8,
-                  overflow: "hidden",
+                  justifyItems: "center",
+                  gap: 3,
                 }}
               >
                 <div
                   style={{
-                    display: "grid",
-                    justifyItems: "center",
-                    gap: 4,
+                    fontSize: isTouchDevice ? 9 : 11,
+                    fontWeight: 1000,
+                    letterSpacing: 0.3,
+                    textTransform: "uppercase",
+                    color: isWeekend ? "rgba(185,28,28,0.86)" : "rgba(22,101,52,0.80)",
+                    lineHeight: 1,
                   }}
                 >
-                  <div
-                    style={{
-                      fontSize: isTouchDevice ? 9 : 11,
-                      fontWeight: 1000,
-                      letterSpacing: 0.35,
-                      textTransform: "uppercase",
-                      color: isWeekend ? "rgba(185,28,28,0.86)" : "rgba(22,101,52,0.80)",
-                      lineHeight: 1,
-                    }}
-                  >
-                    {cellDate.toLocaleDateString("it-IT", { weekday: "short" }).replace(".", "")}
-                  </div>
-
-                  <div
-                    style={{
-                      fontSize: isTouchDevice ? (isToday ? 20 : 17) : isToday ? 24 : 20,
-                      fontWeight: 1000,
-                      lineHeight: 1,
-                      color: isWeekend ? "rgba(200,20,16,0.98)" : "rgba(18,140,48,0.98)",
-                      textAlign: "center",
-                    }}
-                  >
-                    {d}
-                  </div>
+                  {cellDate.toLocaleDateString("it-IT", { weekday: "short" }).replace(".", "")}
                 </div>
 
-                <div style={{ display: "grid", gap: 4 }}>
-                  {info?.scadenze ? (
-                    <div
-                      style={{
-                        padding: isTouchDevice ? "3px 6px" : "4px 8px",
-                        borderRadius: 999,
-                        fontSize: isTouchDevice ? 9 : 11,
-                        fontWeight: 900,
-                        textAlign: "center",
-                        color: "rgba(6,95,70,0.98)",
-                        background: "rgba(220,252,231,0.95)",
-                        border: "1px solid rgba(16,185,129,0.18)",
-                      }}
-                    >
-                      SCA {info.scadenze}
-                    </div>
-                  ) : null}
-
-                  {info?.appuntamenti ? (
-                    <div
-                      style={{
-                        padding: isTouchDevice ? "3px 6px" : "4px 8px",
-                        borderRadius: 999,
-                        fontSize: isTouchDevice ? 9 : 11,
-                        fontWeight: 900,
-                        textAlign: "center",
-                        color: "rgba(107,33,168,0.98)",
-                        background: "rgba(245,243,255,0.95)",
-                        border: "1px solid rgba(168,85,247,0.18)",
-                      }}
-                    >
-                      APP {info.appuntamenti}
-                    </div>
-                  ) : null}
-
-                  {info?.entrate ? (
-                    <div
-                      style={{
-                        padding: isTouchDevice ? "3px 6px" : "4px 8px",
-                        borderRadius: 999,
-                        fontSize: isTouchDevice ? 9 : 11,
-                        fontWeight: 900,
-                        textAlign: "center",
-                        color: "rgba(5,150,105,0.98)",
-                        background: "rgba(236,253,245,0.95)",
-                        border: "1px solid rgba(16,185,129,0.18)",
-                      }}
-                    >
-                      ENT {info.entrate}
-                    </div>
-                  ) : null}
-
-                  {info?.uscite ? (
-                    <div
-                      style={{
-                        padding: isTouchDevice ? "3px 6px" : "4px 8px",
-                        borderRadius: 999,
-                        fontSize: isTouchDevice ? 9 : 11,
-                        fontWeight: 900,
-                        textAlign: "center",
-                        color: "rgba(185,28,28,0.98)",
-                        background: "rgba(254,242,242,0.95)",
-                        border: "1px solid rgba(239,68,68,0.18)",
-                      }}
-                    >
-                      USC {info.uscite}
-                    </div>
-                  ) : null}
-
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 1fr",
-                      gap: 4,
-                      marginTop: 2,
-                    }}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => onAddScadenza(key)}
-                      style={{
-                        padding: isTouchDevice ? "3px 4px" : "4px 6px",
-                        borderRadius: 999,
-                        border: "1px solid rgba(16,185,129,0.18)",
-                        background: "rgba(220,252,231,0.92)",
-                        fontSize: isTouchDevice ? 9 : 10,
-                        fontWeight: 900,
-                        cursor: "pointer",
-                        color: "rgba(6,95,70,0.98)",
-                      }}
-                      title="Nuova scadenza"
-                    >
-                      + S
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => onAddAppuntamento(key)}
-                      style={{
-                        padding: isTouchDevice ? "3px 4px" : "4px 6px",
-                        borderRadius: 999,
-                        border: "1px solid rgba(168,85,247,0.18)",
-                        background: "rgba(245,243,255,0.92)",
-                        fontSize: isTouchDevice ? 9 : 10,
-                        fontWeight: 900,
-                        cursor: "pointer",
-                        color: "rgba(107,33,168,0.98)",
-                      }}
-                      title="Nuovo appuntamento"
-                    >
-                      + A
-                    </button>
-                  </div>
-
-                  {!info && (
-                    <div
-                      style={{
-                        fontSize: isTouchDevice ? 9 : 10,
-                        fontWeight: 800,
-                        opacity: 0.25,
-                        textAlign: "center",
-                      }}
-                    >
-                      —
-                    </div>
-                  )}
+                <div
+                  style={{
+                    fontSize: isTouchDevice ? (isToday ? 18 : 16) : isToday ? 24 : 20,
+                    fontWeight: 1000,
+                    lineHeight: 1,
+                    color: isWeekend ? "rgba(200,20,16,0.98)" : "rgba(18,140,48,0.98)",
+                    textAlign: "center",
+                  }}
+                >
+                  {d}
                 </div>
               </div>
-            );
-          })}
-        </div>
 
+              <div style={{ display: "grid", gap: 4 }}>
+                {isTouchDevice ? (
+                  <>
+                    {totalEvents > 0 ? (
+                      <div
+                        style={{
+                          padding: "3px 6px",
+                          borderRadius: 999,
+                          fontSize: 9,
+                          fontWeight: 950,
+                          textAlign: "center",
+                          color: info?.urgente ? "rgba(185,28,28,0.98)" : "rgba(15,23,42,0.86)",
+                          background: info?.urgente
+                            ? "rgba(254,226,226,0.95)"
+                            : "rgba(241,245,249,0.95)",
+                          border: info?.urgente
+                            ? "1px solid rgba(239,68,68,0.18)"
+                            : "1px solid rgba(148,163,184,0.18)",
+                        }}
+                      >
+                        {totalEvents} evento{totalEvents > 1 ? "i" : ""}
+                      </div>
+                    ) : (
+                      <div
+                        style={{
+                          fontSize: 9,
+                          fontWeight: 800,
+                          opacity: 0.25,
+                          textAlign: "center",
+                        }}
+                      >
+                        —
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {info?.scadenze ? (
+                      <div
+                        style={{
+                          padding: "4px 8px",
+                          borderRadius: 999,
+                          fontSize: 11,
+                          fontWeight: 900,
+                          textAlign: "center",
+                          color: "rgba(6,95,70,0.98)",
+                          background: "rgba(220,252,231,0.95)",
+                          border: "1px solid rgba(16,185,129,0.18)",
+                        }}
+                      >
+                        SCA {info.scadenze}
+                      </div>
+                    ) : null}
+
+                    {info?.appuntamenti ? (
+                      <div
+                        style={{
+                          padding: "4px 8px",
+                          borderRadius: 999,
+                          fontSize: 11,
+                          fontWeight: 900,
+                          textAlign: "center",
+                          color: "rgba(107,33,168,0.98)",
+                          background: "rgba(245,243,255,0.95)",
+                          border: "1px solid rgba(168,85,247,0.18)",
+                        }}
+                      >
+                        APP {info.appuntamenti}
+                      </div>
+                    ) : null}
+
+                    {info?.entrate ? (
+                      <div
+                        style={{
+                          padding: "4px 8px",
+                          borderRadius: 999,
+                          fontSize: 11,
+                          fontWeight: 900,
+                          textAlign: "center",
+                          color: "rgba(5,150,105,0.98)",
+                          background: "rgba(236,253,245,0.95)",
+                          border: "1px solid rgba(16,185,129,0.18)",
+                        }}
+                      >
+                        ENT {info.entrate}
+                      </div>
+                    ) : null}
+
+                    {info?.uscite ? (
+                      <div
+                        style={{
+                          padding: "4px 8px",
+                          borderRadius: 999,
+                          fontSize: 11,
+                          fontWeight: 900,
+                          textAlign: "center",
+                          color: "rgba(185,28,28,0.98)",
+                          background: "rgba(254,242,242,0.95)",
+                          border: "1px solid rgba(239,68,68,0.18)",
+                        }}
+                      >
+                        USC {info.uscite}
+                      </div>
+                    ) : null}
+
+                    {!info && (
+                      <div
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 800,
+                          opacity: 0.25,
+                          textAlign: "center",
+                        }}
+                      >
+                        —
+                      </div>
+                    )}
+                  </>
+                )}
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: 4,
+                    marginTop: 2,
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => onAddScadenza(key)}
+                    style={{
+                      padding: isTouchDevice ? "3px 2px" : "4px 6px",
+                      borderRadius: 999,
+                      border: "1px solid rgba(16,185,129,0.18)",
+                      background: "rgba(220,252,231,0.92)",
+                      fontSize: isTouchDevice ? 8 : 10,
+                      fontWeight: 900,
+                      cursor: "pointer",
+                      color: "rgba(6,95,70,0.98)",
+                    }}
+                    title="Nuova scadenza"
+                  >
+                    +S
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onAddAppuntamento(key)}
+                    style={{
+                      padding: isTouchDevice ? "3px 2px" : "4px 6px",
+                      borderRadius: 999,
+                      border: "1px solid rgba(168,85,247,0.18)",
+                      background: "rgba(245,243,255,0.92)",
+                      fontSize: isTouchDevice ? 8 : 10,
+                      fontWeight: 900,
+                      cursor: "pointer",
+                      color: "rgba(107,33,168,0.98)",
+                    }}
+                    title="Nuovo appuntamento"
+                  >
+                    +A
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {!isTouchDevice && (
         <div
           style={{
             marginTop: 14,
@@ -3329,9 +3374,10 @@ export default function App() {
             USC = Uscite
           </span>
         </div>
-      </div>
-    );
-  }
+      )}
+    </div>
+  );
+}
 
 
 
