@@ -517,9 +517,11 @@ function DraggableFab({
   onClick: () => void;
   label?: string;
 }) {
+    const isMobile = window.innerWidth <= 820;
+
   const defaultPos: FabPos = {
     x: window.innerWidth - 110,
-    y: window.innerHeight - 150,
+    y: window.innerHeight - (isMobile ? 220 : 150),
   };
 
   const [pos, setPos] = useState<FabPos>(() => {
