@@ -1476,7 +1476,6 @@ export default function App() {
 
 
 
-
   const eventiControlloMese = useMemo(() => {
     const eventiVoci = voci
       .filter((v) => stessoMeseSelezionato(v.data))
@@ -1506,12 +1505,25 @@ export default function App() {
       sorgente: "entrata" as const,
     }));
 
-    return [...eventiVoci, ...eventiEntrate].sort((a, b) => {
+    const eventiUscite = usciteExtraVal.map((e) => ({
+      id: e.id,
+      data: e.data,
+      tipo: "uscita" as const,
+      titolo: e.descrizione,
+      ora: "09:00",
+      importo: e.importo,
+      movimento: "uscita" as const,
+      nota: e.nota,
+      urgente: false,
+      sorgente: "uscita-extra" as const,
+    }));
+
+    return [...eventiVoci, ...eventiEntrate, ...eventiUscite].sort((a, b) => {
       const d = a.data.localeCompare(b.data);
       if (d !== 0) return d;
       return a.ora.localeCompare(b.ora);
     });
-  }, [voci, entrateExtraVal, meseCorrente]);
+  }, [voci, entrateExtraVal, usciteExtraVal, meseCorrente]);
 
   const scadenzeControlloMese = useMemo(() => {
     return eventiControlloMese.filter((x) => x.tipo === "scadenza");
@@ -1529,10 +1541,17 @@ export default function App() {
     return eventiControlloMese.filter((x) => x.movimento === "uscita" && x.importo !== null);
   }, [eventiControlloMese]);
 
+  const eventiCalendarioControllo = useMemo(() => {
+    return eventiControlloMese.filter(
+      (x) => x.tipo === "scadenza" || x.tipo === "appuntamento"
+    );
+  }, [eventiControlloMese]);
+
+
   const eventiControlloGiornoSelezionato = useMemo(() => {
     if (!controlloDettaglioData) return [];
 
-    return eventiControlloMese
+    return eventiCalendarioControllo
       .filter((ev) => ev.data === controlloDettaglioData)
       .slice()
       .sort((a, b) => {
@@ -1542,7 +1561,7 @@ export default function App() {
         if (d !== 0) return d;
         return a.titolo.localeCompare(b.titolo);
       });
-  }, [controlloDettaglioData, eventiControlloMese]);
+  }, [controlloDettaglioData, eventiCalendarioControllo]);
 
   const annoCorrenteArchivio = meseCorrente.getFullYear();
 
