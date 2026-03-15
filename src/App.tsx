@@ -3000,6 +3000,8 @@ function MiniCalendarioControllo({
   onOpenDayDetails: (data: string) => void;
 }) {
   const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [previewData, setPreviewData] = useState<string | null>(null);
+  const [previewAnchor, setPreviewAnchor] = useState<{ top: number; left: number } | null>(null);
 
   useEffect(() => {
     const checkTouch = () => {
@@ -3040,8 +3042,6 @@ function MiniCalendarioControllo({
     {
       scadenze: number;
       appuntamenti: number;
-      entrate: number;
-      uscite: number;
       urgente: boolean;
     }
   >();
@@ -3050,19 +3050,79 @@ function MiniCalendarioControllo({
     const prev = stats.get(ev.data) ?? {
       scadenze: 0,
       appuntamenti: 0,
-      entrate: 0,
-      uscite: 0,
       urgente: false,
     };
 
     if (ev.tipo === "scadenza") prev.scadenze += 1;
     if (ev.tipo === "appuntamento") prev.appuntamenti += 1;
-    if (ev.movimento === "entrata") prev.entrate += 1;
-    if (ev.movimento === "uscita" && ev.importo !== null) prev.uscite += 1;
     if (ev.urgente) prev.urgente = true;
 
     stats.set(ev.data, prev);
   }
+
+  const eventiPreviewGiorno = useMemo(() => {
+    if (!previewData) return [];
+
+    return eventi
+      .filter(
+        (ev) =>
+          ev.data === previewData &&
+          (ev.tipo === "scadenza" || ev.tipo === "appuntamento")
+      )
+      .slice()
+      .sort((a, b) => {
+        const oraA = a.ora || "09:00";
+        const oraB = b.ora || "09:00";
+        const d = oraA.localeCompare(oraB);
+        if (d !== 0) return d;
+        return a.titolo.localeCompare(b.titolo);
+      });
+  }, [previewData, eventi]);
+
+  function chiudiPreview() {
+    setPreviewData(null);
+    setPreviewAnchor(null);
+  }
+
+  function apriPreviewDesktop(data: string, element: HTMLButtonElement) {
+    const rect = element.getBoundingClientRect();
+
+    const panelWidth = 320;
+    const estimatedHeight = 240;
+
+    let left = rect.left + rect.width / 2 - panelWidth / 2;
+    let top = rect.top - estimatedHeight - 12;
+
+    if (left < 12) left = 12;
+    if (left + panelWidth > window.innerWidth - 12) {
+      left = window.innerWidth - panelWidth - 12;
+    }
+
+    if (top < 12) {
+      top = rect.bottom + 12;
+    }
+
+    setPreviewData(data);
+    setPreviewAnchor({ top, left });
+  }
+
+  useEffect(() => {
+    if (!previewData) return;
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") chiudiPreview();
+    };
+
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("resize", chiudiPreview);
+    window.addEventListener("scroll", chiudiPreview, true);
+
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("resize", chiudiPreview);
+      window.removeEventListener("scroll", chiudiPreview, true);
+    };
+  }, [previewData]);
 
   const navBtnStyle: React.CSSProperties = {
     width: isTouchDevice ? 40 : 46,
@@ -3140,12 +3200,7 @@ function MiniCalendarioControllo({
           const cellDate = new Date(y, m0, d);
           const jsDay = cellDate.getDay();
           const isWeekend = jsDay === 0 || jsDay === 6;
-
-          const totalEvents =
-            (info?.scadenze ?? 0) +
-            (info?.appuntamenti ?? 0) +
-            (info?.entrate ?? 0) +
-            (info?.uscite ?? 0);
+          const totalEvents = (info?.scadenze ?? 0) + (info?.appuntamenti ?? 0);
 
           return (
             <div
@@ -3210,8 +3265,9 @@ function MiniCalendarioControllo({
                         type="button"
                         onClick={() => onOpenDayDetails(key)}
                         style={{
-                          width: "100%",
-                          padding: "4px 6px",
+                          width: "calc(100% - 8px)",
+                          margin: "0 auto",
+                          padding: "5px 8px",
                           borderRadius: 999,
                           fontSize: 9,
                           fontWeight: 950,
@@ -3224,10 +3280,11 @@ function MiniCalendarioControllo({
                             ? "1px solid rgba(239,68,68,0.18)"
                             : "1px solid rgba(148,163,184,0.18)",
                           cursor: "pointer",
-                          lineHeight: 1.15,
-                          minHeight: 36,
+                          lineHeight: 1.1,
+                          minHeight: 30,
                           display: "grid",
                           placeItems: "center",
+                          boxSizing: "border-box",
                         }}
                         title="Apri dettagli del giorno"
                       >
@@ -3249,8 +3306,11 @@ function MiniCalendarioControllo({
                 ) : (
                   <>
                     {info?.scadenze ? (
-                      <div
+                      <button
+                        type="button"
+                        onClick={(e) => apriPreviewDesktop(key, e.currentTarget)}
                         style={{
+                          width: "100%",
                           padding: "4px 8px",
                           borderRadius: 999,
                           fontSize: 11,
@@ -3259,15 +3319,20 @@ function MiniCalendarioControllo({
                           color: "rgba(6,95,70,0.98)",
                           background: "rgba(220,252,231,0.95)",
                           border: "1px solid rgba(16,185,129,0.18)",
+                          cursor: "pointer",
                         }}
+                        title="Anteprima giorno"
                       >
                         SCA {info.scadenze}
-                      </div>
+                      </button>
                     ) : null}
 
                     {info?.appuntamenti ? (
-                      <div
+                      <button
+                        type="button"
+                        onClick={(e) => apriPreviewDesktop(key, e.currentTarget)}
                         style={{
+                          width: "100%",
                           padding: "4px 8px",
                           borderRadius: 999,
                           fontSize: 11,
@@ -3276,44 +3341,12 @@ function MiniCalendarioControllo({
                           color: "rgba(107,33,168,0.98)",
                           background: "rgba(245,243,255,0.95)",
                           border: "1px solid rgba(168,85,247,0.18)",
+                          cursor: "pointer",
                         }}
+                        title="Anteprima giorno"
                       >
                         APP {info.appuntamenti}
-                      </div>
-                    ) : null}
-
-                    {info?.entrate ? (
-                      <div
-                        style={{
-                          padding: "4px 8px",
-                          borderRadius: 999,
-                          fontSize: 11,
-                          fontWeight: 900,
-                          textAlign: "center",
-                          color: "rgba(5,150,105,0.98)",
-                          background: "rgba(236,253,245,0.95)",
-                          border: "1px solid rgba(16,185,129,0.18)",
-                        }}
-                      >
-                        ENT {info.entrate}
-                      </div>
-                    ) : null}
-
-                    {info?.uscite ? (
-                      <div
-                        style={{
-                          padding: "4px 8px",
-                          borderRadius: 999,
-                          fontSize: 11,
-                          fontWeight: 900,
-                          textAlign: "center",
-                          color: "rgba(185,28,28,0.98)",
-                          background: "rgba(254,242,242,0.95)",
-                          border: "1px solid rgba(239,68,68,0.18)",
-                        }}
-                      >
-                        USC {info.uscite}
-                      </div>
+                      </button>
                     ) : null}
 
                     {!info && (
@@ -3337,13 +3370,20 @@ function MiniCalendarioControllo({
                     gridTemplateColumns: "1fr 1fr",
                     gap: 4,
                     marginTop: 2,
+                    width: "100%",
+                    paddingLeft: 4,
+                    paddingRight: 4,
+                    boxSizing: "border-box",
+                    justifyItems: "center",
                   }}
                 >
                   <button
                     type="button"
                     onClick={() => onAddScadenza(key)}
                     style={{
-                      padding: isTouchDevice ? "3px 2px" : "4px 6px",
+                      width: "100%",
+                      maxWidth: 44,
+                      padding: isTouchDevice ? "4px 0" : "4px 6px",
                       borderRadius: 999,
                       border: "1px solid rgba(16,185,129,0.18)",
                       background: "rgba(220,252,231,0.92)",
@@ -3351,6 +3391,8 @@ function MiniCalendarioControllo({
                       fontWeight: 900,
                       cursor: "pointer",
                       color: "rgba(6,95,70,0.98)",
+                      textAlign: "center",
+                      lineHeight: 1,
                     }}
                     title="Nuova scadenza"
                   >
@@ -3361,7 +3403,9 @@ function MiniCalendarioControllo({
                     type="button"
                     onClick={() => onAddAppuntamento(key)}
                     style={{
-                      padding: isTouchDevice ? "3px 2px" : "4px 6px",
+                      width: "100%",
+                      maxWidth: 44,
+                      padding: isTouchDevice ? "4px 0" : "4px 6px",
                       borderRadius: 999,
                       border: "1px solid rgba(168,85,247,0.18)",
                       background: "rgba(245,243,255,0.92)",
@@ -3369,6 +3413,8 @@ function MiniCalendarioControllo({
                       fontWeight: 900,
                       cursor: "pointer",
                       color: "rgba(107,33,168,0.98)",
+                      textAlign: "center",
+                      lineHeight: 1,
                     }}
                     title="Nuovo appuntamento"
                   >
@@ -3380,6 +3426,182 @@ function MiniCalendarioControllo({
           );
         })}
       </div>
+
+      {!isTouchDevice && previewData && previewAnchor && (
+        <div
+          onClick={chiudiPreview}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 1300,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              position: "fixed",
+              top: previewAnchor.top,
+              left: previewAnchor.left,
+              width: 320,
+              maxWidth: "calc(100vw - 24px)",
+              borderRadius: 22,
+              border: "1px solid rgba(255,255,255,0.58)",
+              background: "rgba(255,255,255,0.94)",
+              boxShadow: "0 28px 80px rgba(15,23,42,0.24)",
+              backdropFilter: "blur(16px)",
+              padding: 14,
+              display: "grid",
+              gap: 10,
+              animation: "popIn .16s ease",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 10,
+              }}
+            >
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 950, letterSpacing: -0.2 }}>
+                  Anteprima giorno
+                </div>
+                <div style={{ marginTop: 4, fontSize: 11, fontWeight: 800, opacity: 0.68 }}>
+                  {formattaDataBreve(previewData)}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={chiudiPreview}
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 12,
+                  border: "1px solid rgba(15,23,42,0.08)",
+                  background: "rgba(255,255,255,0.88)",
+                  cursor: "pointer",
+                  fontSize: 16,
+                  fontWeight: 1000,
+                  color: "rgba(15,23,42,0.82)",
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            {eventiPreviewGiorno.length === 0 ? (
+              <div
+                style={{
+                  padding: 10,
+                  borderRadius: 16,
+                  border: "1px solid rgba(15,23,42,0.08)",
+                  background: "rgba(248,250,252,0.88)",
+                  fontSize: 12,
+                  fontWeight: 800,
+                  opacity: 0.7,
+                }}
+              >
+                Nessun evento visibile.
+              </div>
+            ) : (
+              eventiPreviewGiorno.map((ev) => (
+                <div
+                  key={`${ev.sorgente}_${ev.id}`}
+                  style={{
+                    padding: 12,
+                    borderRadius: 16,
+                    border: "1px solid rgba(15,23,42,0.08)",
+                    background:
+                      "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.92))",
+                    boxShadow: "0 10px 22px rgba(15,23,42,0.05)",
+                    display: "grid",
+                    gap: 6,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <span
+                      style={{
+                        padding: "5px 9px",
+                        borderRadius: 999,
+                        fontSize: 11,
+                        fontWeight: 900,
+                        color:
+                          ev.tipo === "scadenza"
+                            ? "rgba(6,95,70,0.98)"
+                            : "rgba(107,33,168,0.98)",
+                        background:
+                          ev.tipo === "scadenza"
+                            ? "rgba(220,252,231,0.95)"
+                            : "rgba(245,243,255,0.95)",
+                        border:
+                          ev.tipo === "scadenza"
+                            ? "1px solid rgba(16,185,129,0.18)"
+                            : "1px solid rgba(168,85,247,0.18)",
+                      }}
+                    >
+                      {ev.tipo === "scadenza" ? "Scadenza" : "Appuntamento"}
+                    </span>
+
+                    {ev.urgente && badgeUrgente()}
+                  </div>
+
+                  <div style={{ fontSize: 14, fontWeight: 950 }}>{ev.titolo}</div>
+
+                  <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72 }}>
+                    {ev.ora}
+                  </div>
+
+                  {ev.nota && (
+                    <div style={{ fontSize: 12, fontWeight: 800, opacity: 0.68 }}>
+                      {ev.nota}
+                    </div>
+                  )}
+
+                  {ev.importo !== null && (
+                    <div
+                      style={{
+                        justifySelf: "start",
+                        padding: "6px 10px",
+                        borderRadius: 999,
+                        border: "1px solid rgba(239,68,68,0.18)",
+                        background: "rgba(254,242,242,0.96)",
+                        fontSize: 12,
+                        fontWeight: 950,
+                        color: "rgba(185,28,28,0.96)",
+                      }}
+                    >
+                      {ev.importo.toLocaleString("it-IT")} €
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                onOpenDayDetails(previewData);
+                chiudiPreview();
+              }}
+              style={{
+                marginTop: 2,
+                padding: "10px 12px",
+                borderRadius: 16,
+                border: "1px solid rgba(79,70,229,0.18)",
+                background: "linear-gradient(180deg, rgba(79,70,229,0.12), rgba(124,58,237,0.10))",
+                color: "rgba(67,56,202,0.98)",
+                fontSize: 12,
+                fontWeight: 900,
+                cursor: "pointer",
+              }}
+            >
+              Apri dettaglio completo
+            </button>
+          </div>
+        </div>
+      )}
 
       {!isTouchDevice && (
         <div
@@ -3413,26 +3635,6 @@ function MiniCalendarioControllo({
             }}
           >
             APP = Appuntamenti
-          </span>
-          <span
-            style={{
-              padding: "6px 10px",
-              borderRadius: 999,
-              background: "rgba(236,253,245,0.95)",
-              border: "1px solid rgba(16,185,129,0.18)",
-            }}
-          >
-            ENT = Entrate
-          </span>
-          <span
-            style={{
-              padding: "6px 10px",
-              borderRadius: 999,
-              background: "rgba(254,242,242,0.95)",
-              border: "1px solid rgba(239,68,68,0.18)",
-            }}
-          >
-            USC = Uscite
           </span>
         </div>
       )}
@@ -3630,7 +3832,7 @@ function MiniCalendarioControllo({
 
             <MiniCalendarioControllo
           mese={meseCorrente}
-          eventi={eventiControlloMese}
+          eventi={eventiCalendarioControllo}
           onPrevMonth={mesePrecedente}
           onNextMonth={meseSuccessivo}
           onAddScadenza={(dataSel) => apriNuovaConData(dataSel, "scadenza")}
@@ -3642,78 +3844,99 @@ function MiniCalendarioControllo({
 
 
         {controlloDettaglioData && (
-          <div style={{ ...ui.card, padding: 18 }}>
+          <div
+            onClick={() => setControlloDettaglioData(null)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(15,23,42,0.34)",
+              backdropFilter: "blur(10px)",
+              display: "grid",
+              placeItems: "center",
+              padding: 16,
+              zIndex: 1200,
+              animation: "fadeIn .18s ease",
+            }}
+          >
             <div
+              onClick={(e) => e.stopPropagation()}
               style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: 12,
-                flexWrap: "wrap",
+                width: "min(680px, 100%)",
+                maxHeight: "82vh",
+                overflowY: "auto",
+                borderRadius: 26,
+                border: "1px solid rgba(255,255,255,0.58)",
+                background: "rgba(255,255,255,0.90)",
+                boxShadow: "0 40px 120px rgba(15,23,42,0.28)",
+                padding: 18,
+                animation: "popIn .18s ease",
               }}
             >
-              <div>
-                <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>
-                  Dettaglio giorno
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 12,
+                  flexWrap: "wrap",
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 20 }}>
+                    Dettaglio giorno
+                  </div>
+                  <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
+                    {formattaDataBreve(controlloDettaglioData)}
+                  </div>
                 </div>
-                <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
-                  {formattaDataBreve(controlloDettaglioData)}
-                </div>
+
+                <button
+                  data-chip="1"
+                  onClick={() => setControlloDettaglioData(null)}
+                  style={chip(false)}
+                >
+                  Chiudi
+                </button>
               </div>
 
-              <button
-                data-chip="1"
-                onClick={() => setControlloDettaglioData(null)}
-                style={chip(false)}
-              >
-                Chiudi
-              </button>
-            </div>
-
-            <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
-              {eventiControlloGiornoSelezionato.length === 0 ? (
-                <div
-                  style={{
-                    padding: 12,
-                    borderRadius: 16,
-                    border: "1px solid rgba(15,23,42,0.08)",
-                    background: "rgba(255,255,255,0.72)",
-                    fontSize: 13,
-                    fontWeight: 800,
-                    opacity: 0.65,
-                  }}
-                >
-                  Nessun elemento in questo giorno.
-                </div>
-              ) : (
-                eventiControlloGiornoSelezionato.map((ev) => {
-                  const isEntrata = ev.movimento === "entrata";
-
-                  return (
+              <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
+                {eventiControlloGiornoSelezionato.length === 0 ? (
+                  <div
+                    style={{
+                      padding: 12,
+                      borderRadius: 16,
+                      border: "1px solid rgba(15,23,42,0.08)",
+                      background: "rgba(255,255,255,0.72)",
+                      fontSize: 13,
+                      fontWeight: 800,
+                      opacity: 0.65,
+                    }}
+                  >
+                    Nessun elemento in questo giorno.
+                  </div>
+                ) : (
+                  eventiControlloGiornoSelezionato.map((ev) => (
                     <div
                       key={`${ev.sorgente}_${ev.id}`}
                       style={{
                         padding: 14,
                         borderRadius: 18,
                         border: "1px solid rgba(15,23,42,0.08)",
-                        background: "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.88))",
+                        background:
+                          "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.90))",
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "center",
                         gap: 12,
                         flexWrap: "wrap",
+                        boxShadow: "0 12px 24px rgba(15,23,42,0.06)",
                       }}
                     >
                       <div style={{ display: "grid", gap: 5 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                          {ev.tipo === "scadenza" || ev.tipo === "appuntamento" ? (
-                            badgeTipo(ev.tipo)
-                          ) : isEntrata ? (
-                            badgeMov("entrata")
-                          ) : (
-                            badgeMov("uscita")
-                          )}
-
+                          {ev.tipo === "scadenza" || ev.tipo === "appuntamento"
+                        ? badgeTipo(ev.tipo)
+                        : null}
                           {ev.urgente && badgeUrgente()}
                         </div>
 
@@ -3730,29 +3953,25 @@ function MiniCalendarioControllo({
                         )}
                       </div>
 
-                      <div style={{ display: "grid", gap: 6, justifyItems: "end" }}>
-                        {ev.importo !== null && (
-                          <div
-                            style={{
-                              padding: "7px 11px",
-                              borderRadius: 999,
-                              border: isEntrata
-                                ? "2px solid rgba(16,185,129,0.28)"
-                                : "2px solid rgba(239,68,68,0.28)",
-                              background: isEntrata ? "rgba(236,253,245,0.96)" : "rgba(254,242,242,0.96)",
-                              fontSize: 12,
-                              fontWeight: 950,
-                              color: isEntrata ? "rgba(5,150,105,0.96)" : "rgba(185,28,28,0.96)",
-                            }}
-                          >
-                            {ev.importo.toLocaleString("it-IT")} €
-                          </div>
-                        )}
-                      </div>
+                      {ev.importo !== null && (
+                        <div
+                          style={{
+                            padding: "7px 11px",
+                            borderRadius: 999,
+                            border: "2px solid rgba(239,68,68,0.22)",
+                            background: "rgba(254,242,242,0.96)",
+                            fontSize: 12,
+                            fontWeight: 950,
+                            color: "rgba(185,28,28,0.96)",
+                          }}
+                        >
+                          {ev.importo.toLocaleString("it-IT")} €
+                        </div>
+                      )}
                     </div>
-                  );
-                })
-              )}
+                  ))
+                )}
+              </div>
             </div>
           </div>
         )}
