@@ -2916,6 +2916,11 @@ export default function App() {
 
 
 
+
+
+
+
+
   function MiniCalendarioControllo({
     mese,
     eventi,
@@ -2942,7 +2947,22 @@ export default function App() {
     onAddScadenza: (data: string) => void;
     onAddAppuntamento: (data: string) => void;
   }) {
+    const [isTouchDevice, setIsTouchDevice] = useState(false);
 
+    useEffect(() => {
+      const checkTouch = () => {
+        const touch =
+          window.matchMedia("(hover: none)").matches ||
+          window.matchMedia("(pointer: coarse)").matches ||
+          "ontouchstart" in window;
+
+        setIsTouchDevice(touch || window.innerWidth <= 820);
+      };
+
+      checkTouch();
+      window.addEventListener("resize", checkTouch);
+      return () => window.removeEventListener("resize", checkTouch);
+    }, []);
 
     const y = mese.getFullYear();
     const m0 = mese.getMonth();
@@ -2992,27 +3012,40 @@ export default function App() {
       stats.set(ev.data, prev);
     }
 
- 
+    const navBtnStyle: React.CSSProperties = {
+      width: isTouchDevice ? 42 : 46,
+      height: isTouchDevice ? 42 : 46,
+      borderRadius: 16,
+      border: "1px solid rgba(15,23,42,0.08)",
+      background: "rgba(255,255,255,0.86)",
+      boxShadow: "0 10px 22px rgba(15,23,42,0.08)",
+      display: "grid",
+      placeItems: "center",
+      cursor: "pointer",
+      fontSize: 20,
+      fontWeight: 1000,
+      color: "rgba(15,23,42,0.88)",
+    };
 
     return (
-      <div style={{ ...ui.card, padding: 18 }}>
+      <div style={{ ...ui.card, padding: isTouchDevice ? 12 : 18, overflow: "visible" }}>
         <div
           style={{
             display: "grid",
             gridTemplateColumns: "42px 1fr 42px",
             alignItems: "center",
-            gap: 12,
+            gap: isTouchDevice ? 8 : 12,
             marginBottom: 14,
           }}
         >
-          <button type="button" onClick={onPrevMonth} style={chip(false)} title="Mese precedente">
+          <button type="button" onClick={onPrevMonth} style={navBtnStyle} title="Mese precedente">
             ←
           </button>
 
           <div
             style={{
               textAlign: "center",
-              fontSize: 24,
+              fontSize: isTouchDevice ? 18 : 24,
               fontWeight: 1000,
               letterSpacing: -0.6,
               textTransform: "capitalize",
@@ -3023,17 +3056,16 @@ export default function App() {
             {titoloMese}
           </div>
 
-          <button type="button" onClick={onNextMonth} style={chip(false)} title="Mese successivo">
+          <button type="button" onClick={onNextMonth} style={navBtnStyle} title="Mese successivo">
             →
           </button>
         </div>
-
 
         <div
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
-            gap: 10,
+            gap: isTouchDevice ? 6 : 10,
           }}
         >
           {giorni.map((key, idx) => {
@@ -3042,7 +3074,7 @@ export default function App() {
                 <div
                   key={`ec_${idx}`}
                   style={{
-                    minHeight: 110,
+                    minHeight: isTouchDevice ? 88 : 120,
                     borderRadius: 18,
                     background: "transparent",
                   }}
@@ -3061,8 +3093,8 @@ export default function App() {
               <div
                 key={key}
                 style={{
-                  minHeight: 120,
-                  borderRadius: 20,
+                  minHeight: isTouchDevice ? 112 : 128,
+                  borderRadius: isTouchDevice ? 18 : 20,
                   border: info?.urgente
                     ? "2px solid rgba(239,68,68,0.34)"
                     : isToday
@@ -3072,10 +3104,11 @@ export default function App() {
                     ? "linear-gradient(180deg, rgba(239,246,255,0.96), rgba(248,250,252,0.92))"
                     : "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.88))",
                   boxShadow: "0 12px 26px rgba(15,23,42,0.08)",
-                  padding: 10,
+                  padding: isTouchDevice ? 8 : 10,
                   display: "grid",
                   alignContent: "space-between",
-                  gap: 8,
+                  gap: isTouchDevice ? 6 : 8,
+                  overflow: "hidden",
                 }}
               >
                 <div
@@ -3087,7 +3120,7 @@ export default function App() {
                 >
                   <div
                     style={{
-                      fontSize: 11,
+                      fontSize: isTouchDevice ? 9 : 11,
                       fontWeight: 1000,
                       letterSpacing: 0.35,
                       textTransform: "uppercase",
@@ -3100,7 +3133,7 @@ export default function App() {
 
                   <div
                     style={{
-                      fontSize: isToday ? 24 : 20,
+                      fontSize: isTouchDevice ? (isToday ? 20 : 17) : isToday ? 24 : 20,
                       fontWeight: 1000,
                       lineHeight: 1,
                       color: isWeekend ? "rgba(200,20,16,0.98)" : "rgba(18,140,48,0.98)",
@@ -3111,13 +3144,13 @@ export default function App() {
                   </div>
                 </div>
 
-                <div style={{ display: "grid", gap: 5 }}>
+                <div style={{ display: "grid", gap: 4 }}>
                   {info?.scadenze ? (
                     <div
                       style={{
-                        padding: "4px 8px",
+                        padding: isTouchDevice ? "3px 6px" : "4px 8px",
                         borderRadius: 999,
-                        fontSize: 11,
+                        fontSize: isTouchDevice ? 9 : 11,
                         fontWeight: 900,
                         textAlign: "center",
                         color: "rgba(6,95,70,0.98)",
@@ -3132,9 +3165,9 @@ export default function App() {
                   {info?.appuntamenti ? (
                     <div
                       style={{
-                        padding: "4px 8px",
+                        padding: isTouchDevice ? "3px 6px" : "4px 8px",
                         borderRadius: 999,
-                        fontSize: 11,
+                        fontSize: isTouchDevice ? 9 : 11,
                         fontWeight: 900,
                         textAlign: "center",
                         color: "rgba(107,33,168,0.98)",
@@ -3149,9 +3182,9 @@ export default function App() {
                   {info?.entrate ? (
                     <div
                       style={{
-                        padding: "4px 8px",
+                        padding: isTouchDevice ? "3px 6px" : "4px 8px",
                         borderRadius: 999,
-                        fontSize: 11,
+                        fontSize: isTouchDevice ? 9 : 11,
                         fontWeight: 900,
                         textAlign: "center",
                         color: "rgba(5,150,105,0.98)",
@@ -3166,9 +3199,9 @@ export default function App() {
                   {info?.uscite ? (
                     <div
                       style={{
-                        padding: "4px 8px",
+                        padding: isTouchDevice ? "3px 6px" : "4px 8px",
                         borderRadius: 999,
-                        fontSize: 11,
+                        fontSize: isTouchDevice ? 9 : 11,
                         fontWeight: 900,
                         textAlign: "center",
                         color: "rgba(185,28,28,0.98)",
@@ -3180,24 +3213,23 @@ export default function App() {
                     </div>
                   ) : null}
 
-
-                                    <div
+                  <div
                     style={{
                       display: "grid",
                       gridTemplateColumns: "1fr 1fr",
                       gap: 4,
-                      marginTop: 4,
+                      marginTop: 2,
                     }}
                   >
                     <button
                       type="button"
                       onClick={() => onAddScadenza(key)}
                       style={{
-                        padding: "4px 6px",
+                        padding: isTouchDevice ? "3px 4px" : "4px 6px",
                         borderRadius: 999,
                         border: "1px solid rgba(16,185,129,0.18)",
                         background: "rgba(220,252,231,0.92)",
-                        fontSize: 10,
+                        fontSize: isTouchDevice ? 9 : 10,
                         fontWeight: 900,
                         cursor: "pointer",
                         color: "rgba(6,95,70,0.98)",
@@ -3211,11 +3243,11 @@ export default function App() {
                       type="button"
                       onClick={() => onAddAppuntamento(key)}
                       style={{
-                        padding: "4px 6px",
+                        padding: isTouchDevice ? "3px 4px" : "4px 6px",
                         borderRadius: 999,
                         border: "1px solid rgba(168,85,247,0.18)",
                         background: "rgba(245,243,255,0.92)",
-                        fontSize: 10,
+                        fontSize: isTouchDevice ? 9 : 10,
                         fontWeight: 900,
                         cursor: "pointer",
                         color: "rgba(107,33,168,0.98)",
@@ -3226,11 +3258,10 @@ export default function App() {
                     </button>
                   </div>
 
-
                   {!info && (
                     <div
                       style={{
-                        fontSize: 10,
+                        fontSize: isTouchDevice ? 9 : 10,
                         fontWeight: 800,
                         opacity: 0.25,
                         textAlign: "center",
@@ -3301,6 +3332,17 @@ export default function App() {
       </div>
     );
   }
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4388,8 +4430,7 @@ export default function App() {
                       background: "linear-gradient(180deg, rgba(59,130,246,0.10), rgba(59,130,246,0.05))",
                     }}
                   >
-                    <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Turni mese</div>
-                    <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000 }}>{turniMese.length}</div>
+                  
                   </div>
 
                   <div
@@ -4838,8 +4879,7 @@ export default function App() {
                     background: "linear-gradient(180deg, rgba(59,130,246,0.08), rgba(59,130,246,0.03))",
                   }}
                 >
-                  <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Turni mese</div>
-                  <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>{turniMese.length}</div>
+            
                 </div>
 
                 <div
@@ -5397,7 +5437,7 @@ export default function App() {
 
 
 
-      {pagina !== "controllo" && <DraggableFab onClick={apriNuova} label="Aggiungi" />}
+            <DraggableFab onClick={apriNuova} label="Aggiungi" />
 
       {mostraForm && (
         <div
