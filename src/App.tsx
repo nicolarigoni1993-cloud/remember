@@ -3002,6 +3002,7 @@ function MiniCalendarioControllo({
   const [isTouchDevice, setIsTouchDevice] = useState(false);
   const [previewData, setPreviewData] = useState<string | null>(null);
   const [previewAnchor, setPreviewAnchor] = useState<{ top: number; left: number } | null>(null);
+  const [mobileMenuData, setMobileMenuData] = useState<string | null>(null);
 
   useEffect(() => {
     const checkTouch = () => {
@@ -3140,316 +3141,474 @@ function MiniCalendarioControllo({
   };
 
   return (
-    <div
-      style={{
-        ...ui.card,
-        width: "100%",
-        maxWidth: "100%",
-        boxSizing: "border-box",
-        padding: isTouchDevice ? 8 : 18,
-        overflow: "visible",
-      }}
-    >
+    <>
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: isTouchDevice ? "36px minmax(0, 1fr) 36px" : "42px 1fr 42px",
-          alignItems: "center",
-          gap: isTouchDevice ? 6 : 12,
-          marginBottom: isTouchDevice ? 10 : 14,
-        }}
-      >
-        <button type="button" onClick={onPrevMonth} style={navBtnStyle} title="Mese precedente">
-          ←
-        </button>
-
-        <div
-          style={{
-            textAlign: "center",
-            fontSize: isTouchDevice ? 17 : 24,
-            fontWeight: 1000,
-            letterSpacing: -0.6,
-            textTransform: "capitalize",
-            color: "rgba(15,23,42,0.94)",
-            lineHeight: 1.1,
-            minWidth: 0,
-          }}
-        >
-          {titoloMese}
-        </div>
-
-        <button type="button" onClick={onNextMonth} style={navBtnStyle} title="Mese successivo">
-          →
-        </button>
-      </div>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
-          gap: isTouchDevice ? 3 : 10,
+          ...ui.card,
           width: "100%",
           maxWidth: "100%",
           boxSizing: "border-box",
+          padding: isTouchDevice ? 8 : 18,
+          overflow: "visible",
         }}
       >
-        {giorni.map((key, idx) => {
-          if (!key) {
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: isTouchDevice ? "36px minmax(0, 1fr) 36px" : "42px 1fr 42px",
+            alignItems: "center",
+            gap: isTouchDevice ? 6 : 12,
+            marginBottom: isTouchDevice ? 10 : 14,
+          }}
+        >
+          <button type="button" onClick={onPrevMonth} style={navBtnStyle} title="Mese precedente">
+            ←
+          </button>
+
+          <div
+            style={{
+              textAlign: "center",
+              fontSize: isTouchDevice ? 17 : 24,
+              fontWeight: 1000,
+              letterSpacing: -0.6,
+              textTransform: "capitalize",
+              color: "rgba(15,23,42,0.94)",
+              lineHeight: 1.1,
+              minWidth: 0,
+            }}
+          >
+            {titoloMese}
+          </div>
+
+          <button type="button" onClick={onNextMonth} style={navBtnStyle} title="Mese successivo">
+            →
+          </button>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
+            gap: isTouchDevice ? 3 : 10,
+            width: "100%",
+            maxWidth: "100%",
+            boxSizing: "border-box",
+          }}
+        >
+          {giorni.map((key, idx) => {
+            if (!key) {
+              return (
+                <div
+                  key={`ec_${idx}`}
+                  style={{
+                    minHeight: isTouchDevice ? 78 : 124,
+                    borderRadius: 16,
+                    background: "transparent",
+                  }}
+                />
+              );
+            }
+
+            const d = Number(key.slice(-2));
+            const info = stats.get(key);
+            const isToday = key === oggiKey;
+            const cellDate = new Date(y, m0, d);
+            const jsDay = cellDate.getDay();
+            const isWeekend = jsDay === 0 || jsDay === 6;
+            const totalEvents = (info?.scadenze ?? 0) + (info?.appuntamenti ?? 0);
+
             return (
               <div
-                key={`ec_${idx}`}
+                key={key}
                 style={{
-                  minHeight: isTouchDevice ? 78 : 124,
-                  borderRadius: 16,
-                  background: "transparent",
-                }}
-              />
-            );
-          }
-
-          const d = Number(key.slice(-2));
-          const info = stats.get(key);
-          const isToday = key === oggiKey;
-          const cellDate = new Date(y, m0, d);
-          const jsDay = cellDate.getDay();
-          const isWeekend = jsDay === 0 || jsDay === 6;
-          const totalEvents = (info?.scadenze ?? 0) + (info?.appuntamenti ?? 0);
-
-          return (
-            <div
-              key={key}
-              style={{
-                minHeight: isTouchDevice ? 88 : 128,
-                borderRadius: isTouchDevice ? 15 : 20,
-                border: info?.urgente
-                  ? "2px solid rgba(239,68,68,0.34)"
-                  : isToday
-                  ? "2px solid rgba(59,130,246,0.28)"
-                  : "1px solid rgba(15,23,42,0.08)",
-                background: isToday
-                  ? "linear-gradient(180deg, rgba(239,246,255,0.96), rgba(248,250,252,0.92))"
-                  : "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.88))",
-                boxShadow: "0 10px 20px rgba(15,23,42,0.07)",
-                padding: isTouchDevice ? "5px 2px 6px" : "10px",
-                display: "grid",
-                alignContent: "space-between",
-                gap: isTouchDevice ? 4 : 8,
-                overflow: "hidden",
-                minWidth: 0,
-                boxSizing: "border-box",
-              }}
-            >
-              <div
-                style={{
+                  minHeight: isTouchDevice ? 88 : 128,
+                  borderRadius: isTouchDevice ? 15 : 20,
+                  border: info?.urgente
+                    ? "2px solid rgba(239,68,68,0.34)"
+                    : isToday
+                    ? "2px solid rgba(59,130,246,0.28)"
+                    : "1px solid rgba(15,23,42,0.08)",
+                  background: isToday
+                    ? "linear-gradient(180deg, rgba(239,246,255,0.96), rgba(248,250,252,0.92))"
+                    : "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.88))",
+                  boxShadow: "0 10px 20px rgba(15,23,42,0.07)",
+                  padding: isTouchDevice ? "5px 2px 6px" : "10px",
                   display: "grid",
-                  justifyItems: "center",
-                  gap: isTouchDevice ? 2 : 3,
+                  alignContent: "space-between",
+                  gap: isTouchDevice ? 4 : 8,
+                  overflow: "hidden",
+                  minWidth: 0,
+                  boxSizing: "border-box",
                 }}
               >
                 <div
                   style={{
-                    fontSize: isTouchDevice ? 8 : 11,
-                    fontWeight: 1000,
-                    letterSpacing: 0.2,
-                    textTransform: "uppercase",
-                    color: isWeekend ? "rgba(185,28,28,0.86)" : "rgba(22,101,52,0.80)",
-                    lineHeight: 1,
+                    display: "grid",
+                    justifyItems: "center",
+                    gap: isTouchDevice ? 2 : 3,
                   }}
                 >
-                  {cellDate.toLocaleDateString("it-IT", { weekday: "short" }).replace(".", "")}
+                  <div
+                    style={{
+                      fontSize: isTouchDevice ? 8 : 11,
+                      fontWeight: 1000,
+                      letterSpacing: 0.2,
+                      textTransform: "uppercase",
+                      color: isWeekend ? "rgba(185,28,28,0.86)" : "rgba(22,101,52,0.80)",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {cellDate.toLocaleDateString("it-IT", { weekday: "short" }).replace(".", "")}
+                  </div>
+
+                  <div
+                    style={{
+                      fontSize: isTouchDevice ? (isToday ? 16 : 15) : isToday ? 24 : 20,
+                      fontWeight: 1000,
+                      lineHeight: 1,
+                      color: isWeekend ? "rgba(200,20,16,0.98)" : "rgba(18,140,48,0.98)",
+                      textAlign: "center",
+                    }}
+                  >
+                    {d}
+                  </div>
                 </div>
 
-                <div
-                  style={{
-                    fontSize: isTouchDevice ? (isToday ? 16 : 15) : isToday ? 24 : 20,
-                    fontWeight: 1000,
-                    lineHeight: 1,
-                    color: isWeekend ? "rgba(200,20,16,0.98)" : "rgba(18,140,48,0.98)",
-                    textAlign: "center",
-                  }}
-                >
-                  {d}
-                </div>
-              </div>
+                <div style={{ display: "grid", gap: isTouchDevice ? 3 : 4, minWidth: 0 }}>
+                  {isTouchDevice ? (
+                    <>
+                      {totalEvents > 0 ? (
+                        <button
+                          type="button"
+                          onClick={() => onOpenDayDetails(key)}
+                          style={{
+                            justifySelf: "center",
+                            width: "auto",
+                            minWidth: 34,
+                            maxWidth: "88%",
+                            padding: "3px 6px",
+                            borderRadius: 999,
+                            fontSize: 7,
+                            fontWeight: 950,
+                            textAlign: "center",
+                            color: info?.urgente
+                              ? "rgba(185,28,28,0.98)"
+                              : "rgba(15,23,42,0.82)",
+                            background: info?.urgente
+                              ? "rgba(254,226,226,0.95)"
+                              : "rgba(241,245,249,0.92)",
+                            border: info?.urgente
+                              ? "1px solid rgba(239,68,68,0.18)"
+                              : "1px solid rgba(148,163,184,0.16)",
+                            cursor: "pointer",
+                            lineHeight: 1.05,
+                            minHeight: 22,
+                            display: "grid",
+                            placeItems: "center",
+                            boxSizing: "border-box",
+                            whiteSpace: "normal",
+                          }}
+                          title="Apri dettagli del giorno"
+                        >
+                          {totalEvents}
+                          <span style={{ display: "block", lineHeight: 1 }}>
+                            {totalEvents === 1 ? "evento" : "eventi"}
+                          </span>
+                        </button>
+                      ) : (
+                        <div
+                          style={{
+                            fontSize: 8,
+                            fontWeight: 800,
+                            opacity: 0.25,
+                            textAlign: "center",
+                          }}
+                        >
+                          —
+                        </div>
+                      )}
 
-              <div style={{ display: "grid", gap: isTouchDevice ? 3 : 4, minWidth: 0 }}>
-                {isTouchDevice ? (
-                  <>
-                    {totalEvents > 0 ? (
                       <button
                         type="button"
-                        onClick={() => onOpenDayDetails(key)}
+                        onClick={() => setMobileMenuData(key)}
                         style={{
                           justifySelf: "center",
-                          width: "auto",
-                          minWidth: 36,
-                          maxWidth: "90%",
-                          padding: "3px 6px",
+                          width: 24,
+                          height: 24,
                           borderRadius: 999,
-                          fontSize: 7,
-                          fontWeight: 950,
-                          textAlign: "center",
-                          color: info?.urgente
-                            ? "rgba(185,28,28,0.98)"
-                            : "rgba(15,23,42,0.82)",
-                          background: info?.urgente
-                            ? "rgba(254,226,226,0.95)"
-                            : "rgba(241,245,249,0.92)",
-                          border: info?.urgente
-                            ? "1px solid rgba(239,68,68,0.18)"
-                            : "1px solid rgba(148,163,184,0.16)",
+                          border: "1px solid rgba(79,70,229,0.16)",
+                          background: "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92))",
+                          color: "rgba(67,56,202,0.98)",
+                          fontSize: 16,
+                          fontWeight: 1000,
                           cursor: "pointer",
-                          lineHeight: 1.05,
-                          minHeight: 22,
                           display: "grid",
                           placeItems: "center",
+                          lineHeight: 1,
+                          boxShadow: "0 6px 14px rgba(15,23,42,0.06)",
+                        }}
+                        title="Aggiungi"
+                      >
+                        +
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      {info?.scadenze ? (
+                        <button
+                          type="button"
+                          onClick={(e) => apriPreviewDesktop(key, e.currentTarget)}
+                          style={{
+                            width: "100%",
+                            padding: "4px 8px",
+                            borderRadius: 999,
+                            fontSize: 11,
+                            fontWeight: 900,
+                            textAlign: "center",
+                            color: "rgba(6,95,70,0.98)",
+                            background: "rgba(220,252,231,0.95)",
+                            border: "1px solid rgba(16,185,129,0.18)",
+                            cursor: "pointer",
+                          }}
+                          title="Anteprima giorno"
+                        >
+                          SCA {info.scadenze}
+                        </button>
+                      ) : null}
+
+                      {info?.appuntamenti ? (
+                        <button
+                          type="button"
+                          onClick={(e) => apriPreviewDesktop(key, e.currentTarget)}
+                          style={{
+                            width: "100%",
+                            padding: "4px 8px",
+                            borderRadius: 999,
+                            fontSize: 11,
+                            fontWeight: 900,
+                            textAlign: "center",
+                            color: "rgba(107,33,168,0.98)",
+                            background: "rgba(245,243,255,0.95)",
+                            border: "1px solid rgba(168,85,247,0.18)",
+                            cursor: "pointer",
+                          }}
+                          title="Anteprima giorno"
+                        >
+                          APP {info.appuntamenti}
+                        </button>
+                      ) : null}
+
+                      {!info && (
+                        <div
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 800,
+                            opacity: 0.25,
+                            textAlign: "center",
+                          }}
+                        >
+                          —
+                        </div>
+                      )}
+
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "1fr 1fr",
+                          gap: 4,
+                          marginTop: 2,
+                          width: "100%",
                           boxSizing: "border-box",
-                          whiteSpace: "normal",
-                        }}
-                        title="Apri dettagli del giorno"
-                      >
-                        {totalEvents}
-                        <span style={{ display: "block", lineHeight: 1 }}>
-                          {totalEvents === 1 ? "evento" : "eventi"}
-                        </span>
-                      </button>
-                    ) : (
-                      <div
-                        style={{
-                          fontSize: 8,
-                          fontWeight: 800,
-                          opacity: 0.25,
-                          textAlign: "center",
+                          justifyItems: "center",
+                          alignItems: "center",
                         }}
                       >
-                        —
+                        <button
+                          type="button"
+                          onClick={() => onAddScadenza(key)}
+                          style={{
+                            width: "100%",
+                            maxWidth: 44,
+                            minWidth: 0,
+                            padding: "4px 6px",
+                            borderRadius: 999,
+                            border: "1px solid rgba(16,185,129,0.18)",
+                            background: "rgba(220,252,231,0.92)",
+                            fontSize: 10,
+                            fontWeight: 900,
+                            cursor: "pointer",
+                            color: "rgba(6,95,70,0.98)",
+                            textAlign: "center",
+                            lineHeight: 1,
+                          }}
+                          title="Nuova scadenza"
+                        >
+                          +S
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => onAddAppuntamento(key)}
+                          style={{
+                            width: "100%",
+                            maxWidth: 44,
+                            minWidth: 0,
+                            padding: "4px 6px",
+                            borderRadius: 999,
+                            border: "1px solid rgba(168,85,247,0.18)",
+                            background: "rgba(245,243,255,0.92)",
+                            fontSize: 10,
+                            fontWeight: 900,
+                            cursor: "pointer",
+                            color: "rgba(107,33,168,0.98)",
+                            textAlign: "center",
+                            lineHeight: 1,
+                          }}
+                          title="Nuovo appuntamento"
+                        >
+                          +A
+                        </button>
                       </div>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    {info?.scadenze ? (
-                      <button
-                        type="button"
-                        onClick={(e) => apriPreviewDesktop(key, e.currentTarget)}
-                        style={{
-                          width: "100%",
-                          padding: "4px 8px",
-                          borderRadius: 999,
-                          fontSize: 11,
-                          fontWeight: 900,
-                          textAlign: "center",
-                          color: "rgba(6,95,70,0.98)",
-                          background: "rgba(220,252,231,0.95)",
-                          border: "1px solid rgba(16,185,129,0.18)",
-                          cursor: "pointer",
-                        }}
-                        title="Anteprima giorno"
-                      >
-                        SCA {info.scadenze}
-                      </button>
-                    ) : null}
-
-                    {info?.appuntamenti ? (
-                      <button
-                        type="button"
-                        onClick={(e) => apriPreviewDesktop(key, e.currentTarget)}
-                        style={{
-                          width: "100%",
-                          padding: "4px 8px",
-                          borderRadius: 999,
-                          fontSize: 11,
-                          fontWeight: 900,
-                          textAlign: "center",
-                          color: "rgba(107,33,168,0.98)",
-                          background: "rgba(245,243,255,0.95)",
-                          border: "1px solid rgba(168,85,247,0.18)",
-                          cursor: "pointer",
-                        }}
-                        title="Anteprima giorno"
-                      >
-                        APP {info.appuntamenti}
-                      </button>
-                    ) : null}
-
-                    {!info && (
-                      <div
-                        style={{
-                          fontSize: 10,
-                          fontWeight: 800,
-                          opacity: 0.25,
-                          textAlign: "center",
-                        }}
-                      >
-                        —
-                      </div>
-                    )}
-                  </>
-                )}
-
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: isTouchDevice ? 2 : 4,
-                    marginTop: isTouchDevice ? 1 : 2,
-                    width: "100%",
-                    boxSizing: "border-box",
-                    justifyItems: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  <button
-                    type="button"
-                    onClick={() => onAddScadenza(key)}
-                    style={{
-                      width: isTouchDevice ? 28 : "100%",
-                      maxWidth: isTouchDevice ? 28 : 44,
-                      minWidth: 0,
-                      padding: isTouchDevice ? "3px 0" : "4px 6px",
-                      borderRadius: 999,
-                      border: "1px solid rgba(16,185,129,0.18)",
-                      background: "rgba(220,252,231,0.92)",
-                      fontSize: isTouchDevice ? 7 : 10,
-                      fontWeight: 900,
-                      cursor: "pointer",
-                      color: "rgba(6,95,70,0.98)",
-                      textAlign: "center",
-                      lineHeight: 1,
-                    }}
-                    title="Nuova scadenza"
-                  >
-                    +S
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => onAddAppuntamento(key)}
-                    style={{
-                      width: isTouchDevice ? 28 : "100%",
-                      maxWidth: isTouchDevice ? 28 : 44,
-                      minWidth: 0,
-                      padding: isTouchDevice ? "3px 0" : "4px 6px",
-                      borderRadius: 999,
-                      border: "1px solid rgba(168,85,247,0.18)",
-                      background: "rgba(245,243,255,0.92)",
-                      fontSize: isTouchDevice ? 7 : 10,
-                      fontWeight: 900,
-                      cursor: "pointer",
-                      color: "rgba(107,33,168,0.98)",
-                      textAlign: "center",
-                      lineHeight: 1,
-                    }}
-                    title="Nuovo appuntamento"
-                  >
-                    +A
-                  </button>
+                    </>
+                  )}
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
+
+        {!isTouchDevice && (
+          <div
+            style={{
+              marginTop: 14,
+              display: "flex",
+              gap: 8,
+              flexWrap: "wrap",
+              alignItems: "center",
+              fontSize: 11,
+              fontWeight: 900,
+              opacity: 0.82,
+            }}
+          >
+            <span
+              style={{
+                padding: "6px 10px",
+                borderRadius: 999,
+                background: "rgba(220,252,231,0.95)",
+                border: "1px solid rgba(16,185,129,0.18)",
+              }}
+            >
+              SCA = Scadenze
+            </span>
+            <span
+              style={{
+                padding: "6px 10px",
+                borderRadius: 999,
+                background: "rgba(245,243,255,0.95)",
+                border: "1px solid rgba(168,85,247,0.18)",
+              }}
+            >
+              APP = Appuntamenti
+            </span>
+          </div>
+        )}
       </div>
+
+      {isTouchDevice && mobileMenuData && (
+        <div
+          onClick={() => setMobileMenuData(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15,23,42,0.28)",
+            backdropFilter: "blur(8px)",
+            display: "grid",
+            placeItems: "center",
+            padding: 16,
+            zIndex: 1400,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "min(320px, 100%)",
+              borderRadius: 24,
+              border: "1px solid rgba(255,255,255,0.58)",
+              background: "rgba(255,255,255,0.94)",
+              boxShadow: "0 30px 90px rgba(15,23,42,0.24)",
+              padding: 16,
+              display: "grid",
+              gap: 10,
+              animation: "popIn .16s ease",
+            }}
+          >
+            <div style={{ fontSize: 16, fontWeight: 950, letterSpacing: -0.2 }}>
+              Aggiungi elemento
+            </div>
+
+            <div style={{ fontSize: 12, fontWeight: 800, opacity: 0.68 }}>
+              {formattaDataBreve(mobileMenuData)}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                onAddScadenza(mobileMenuData);
+                setMobileMenuData(null);
+              }}
+              style={{
+                padding: "12px 14px",
+                borderRadius: 16,
+                border: "1px solid rgba(16,185,129,0.18)",
+                background: "rgba(220,252,231,0.92)",
+                color: "rgba(6,95,70,0.98)",
+                fontSize: 13,
+                fontWeight: 900,
+                cursor: "pointer",
+              }}
+            >
+              Nuova scadenza
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                onAddAppuntamento(mobileMenuData);
+                setMobileMenuData(null);
+              }}
+              style={{
+                padding: "12px 14px",
+                borderRadius: 16,
+                border: "1px solid rgba(168,85,247,0.18)",
+                background: "rgba(245,243,255,0.92)",
+                color: "rgba(107,33,168,0.98)",
+                fontSize: 13,
+                fontWeight: 900,
+                cursor: "pointer",
+              }}
+            >
+              Nuovo appuntamento
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setMobileMenuData(null)}
+              style={{
+                padding: "10px 12px",
+                borderRadius: 16,
+                border: "1px solid rgba(15,23,42,0.08)",
+                background: "rgba(255,255,255,0.88)",
+                color: "rgba(15,23,42,0.86)",
+                fontSize: 12,
+                fontWeight: 900,
+                cursor: "pointer",
+              }}
+            >
+              Chiudi
+            </button>
+          </div>
+        </div>
+      )}
 
       {!isTouchDevice && previewData && previewAnchor && (
         <div
@@ -3626,43 +3785,7 @@ function MiniCalendarioControllo({
           </div>
         </div>
       )}
-
-      {!isTouchDevice && (
-        <div
-          style={{
-            marginTop: 14,
-            display: "flex",
-            gap: 8,
-            flexWrap: "wrap",
-            alignItems: "center",
-            fontSize: 11,
-            fontWeight: 900,
-            opacity: 0.82,
-          }}
-        >
-          <span
-            style={{
-              padding: "6px 10px",
-              borderRadius: 999,
-              background: "rgba(220,252,231,0.95)",
-              border: "1px solid rgba(16,185,129,0.18)",
-            }}
-          >
-            SCA = Scadenze
-          </span>
-          <span
-            style={{
-              padding: "6px 10px",
-              borderRadius: 999,
-              background: "rgba(245,243,255,0.95)",
-              border: "1px solid rgba(168,85,247,0.18)",
-            }}
-          >
-            APP = Appuntamenti
-          </span>
-        </div>
-      )}
-    </div>
+    </>
   );
 }
 
