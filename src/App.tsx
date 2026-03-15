@@ -3327,30 +3327,32 @@ function MiniCalendarioControllo({
                           —
                         </div>
                       )}
-
-                      <button
-                        type="button"
-                        onClick={() => setMobileMenuData(key)}
-                        style={{
-                          justifySelf: "center",
-                          width: 24,
-                          height: 24,
-                          borderRadius: 999,
-                          border: "1px solid rgba(79,70,229,0.16)",
-                          background: "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92))",
-                          color: "rgba(67,56,202,0.98)",
-                          fontSize: 16,
-                          fontWeight: 1000,
-                          cursor: "pointer",
-                          display: "grid",
-                          placeItems: "center",
-                          lineHeight: 1,
-                          boxShadow: "0 6px 14px rgba(15,23,42,0.06)",
-                        }}
-                        title="Aggiungi"
-                      >
-                        +
-                      </button>
+<button
+  type="button"
+  onClick={() => setMobileMenuData(key)}
+  style={{
+    justifySelf: "center",
+    alignSelf: "center",
+    width: 44,
+    height: 24,
+    padding: 0,
+    borderRadius: 999,
+    border: "1px solid rgba(99,102,241,0.16)",
+    background: "linear-gradient(180deg, rgba(245,243,255,0.96), rgba(238,242,255,0.92))",
+    color: "rgba(79,70,229,0.98)",
+    fontSize: 18,
+    fontWeight: 1000,
+    cursor: "pointer",
+    display: "grid",
+    placeItems: "center",
+    lineHeight: 1,
+    boxShadow: "0 6px 14px rgba(79,70,229,0.08)",
+    boxSizing: "border-box",
+  }}
+  title="Aggiungi"
+>
+  +
+</button>
                     </>
                   ) : (
                     <>
