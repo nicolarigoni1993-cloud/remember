@@ -763,6 +763,8 @@ export default function App() {
 
   const presetTurni = ["RIPOSO", "00-06", "06-12", "12-18", "18-24", "6-14", "14-22", "22-06", "8-18", "8-17"];
 
+  const [controlloDettaglioData, setControlloDettaglioData] = useState<string | null>(null);
+
   const meseKey = useMemo(() => yyyymmFromDate(meseCorrente), [meseCorrente]);
   const [hoverClose, setHoverClose] = useState(false);
   const [hoverCloseTurno, setHoverCloseTurno] = useState(false);
@@ -920,6 +922,17 @@ export default function App() {
 
     return { glass, card };
   }, []);
+
+
+
+
+
+
+
+
+
+
+
 
   function chiudiForm() {
     setMostraForm(false);
@@ -1461,6 +1474,9 @@ export default function App() {
     return entrateAnnoCorrente - usciteAnnoCorrente;
   }, [entrateAnnoCorrente, usciteAnnoCorrente]);
 
+
+
+
   const eventiControlloMese = useMemo(() => {
     const eventiVoci = voci
       .filter((v) => stessoMeseSelezionato(v.data))
@@ -1513,7 +1529,20 @@ export default function App() {
     return eventiControlloMese.filter((x) => x.movimento === "uscita" && x.importo !== null);
   }, [eventiControlloMese]);
 
+  const eventiControlloGiornoSelezionato = useMemo(() => {
+    if (!controlloDettaglioData) return [];
 
+    return eventiControlloMese
+      .filter((ev) => ev.data === controlloDettaglioData)
+      .slice()
+      .sort((a, b) => {
+        const oraA = a.ora || "09:00";
+        const oraB = b.ora || "09:00";
+        const d = oraA.localeCompare(oraB);
+        if (d !== 0) return d;
+        return a.titolo.localeCompare(b.titolo);
+      });
+  }, [controlloDettaglioData, eventiControlloMese]);
 
   const annoCorrenteArchivio = meseCorrente.getFullYear();
 
@@ -2930,6 +2959,7 @@ function MiniCalendarioControllo({
   onNextMonth,
   onAddScadenza,
   onAddAppuntamento,
+  onOpenDayDetails,
 }: {
   mese: Date;
   eventi: Array<{
@@ -2948,6 +2978,7 @@ function MiniCalendarioControllo({
   onNextMonth: () => void;
   onAddScadenza: (data: string) => void;
   onAddAppuntamento: (data: string) => void;
+  onOpenDayDetails: (data: string) => void;
 }) {
   const [isTouchDevice, setIsTouchDevice] = useState(false);
 
@@ -3156,9 +3187,12 @@ function MiniCalendarioControllo({
                 {isTouchDevice ? (
                   <>
                     {totalEvents > 0 ? (
-                      <div
+                      <button
+                        type="button"
+                        onClick={() => onOpenDayDetails(key)}
                         style={{
-                          padding: "3px 6px",
+                          width: "100%",
+                          padding: "4px 6px",
                           borderRadius: 999,
                           fontSize: 9,
                           fontWeight: 950,
@@ -3170,10 +3204,16 @@ function MiniCalendarioControllo({
                           border: info?.urgente
                             ? "1px solid rgba(239,68,68,0.18)"
                             : "1px solid rgba(148,163,184,0.18)",
+                          cursor: "pointer",
+                          lineHeight: 1.15,
+                          minHeight: 36,
+                          display: "grid",
+                          placeItems: "center",
                         }}
+                        title="Apri dettagli del giorno"
                       >
-                        {totalEvents} evento{totalEvents > 1 ? "i" : ""}
-                      </div>
+                        {totalEvents} {totalEvents === 1 ? "evento" : "eventi"}
+                      </button>
                     ) : (
                       <div
                         style={{
@@ -3569,14 +3609,137 @@ function MiniCalendarioControllo({
           </div>
         </div>
 
-           <MiniCalendarioControllo
+            <MiniCalendarioControllo
           mese={meseCorrente}
           eventi={eventiControlloMese}
           onPrevMonth={mesePrecedente}
           onNextMonth={meseSuccessivo}
           onAddScadenza={(dataSel) => apriNuovaConData(dataSel, "scadenza")}
           onAddAppuntamento={(dataSel) => apriNuovaConData(dataSel, "appuntamento")}
+          onOpenDayDetails={(dataSel) => setControlloDettaglioData(dataSel)}
         />
+
+        
+
+
+        {controlloDettaglioData && (
+          <div style={{ ...ui.card, padding: 18 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 12,
+                flexWrap: "wrap",
+              }}
+            >
+              <div>
+                <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>
+                  Dettaglio giorno
+                </div>
+                <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
+                  {formattaDataBreve(controlloDettaglioData)}
+                </div>
+              </div>
+
+              <button
+                data-chip="1"
+                onClick={() => setControlloDettaglioData(null)}
+                style={chip(false)}
+              >
+                Chiudi
+              </button>
+            </div>
+
+            <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
+              {eventiControlloGiornoSelezionato.length === 0 ? (
+                <div
+                  style={{
+                    padding: 12,
+                    borderRadius: 16,
+                    border: "1px solid rgba(15,23,42,0.08)",
+                    background: "rgba(255,255,255,0.72)",
+                    fontSize: 13,
+                    fontWeight: 800,
+                    opacity: 0.65,
+                  }}
+                >
+                  Nessun elemento in questo giorno.
+                </div>
+              ) : (
+                eventiControlloGiornoSelezionato.map((ev) => {
+                  const isEntrata = ev.movimento === "entrata";
+
+                  return (
+                    <div
+                      key={`${ev.sorgente}_${ev.id}`}
+                      style={{
+                        padding: 14,
+                        borderRadius: 18,
+                        border: "1px solid rgba(15,23,42,0.08)",
+                        background: "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.88))",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: 12,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <div style={{ display: "grid", gap: 5 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                          {ev.tipo === "scadenza" || ev.tipo === "appuntamento" ? (
+                            badgeTipo(ev.tipo)
+                          ) : isEntrata ? (
+                            badgeMov("entrata")
+                          ) : (
+                            badgeMov("uscita")
+                          )}
+
+                          {ev.urgente && badgeUrgente()}
+                        </div>
+
+                        <div style={{ fontSize: 15, fontWeight: 950 }}>{ev.titolo}</div>
+
+                        <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72 }}>
+                          {ev.ora}
+                        </div>
+
+                        {ev.nota && (
+                          <div style={{ fontSize: 12, fontWeight: 800, opacity: 0.68 }}>
+                            {ev.nota}
+                          </div>
+                        )}
+                      </div>
+
+                      <div style={{ display: "grid", gap: 6, justifyItems: "end" }}>
+                        {ev.importo !== null && (
+                          <div
+                            style={{
+                              padding: "7px 11px",
+                              borderRadius: 999,
+                              border: isEntrata
+                                ? "2px solid rgba(16,185,129,0.28)"
+                                : "2px solid rgba(239,68,68,0.28)",
+                              background: isEntrata ? "rgba(236,253,245,0.96)" : "rgba(254,242,242,0.96)",
+                              fontSize: 12,
+                              fontWeight: 950,
+                              color: isEntrata ? "rgba(5,150,105,0.96)" : "rgba(185,28,28,0.96)",
+                            }}
+                          >
+                            {ev.importo.toLocaleString("it-IT")} €
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        )}
+
+
+
 
         <div
           style={{
