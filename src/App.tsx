@@ -1704,9 +1704,7 @@ export default function App() {
     return stats;
   }, [turniMese]);
 
-  const vociUrgentiHome = useMemo(() => {
-    return vociAttiveOrdinate.filter((v) => v.urgente || giorniMancanti(v.data) <= 7).slice(0, 6);
-  }, [vociAttiveOrdinate]);
+ 
 
   const appuntamentiCountHome = prossimiAppuntamentiHome.length;
   const scadenzeCountHome = prossimeScadenzeHome.length;
@@ -7189,8 +7187,7 @@ function MiniCalendarioControllo({
                       lineHeight: 1.4,
                     }}
                   >
-                    Se lasci la data vuota, la nota verrà considerata nota libera del mese corrente e la collegheremo all’Archivio Generale nel prossimo step.
-                  </div>
+                Se lasci la data vuota, la nota verrà salvata come nota libera del mese corrente e comparirà solo in Archivio Generale.                  </div>
                 )}
               </div>
             </div>
