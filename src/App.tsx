@@ -26,7 +26,6 @@ type EntrataExtra = {
   importo: number;
 };
 
-
 type UscitaExtra = {
   id: string;
   data: string;
@@ -34,8 +33,6 @@ type UscitaExtra = {
   importo: number;
   nota: string;
 };
-
-
 
 type IncassiMese = {
   entrateExtra: EntrataExtra[];
@@ -111,26 +108,47 @@ function formatNumeroOre(n: number) {
 }
 
 function normalizeTurnoLabel(inizio: string, fine: string, note?: string) {
-  const i = (inizio || "").trim();
-  const f = (fine || "").trim();
+  const i = (inizio || "").trim().toUpperCase();
+  const f = (fine || "").trim().toUpperCase();
   const n = (note || "").trim().toUpperCase();
 
-  if (n === "RIPOSO" || i === "RIPOSO" || f === "RIPOSO") return "R";
+  if (
+    n === "RIPOSO" ||
+    i === "RIPOSO" ||
+    f === "RIPOSO" ||
+    n === "R" ||
+    i === "R" ||
+    f === "R"
+  ) {
+    return "R" as const;
+  }
+
+  if (
+    n === "FERIE" ||
+    i === "FERIE" ||
+    f === "FERIE" ||
+    n === "F" ||
+    i === "F" ||
+    f === "F"
+  ) {
+    return "F" as const;
+  }
 
   const key = `${i}-${f}`;
 
-  if (key === "22:00-06:00" || key === "00:00-06:00") return "N";
-  if (key === "06:00-12:00" || key === "06:00-14:00") return "M";
-  if (key === "12:00-18:00" || key === "14:00-22:00") return "P";
-  if (key === "18:00-00:00") return "S";
+  if (key === "22:00-06:00" || key === "00:00-06:00") return "N" as const;
+  if (key === "06:00-12:00" || key === "06:00-14:00") return "M" as const;
+  if (key === "12:00-18:00" || key === "14:00-22:00") return "P" as const;
+  if (key === "18:00-00:00") return "S" as const;
 
-  return "T";
+  return "T" as const;
 }
 
 function descrizioneTurnoBreve(inizio: string, fine: string, note?: string) {
   const sigla = normalizeTurnoLabel(inizio, fine, note);
 
   if (sigla === "R") return "Riposo";
+  if (sigla === "F") return "Ferie";
   if (sigla === "N") return "Notte";
   if (sigla === "M") return "Mattina";
   if (sigla === "P") return "Pomeriggio";
@@ -138,8 +156,6 @@ function descrizioneTurnoBreve(inizio: string, fine: string, note?: string) {
 
   return "Turno";
 }
-
-
 
 function isTurnoRiposo(t: Turno) {
   return normalizeTurnoLabel(t.inizio, t.fine, t.note) === "R";
@@ -934,7 +950,7 @@ export default function App() {
 
 
 
-  function chiudiForm() {
+   function chiudiForm() {
     setMostraForm(false);
     resetForm();
   }
@@ -957,7 +973,6 @@ export default function App() {
     setMostraForm(true);
   }
 
-
   function apriNuovaConData(dataSelezionata: string, tipoDefault: Voce["tipo"]) {
     resetForm();
     setData(dataSelezionata);
@@ -965,8 +980,6 @@ export default function App() {
     setTipo(tipoDefault);
     setMostraForm(true);
   }
-
-  
 
   function apriModifica(v: Voce) {
     setIdInModifica(v.id);
@@ -980,7 +993,6 @@ export default function App() {
     setNotificheMinutiPrima(v.notificheMinutiPrima ?? []);
     setMostraForm(true);
   }
-
 
   void apriModifica;
 
@@ -1054,17 +1066,29 @@ export default function App() {
   }
 
   function apriModificaTurno(t: Turno) {
+    const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
+
     setTurnoIdInModifica(t.id);
     setTurnoData(t.data);
-    setTurnoInizio(t.inizio === "RIPOSO" ? "08:00" : t.inizio);
-    setTurnoFine(t.fine === "RIPOSO" ? "16:00" : t.fine);
-    setTurnoOreOrd(String(t.oreOrdinarie ?? ""));
-    setTurnoOreStraord(t.oreStraordinarie ? String(t.oreStraordinarie) : "");
-    setTurnoNote(t.note ?? "");
 
-    if (isTurnoRiposo(t)) {
+    if (sigla === "R") {
+      setTurnoInizio("08:00");
+      setTurnoFine("16:00");
+      setTurnoOreOrd("0");
+      setTurnoOreStraord("");
       setTurnoPreset("RIPOSO");
+    } else if (sigla === "F") {
+      setTurnoInizio("08:00");
+      setTurnoFine("16:00");
+      setTurnoOreOrd(String(t.oreOrdinarie ?? ""));
+      setTurnoOreStraord(t.oreStraordinarie ? String(t.oreStraordinarie) : "");
+      setTurnoPreset("FERIE");
     } else {
+      setTurnoInizio(t.inizio);
+      setTurnoFine(t.fine);
+      setTurnoOreOrd(String(t.oreOrdinarie ?? ""));
+      setTurnoOreStraord(t.oreStraordinarie ? String(t.oreStraordinarie) : "");
+
       const key = `${t.inizio}-${t.fine}`
         .replace("06:00-14:00", "6-14")
         .replace("14:00-22:00", "14-22")
@@ -1075,7 +1099,18 @@ export default function App() {
         .replace("18:00-00:00", "18-24")
         .replace("08:00-18:00", "8-18")
         .replace("08:00-17:00", "8-17");
-      setTurnoPreset(presetTurni.includes(key) ? key : "");
+
+      setTurnoPreset([...presetTurni, "FERIE"].includes(key) ? key : "");
+    }
+
+    if (sigla === "R") {
+      const notaPulita = (t.note || "").replace(/^RIPOSO\s*•?\s*/i, "").trim();
+      setTurnoNote(notaPulita);
+    } else if (sigla === "F") {
+      const notaPulita = (t.note || "").replace(/^FERIE\s*•?\s*/i, "").trim();
+      setTurnoNote(notaPulita);
+    } else {
+      setTurnoNote(t.note ?? "");
     }
 
     setMostraTurnoForm(true);
@@ -1099,6 +1134,7 @@ export default function App() {
     }
 
     const isRiposo = turnoPreset === "RIPOSO";
+    const isFerie = turnoPreset === "FERIE";
 
     if (isRiposo) {
       const aggiornato: Turno = {
@@ -1109,6 +1145,40 @@ export default function App() {
         oreOrdinarie: 0,
         oreStraordinarie: 0,
         note: turnoNote.trim() ? `RIPOSO • ${turnoNote.trim()}` : "RIPOSO",
+      };
+
+      if (turnoIdInModifica) {
+        setTurni((prev) => prev.map((t) => (t.id === turnoIdInModifica ? aggiornato : t)));
+      } else {
+        setTurni((prev) => [aggiornato, ...prev]);
+      }
+
+      chiudiTurnoForm();
+      return;
+    }
+
+    if (isFerie) {
+      const oreOrd = turnoOreOrd.trim() === "" ? 8 : parseOreItaliane(turnoOreOrd);
+      const oreStra = turnoOreStraord.trim() === "" ? 0 : parseOreItaliane(turnoOreStraord);
+
+      if (oreOrd === null) {
+        alert("Inserisci ore ferie valide.");
+        return;
+      }
+
+      if (oreStra === null) {
+        alert("Inserisci ore extra ferie valide.");
+        return;
+      }
+
+      const aggiornato: Turno = {
+        id: turnoIdInModifica ?? safeUUID(),
+        data: turnoData,
+        inizio: "FERIE",
+        fine: "FERIE",
+        oreOrdinarie: oreOrd,
+        oreStraordinarie: oreStra,
+        note: turnoNote.trim() ? `FERIE • ${turnoNote.trim()}` : "FERIE",
       };
 
       if (turnoIdInModifica) {
@@ -1159,7 +1229,7 @@ export default function App() {
     setTurni((prev) => prev.filter((t) => t.id !== id));
   }
 
-void eliminaTurno;
+  void eliminaTurno;
 
   function elimina(id: string) {
     const ok = confirm("Vuoi eliminare questa voce?");
@@ -1189,7 +1259,7 @@ void eliminaTurno;
   }
 
   const entrateExtraVal = incassi[meseKey]?.entrateExtra ?? [];
-    const usciteExtraVal = incassi[meseKey]?.usciteExtra ?? [];
+  const usciteExtraVal = incassi[meseKey]?.usciteExtra ?? [];
 
   function aggiungiEntrataExtra() {
     const descrizione = nuovaEntrataDesc.trim();
@@ -1236,9 +1306,6 @@ void eliminaTurno;
       },
     }));
   }
-
-
-
 
   function aggiungiUscitaExtra() {
     const descrizione = nuovaUscitaDesc.trim();
@@ -1416,10 +1483,32 @@ void eliminaTurno;
     }).length;
   }, [turniMese]);
 
-  const ferieGiorniEffettuati = 0;
-  const ferieGiorniResidui = 0;
-  const ferieOreEffettuate = 0;
-  const ferieOreResidue = 0;
+  const ferieTotaliGiorniBase = 26;
+  const ferieTotaliOreBase = 208;
+
+  const turniFerie = useMemo(() => {
+    return turni.filter((t) => normalizeTurnoLabel(t.inizio, t.fine, t.note) === "F");
+  }, [turni]);
+
+  const ferieGiorniEffettuati = useMemo(() => {
+    return turniFerie.length;
+  }, [turniFerie]);
+
+  const ferieOreEffettuate = useMemo(() => {
+    return turniFerie.reduce((tot, t) => {
+      return tot + Number(t.oreOrdinarie || 0) + Number(t.oreStraordinarie || 0);
+    }, 0);
+  }, [turniFerie]);
+
+  const ferieGiorniResidui = useMemo(() => {
+    return Math.max(0, ferieTotaliGiorniBase - ferieGiorniEffettuati);
+  }, [ferieGiorniEffettuati]);
+
+  const ferieOreResidue = useMemo(() => {
+    return Math.max(0, ferieTotaliOreBase - ferieOreEffettuate);
+  }, [ferieOreEffettuate]);
+
+ 
 
 
 
@@ -5662,7 +5751,7 @@ function MiniCalendarioControllo({
 
 
 
-        {pagina === "agenda" && (
+               {pagina === "agenda" && (
           <>
             <MiniCalendario
               mese={meseCorrente}
@@ -5687,69 +5776,95 @@ function MiniCalendarioControllo({
                   ...ui.card,
                   padding: 18,
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                  gap: 12,
+                  gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
+                  gap: 14,
+                  border: "1px solid rgba(255,255,255,0.55)",
+                  boxShadow: "0 18px 40px rgba(15,23,42,0.08)",
+                  background:
+                    "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92))",
                 }}
               >
                 <div
                   style={{
-                    padding: 14,
-                    borderRadius: 18,
-                    border: "1px solid rgba(14,165,233,0.12)",
+                    padding: 16,
+                    borderRadius: 22,
+                    border: "1px solid rgba(14,165,233,0.14)",
                     background:
-                      "linear-gradient(180deg, rgba(14,165,233,0.08), rgba(14,165,233,0.03))",
+                      "linear-gradient(180deg, rgba(14,165,233,0.10), rgba(14,165,233,0.04))",
+                    boxShadow: "0 10px 24px rgba(14,165,233,0.08)",
                   }}
                 >
-                  <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Totale turni</div>
-                  <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+                  <div style={{ fontSize: 12, fontWeight: 950, opacity: 0.7, letterSpacing: 0.2 }}>
+                    Totale turni
+                  </div>
+                  <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000, lineHeight: 1 }}>
                     {totaleTurniMese}
                   </div>
+                  <div style={{ marginTop: 6, fontSize: 12, fontWeight: 800, opacity: 0.58 }}>
+                    Esclusi i riposi
+                  </div>
                 </div>
 
                 <div
                   style={{
-                    padding: 14,
-                    borderRadius: 18,
-                    border: "1px solid rgba(16,185,129,0.12)",
+                    padding: 16,
+                    borderRadius: 22,
+                    border: "1px solid rgba(16,185,129,0.14)",
                     background:
-                      "linear-gradient(180deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03))",
+                      "linear-gradient(180deg, rgba(16,185,129,0.10), rgba(16,185,129,0.04))",
+                    boxShadow: "0 10px 24px rgba(16,185,129,0.08)",
                   }}
                 >
-                  <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Ore ordinarie</div>
-                  <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+                  <div style={{ fontSize: 12, fontWeight: 950, opacity: 0.7, letterSpacing: 0.2 }}>
+                    Ore ordinarie
+                  </div>
+                  <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000, lineHeight: 1 }}>
                     {formatNumeroOre(oreOrdMese)} h
                   </div>
+                  <div style={{ marginTop: 6, fontSize: 12, fontWeight: 800, opacity: 0.58 }}>
+                    Monte ore base
+                  </div>
                 </div>
 
                 <div
                   style={{
-                    padding: 14,
-                    borderRadius: 18,
-                    border: "1px solid rgba(249,115,22,0.12)",
+                    padding: 16,
+                    borderRadius: 22,
+                    border: "1px solid rgba(249,115,22,0.14)",
                     background:
-                      "linear-gradient(180deg, rgba(249,115,22,0.08), rgba(249,115,22,0.03))",
+                      "linear-gradient(180deg, rgba(249,115,22,0.10), rgba(249,115,22,0.04))",
+                    boxShadow: "0 10px 24px rgba(249,115,22,0.08)",
                   }}
                 >
-                  <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>
+                  <div style={{ fontSize: 12, fontWeight: 950, opacity: 0.7, letterSpacing: 0.2 }}>
                     Ore straordinarie
                   </div>
-                  <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+                  <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000, lineHeight: 1 }}>
                     {formatNumeroOre(oreStraMese)} h
+                  </div>
+                  <div style={{ marginTop: 6, fontSize: 12, fontWeight: 800, opacity: 0.58 }}>
+                    Extra mensili
                   </div>
                 </div>
 
                 <div
                   style={{
-                    padding: 14,
-                    borderRadius: 18,
-                    border: "1px solid rgba(124,58,237,0.12)",
+                    padding: 16,
+                    borderRadius: 22,
+                    border: "1px solid rgba(124,58,237,0.14)",
                     background:
-                      "linear-gradient(180deg, rgba(124,58,237,0.08), rgba(124,58,237,0.03))",
+                      "linear-gradient(180deg, rgba(124,58,237,0.10), rgba(124,58,237,0.04))",
+                    boxShadow: "0 10px 24px rgba(124,58,237,0.08)",
                   }}
                 >
-                  <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Ore totali</div>
-                  <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+                  <div style={{ fontSize: 12, fontWeight: 950, opacity: 0.7, letterSpacing: 0.2 }}>
+                    Ore totali
+                  </div>
+                  <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000, lineHeight: 1 }}>
                     {formatNumeroOre(oreTotMese)} h
+                  </div>
+                  <div style={{ marginTop: 6, fontSize: 12, fontWeight: 800, opacity: 0.58 }}>
+                    Totale mese
                   </div>
                 </div>
               </div>
@@ -5759,7 +5874,11 @@ function MiniCalendarioControllo({
                   ...ui.card,
                   padding: 18,
                   display: "grid",
-                  gap: 12,
+                  gap: 14,
+                  border: "1px solid rgba(255,255,255,0.55)",
+                  boxShadow: "0 18px 40px rgba(15,23,42,0.08)",
+                  background:
+                    "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92))",
                 }}
               >
                 <div
@@ -5771,8 +5890,13 @@ function MiniCalendarioControllo({
                     flexWrap: "wrap",
                   }}
                 >
-                  <div style={{ fontSize: 18, fontWeight: 1000, letterSpacing: -0.3 }}>
-                    Monitoraggio ferie
+                  <div style={{ display: "grid", gap: 4 }}>
+                    <div style={{ fontSize: 18, fontWeight: 1000, letterSpacing: -0.3 }}>
+                      Monitoraggio ferie
+                    </div>
+                    <div style={{ fontSize: 12, fontWeight: 800, opacity: 0.62 }}>
+                      Sezione pronta per il prossimo step completo ferie
+                    </div>
                   </div>
 
                   <div
@@ -5780,10 +5904,11 @@ function MiniCalendarioControllo({
                       padding: "8px 12px",
                       borderRadius: 999,
                       border: "1px solid rgba(16,185,129,0.14)",
-                      background: "rgba(240,253,244,0.9)",
+                      background: "rgba(240,253,244,0.92)",
                       fontSize: 12,
                       fontWeight: 900,
                       color: "rgba(21,128,61,0.95)",
+                      boxShadow: "0 8px 18px rgba(34,197,94,0.08)",
                     }}
                   >
                     Sigla calendario: F
@@ -5793,75 +5918,91 @@ function MiniCalendarioControllo({
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                    gap: 12,
+                    gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
+                    gap: 14,
                   }}
                 >
                   <div
                     style={{
-                      padding: 14,
-                      borderRadius: 18,
-                      border: "1px solid rgba(34,197,94,0.12)",
+                      padding: 16,
+                      borderRadius: 22,
+                      border: "1px solid rgba(34,197,94,0.14)",
                       background:
-                        "linear-gradient(180deg, rgba(34,197,94,0.08), rgba(34,197,94,0.03))",
+                        "linear-gradient(180deg, rgba(34,197,94,0.10), rgba(34,197,94,0.04))",
+                      boxShadow: "0 10px 24px rgba(34,197,94,0.08)",
                     }}
                   >
-                    <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>
+                    <div style={{ fontSize: 12, fontWeight: 950, opacity: 0.7, letterSpacing: 0.2 }}>
                       Giorni ferie effettuati
                     </div>
-                    <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+                    <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000, lineHeight: 1 }}>
                       {ferieGiorniEffettuati}
                     </div>
+                    <div style={{ marginTop: 6, fontSize: 12, fontWeight: 800, opacity: 0.58 }}>
+                      Attualmente provvisorio
+                    </div>
                   </div>
 
                   <div
                     style={{
-                      padding: 14,
-                      borderRadius: 18,
-                      border: "1px solid rgba(59,130,246,0.12)",
+                      padding: 16,
+                      borderRadius: 22,
+                      border: "1px solid rgba(59,130,246,0.14)",
                       background:
-                        "linear-gradient(180deg, rgba(59,130,246,0.08), rgba(59,130,246,0.03))",
+                        "linear-gradient(180deg, rgba(59,130,246,0.10), rgba(59,130,246,0.04))",
+                      boxShadow: "0 10px 24px rgba(59,130,246,0.08)",
                     }}
                   >
-                    <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>
+                    <div style={{ fontSize: 12, fontWeight: 950, opacity: 0.7, letterSpacing: 0.2 }}>
                       Giorni ferie residui
                     </div>
-                    <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+                    <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000, lineHeight: 1 }}>
                       {ferieGiorniResidui}
                     </div>
+                    <div style={{ marginTop: 6, fontSize: 12, fontWeight: 800, opacity: 0.58 }}>
+                      Da collegare alla base utente
+                    </div>
                   </div>
 
                   <div
                     style={{
-                      padding: 14,
-                      borderRadius: 18,
-                      border: "1px solid rgba(168,85,247,0.12)",
+                      padding: 16,
+                      borderRadius: 22,
+                      border: "1px solid rgba(168,85,247,0.14)",
                       background:
-                        "linear-gradient(180deg, rgba(168,85,247,0.08), rgba(168,85,247,0.03))",
+                        "linear-gradient(180deg, rgba(168,85,247,0.10), rgba(168,85,247,0.04))",
+                      boxShadow: "0 10px 24px rgba(168,85,247,0.08)",
                     }}
                   >
-                    <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>
+                    <div style={{ fontSize: 12, fontWeight: 950, opacity: 0.7, letterSpacing: 0.2 }}>
                       Ore ferie effettuate
                     </div>
-                    <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+                    <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000, lineHeight: 1 }}>
                       {formatNumeroOre(ferieOreEffettuate)} h
+                    </div>
+                    <div style={{ marginTop: 6, fontSize: 12, fontWeight: 800, opacity: 0.58 }}>
+                      Valore ore ferie
                     </div>
                   </div>
 
                   <div
                     style={{
-                      padding: 14,
-                      borderRadius: 18,
-                      border: "1px solid rgba(244,114,182,0.12)",
+                      padding: 16,
+                      borderRadius: 22,
+                      border: "1px solid rgba(244,114,182,0.14)",
                       background:
-                        "linear-gradient(180deg, rgba(244,114,182,0.08), rgba(244,114,182,0.03))",
+                        "linear-gradient(180deg, rgba(244,114,182,0.10), rgba(244,114,182,0.04))",
+                      boxShadow: "0 10px 24px rgba(244,114,182,0.08)",
                     }}
                   >
-                    <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>
+                    <div style={{ fontSize: 12, fontWeight: 950, opacity: 0.7, letterSpacing: 0.2 }}>
                       Ore ferie residue
                     </div>
-                    <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+                    <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000, lineHeight: 1 }}>
                       {formatNumeroOre(ferieOreResidue)} h
+                    </div>
+                    <div style={{ marginTop: 6, fontSize: 12, fontWeight: 800, opacity: 0.58 }}>
+                      Residuo disponibile
                     </div>
                   </div>
                 </div>
@@ -5869,7 +6010,6 @@ function MiniCalendarioControllo({
             </div>
           </>
         )}
-
         {pagina === "controllo" && renderAreaControllo()}
 
         
@@ -6485,6 +6625,9 @@ function MiniCalendarioControllo({
         </div>
       )}
 
+
+
+
       {mostraTurnoForm && (
         <div
           style={sx.overlay}
@@ -6492,13 +6635,29 @@ function MiniCalendarioControllo({
             if (e.target === e.currentTarget) chiudiTurnoForm();
           }}
         >
-          <div style={sx.modal}>
-            <div style={sx.header}>
+          <div
+            style={{
+              ...sx.modal,
+              maxWidth: 760,
+              borderRadius: 28,
+              border: "1px solid rgba(255,255,255,0.58)",
+              background: "linear-gradient(180deg, rgba(255,255,255,0.97), rgba(248,250,252,0.94))",
+              boxShadow: "0 32px 90px rgba(15,23,42,0.20)",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                ...sx.header,
+                paddingBottom: 14,
+                borderBottom: "1px solid rgba(15,23,42,0.06)",
+              }}
+            >
               <div>
-                <div style={{ fontSize: 18, fontWeight: 950, letterSpacing: -0.2 }}>
+                <div style={{ fontSize: 20, fontWeight: 1000, letterSpacing: -0.3 }}>
                   {turnoIdInModifica ? "Modifica turno" : "Nuovo turno"}
                 </div>
-                <div style={{ fontSize: 12, opacity: 0.65, marginTop: 4, fontWeight: 800 }}>
+                <div style={{ fontSize: 12, opacity: 0.65, marginTop: 5, fontWeight: 800 }}>
                   {turnoIdInModifica
                     ? "Modifica turno, ore ordinarie e straordinarie"
                     : "Inserisci turno, ore ordinarie e straordinarie"}
@@ -6518,19 +6677,53 @@ function MiniCalendarioControllo({
               </button>
             </div>
 
-            <div style={sx.body}>
-              <div style={sx.content}>
-                <div>
-                  <div style={sx.sectionLabel}>Data</div>
-                  <input
-                    type="date"
-                    value={turnoData}
-                    onChange={(e) => setTurnoData(e.target.value)}
-                    style={inputLight(false)}
-                  />
+            <div style={{ ...sx.body, paddingTop: 18 }}>
+              <div style={{ ...sx.content, display: "grid", gap: 18 }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "minmax(170px, 220px) 1fr",
+                    gap: 14,
+                    alignItems: "end",
+                  }}
+                >
+                  <div>
+                    <div style={sx.sectionLabel}>Data</div>
+                    <input
+                      type="date"
+                      value={turnoData}
+                      onChange={(e) => setTurnoData(e.target.value)}
+                      style={inputLight(false)}
+                    />
+                  </div>
+
+                  <div
+                    style={{
+                      padding: "12px 14px",
+                      borderRadius: 18,
+                      border: "1px solid rgba(79,70,229,0.10)",
+                      background:
+                        "linear-gradient(180deg, rgba(79,70,229,0.06), rgba(124,58,237,0.03))",
+                      fontSize: 12,
+                      fontWeight: 850,
+                      color: "rgba(67,56,202,0.92)",
+                    }}
+                  >
+                    Scegli un preset rapido oppure imposta manualmente orari e ore.
+                  </div>
                 </div>
 
-                <div style={{ display: "grid", gap: 12 }}>
+                <div
+                  style={{
+                    padding: 16,
+                    borderRadius: 22,
+                    border: "1px solid rgba(15,23,42,0.06)",
+                    background: "rgba(255,255,255,0.72)",
+                    boxShadow: "0 10px 24px rgba(15,23,42,0.05)",
+                    display: "grid",
+                    gap: 14,
+                  }}
+                >
                   <div>
                     <div style={sx.sectionLabel}>Turno predefinito</div>
 
@@ -6546,6 +6739,14 @@ function MiniCalendarioControllo({
                           setTurnoInizio("RIPOSO");
                           setTurnoFine("RIPOSO");
                           setTurnoOreOrd("0");
+                          setTurnoOreStraord("");
+                          return;
+                        }
+
+                        if (val === "FERIE") {
+                          setTurnoInizio("FERIE");
+                          setTurnoFine("FERIE");
+                          setTurnoOreOrd("8");
                           setTurnoOreStraord("");
                           return;
                         }
@@ -6566,8 +6767,8 @@ function MiniCalendarioControllo({
                       }}
                       style={{
                         ...inputLight(false),
-                        background: "rgba(255,255,255,0.90)",
-                        fontWeight: 850,
+                        background: "rgba(255,255,255,0.92)",
+                        fontWeight: 900,
                       }}
                       title="Seleziona turno predefinito"
                     >
@@ -6577,6 +6778,8 @@ function MiniCalendarioControllo({
                           {p}
                         </option>
                       ))}
+                      <option value="RIPOSO">RIPOSO</option>
+                      <option value="FERIE">FERIE</option>
                     </select>
                   </div>
 
@@ -6584,7 +6787,9 @@ function MiniCalendarioControllo({
                     <div>
                       <div style={sx.sectionLabel}>Inizio turno</div>
                       <input
-                        type={turnoInizio === "RIPOSO" ? "text" : "time"}
+                        type={
+                          turnoInizio === "RIPOSO" || turnoInizio === "FERIE" ? "text" : "time"
+                        }
                         value={turnoInizio}
                         onChange={(e) => setTurnoInizio(e.target.value)}
                         style={inputLight(false)}
@@ -6594,7 +6799,9 @@ function MiniCalendarioControllo({
                     <div>
                       <div style={sx.sectionLabel}>Fine turno</div>
                       <input
-                        type={turnoFine === "RIPOSO" ? "text" : "time"}
+                        type={
+                          turnoFine === "RIPOSO" || turnoFine === "FERIE" ? "text" : "time"
+                        }
                         value={turnoFine}
                         onChange={(e) => setTurnoFine(e.target.value)}
                         style={inputLight(false)}
@@ -6603,8 +6810,23 @@ function MiniCalendarioControllo({
                   </div>
                 </div>
 
-                <div style={sx.row2}>
-                  <div>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                    gap: 14,
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: 16,
+                      borderRadius: 22,
+                      border: "1px solid rgba(16,185,129,0.10)",
+                      background:
+                        "linear-gradient(180deg, rgba(16,185,129,0.06), rgba(16,185,129,0.02))",
+                      boxShadow: "0 10px 24px rgba(16,185,129,0.05)",
+                    }}
+                  >
                     <div style={sx.sectionLabel}>Ore ordinarie</div>
                     <input
                       value={turnoOreOrd}
@@ -6613,8 +6835,21 @@ function MiniCalendarioControllo({
                       style={inputLight(false)}
                       inputMode="decimal"
                     />
+                    <div style={{ marginTop: 8, fontSize: 11, fontWeight: 800, opacity: 0.58 }}>
+                      Per FERIE puoi lasciare 8 come base.
+                    </div>
                   </div>
-                  <div>
+
+                  <div
+                    style={{
+                      padding: 16,
+                      borderRadius: 22,
+                      border: "1px solid rgba(249,115,22,0.10)",
+                      background:
+                        "linear-gradient(180deg, rgba(249,115,22,0.06), rgba(249,115,22,0.02))",
+                      boxShadow: "0 10px 24px rgba(249,115,22,0.05)",
+                    }}
+                  >
                     <div style={sx.sectionLabel}>Ore straordinarie</div>
                     <input
                       value={turnoOreStraord}
@@ -6623,10 +6858,21 @@ function MiniCalendarioControllo({
                       style={inputLight(false)}
                       inputMode="decimal"
                     />
+                    <div style={{ marginTop: 8, fontSize: 11, fontWeight: 800, opacity: 0.58 }}>
+                      Campo facoltativo.
+                    </div>
                   </div>
                 </div>
 
-                <div>
+                <div
+                  style={{
+                    padding: 16,
+                    borderRadius: 22,
+                    border: "1px solid rgba(15,23,42,0.06)",
+                    background: "rgba(255,255,255,0.72)",
+                    boxShadow: "0 10px 24px rgba(15,23,42,0.05)",
+                  }}
+                >
                   <div style={sx.sectionLabel}>Note</div>
                   <textarea
                     value={turnoNote}
@@ -6645,7 +6891,14 @@ function MiniCalendarioControllo({
               </div>
             </div>
 
-            <div style={sx.footer}>
+            <div
+              style={{
+                ...sx.footer,
+                borderTop: "1px solid rgba(15,23,42,0.06)",
+                background: "rgba(255,255,255,0.66)",
+                backdropFilter: "blur(8px)",
+              }}
+            >
               <button type="button" data-chip="1" onClick={chiudiTurnoForm} style={sx.actionBtn(false)}>
                 Annulla
               </button>
@@ -6659,7 +6912,3 @@ function MiniCalendarioControllo({
     </div>
   );
 }
-
-
-
-        
