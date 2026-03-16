@@ -3154,18 +3154,20 @@ function MiniCalendarioControllo({
   }, [previewData]);
 
   const navBtnStyle: React.CSSProperties = {
-    width: isTouchDevice ? 36 : 46,
-    height: isTouchDevice ? 36 : 46,
-    borderRadius: isTouchDevice ? 14 : 16,
-    border: "1px solid rgba(15,23,42,0.08)",
-    background: "rgba(255,255,255,0.86)",
-    boxShadow: "0 10px 22px rgba(15,23,42,0.08)",
+    width: isTouchDevice ? 42 : 48,
+    height: isTouchDevice ? 42 : 48,
+    borderRadius: isTouchDevice ? 16 : 18,
+    border: "1px solid rgba(15,23,42,0.07)",
+    background: "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92))",
+    boxShadow:
+      "0 10px 24px rgba(15,23,42,0.08), inset 0 1px 0 rgba(255,255,255,0.72)",
     display: "grid",
     placeItems: "center",
     cursor: "pointer",
-    fontSize: isTouchDevice ? 18 : 20,
-    fontWeight: 1000,
-    color: "rgba(15,23,42,0.88)",
+    color: "rgba(15,23,42,0.84)",
+    padding: 0,
+    flexShrink: 0,
+    WebkitTapHighlightColor: "transparent",
   };
 
   return (
@@ -3183,14 +3185,30 @@ function MiniCalendarioControllo({
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: isTouchDevice ? "36px minmax(0, 1fr) 36px" : "42px 1fr 42px",
+            gridTemplateColumns: isTouchDevice ? "42px minmax(0, 1fr) 42px" : "48px 1fr 48px",
             alignItems: "center",
-            gap: isTouchDevice ? 6 : 12,
-            marginBottom: isTouchDevice ? 10 : 14,
+            gap: isTouchDevice ? 10 : 12,
+            marginBottom: isTouchDevice ? 12 : 14,
           }}
         >
-          <button type="button" onClick={onPrevMonth} style={navBtnStyle} title="Mese precedente">
-            ←
+          <button
+            type="button"
+            onClick={onPrevMonth}
+            style={navBtnStyle}
+            title="Mese precedente"
+            aria-label="Mese precedente"
+          >
+            <span
+              style={{
+                display: "block",
+                width: isTouchDevice ? 12 : 14,
+                height: isTouchDevice ? 12 : 14,
+                borderLeft: "2.4px solid currentColor",
+                borderBottom: "2.4px solid currentColor",
+                transform: "rotate(45deg) translate(1px, -1px)",
+                boxSizing: "border-box",
+              }}
+            />
           </button>
 
           <div
@@ -3208,8 +3226,24 @@ function MiniCalendarioControllo({
             {titoloMese}
           </div>
 
-          <button type="button" onClick={onNextMonth} style={navBtnStyle} title="Mese successivo">
-            →
+          <button
+            type="button"
+            onClick={onNextMonth}
+            style={navBtnStyle}
+            title="Mese successivo"
+            aria-label="Mese successivo"
+          >
+            <span
+              style={{
+                display: "block",
+                width: isTouchDevice ? 12 : 14,
+                height: isTouchDevice ? 12 : 14,
+                borderTop: "2.4px solid currentColor",
+                borderRight: "2.4px solid currentColor",
+                transform: "rotate(45deg) translate(-1px, 1px)",
+                boxSizing: "border-box",
+              }}
+            />
           </button>
         </div>
 
