@@ -3234,7 +3234,7 @@ function MiniCalendarioControllo({
                   boxShadow: "0 10px 20px rgba(15,23,42,0.07)",
                   padding: isTouchDevice ? "5px 2px 6px" : "10px",
                   display: "grid",
-                  alignContent: "space-between",
+                  alignContent: "center",
                   gap: isTouchDevice ? 4 : 8,
                   overflow: "hidden",
                   minWidth: 0,
