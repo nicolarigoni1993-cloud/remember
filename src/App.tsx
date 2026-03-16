@@ -2999,67 +2999,95 @@ function MiniCalendarioControllo({
   onAddAppuntamento: (data: string) => void;
   onOpenDayDetails: (data: string) => void;
 }) {
-  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return (
+      window.matchMedia("(hover: none)").matches ||
+      window.matchMedia("(pointer: coarse)").matches ||
+      "ontouchstart" in window ||
+      window.innerWidth <= 820
+    );
+  });
+
   const [previewData, setPreviewData] = useState<string | null>(null);
   const [previewAnchor, setPreviewAnchor] = useState<{ top: number; left: number } | null>(null);
   const [mobileMenuData, setMobileMenuData] = useState<string | null>(null);
 
   useEffect(() => {
-    const checkTouch = () => {
-      const touch =
-        window.matchMedia("(hover: none)").matches ||
-        window.matchMedia("(pointer: coarse)").matches ||
-        "ontouchstart" in window;
+    let raf = 0;
 
-      setIsTouchDevice(touch || window.innerWidth <= 820);
+    const checkTouch = () => {
+      cancelAnimationFrame(raf);
+      raf = window.requestAnimationFrame(() => {
+        const touch =
+          window.matchMedia("(hover: none)").matches ||
+          window.matchMedia("(pointer: coarse)").matches ||
+          "ontouchstart" in window ||
+          window.innerWidth <= 820;
+
+        setIsTouchDevice((prev) => (prev !== touch ? touch : prev));
+      });
     };
 
     checkTouch();
-    window.addEventListener("resize", checkTouch);
-    return () => window.removeEventListener("resize", checkTouch);
+    window.addEventListener("resize", checkTouch, { passive: true });
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", checkTouch);
+    };
   }, []);
 
-  const y = mese.getFullYear();
-  const m0 = mese.getMonth();
-  const first = new Date(y, m0, 1);
-  const offset = weekdayMon0(first);
-  const dim = daysInMonth(y, m0);
+  const { titoloMese, giorni, oggiKey, stats } = useMemo(() => {
+    const y = mese.getFullYear();
+    const m0 = mese.getMonth();
+    const first = new Date(y, m0, 1);
+    const offset = weekdayMon0(first);
+    const dim = daysInMonth(y, m0);
 
-  const oggi = new Date();
-  const oggiKey = ymd(oggi.getFullYear(), oggi.getMonth(), oggi.getDate());
+    const oggi = new Date();
+    const oggiKeyLocal = ymd(oggi.getFullYear(), oggi.getMonth(), oggi.getDate());
 
-  const giorni: Array<string | null> = [];
-  for (let i = 0; i < offset; i++) giorni.push(null);
-  for (let d = 1; d <= dim; d++) giorni.push(ymd(y, m0, d));
-  while (giorni.length % 7 !== 0) giorni.push(null);
+    const giorniLocal: Array<string | null> = [];
+    for (let i = 0; i < offset; i++) giorniLocal.push(null);
+    for (let d = 1; d <= dim; d++) giorniLocal.push(ymd(y, m0, d));
+    while (giorniLocal.length % 7 !== 0) giorniLocal.push(null);
 
-  const titoloMese = mese.toLocaleDateString("it-IT", {
-    month: "long",
-    year: "numeric",
-  });
+    const statsLocal = new Map<
+      string,
+      {
+        scadenze: number;
+        appuntamenti: number;
+        urgente: boolean;
+      }
+    >();
 
-  const stats = new Map<
-    string,
-    {
-      scadenze: number;
-      appuntamenti: number;
-      urgente: boolean;
+    for (const ev of eventi) {
+      const prev = statsLocal.get(ev.data) ?? {
+        scadenze: 0,
+        appuntamenti: 0,
+        urgente: false,
+      };
+
+      if (ev.tipo === "scadenza") prev.scadenze += 1;
+      if (ev.tipo === "appuntamento") prev.appuntamenti += 1;
+      if (ev.urgente) prev.urgente = true;
+
+      statsLocal.set(ev.data, prev);
     }
-  >();
 
-  for (const ev of eventi) {
-    const prev = stats.get(ev.data) ?? {
-      scadenze: 0,
-      appuntamenti: 0,
-      urgente: false,
+    const titoloMeseLocal = mese.toLocaleDateString("it-IT", {
+      month: "long",
+      year: "numeric",
+    });
+
+    return {
+      titoloMese: titoloMeseLocal,
+      giorni: giorniLocal,
+      oggiKey: oggiKeyLocal,
+      stats: statsLocal,
     };
-
-    if (ev.tipo === "scadenza") prev.scadenze += 1;
-    if (ev.tipo === "appuntamento") prev.appuntamenti += 1;
-    if (ev.urgente) prev.urgente = true;
-
-    stats.set(ev.data, prev);
-  }
+  }, [mese, eventi]);
 
   const eventiPreviewGiorno = useMemo(() => {
     if (!previewData) return [];
@@ -3115,7 +3143,7 @@ function MiniCalendarioControllo({
     };
 
     window.addEventListener("keydown", onKey);
-    window.addEventListener("resize", chiudiPreview);
+    window.addEventListener("resize", chiudiPreview, { passive: true });
     window.addEventListener("scroll", chiudiPreview, true);
 
     return () => {
@@ -3189,7 +3217,7 @@ function MiniCalendarioControllo({
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
-            gap: isTouchDevice ? 3 : 10,
+            gap: isTouchDevice ? 4 : 10,
             width: "100%",
             maxWidth: "100%",
             boxSizing: "border-box",
@@ -3201,28 +3229,36 @@ function MiniCalendarioControllo({
                 <div
                   key={`ec_${idx}`}
                   style={{
-                    minHeight: isTouchDevice ? 78 : 124,
-                    borderRadius: 16,
+                    minHeight: isTouchDevice ? 92 : 124,
+                    borderRadius: isTouchDevice ? 16 : 20,
                     background: "transparent",
                   }}
                 />
               );
             }
 
-            const d = Number(key.slice(-2));
+            const cellDate = new Date(
+              Number(key.slice(0, 4)),
+              Number(key.slice(5, 7)) - 1,
+              Number(key.slice(8, 10))
+            );
+
+            const d = cellDate.getDate();
             const info = stats.get(key);
             const isToday = key === oggiKey;
-            const cellDate = new Date(y, m0, d);
             const jsDay = cellDate.getDay();
             const isWeekend = jsDay === 0 || jsDay === 6;
-            const totalEvents = (info?.scadenze ?? 0) + (info?.appuntamenti ?? 0);
+
+            const scadenze = info?.scadenze ?? 0;
+            const appuntamenti = info?.appuntamenti ?? 0;
+            const totalEvents = scadenze + appuntamenti;
 
             return (
               <div
                 key={key}
                 style={{
-                  minHeight: isTouchDevice ? 88 : 128,
-                  borderRadius: isTouchDevice ? 15 : 20,
+                  minHeight: isTouchDevice ? 92 : 128,
+                  borderRadius: isTouchDevice ? 16 : 20,
                   border: info?.urgente
                     ? "2px solid rgba(239,68,68,0.34)"
                     : isToday
@@ -3232,10 +3268,10 @@ function MiniCalendarioControllo({
                     ? "linear-gradient(180deg, rgba(239,246,255,0.96), rgba(248,250,252,0.92))"
                     : "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.88))",
                   boxShadow: "0 10px 20px rgba(15,23,42,0.07)",
-                  padding: isTouchDevice ? "5px 2px 6px" : "10px",
+                  padding: isTouchDevice ? "6px 4px" : "10px",
                   display: "grid",
-                  alignContent: "center",
-                  gap: isTouchDevice ? 4 : 8,
+                  gridTemplateRows: isTouchDevice ? "auto 1fr auto" : "auto 1fr",
+                  gap: isTouchDevice ? 6 : 8,
                   overflow: "hidden",
                   minWidth: 0,
                   boxSizing: "border-box",
@@ -3246,6 +3282,7 @@ function MiniCalendarioControllo({
                     display: "grid",
                     justifyItems: "center",
                     gap: isTouchDevice ? 2 : 3,
+                    alignContent: "start",
                   }}
                 >
                   <div
@@ -3258,7 +3295,9 @@ function MiniCalendarioControllo({
                       lineHeight: 1,
                     }}
                   >
-                    {cellDate.toLocaleDateString("it-IT", { weekday: "short" }).replace(".", "")}
+                    {cellDate
+                      .toLocaleDateString("it-IT", { weekday: "short" })
+                      .replace(".", "")}
                   </div>
 
                   <div
@@ -3274,97 +3313,71 @@ function MiniCalendarioControllo({
                   </div>
                 </div>
 
-                <div style={{ display: "grid", gap: isTouchDevice ? 3 : 4, minWidth: 0 }}>
+                <div
+                  style={{
+                    minWidth: 0,
+                    display: "grid",
+                    alignItems: "center",
+                    justifyItems: "center",
+                    alignContent: "center",
+                  }}
+                >
                   {isTouchDevice ? (
-                    <>
-                      {totalEvents > 0 ? (
-                        <button
-                          type="button"
-                          onClick={() => onOpenDayDetails(key)}
-                          style={{
-                            justifySelf: "center",
-                            width: "auto",
-                            minWidth: 34,
-                            maxWidth: "88%",
-                            padding: "3px 6px",
-                            borderRadius: 999,
-                            fontSize: 7,
-                            fontWeight: 950,
-                            textAlign: "center",
-                            color: info?.urgente
-                              ? "rgba(185,28,28,0.98)"
-                              : "rgba(15,23,42,0.82)",
-                            background: info?.urgente
-                              ? "rgba(254,226,226,0.95)"
-                              : "rgba(241,245,249,0.92)",
-                            border: info?.urgente
-                              ? "1px solid rgba(239,68,68,0.18)"
-                              : "1px solid rgba(148,163,184,0.16)",
-                            cursor: "pointer",
-                            lineHeight: 1.05,
-                            minHeight: 22,
-                            display: "grid",
-                            placeItems: "center",
-                            boxSizing: "border-box",
-                            whiteSpace: "normal",
-                          }}
-                          title="Apri dettagli del giorno"
-                        >
+                    totalEvents > 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => onOpenDayDetails(key)}
+                        style={{
+                          width: "100%",
+                          maxWidth: 52,
+                          minHeight: 32,
+                          padding: "4px 6px",
+                          borderRadius: 14,
+                          fontSize: 8,
+                          fontWeight: 950,
+                          textAlign: "center",
+                          color: info?.urgente
+                            ? "rgba(185,28,28,0.98)"
+                            : "rgba(15,23,42,0.82)",
+                          background: info?.urgente
+                            ? "rgba(254,226,226,0.95)"
+                            : "rgba(241,245,249,0.92)",
+                          border: info?.urgente
+                            ? "1px solid rgba(239,68,68,0.18)"
+                            : "1px solid rgba(148,163,184,0.16)",
+                          cursor: "pointer",
+                          lineHeight: 1.05,
+                          display: "grid",
+                          placeItems: "center",
+                          boxSizing: "border-box",
+                          boxShadow: info?.urgente
+                            ? "0 6px 14px rgba(239,68,68,0.08)"
+                            : "0 6px 14px rgba(15,23,42,0.05)",
+                        }}
+                        title="Apri dettagli del giorno"
+                      >
+                        <span style={{ fontSize: 11, fontWeight: 1000, lineHeight: 1 }}>
                           {totalEvents}
-                          <span style={{ display: "block", lineHeight: 1 }}>
-                            {totalEvents === 1 ? "evento" : "eventi"}
-                          </span>
-                        </button>
-                      ) : (
-                        <div
-                          style={{
-                            fontSize: 8,
-                            fontWeight: 800,
-                            opacity: 0.25,
-                            textAlign: "center",
-                          }}
-                        >
-                          —
-                        </div>
-                      )}
-<button
-  type="button"
-  onClick={() => setMobileMenuData(key)}
-  style={{
-    justifySelf: "center",
-    alignSelf: "center",
-    width: 44,
-    height: 24,
-    padding: 0,
-    borderRadius: 999,
-    border: "1px solid rgba(99,102,241,0.16)",
-    background: "linear-gradient(180deg, rgba(245,243,255,0.96), rgba(238,242,255,0.92))",
-    color: "rgba(79,70,229,0.98)",
-    fontSize: 18,
-    fontWeight: 1000,
-    cursor: "pointer",
-    display: "grid",
-    placeItems: "center",
-    lineHeight: 1,
-    boxShadow: "0 6px 14px rgba(79,70,229,0.08)",
-    boxSizing: "border-box",
-  }}
-  title="Aggiungi"
->
-  <span
-    style={{
-      transform: "translateY(-1px)",
-      display: "block",
-      lineHeight: 1,
-    }}
-  >
-    +
-  </span>
-</button>
-                    </>
+                        </span>
+                        <span style={{ display: "block", lineHeight: 1, marginTop: 1 }}>
+                          {totalEvents === 1 ? "evento" : "eventi"}
+                        </span>
+                      </button>
+                    ) : (
+                      <div
+                        style={{
+                          width: 34,
+                          height: 20,
+                          borderRadius: 999,
+                          background: "rgba(241,245,249,0.65)",
+                          border: "1px solid rgba(148,163,184,0.10)",
+                          opacity: 0.55,
+                        }}
+                      />
+                    )
                   ) : (
-                    <>
-                      {info?.scadenze ? (
+                    <div style={{ display: "grid", gap: 4, width: "100%", minWidth: 0 }}>
+                      {scadenze > 0 ? (
                         <button
                           type="button"
                           onClick={(e) => apriPreviewDesktop(key, e.currentTarget)}
@@ -3382,11 +3395,11 @@ function MiniCalendarioControllo({
                           }}
                           title="Anteprima giorno"
                         >
-                          SCA {info.scadenze}
+                          SCA {scadenze}
                         </button>
                       ) : null}
 
-                      {info?.appuntamenti ? (
+                      {appuntamenti > 0 ? (
                         <button
                           type="button"
                           onClick={(e) => apriPreviewDesktop(key, e.currentTarget)}
@@ -3404,11 +3417,11 @@ function MiniCalendarioControllo({
                           }}
                           title="Anteprima giorno"
                         >
-                          APP {info.appuntamenti}
+                          APP {appuntamenti}
                         </button>
                       ) : null}
 
-                      {!info && (
+                      {totalEvents === 0 ? (
                         <div
                           style={{
                             fontSize: 10,
@@ -3419,7 +3432,7 @@ function MiniCalendarioControllo({
                         >
                           —
                         </div>
-                      )}
+                      ) : null}
 
                       <div
                         style={{
@@ -3479,9 +3492,53 @@ function MiniCalendarioControllo({
                           +A
                         </button>
                       </div>
-                    </>
+                    </div>
                   )}
                 </div>
+
+                {isTouchDevice ? (
+                  <div
+                    style={{
+                      display: "grid",
+                      placeItems: "center",
+                      minHeight: 28,
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setMobileMenuData(key)}
+                      style={{
+                        width: 30,
+                        height: 30,
+                        padding: 0,
+                        borderRadius: 999,
+                        border: "1px solid rgba(99,102,241,0.16)",
+                        background:
+                          "linear-gradient(180deg, rgba(245,243,255,0.98), rgba(238,242,255,0.94))",
+                        color: "rgba(79,70,229,0.98)",
+                        fontSize: 18,
+                        fontWeight: 1000,
+                        cursor: "pointer",
+                        display: "grid",
+                        placeItems: "center",
+                        lineHeight: 1,
+                        boxShadow: "0 6px 14px rgba(79,70,229,0.08)",
+                        boxSizing: "border-box",
+                      }}
+                      title="Aggiungi"
+                    >
+                      <span
+                        style={{
+                          transform: "translateY(-1px)",
+                          display: "block",
+                          lineHeight: 1,
+                        }}
+                      >
+                        +
+                      </span>
+                    </button>
+                  </div>
+                ) : null}
               </div>
             );
           })}
