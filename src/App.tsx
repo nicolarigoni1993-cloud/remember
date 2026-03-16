@@ -147,7 +147,7 @@ function normalizeTurnoLabel(inizio: string, fine: string, note?: string) {
 function descrizioneTurnoBreve(inizio: string, fine: string, note?: string) {
   const sigla = normalizeTurnoLabel(inizio, fine, note);
 
-  if (sigla === "R") return "Riposo";
+  
   if (sigla === "F") return "Ferie";
   if (sigla === "N") return "Notte";
   if (sigla === "M") return "Mattina";
