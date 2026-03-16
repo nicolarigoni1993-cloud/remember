@@ -1099,8 +1099,19 @@ export default function App() {
       .filter((n) => Number.isFinite(n) && n > 0)
       .sort((a, b) => b - a);
 
-    const voceData = isNota ? dataFinale : dataFinale;
-    const voceOra = isNota ? oraFinale : oraFinale;
+        const meseCorrenteData = `${meseKey}-01`;
+    const voceData = isNota
+      ? dataFinale || meseCorrenteData
+      : dataFinale;
+
+    const voceOra = isNota
+      ? oraFinale || "00:00"
+      : oraFinale;
+
+     const notaFinale =
+      isNota && !dataFinale
+        ? `[NOTA_LIBERA_MESE] ${nota.trim()}`.trim()
+        : nota.trim().replace(/^\[NOTA_LIBERA_MESE\]\s*/i, "");
 
     if (idInModifica) {
       setVoci((prev) =>
@@ -1113,7 +1124,7 @@ export default function App() {
                 ora: voceOra,
                 tipo,
                 urgente: isNota ? false : urgente,
-                nota: nota.trim(),
+                nota: notaFinale,
                 importo: isNota ? null : importoNum,
                 movimento: "uscita" as Movimento,
                 fatto: voceData && voceOra ? vocePassata(voceData, voceOra) : false,
@@ -1668,6 +1679,12 @@ export default function App() {
 
 
 
+
+
+
+
+
+
   const eventiControlloMese = useMemo(() => {
     const eventiVoci = voci
       .filter((v) => stessoMeseSelezionato(v.data))
@@ -1734,11 +1751,18 @@ export default function App() {
   }, [eventiControlloMese]);
 
   const eventiCalendarioControllo = useMemo(() => {
-    return eventiControlloMese.filter(
-      (x) => x.tipo === "scadenza" || x.tipo === "appuntamento"
-    );
-  }, [eventiControlloMese]);
+    return eventiControlloMese.filter((x) => {
+      if (x.tipo !== "scadenza" && x.tipo !== "appuntamento" && x.tipo !== "nota") {
+        return false;
+      }
 
+      if (x.tipo === "nota" && x.nota.startsWith("[NOTA_LIBERA_MESE]")) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [eventiControlloMese]);
 
   const eventiControlloGiornoSelezionato = useMemo(() => {
     if (!controlloDettaglioData) return [];
@@ -1781,7 +1805,7 @@ export default function App() {
   }, [turni, meseCorrente]);
 
   const turniStatsArchivioMese = useMemo(() => {
-    const stats = { N: 0, M: 0, P: 0, S: 0, R: 0, T: 0 };
+    const stats = { N: 0, M: 0, P: 0, S: 0, R: 0, F: 0, T: 0 };
 
     for (const t of turniArchivioMese) {
       const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
@@ -1886,52 +1910,48 @@ export default function App() {
     });
   }, [voci, entrateExtraVal, usciteExtraVal, meseCorrente]);
 
+  function badgeTipo(t: Voce["tipo"]) {
+    const map = {
+      scadenza: {
+        bg: "rgba(52,211,153,0.16)",
+        bd: "rgba(5,150,105,0.26)",
+        tx: "rgba(6,95,70,0.98)",
+        label: "Scadenza",
+      },
+      appuntamento: {
+        bg: "rgba(168,85,247,0.16)",
+        bd: "rgba(147,51,234,0.24)",
+        tx: "rgba(91,33,182,0.98)",
+        label: "Appuntamento",
+      },
+      nota: {
+        bg: "rgba(239,68,68,0.12)",
+        bd: "rgba(220,38,38,0.22)",
+        tx: "rgba(153,27,27,0.96)",
+        label: "Nota",
+      },
+    } as const;
 
+    const s = map[t];
 
-
-
-function badgeTipo(t: Voce["tipo"]) {
-  const map = {
-    scadenza: {
-      bg: "rgba(52,211,153,0.16)",
-      bd: "rgba(5,150,105,0.26)",
-      tx: "rgba(6,95,70,0.98)",
-      label: "Scadenza",
-    },
-    appuntamento: {
-      bg: "rgba(168,85,247,0.16)",
-      bd: "rgba(147,51,234,0.24)",
-      tx: "rgba(91,33,182,0.98)",
-      label: "Appuntamento",
-    },
-    nota: {
-      bg: "rgba(239,68,68,0.12)",
-      bd: "rgba(220,38,38,0.22)",
-      tx: "rgba(153,27,27,0.96)",
-      label: "Nota",
-    },
-  } as const;
-
-  const s = map[t];
-
-  return (
-    <span
-      style={{
-        padding: "6px 10px",
-        borderRadius: 999,
-        fontSize: 12,
-        fontWeight: 950,
-        background: s.bg,
-        border: `1px solid ${s.bd}`,
-        color: s.tx,
-        lineHeight: 1,
-        whiteSpace: "nowrap",
-      }}
-    >
-      {s.label}
-    </span>
-  );
-}
+    return (
+      <span
+        style={{
+          padding: "6px 10px",
+          borderRadius: 999,
+          fontSize: 12,
+          fontWeight: 950,
+          background: s.bg,
+          border: `1px solid ${s.bd}`,
+          color: s.tx,
+          lineHeight: 1,
+          whiteSpace: "nowrap",
+        }}
+      >
+        {s.label}
+      </span>
+    );
+  }
 
   function badgeMov(m: Movimento) {
     const map = {
@@ -6534,13 +6554,15 @@ function MiniCalendarioControllo({
                             <div style={{ fontSize: 15, fontWeight: 950 }}>{ev.titolo}</div>
 
                             <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72 }}>
-                              {formattaDataBreve(ev.data)} • {ev.ora}
+                              {ev.tipo === "nota" && ev.nota.startsWith("[NOTA_LIBERA_MESE]")
+                                ? "Nota libera del mese"
+                                : `${formattaDataBreve(ev.data)} • ${ev.ora}`}
                             </div>
 
                             {ev.nota && (
-                              <div style={{ fontSize: 12, fontWeight: 800, opacity: 0.68 }}>
-                                {ev.nota}
-                              </div>
+                            <div style={{ fontSize: 12, fontWeight: 800, opacity: 0.68 }}>
+                              {ev.nota.replace(/^\[NOTA_LIBERA_MESE\]\s*/i, "")}
+                            </div>
                             )}
                           </div>
 
