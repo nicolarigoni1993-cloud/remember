@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 type Filtro = "oggi" | "7giorni" | "30giorni";
-type Movimento = "uscita" | "entrata";
+type Movimento = "uscita" | "entrata" | "nessuno";
 
 type Voce = {
   id: string;
@@ -208,7 +208,12 @@ function normalizeVoce(x: any): Voce {
       ? null
       : Number(x.importo);
 
-  const movimento: Movimento = x?.movimento === "entrata" ? "entrata" : "uscita";
+  const movimento: Movimento =
+  x?.movimento === "entrata"
+    ? "entrata"
+    : x?.movimento === "uscita"
+    ? "uscita"
+    : "nessuno";
 
   const noti: number[] = Array.isArray(x?.notificheMinutiPrima)
     ? x.notificheMinutiPrima
@@ -863,7 +868,9 @@ export default function App() {
     if (Notification.permission !== "granted") return;
 
     clearScheduledForVoce(v.id);
-    if (v.fatto || !v.data || !v.ora) return;
+
+    if (v.fatto || !v.data || !v.ora || !v.notificheMinutiPrima?.length) return;
+    if (v.tipo !== "scadenza" && v.tipo !== "appuntamento" && v.tipo !== "nota") return;
 
     const dt = buildDateTime(v.data, v.ora).getTime();
     const now = Date.now();
@@ -872,12 +879,20 @@ export default function App() {
     for (const min of v.notificheMinutiPrima) {
       const at = dt - min * 60_000;
       const diff = at - now;
+
       if (diff <= 0) continue;
       if (diff > 30 * 24 * 60 * 60 * 1000) continue;
 
       const id = window.setTimeout(() => {
         try {
-          new Notification(`${v.tipo === "scadenza" ? "Scadenza" : "Appuntamento"}: ${v.titolo}`, {
+          const tipoLabel =
+            v.tipo === "scadenza"
+              ? "Scadenza"
+              : v.tipo === "appuntamento"
+              ? "Appuntamento"
+              : "Nota";
+
+          new Notification(`${tipoLabel}: ${v.titolo}`, {
             body: `Tra ${formatOreItalianeFromMin(min)} ore • ${formattaDataBreve(v.data)} ${v.ora}`,
           });
         } catch {
@@ -889,6 +904,47 @@ export default function App() {
     }
 
     if (ids.length) scheduledRef.current[v.id] = ids;
+  }
+
+  function checkDueNotifications() {
+    if (!("Notification" in window)) return;
+    if (Notification.permission !== "granted") return;
+
+    const now = Date.now();
+
+    voci.forEach((v) => {
+      if (v.fatto || !v.data || !v.ora || !v.notificheMinutiPrima?.length) return;
+      if (v.tipo !== "scadenza" && v.tipo !== "appuntamento" && v.tipo !== "nota") return;
+
+      const dt = buildDateTime(v.data, v.ora).getTime();
+
+      v.notificheMinutiPrima.forEach((min) => {
+        const at = dt - min * 60_000;
+        const diff = now - at;
+
+        if (diff >= 0 && diff <= 60_000) {
+          const firedKey = `remember_notifica_fired_${v.id}_${min}`;
+          if (sessionStorage.getItem(firedKey) === "1") return;
+
+          try {
+            const tipoLabel =
+              v.tipo === "scadenza"
+                ? "Scadenza"
+                : v.tipo === "appuntamento"
+                ? "Appuntamento"
+                : "Nota";
+
+            new Notification(`${tipoLabel}: ${v.titolo}`, {
+              body: `Tra ${formatOreItalianeFromMin(min)} ore • ${formattaDataBreve(v.data)} ${v.ora}`,
+            });
+
+            sessionStorage.setItem(firedKey, "1");
+          } catch {
+            //
+          }
+        }
+      });
+    });
   }
 
 
@@ -996,6 +1052,31 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, [mostraForm, mostraTurnoForm]);
 
+
+
+    useEffect(() => {
+    if (!currentUserId) return;
+
+    checkDueNotifications();
+
+    const interval = window.setInterval(() => {
+      checkDueNotifications();
+    }, 30000);
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        checkDueNotifications();
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [voci, currentUserId]);
+
   const ui = useMemo(() => {
     const glass = {
       border: "1px solid rgba(255,255,255,0.55)",
@@ -1099,19 +1180,21 @@ export default function App() {
       .filter((n) => Number.isFinite(n) && n > 0)
       .sort((a, b) => b - a);
 
-        const meseCorrenteData = `${meseKey}-01`;
-    const voceData = isNota
-      ? dataFinale || meseCorrenteData
-      : dataFinale;
+          if (notiUniq.length > 0) {
+      requestNotifyPermission();
+    }
 
-    const voceOra = isNota
-      ? oraFinale || "00:00"
-      : oraFinale;
+    const meseCorrenteData = `${meseKey}-01`;
+    const voceData = isNota ? dataFinale || meseCorrenteData : dataFinale;
 
-     const notaFinale =
+    const voceOra = isNota ? oraFinale || "00:00" : oraFinale;
+
+    const notaFinale =
       isNota && !dataFinale
         ? `[NOTA_LIBERA_MESE] ${nota.trim()}`.trim()
         : nota.trim().replace(/^\[NOTA_LIBERA_MESE\]\s*/i, "");
+
+    const movimentoFinale: Movimento = isNota ? "nessuno" : "uscita";
 
     if (idInModifica) {
       setVoci((prev) =>
@@ -1126,7 +1209,7 @@ export default function App() {
                 urgente: isNota ? false : urgente,
                 nota: notaFinale,
                 importo: isNota ? null : importoNum,
-                movimento: "uscita" as Movimento,
+                movimento: movimentoFinale,
                 fatto: voceData && voceOra ? vocePassata(voceData, voceOra) : false,
                 notificheMinutiPrima: isNota ? [] : notiUniq,
               }
@@ -1141,9 +1224,9 @@ export default function App() {
         ora: voceOra,
         tipo,
         urgente: isNota ? false : urgente,
-        nota: nota.trim(),
+        nota: notaFinale,
         importo: isNota ? null : importoNum,
-        movimento: "uscita",
+        movimento: movimentoFinale,
         fatto: voceData && voceOra ? vocePassata(voceData, voceOra) : false,
         notificheMinutiPrima: isNota ? [] : notiUniq,
       };
@@ -1953,7 +2036,7 @@ export default function App() {
     );
   }
 
-  function badgeMov(m: Movimento) {
+  function badgeMov(m: Exclude<Movimento, "nessuno">) {
     const map = {
       uscita: { bg: "rgba(255,59,48,0.10)", bd: "rgba(255,59,48,0.22)", tx: "rgba(120,10,8,0.88)" },
       entrata: { bg: "rgba(52,199,89,0.10)", bd: "rgba(52,199,89,0.22)", tx: "rgba(10,85,35,0.88)" },
@@ -2217,6 +2300,20 @@ export default function App() {
     setFiltro(null);
     setMeseCorrente(new Date());
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   const presetOre = [
     { label: "24h", ore: 24 },
@@ -2844,6 +2941,14 @@ export default function App() {
                       )}
                     </div>
                   </button>
+
+
+
+
+
+
+
+
 
                   {!isTouchDevice && (previewItems.length > 0 || previewTurni.length > 0) && (
                     <div
@@ -4297,6 +4402,53 @@ function MiniCalendarioControllo({
               ))
             )}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             <button
               type="button"
               onClick={() => {
@@ -4323,19 +4475,6 @@ function MiniCalendarioControllo({
     </>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   function renderAreaControllo() {
     const controlloCardStyle: React.CSSProperties = {
@@ -4512,7 +4651,7 @@ function MiniCalendarioControllo({
           </div>
         </div>
 
-            <MiniCalendarioControllo
+        <MiniCalendarioControllo
           mese={meseCorrente}
           eventi={eventiCalendarioControllo}
           onPrevMonth={mesePrecedente}
@@ -4522,9 +4661,6 @@ function MiniCalendarioControllo({
           onAddNota={(data) => apriNuovaConData(data, "nota")}
           onOpenDayDetails={(dataSel) => setControlloDettaglioData(dataSel)}
         />
-
-        
-
 
         {controlloDettaglioData && (
           <div
@@ -4617,9 +4753,9 @@ function MiniCalendarioControllo({
                     >
                       <div style={{ display: "grid", gap: 5 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                          {ev.tipo === "scadenza" || ev.tipo === "appuntamento"
-                        ? badgeTipo(ev.tipo)
-                        : null}
+                          {ev.tipo === "scadenza" || ev.tipo === "appuntamento" || ev.tipo === "nota"
+                            ? badgeTipo(ev.tipo as Voce["tipo"])
+                            : null}
                           {ev.urgente && badgeUrgente()}
                         </div>
 
@@ -4636,21 +4772,53 @@ function MiniCalendarioControllo({
                         )}
                       </div>
 
-                      {ev.importo !== null && (
-                        <div
-                          style={{
-                            padding: "7px 11px",
-                            borderRadius: 999,
-                            border: "2px solid rgba(239,68,68,0.22)",
-                            background: "rgba(254,242,242,0.96)",
-                            fontSize: 12,
-                            fontWeight: 950,
-                            color: "rgba(185,28,28,0.96)",
-                          }}
-                        >
-                          {ev.importo.toLocaleString("it-IT")} €
-                        </div>
-                      )}
+                      <div style={{ display: "grid", gap: 8, justifyItems: "end" }}>
+                        {ev.importo !== null && (
+                          <div
+                            style={{
+                              padding: "7px 11px",
+                              borderRadius: 999,
+                              border: "2px solid rgba(239,68,68,0.22)",
+                              background: "rgba(254,242,242,0.96)",
+                              fontSize: 12,
+                              fontWeight: 950,
+                              color: "rgba(185,28,28,0.96)",
+                            }}
+                          >
+                            {ev.importo.toLocaleString("it-IT")} €
+                          </div>
+                        )}
+
+                        {ev.sorgente === "voce" && (
+                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                            <button
+                              data-chip="1"
+                              onClick={() => {
+                                const voceOriginale = voci.find((x) => x.id === ev.id);
+                                if (!voceOriginale) return;
+                                setControlloDettaglioData(null);
+                                apriModifica(voceOriginale);
+                              }}
+                              style={chip(false)}
+                            >
+                              Modifica
+                            </button>
+
+                            <button
+                              data-chip="1"
+                              onClick={() => elimina(ev.id)}
+                              style={{
+                                ...chip(false),
+                                border: "1px solid rgba(239,68,68,0.22)",
+                                color: "rgba(185,28,28,0.96)",
+                                background: "rgba(254,242,242,0.92)",
+                              }}
+                            >
+                              Elimina
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ))
                 )}
@@ -4658,9 +4826,6 @@ function MiniCalendarioControllo({
             </div>
           </div>
         )}
-
-
-
 
         <div
           style={{
@@ -5101,6 +5266,8 @@ function MiniCalendarioControllo({
               ) : (
                 eventiControlloMese.map((ev) => {
                   const isEntrata = ev.movimento === "entrata";
+                  const isVoce = ev.sorgente === "voce";
+                  const isNota = ev.tipo === "nota";
 
                   return (
                     <div
@@ -5119,8 +5286,8 @@ function MiniCalendarioControllo({
                     >
                       <div style={{ display: "grid", gap: 5 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                          {ev.tipo === "scadenza" || ev.tipo === "appuntamento" ? (
-                            badgeTipo(ev.tipo)
+                          {isVoce ? (
+                            badgeTipo(ev.tipo as Voce["tipo"])
                           ) : isEntrata ? (
                             badgeMov("entrata")
                           ) : (
@@ -5143,7 +5310,7 @@ function MiniCalendarioControllo({
                         )}
                       </div>
 
-                      <div style={{ display: "grid", gap: 6, justifyItems: "end" }}>
+                      <div style={{ display: "grid", gap: 8, justifyItems: "end" }}>
                         {ev.importo !== null && (
                           <div
                             style={{
@@ -5162,11 +5329,44 @@ function MiniCalendarioControllo({
                           </div>
                         )}
 
-                        {ev.tipo === "scadenza" || ev.tipo === "appuntamento" ? (
+                        {(ev.tipo === "scadenza" || ev.tipo === "appuntamento") && !isNota ? (
                           <span style={styleBadgeScadenza(giorniMancanti(ev.data), ev.urgente)}>
                             {ev.urgente ? "URGENTE" : labelGiorni(giorniMancanti(ev.data))}
                           </span>
                         ) : null}
+
+                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                          {isVoce && (
+                            <button
+                              data-chip="1"
+                              onClick={() => {
+                                const voceOriginale = voci.find((x) => x.id === ev.id);
+                                if (!voceOriginale) return;
+                                apriModifica(voceOriginale);
+                              }}
+                              style={chip(false)}
+                            >
+                              Modifica
+                            </button>
+                          )}
+
+                          <button
+                            data-chip="1"
+                            onClick={() => {
+                              if (ev.sorgente === "voce") elimina(ev.id);
+                              else if (ev.sorgente === "entrata") eliminaEntrataExtra(ev.id);
+                              else if (ev.sorgente === "uscita-extra") eliminaUscitaExtra(ev.id);
+                            }}
+                            style={{
+                              ...chip(false),
+                              border: "1px solid rgba(239,68,68,0.22)",
+                              color: "rgba(185,28,28,0.96)",
+                              background: "rgba(254,242,242,0.92)",
+                            }}
+                          >
+                            Elimina
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );
@@ -5598,17 +5798,17 @@ function MiniCalendarioControllo({
                     </div>
                   </div>
 
-                  <div
-                    style={{
-                      padding: 16,
-                      borderRadius: 20,
-                      border: "1px solid rgba(245,158,11,0.14)",
-                      background: "linear-gradient(180deg, rgba(245,158,11,0.10), rgba(245,158,11,0.05))",
-                    }}
-                  >
-                    <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Urgenti / 7 giorni</div>
-                    <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000 }}>{vociUrgentiHome.length}</div>
-                  </div>
+              <div
+                  style={{
+                    padding: 16,
+                    borderRadius: 20,
+                    border: "1px solid rgba(59,130,246,0.14)",
+                    background: "linear-gradient(180deg, rgba(59,130,246,0.10), rgba(59,130,246,0.05))",
+                  }}
+                   >
+                  <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Turni del mese</div>
+                  <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000 }}>{totaleTurniMese}</div>
+                </div>
                 </div>
               </div>
             </div>
@@ -6238,8 +6438,6 @@ function MiniCalendarioControllo({
                     </div>
                     <div style={{ marginTop: 6, fontSize: 12, fontWeight: 800, opacity: 0.58 }}>
                       Conteggio automatico dai turni F
-                      Conteggio automatico dai turni F
-                      Conteggio automatico dai turni F
                     </div>
                   </div>
 
@@ -6321,7 +6519,7 @@ function MiniCalendarioControllo({
 
 
 
-                     {pagina === "archivio" && (
+            {pagina === "archivio" && (
           <>
             <div style={{ maxWidth: 1060, margin: "0 auto", marginTop: 14, display: "grid", gap: 14 }}>
               <div
@@ -6522,6 +6720,8 @@ function MiniCalendarioControllo({
                   ) : (
                     eventiArchivioMese.map((ev) => {
                       const isEntrata = ev.movimento === "entrata";
+                      const isVoce = ev.origine === "voce";
+                      const isNotaLibera = ev.tipo === "nota" && ev.nota.startsWith("[NOTA_LIBERA_MESE]");
 
                       return (
                         <div
@@ -6540,8 +6740,8 @@ function MiniCalendarioControllo({
                         >
                           <div style={{ display: "grid", gap: 5 }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                              {ev.tipo === "scadenza" || ev.tipo === "appuntamento" ? (
-                                badgeTipo(ev.tipo)
+                              {isVoce ? (
+                                badgeTipo(ev.tipo as Voce["tipo"])
                               ) : isEntrata ? (
                                 badgeMov("entrata")
                               ) : (
@@ -6554,19 +6754,17 @@ function MiniCalendarioControllo({
                             <div style={{ fontSize: 15, fontWeight: 950 }}>{ev.titolo}</div>
 
                             <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72 }}>
-                              {ev.tipo === "nota" && ev.nota.startsWith("[NOTA_LIBERA_MESE]")
-                                ? "Nota libera del mese"
-                                : `${formattaDataBreve(ev.data)} • ${ev.ora}`}
+                              {isNotaLibera ? "Nota libera del mese" : `${formattaDataBreve(ev.data)} • ${ev.ora}`}
                             </div>
 
                             {ev.nota && (
-                            <div style={{ fontSize: 12, fontWeight: 800, opacity: 0.68 }}>
-                              {ev.nota.replace(/^\[NOTA_LIBERA_MESE\]\s*/i, "")}
-                            </div>
+                              <div style={{ fontSize: 12, fontWeight: 800, opacity: 0.68 }}>
+                                {ev.nota.replace(/^\[NOTA_LIBERA_MESE\]\s*/i, "")}
+                              </div>
                             )}
                           </div>
 
-                          <div style={{ display: "grid", gap: 6, justifyItems: "end" }}>
+                          <div style={{ display: "grid", gap: 8, justifyItems: "end" }}>
                             {ev.importo !== null && (
                               <div
                                 style={{
@@ -6590,6 +6788,39 @@ function MiniCalendarioControllo({
                                 {ev.urgente ? "URGENTE" : labelGiorni(giorniMancanti(ev.data))}
                               </span>
                             ) : null}
+
+                            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                              {isVoce && (
+                                <button
+                                  data-chip="1"
+                                  onClick={() => {
+                                    const voceOriginale = voci.find((x) => x.id === ev.id);
+                                    if (!voceOriginale) return;
+                                    apriModifica(voceOriginale);
+                                  }}
+                                  style={chip(false)}
+                                >
+                                  Modifica
+                                </button>
+                              )}
+
+                              <button
+                                data-chip="1"
+                                onClick={() => {
+                                  if (ev.origine === "voce") elimina(ev.id);
+                                  else if (ev.origine === "entrata") eliminaEntrataExtra(ev.id);
+                                  else if (ev.origine === "uscita-extra") eliminaUscitaExtra(ev.id);
+                                }}
+                                style={{
+                                  ...chip(false),
+                                  border: "1px solid rgba(239,68,68,0.22)",
+                                  color: "rgba(185,28,28,0.96)",
+                                  background: "rgba(254,242,242,0.92)",
+                                }}
+                              >
+                                Elimina
+                              </button>
+                            </div>
                           </div>
                         </div>
                       );
@@ -6687,6 +6918,19 @@ function MiniCalendarioControllo({
                                     )}h • Tot: ${formatNumeroOre(t.oreOrdinarie + t.oreStraordinarie)}h`}
                               </div>
                             </div>
+
+                            <button
+                              data-chip="1"
+                              onClick={() => eliminaTurno(t.id)}
+                              style={{
+                                ...chip(false),
+                                border: "1px solid rgba(239,68,68,0.22)",
+                                color: "rgba(185,28,28,0.96)",
+                                background: "rgba(254,242,242,0.92)",
+                              }}
+                            >
+                              Elimina
+                            </button>
                           </div>
                         );
                       })
@@ -6711,8 +6955,7 @@ function MiniCalendarioControllo({
 
 
 
-            <DraggableFab onClick={apriNuova} label="Aggiungi" />
-
+            {!mostraForm && !mostraTurnoForm && <DraggableFab onClick={apriNuova} label="Aggiungi" />}
           {mostraForm && (
         <div
           style={sx.overlay}
