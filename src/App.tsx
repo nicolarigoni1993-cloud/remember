@@ -8,7 +8,7 @@ type Voce = {
   titolo: string;
   data: string;
   ora: string;
-  tipo: "scadenza" | "appuntamento";
+  tipo: "scadenza" | "appuntamento" | "nota";
   urgente: boolean;
   nota: string;
   importo: number | null;
@@ -224,7 +224,12 @@ function normalizeVoce(x: any): Voce {
     titolo: String(x?.titolo ?? ""),
     data: String(x?.data ?? ""),
     ora: typeof x?.ora === "string" && x.ora ? x.ora : "09:00",
-    tipo: x?.tipo === "appuntamento" ? "appuntamento" : "scadenza",
+    tipo:
+  x?.tipo === "appuntamento"
+    ? "appuntamento"
+    : x?.tipo === "nota"
+    ? "nota"
+    : "scadenza",
     urgente,
     nota: typeof x?.nota === "string" ? x.nota : "",
     importo: Number.isFinite(importoNum) ? importoNum : null,
@@ -1069,7 +1074,16 @@ export default function App() {
   void apriModifica;
 
   function salva() {
-    if (classNameIsEmpty(titolo) || classNameIsEmpty(data) || classNameIsEmpty(ora)) {
+    if (classNameIsEmpty(titolo)) {
+      alert("Compila almeno il titolo");
+      return;
+    }
+
+    const isNota = tipo === "nota";
+    const dataFinale = data.trim();
+    const oraFinale = ora.trim();
+
+    if (!isNota && (classNameIsEmpty(dataFinale) || classNameIsEmpty(oraFinale))) {
       alert("Compila titolo, data e ora");
       return;
     }
@@ -1085,6 +1099,9 @@ export default function App() {
       .filter((n) => Number.isFinite(n) && n > 0)
       .sort((a, b) => b - a);
 
+    const voceData = isNota ? dataFinale : dataFinale;
+    const voceOra = isNota ? oraFinale : oraFinale;
+
     if (idInModifica) {
       setVoci((prev) =>
         prev.map((x) =>
@@ -1092,14 +1109,15 @@ export default function App() {
             ? {
                 ...x,
                 titolo: titolo.trim(),
-                data,
-                ora,
+                data: voceData,
+                ora: voceOra,
                 tipo,
-                urgente,
+                urgente: isNota ? false : urgente,
                 nota: nota.trim(),
-                importo: importoNum,
+                importo: isNota ? null : importoNum,
                 movimento: "uscita" as Movimento,
-                notificheMinutiPrima: notiUniq,
+                fatto: voceData && voceOra ? vocePassata(voceData, voceOra) : false,
+                notificheMinutiPrima: isNota ? [] : notiUniq,
               }
             : x
         )
@@ -1108,15 +1126,15 @@ export default function App() {
       const nuova: Voce = {
         id: safeUUID(),
         titolo: titolo.trim(),
-        data,
-        ora,
+        data: voceData,
+        ora: voceOra,
         tipo,
-        urgente,
+        urgente: isNota ? false : urgente,
         nota: nota.trim(),
-        importo: importoNum,
+        importo: isNota ? null : importoNum,
         movimento: "uscita",
-        fatto: vocePassata(data, ora),
-        notificheMinutiPrima: notiUniq,
+        fatto: voceData && voceOra ? vocePassata(voceData, voceOra) : false,
+        notificheMinutiPrima: isNota ? [] : notiUniq,
       };
 
       setVoci((prev) => [nuova, ...prev]);
@@ -1872,37 +1890,48 @@ export default function App() {
 
 
 
-  function badgeTipo(t: Voce["tipo"]) {
-    const map = {
-      scadenza: {
-        bg: "rgba(52,211,153,0.16)",
-        bd: "rgba(5,150,105,0.26)",
-        tx: "rgba(6,95,70,0.98)",
-      },
-      appuntamento: {
-        bg: "rgba(168,85,247,0.16)",
-        bd: "rgba(147,51,234,0.24)",
-        tx: "rgba(91,33,182,0.98)",
-      },
-    } as const;
+function badgeTipo(t: Voce["tipo"]) {
+  const map = {
+    scadenza: {
+      bg: "rgba(52,211,153,0.16)",
+      bd: "rgba(5,150,105,0.26)",
+      tx: "rgba(6,95,70,0.98)",
+      label: "Scadenza",
+    },
+    appuntamento: {
+      bg: "rgba(168,85,247,0.16)",
+      bd: "rgba(147,51,234,0.24)",
+      tx: "rgba(91,33,182,0.98)",
+      label: "Appuntamento",
+    },
+    nota: {
+      bg: "rgba(239,68,68,0.12)",
+      bd: "rgba(220,38,38,0.22)",
+      tx: "rgba(153,27,27,0.96)",
+      label: "Nota",
+    },
+  } as const;
 
-    const s = map[t];
-    return (
-      <span
-        style={{
-          padding: "6px 10px",
-          borderRadius: 999,
-          fontSize: 12,
-          fontWeight: 900,
-          background: s.bg,
-          border: `1px solid ${s.bd}`,
-          color: s.tx,
-        }}
-      >
-        {t === "scadenza" ? "Scadenza" : "Appuntamento"}
-      </span>
-    );
-  }
+  const s = map[t];
+
+  return (
+    <span
+      style={{
+        padding: "6px 10px",
+        borderRadius: 999,
+        fontSize: 12,
+        fontWeight: 950,
+        background: s.bg,
+        border: `1px solid ${s.bd}`,
+        color: s.tx,
+        lineHeight: 1,
+        whiteSpace: "nowrap",
+      }}
+    >
+      {s.label}
+    </span>
+  );
+}
 
   function badgeMov(m: Movimento) {
     const map = {
@@ -3226,13 +3255,14 @@ function MiniCalendarioControllo({
   onNextMonth,
   onAddScadenza,
   onAddAppuntamento,
+  onAddNota,
   onOpenDayDetails,
 }: {
   mese: Date;
   eventi: Array<{
     id: string;
     data: string;
-    tipo: "scadenza" | "appuntamento" | "entrata" | "uscita";
+    tipo: "scadenza" | "appuntamento" | "nota" | "entrata" | "uscita";
     titolo: string;
     ora: string;
     importo: number | null;
@@ -3245,6 +3275,7 @@ function MiniCalendarioControllo({
   onNextMonth: () => void;
   onAddScadenza: (data: string) => void;
   onAddAppuntamento: (data: string) => void;
+  onAddNota: (data: string) => void;
   onOpenDayDetails: (data: string) => void;
 }) {
   const [isTouchDevice, setIsTouchDevice] = useState(() => {
@@ -3306,6 +3337,7 @@ function MiniCalendarioControllo({
       {
         scadenze: number;
         appuntamenti: number;
+        note: number;
         urgente: boolean;
       }
     >();
@@ -3314,11 +3346,13 @@ function MiniCalendarioControllo({
       const prev = statsLocal.get(ev.data) ?? {
         scadenze: 0,
         appuntamenti: 0,
+        note: 0,
         urgente: false,
       };
 
       if (ev.tipo === "scadenza") prev.scadenze += 1;
       if (ev.tipo === "appuntamento") prev.appuntamenti += 1;
+      if (ev.tipo === "nota") prev.note += 1;
       if (ev.urgente) prev.urgente = true;
 
       statsLocal.set(ev.data, prev);
@@ -3344,7 +3378,7 @@ function MiniCalendarioControllo({
       .filter(
         (ev) =>
           ev.data === previewData &&
-          (ev.tipo === "scadenza" || ev.tipo === "appuntamento")
+          (ev.tipo === "scadenza" || ev.tipo === "appuntamento" || ev.tipo === "nota")
       )
       .slice()
       .sort((a, b) => {
@@ -3365,7 +3399,7 @@ function MiniCalendarioControllo({
     const rect = element.getBoundingClientRect();
 
     const panelWidth = 320;
-    const estimatedHeight = 240;
+    const estimatedHeight = 260;
 
     let left = rect.left + rect.width / 2 - panelWidth / 2;
     let top = rect.top - estimatedHeight - 12;
@@ -3433,7 +3467,7 @@ function MiniCalendarioControllo({
           overflow: "visible",
         }}
       >
-                <div
+        <div
           style={{
             display: "grid",
             gridTemplateColumns: isTouchDevice ? "44px minmax(0, 1fr) 44px" : "50px 1fr 50px",
@@ -3560,7 +3594,8 @@ function MiniCalendarioControllo({
 
             const scadenze = info?.scadenze ?? 0;
             const appuntamenti = info?.appuntamenti ?? 0;
-            const totalEvents = scadenze + appuntamenti;
+            const noteCount = info?.note ?? 0;
+            const totalEvents = scadenze + appuntamenti + noteCount;
 
             return (
               <div
@@ -3592,8 +3627,25 @@ function MiniCalendarioControllo({
                     justifyItems: "center",
                     gap: isTouchDevice ? 2 : 3,
                     alignContent: "start",
+                    position: "relative",
                   }}
                 >
+                  {noteCount > 0 && (
+                    <div
+                      title={noteCount === 1 ? "Nota presente" : `${noteCount} note presenti`}
+                      style={{
+                        position: "absolute",
+                        top: isTouchDevice ? 0 : -2,
+                        right: isTouchDevice ? 4 : 2,
+                        width: isTouchDevice ? 8 : 9,
+                        height: isTouchDevice ? 8 : 9,
+                        borderRadius: 999,
+                        background: "rgba(220,38,38,0.96)",
+                        boxShadow: "0 0 0 4px rgba(220,38,38,0.12)",
+                      }}
+                    />
+                  )}
+
                   <div
                     style={{
                       fontSize: isTouchDevice ? 8 : 11,
@@ -3730,6 +3782,28 @@ function MiniCalendarioControllo({
                         </button>
                       ) : null}
 
+                      {noteCount > 0 ? (
+                        <button
+                          type="button"
+                          onClick={(e) => apriPreviewDesktop(key, e.currentTarget)}
+                          style={{
+                            width: "100%",
+                            padding: "4px 8px",
+                            borderRadius: 999,
+                            fontSize: 11,
+                            fontWeight: 900,
+                            textAlign: "center",
+                            color: "rgba(153,27,27,0.98)",
+                            background: "rgba(254,242,242,0.96)",
+                            border: "1px solid rgba(239,68,68,0.18)",
+                            cursor: "pointer",
+                          }}
+                          title="Anteprima note"
+                        >
+                          NOT {noteCount}
+                        </button>
+                      ) : null}
+
                       {totalEvents === 0 ? (
                         <div
                           style={{
@@ -3746,7 +3820,7 @@ function MiniCalendarioControllo({
                       <div
                         style={{
                           display: "grid",
-                          gridTemplateColumns: "1fr 1fr",
+                          gridTemplateColumns: "1fr 1fr 1fr",
                           gap: 4,
                           marginTop: 2,
                           width: "100%",
@@ -3799,6 +3873,29 @@ function MiniCalendarioControllo({
                           title="Nuovo appuntamento"
                         >
                           +A
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => onAddNota(key)}
+                          style={{
+                            width: "100%",
+                            maxWidth: 44,
+                            minWidth: 0,
+                            padding: "4px 6px",
+                            borderRadius: 999,
+                            border: "1px solid rgba(239,68,68,0.18)",
+                            background: "rgba(254,242,242,0.96)",
+                            fontSize: 10,
+                            fontWeight: 900,
+                            cursor: "pointer",
+                            color: "rgba(153,27,27,0.98)",
+                            textAlign: "center",
+                            lineHeight: 1,
+                          }}
+                          title="Nuova nota rapida"
+                        >
+                          +N
                         </button>
                       </div>
                     </div>
@@ -3886,6 +3983,16 @@ function MiniCalendarioControllo({
             >
               APP = Appuntamenti
             </span>
+            <span
+              style={{
+                padding: "6px 10px",
+                borderRadius: 999,
+                background: "rgba(254,242,242,0.96)",
+                border: "1px solid rgba(239,68,68,0.18)",
+              }}
+            >
+              NOT = Note
+            </span>
           </div>
         )}
       </div>
@@ -3968,6 +4075,26 @@ function MiniCalendarioControllo({
 
             <button
               type="button"
+              onClick={() => {
+                onAddNota(mobileMenuData);
+                setMobileMenuData(null);
+              }}
+              style={{
+                padding: "12px 14px",
+                borderRadius: 16,
+                border: "1px solid rgba(239,68,68,0.18)",
+                background: "rgba(254,242,242,0.96)",
+                color: "rgba(153,27,27,0.98)",
+                fontSize: 13,
+                fontWeight: 900,
+                cursor: "pointer",
+              }}
+            >
+              Nota rapida
+            </button>
+
+            <button
+              type="button"
               onClick={() => setMobileMenuData(null)}
               style={{
                 padding: "10px 12px",
@@ -4001,7 +4128,7 @@ function MiniCalendarioControllo({
               position: "fixed",
               top: previewAnchor.top,
               left: previewAnchor.left,
-              width: 320,
+              width: 340,
               maxWidth: "calc(100vw - 24px)",
               borderRadius: 22,
               border: "1px solid rgba(255,255,255,0.58)",
@@ -4089,18 +4216,28 @@ function MiniCalendarioControllo({
                         color:
                           ev.tipo === "scadenza"
                             ? "rgba(6,95,70,0.98)"
-                            : "rgba(107,33,168,0.98)",
+                            : ev.tipo === "appuntamento"
+                            ? "rgba(107,33,168,0.98)"
+                            : "rgba(153,27,27,0.98)",
                         background:
                           ev.tipo === "scadenza"
                             ? "rgba(220,252,231,0.95)"
-                            : "rgba(245,243,255,0.95)",
+                            : ev.tipo === "appuntamento"
+                            ? "rgba(245,243,255,0.95)"
+                            : "rgba(254,242,242,0.96)",
                         border:
                           ev.tipo === "scadenza"
                             ? "1px solid rgba(16,185,129,0.18)"
-                            : "1px solid rgba(168,85,247,0.18)",
+                            : ev.tipo === "appuntamento"
+                            ? "1px solid rgba(168,85,247,0.18)"
+                            : "1px solid rgba(239,68,68,0.18)",
                       }}
                     >
-                      {ev.tipo === "scadenza" ? "Scadenza" : "Appuntamento"}
+                      {ev.tipo === "scadenza"
+                        ? "Scadenza"
+                        : ev.tipo === "appuntamento"
+                        ? "Appuntamento"
+                        : "Nota"}
                     </span>
 
                     {ev.urgente && badgeUrgente()}
@@ -4108,9 +4245,11 @@ function MiniCalendarioControllo({
 
                   <div style={{ fontSize: 14, fontWeight: 950 }}>{ev.titolo}</div>
 
-                  <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72 }}>
-                    {ev.ora}
-                  </div>
+                  {ev.ora && (
+                    <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72 }}>
+                      {ev.ora}
+                    </div>
+                  )}
 
                   {ev.nota && (
                     <div style={{ fontSize: 12, fontWeight: 800, opacity: 0.68 }}>
@@ -4360,6 +4499,7 @@ function MiniCalendarioControllo({
           onNextMonth={meseSuccessivo}
           onAddScadenza={(dataSel) => apriNuovaConData(dataSel, "scadenza")}
           onAddAppuntamento={(dataSel) => apriNuovaConData(dataSel, "appuntamento")}
+          onAddNota={(data) => apriNuovaConData(data, "nota")}
           onOpenDayDetails={(dataSel) => setControlloDettaglioData(dataSel)}
         />
 
@@ -6551,7 +6691,7 @@ function MiniCalendarioControllo({
 
             <DraggableFab onClick={apriNuova} label="Aggiungi" />
 
-      {mostraForm && (
+          {mostraForm && (
         <div
           style={sx.overlay}
           onMouseDown={(e) => {
@@ -6603,22 +6743,34 @@ function MiniCalendarioControllo({
                     >
                       Appuntamento
                     </button>
+                    <button
+                      type="button"
+                      data-chip="1"
+                      onClick={() => setTipo("nota")}
+                      style={chipSmall(tipo === "nota")}
+                    >
+                      Nota rapida
+                    </button>
                   </div>
                 </div>
 
                 <div>
-                  <div style={sx.sectionLabel}>Titolo</div>
+                  <div style={sx.sectionLabel}>
+                    {tipo === "nota" ? "Titolo nota" : "Titolo"}
+                  </div>
                   <input
                     value={titolo}
                     onChange={(e) => setTitolo(e.target.value)}
-                    placeholder="Es: Affitto / Dentista"
+                    placeholder={tipo === "nota" ? "Es: Da ricordare / Nota veloce" : "Es: Affitto / Dentista"}
                     style={inputLight(false)}
                   />
                 </div>
 
                 <div style={sx.row2}>
                   <div>
-                    <div style={sx.sectionLabel}>Data</div>
+                    <div style={sx.sectionLabel}>
+                      {tipo === "nota" ? "Data (facoltativa)" : "Data"}
+                    </div>
                     <input
                       type="date"
                       value={data}
@@ -6628,7 +6780,9 @@ function MiniCalendarioControllo({
                   </div>
 
                   <div>
-                    <div style={sx.sectionLabel}>Ora</div>
+                    <div style={sx.sectionLabel}>
+                      {tipo === "nota" ? "Ora (facoltativa)" : "Ora"}
+                    </div>
                     <input
                       type="time"
                       value={ora}
@@ -6638,37 +6792,39 @@ function MiniCalendarioControllo({
                   </div>
                 </div>
 
-                <div>
-                  <div style={sx.sectionLabel}>Importo uscita (€) facoltativo</div>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    value={importo}
-                    onChange={(e) => setImporto(e.target.value)}
-                    placeholder="Es: 650"
-                    style={inputLight(false)}
-                  />
+                {tipo !== "nota" && (
+                  <div>
+                    <div style={sx.sectionLabel}>Importo uscita (€) facoltativo</div>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      value={importo}
+                      onChange={(e) => setImporto(e.target.value)}
+                      placeholder="Es: 650"
+                      style={inputLight(false)}
+                    />
 
-                  <div
-                    style={{
-                      marginTop: 8,
-                      fontSize: 12,
-                      fontWeight: 850,
-                      opacity: 0.72,
-                      lineHeight: 1.35,
-                    }}
-                  >
-                    Qui inserisci solo eventuali uscite collegate a scadenze o appuntamenti. Le entrate si inseriscono solo nell’area Controllo.
+                    <div
+                      style={{
+                        marginTop: 8,
+                        fontSize: 12,
+                        fontWeight: 850,
+                        opacity: 0.72,
+                        lineHeight: 1.35,
+                      }}
+                    >
+                      Qui inserisci solo eventuali uscite collegate a scadenze o appuntamenti. Le entrate si inseriscono solo nell’area Controllo.
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div>
-                  <div style={sx.sectionLabel}>Nota</div>
+                  <div style={sx.sectionLabel}>{tipo === "nota" ? "Testo nota" : "Nota"}</div>
                   <textarea
                     value={nota}
                     onChange={(e) => setNota(e.target.value)}
                     rows={4}
-                    placeholder="Scrivi una nota..."
+                    placeholder={tipo === "nota" ? "Scrivi una nota veloce..." : "Scrivi una nota..."}
                     style={{
                       ...inputLight(false),
                       height: "auto",
@@ -6679,77 +6835,98 @@ function MiniCalendarioControllo({
                   />
                 </div>
 
-                <div>
-                  <div style={sx.sectionLabel}>Stato</div>
-                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                    <button
-                      type="button"
-                      data-chip="1"
-                      onClick={() => setUrgente((v) => !v)}
-                      style={{
-                        ...chipSmall(urgente),
-                        background: urgente
-                          ? "linear-gradient(180deg, rgba(239,68,68,0.22), rgba(220,38,38,0.12))"
-                          : "rgba(255,255,255,0.82)",
-                        border: urgente ? "1px solid rgba(239,68,68,0.30)" : "1px solid rgba(15,23,42,0.08)",
-                        boxShadow: urgente
-                          ? "0 14px 28px rgba(239,68,68,0.18)"
-                          : "0 10px 18px rgba(15,23,42,0.06)",
-                      }}
-                    >
-                      {urgente ? "Urgente attivo" : "Segna come urgente"}
-                    </button>
+                {tipo !== "nota" && (
+                  <div>
+                    <div style={sx.sectionLabel}>Stato</div>
+                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                      <button
+                        type="button"
+                        data-chip="1"
+                        onClick={() => setUrgente((v) => !v)}
+                        style={{
+                          ...chipSmall(urgente),
+                          background: urgente
+                            ? "linear-gradient(180deg, rgba(239,68,68,0.22), rgba(220,38,38,0.12))"
+                            : "rgba(255,255,255,0.82)",
+                          border: urgente ? "1px solid rgba(239,68,68,0.30)" : "1px solid rgba(15,23,42,0.08)",
+                          boxShadow: urgente
+                            ? "0 14px 28px rgba(239,68,68,0.18)"
+                            : "0 10px 18px rgba(15,23,42,0.06)",
+                        }}
+                      >
+                        {urgente ? "Urgente attivo" : "Segna come urgente"}
+                      </button>
 
-                    {urgente && badgeUrgente()}
-                    {badgeTipo(tipo)}
+                      {urgente && badgeUrgente()}
+                      {badgeTipo(tipo)}
+                    </div>
                   </div>
-                </div>
+                )}
 
-                <div>
-                  <div style={sx.sectionLabel}>Notifiche (ore prima)</div>
+                {tipo !== "nota" && (
+                  <div>
+                    <div style={sx.sectionLabel}>Notifiche (ore prima)</div>
 
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    {presetOre.map((p) => {
-                      const min = Math.max(1, Math.round(p.ore * 60));
-                      const active = notificheMinutiPrima.includes(min);
-                      return (
-                        <button
-                          type="button"
-                          data-chip="1"
-                          key={p.label}
-                          onClick={() => toggleNotificaOre(p.ore)}
-                          style={chipSmall(active)}
-                          title={`${p.ore} ore prima`}
-                        >
-                          {p.label}
-                        </button>
-                      );
-                    })}
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      {presetOre.map((p) => {
+                        const min = Math.max(1, Math.round(p.ore * 60));
+                        const active = notificheMinutiPrima.includes(min);
+                        return (
+                          <button
+                            type="button"
+                            data-chip="1"
+                            key={p.label}
+                            onClick={() => toggleNotificaOre(p.ore)}
+                            style={chipSmall(active)}
+                            title={`${p.ore} ore prima`}
+                          >
+                            {p.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: "1fr auto", gap: 10 }}>
+                      <input
+                        value={customNotificaOre}
+                        onChange={(e) => setCustomNotificaOre(e.target.value)}
+                        placeholder="Ore custom (es: 1,5)"
+                        style={inputLight(false)}
+                        inputMode="decimal"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            addCustomNotificaOre();
+                          }
+                        }}
+                      />
+                      <button type="button" data-chip="1" onClick={addCustomNotificaOre} style={chip(true)}>
+                        Aggiungi
+                      </button>
+                    </div>
+
+                    <div style={{ marginTop: 10, fontSize: 12, fontWeight: 850, opacity: 0.7, lineHeight: 1.35 }}>
+                      Le notifiche sono in-app: funzionano se l’app resta aperta.
+                    </div>
                   </div>
+                )}
 
-                  <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: "1fr auto", gap: 10 }}>
-                    <input
-                      value={customNotificaOre}
-                      onChange={(e) => setCustomNotificaOre(e.target.value)}
-                      placeholder="Ore custom (es: 1,5)"
-                      style={inputLight(false)}
-                      inputMode="decimal"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          addCustomNotificaOre();
-                        }
-                      }}
-                    />
-                    <button type="button" data-chip="1" onClick={addCustomNotificaOre} style={chip(true)}>
-                      Aggiungi
-                    </button>
+                {tipo === "nota" && (
+                  <div
+                    style={{
+                      padding: 12,
+                      borderRadius: 16,
+                      border: "1px solid rgba(15,23,42,0.08)",
+                      background: "rgba(248,250,252,0.88)",
+                      fontSize: 12,
+                      fontWeight: 850,
+                      opacity: 0.76,
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    Se lasci la data vuota, la nota verrà considerata nota libera del mese corrente e la collegheremo all’Archivio Generale nel prossimo step.
                   </div>
-
-                  <div style={{ marginTop: 10, fontSize: 12, fontWeight: 850, opacity: 0.7, lineHeight: 1.35 }}>
-                    Le notifiche sono in-app: funzionano se l’app resta aperta.
-                  </div>
-                </div>
+                )}
               </div>
             </div>
 
