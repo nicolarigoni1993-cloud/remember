@@ -3351,7 +3351,15 @@ function MiniCalendarioControllo({
   }}
   title="Aggiungi"
 >
-  +
+  <span
+    style={{
+      transform: "translateY(-1px)",
+      display: "block",
+      lineHeight: 1,
+    }}
+  >
+    +
+  </span>
 </button>
                     </>
                   ) : (
