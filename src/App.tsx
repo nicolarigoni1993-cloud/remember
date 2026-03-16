@@ -147,7 +147,7 @@ function normalizeTurnoLabel(inizio: string, fine: string, note?: string) {
 function descrizioneTurnoBreve(inizio: string, fine: string, note?: string) {
   const sigla = normalizeTurnoLabel(inizio, fine, note);
 
-  
+  if (sigla === "R") return "Riposo";
   if (sigla === "F") return "Ferie";
   if (sigla === "N") return "Notte";
   if (sigla === "M") return "Mattina";
@@ -316,8 +316,50 @@ function caricaTurni(userId: string): Turno[] {
   }
 }
 
+
+
+function kFerieBase(userId: string) {
+  return `remember_ferie_base_${userId}`;
+}
+
+
+
+
 function salvaTurni(userId: string, turni: Turno[]) {
   localStorage.setItem(kTurni(userId), JSON.stringify(turni));
+}
+
+
+function caricaFerieBase(userId: string): { giorni: number; ore: number } {
+  const raw = localStorage.getItem(kFerieBase(userId));
+  if (!raw) {
+    return { giorni: 26, ore: 208 };
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as { giorni?: unknown; ore?: unknown };
+
+    const giorniNum =
+      typeof parsed?.giorni === "number" && Number.isFinite(parsed.giorni) && parsed.giorni >= 0
+        ? parsed.giorni
+        : 26;
+
+    const oreNum =
+      typeof parsed?.ore === "number" && Number.isFinite(parsed.ore) && parsed.ore >= 0
+        ? parsed.ore
+        : 208;
+
+    return {
+      giorni: giorniNum,
+      ore: oreNum,
+    };
+  } catch {
+    return { giorni: 26, ore: 208 };
+  }
+}
+
+function salvaFerieBase(userId: string, ferieBase: { giorni: number; ore: number }) {
+  localStorage.setItem(kFerieBase(userId), JSON.stringify(ferieBase));
 }
 
 function buildDateTime(data: string, ora: string) {
@@ -728,6 +770,10 @@ function DraggableFab({
   );
 }
 
+
+
+
+
 export default function App() {
   const [users, setUsers] = useState<User[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -758,6 +804,9 @@ export default function App() {
   const [adesso, setAdesso] = useState(new Date());
   const [filtro, setFiltro] = useState<Filtro | null>(null);
   const [meseCorrente, setMeseCorrente] = useState(new Date());
+
+    const [ferieTotaliGiorniBase, setFerieTotaliGiorniBase] = useState(26);
+  const [ferieTotaliOreBase, setFerieTotaliOreBase] = useState(208);
 
   const [nuovaEntrataData, setNuovaEntrataData] = useState(new Date().toISOString().slice(0, 10));
   const [nuovaEntrataDesc, setNuovaEntrataDesc] = useState("");
@@ -837,6 +886,12 @@ export default function App() {
     if (ids.length) scheduledRef.current[v.id] = ids;
   }
 
+
+
+
+
+
+
   useEffect(() => {
     const timer = setInterval(() => setAdesso(new Date()), 30000);
     return () => clearInterval(timer);
@@ -858,14 +913,22 @@ export default function App() {
       setVoci([]);
       setTurni([]);
       setIncassi({});
+      setFerieTotaliGiorniBase(26);
+      setFerieTotaliOreBase(208);
       setCaricato(false);
       return;
     }
 
     salvaUtenteCorrente(currentUserId);
+
     setVoci(caricaVociDaMemoria(currentUserId));
     setTurni(caricaTurni(currentUserId));
     setIncassi(caricaIncassi(currentUserId));
+
+    const ferieBase = caricaFerieBase(currentUserId);
+    setFerieTotaliGiorniBase(ferieBase.giorni);
+    setFerieTotaliOreBase(ferieBase.ore);
+
     setCaricato(true);
     requestNotifyPermission();
   }, [currentUserId]);
@@ -884,6 +947,15 @@ export default function App() {
     if (!caricato || !currentUserId) return;
     salvaIncassi(currentUserId, incassi);
   }, [incassi, caricato, currentUserId]);
+
+  useEffect(() => {
+    if (!caricato || !currentUserId) return;
+
+    salvaFerieBase(currentUserId, {
+      giorni: ferieTotaliGiorniBase,
+      ore: ferieTotaliOreBase,
+    });
+  }, [currentUserId, caricato, ferieTotaliGiorniBase, ferieTotaliOreBase]);
 
   useEffect(() => {
     if (!currentUserId) return;
@@ -1483,9 +1555,6 @@ export default function App() {
     }).length;
   }, [turniMese]);
 
-  const ferieTotaliGiorniBase = 26;
-  const ferieTotaliOreBase = 208;
-
   const turniFerie = useMemo(() => {
     return turni.filter((t) => normalizeTurnoLabel(t.inizio, t.fine, t.note) === "F");
   }, [turni]);
@@ -1502,11 +1571,11 @@ export default function App() {
 
   const ferieGiorniResidui = useMemo(() => {
     return Math.max(0, ferieTotaliGiorniBase - ferieGiorniEffettuati);
-  }, [ferieGiorniEffettuati]);
+  }, [ferieTotaliGiorniBase, ferieGiorniEffettuati]);
 
   const ferieOreResidue = useMemo(() => {
     return Math.max(0, ferieTotaliOreBase - ferieOreEffettuate);
-  }, [ferieOreEffettuate]);
+  }, [ferieTotaliOreBase, ferieOreEffettuate]);
 
  
 
@@ -5895,7 +5964,7 @@ function MiniCalendarioControllo({
                       Monitoraggio ferie
                     </div>
                     <div style={{ fontSize: 12, fontWeight: 800, opacity: 0.62 }}>
-                      Sezione pronta per il prossimo step completo ferie
+                      Base ferie personalizzabile: giorni e ore modificabili direttamente da qui
                     </div>
                   </div>
 
@@ -5914,6 +5983,75 @@ function MiniCalendarioControllo({
                     Sigla calendario: F
                   </div>
                 </div>
+
+
+                                    <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                    gap: 14,
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: 16,
+                      borderRadius: 22,
+                      border: "1px solid rgba(59,130,246,0.14)",
+                      background:
+                        "linear-gradient(180deg, rgba(59,130,246,0.10), rgba(59,130,246,0.04))",
+                      boxShadow: "0 10px 24px rgba(59,130,246,0.08)",
+                    }}
+                  >
+                    <div style={{ fontSize: 12, fontWeight: 950, opacity: 0.7, letterSpacing: 0.2 }}>
+                      Base ferie giorni
+                    </div>
+                    <input
+                      value={String(ferieTotaliGiorniBase)}
+                      onChange={(e) => {
+                        const n = Number(e.target.value);
+                        setFerieTotaliGiorniBase(Number.isFinite(n) && n >= 0 ? n : 0);
+                      }}
+                      inputMode="numeric"
+                      style={{
+                        ...inputLight(false),
+                        marginTop: 10,
+                        background: "rgba(255,255,255,0.92)",
+                        fontWeight: 900,
+                      }}
+                    />
+                  </div>
+
+                  <div
+                    style={{
+                      padding: 16,
+                      borderRadius: 22,
+                      border: "1px solid rgba(168,85,247,0.14)",
+                      background:
+                        "linear-gradient(180deg, rgba(168,85,247,0.10), rgba(168,85,247,0.04))",
+                      boxShadow: "0 10px 24px rgba(168,85,247,0.08)",
+                    }}
+                  >
+                    <div style={{ fontSize: 12, fontWeight: 950, opacity: 0.7, letterSpacing: 0.2 }}>
+                      Base ferie ore
+                    </div>
+                    <input
+                      value={String(ferieTotaliOreBase)}
+                      onChange={(e) => {
+                        const n = Number(e.target.value.replace(",", "."));
+                        setFerieTotaliOreBase(Number.isFinite(n) && n >= 0 ? n : 0);
+                      }}
+                      inputMode="decimal"
+                      style={{
+                        ...inputLight(false),
+                        marginTop: 10,
+                        background: "rgba(255,255,255,0.92)",
+                        fontWeight: 900,
+                      }}
+                    />
+                  </div>
+                </div>
+
+
 
                 <div
                   style={{
@@ -5939,7 +6077,9 @@ function MiniCalendarioControllo({
                       {ferieGiorniEffettuati}
                     </div>
                     <div style={{ marginTop: 6, fontSize: 12, fontWeight: 800, opacity: 0.58 }}>
-                      Attualmente provvisorio
+                      Conteggio automatico dai turni F
+                      Conteggio automatico dai turni F
+                      Conteggio automatico dai turni F
                     </div>
                   </div>
 
@@ -5960,7 +6100,7 @@ function MiniCalendarioControllo({
                       {ferieGiorniResidui}
                     </div>
                     <div style={{ marginTop: 6, fontSize: 12, fontWeight: 800, opacity: 0.58 }}>
-                      Da collegare alla base utente
+                      Somma ore ferie inserite
                     </div>
                   </div>
 
@@ -6002,7 +6142,7 @@ function MiniCalendarioControllo({
                       {formatNumeroOre(ferieOreResidue)} h
                     </div>
                     <div style={{ marginTop: 6, fontSize: 12, fontWeight: 800, opacity: 0.58 }}>
-                      Residuo disponibile
+                      Residuo calcolato automaticamente
                     </div>
                   </div>
                 </div>
@@ -6772,14 +6912,16 @@ function MiniCalendarioControllo({
                       }}
                       title="Seleziona turno predefinito"
                     >
-                      <option value="">Seleziona turno preset…</option>
-                      {presetTurni.map((p) => (
-                        <option key={p} value={p}>
-                          {p}
-                        </option>
-                      ))}
-                      <option value="RIPOSO">RIPOSO</option>
-                      <option value="FERIE">FERIE</option>
+                            <option value="">Seleziona turno predefinito</option>
+{presetTurni
+  .filter((p) => p !== "RIPOSO" && p !== "FERIE")
+  .map((p) => (
+    <option key={p} value={p}>
+      {p}
+    </option>
+  ))}
+<option value="RIPOSO">RIPOSO</option>
+<option value="FERIE">FERIE</option>
                     </select>
                   </div>
 
