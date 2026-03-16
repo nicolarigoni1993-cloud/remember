@@ -157,9 +157,9 @@ function descrizioneTurnoBreve(inizio: string, fine: string, note?: string) {
   return "Turno";
 }
 
-function isTurnoRiposo(t: Turno) {
-  return normalizeTurnoLabel(t.inizio, t.fine, t.note) === "R";
-}
+
+
+
 
 const K_USERS = "scadenze_users";
 const K_CURR = "scadenze_current_user";
