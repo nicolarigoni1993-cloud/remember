@@ -3154,20 +3154,23 @@ function MiniCalendarioControllo({
   }, [previewData]);
 
   const navBtnStyle: React.CSSProperties = {
-    width: isTouchDevice ? 42 : 48,
-    height: isTouchDevice ? 42 : 48,
-    borderRadius: isTouchDevice ? 16 : 18,
-    border: "1px solid rgba(15,23,42,0.07)",
-    background: "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92))",
+    width: isTouchDevice ? 44 : 50,
+    height: isTouchDevice ? 44 : 50,
+    borderRadius: isTouchDevice ? 18 : 20,
+    border: "1px solid rgba(255,255,255,0.68)",
+    background:
+      "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(245,248,252,0.92))",
     boxShadow:
-      "0 10px 24px rgba(15,23,42,0.08), inset 0 1px 0 rgba(255,255,255,0.72)",
+      "0 12px 30px rgba(15,23,42,0.10), inset 0 1px 0 rgba(255,255,255,0.92), inset 0 -1px 0 rgba(148,163,184,0.08)",
     display: "grid",
     placeItems: "center",
     cursor: "pointer",
-    color: "rgba(15,23,42,0.84)",
+    color: "rgba(30,41,59,0.86)",
     padding: 0,
     flexShrink: 0,
+    outline: "none",
     WebkitTapHighlightColor: "transparent",
+    backdropFilter: "blur(10px)",
   };
 
   return (
@@ -3182,13 +3185,13 @@ function MiniCalendarioControllo({
           overflow: "visible",
         }}
       >
-        <div
+                <div
           style={{
             display: "grid",
-            gridTemplateColumns: isTouchDevice ? "42px minmax(0, 1fr) 42px" : "48px 1fr 48px",
+            gridTemplateColumns: isTouchDevice ? "44px minmax(0, 1fr) 44px" : "50px 1fr 50px",
             alignItems: "center",
-            gap: isTouchDevice ? 10 : 12,
-            marginBottom: isTouchDevice ? 12 : 14,
+            gap: isTouchDevice ? 12 : 14,
+            marginBottom: isTouchDevice ? 12 : 16,
           }}
         >
           <button
@@ -3200,15 +3203,27 @@ function MiniCalendarioControllo({
           >
             <span
               style={{
+                position: "relative",
                 display: "block",
-                width: isTouchDevice ? 12 : 14,
-                height: isTouchDevice ? 12 : 14,
-                borderLeft: "2.4px solid currentColor",
-                borderBottom: "2.4px solid currentColor",
-                transform: "rotate(45deg) translate(1px, -1px)",
-                boxSizing: "border-box",
+                width: isTouchDevice ? 16 : 18,
+                height: isTouchDevice ? 16 : 18,
               }}
-            />
+            >
+              <span
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  margin: "auto",
+                  width: isTouchDevice ? 9 : 10,
+                  height: isTouchDevice ? 9 : 10,
+                  borderLeft: "2.6px solid currentColor",
+                  borderBottom: "2.6px solid currentColor",
+                  transform: "rotate(45deg)",
+                  borderRadius: 1,
+                  boxSizing: "border-box",
+                }}
+              />
+            </span>
           </button>
 
           <div
@@ -3216,10 +3231,10 @@ function MiniCalendarioControllo({
               textAlign: "center",
               fontSize: isTouchDevice ? 17 : 24,
               fontWeight: 1000,
-              letterSpacing: -0.6,
+              letterSpacing: -0.7,
               textTransform: "capitalize",
-              color: "rgba(15,23,42,0.94)",
-              lineHeight: 1.1,
+              color: "rgba(15,23,42,0.96)",
+              lineHeight: 1.05,
               minWidth: 0,
             }}
           >
@@ -3235,15 +3250,27 @@ function MiniCalendarioControllo({
           >
             <span
               style={{
+                position: "relative",
                 display: "block",
-                width: isTouchDevice ? 12 : 14,
-                height: isTouchDevice ? 12 : 14,
-                borderTop: "2.4px solid currentColor",
-                borderRight: "2.4px solid currentColor",
-                transform: "rotate(45deg) translate(-1px, 1px)",
-                boxSizing: "border-box",
+                width: isTouchDevice ? 16 : 18,
+                height: isTouchDevice ? 16 : 18,
               }}
-            />
+            >
+              <span
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  margin: "auto",
+                  width: isTouchDevice ? 9 : 10,
+                  height: isTouchDevice ? 9 : 10,
+                  borderTop: "2.6px solid currentColor",
+                  borderRight: "2.6px solid currentColor",
+                  transform: "rotate(45deg)",
+                  borderRadius: 1,
+                  boxSizing: "border-box",
+                }}
+              />
+            </span>
           </button>
         </div>
 
