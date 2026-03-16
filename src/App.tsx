@@ -783,7 +783,6 @@ function DraggableFab({
 
 
 
-
 export default function App() {
   const [users, setUsers] = useState<User[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -815,13 +814,14 @@ export default function App() {
   const [filtro, setFiltro] = useState<Filtro | null>(null);
   const [meseCorrente, setMeseCorrente] = useState(new Date());
 
-    const [ferieTotaliGiorniBase, setFerieTotaliGiorniBase] = useState(26);
+  const [ferieTotaliGiorniBase, setFerieTotaliGiorniBase] = useState(26);
   const [ferieTotaliOreBase, setFerieTotaliOreBase] = useState(208);
 
   const [nuovaEntrataData, setNuovaEntrataData] = useState(new Date().toISOString().slice(0, 10));
   const [nuovaEntrataDesc, setNuovaEntrataDesc] = useState("");
   const [nuovaEntrataImporto, setNuovaEntrataImporto] = useState("");
- const [nuovaUscitaData, setNuovaUscitaData] = useState(new Date().toISOString().slice(0, 10));
+
+  const [nuovaUscitaData, setNuovaUscitaData] = useState(new Date().toISOString().slice(0, 10));
   const [nuovaUscitaDesc, setNuovaUscitaDesc] = useState("");
   const [nuovaUscitaImporto, setNuovaUscitaImporto] = useState("");
   const [nuovaUscitaNota, setNuovaUscitaNota] = useState("");
@@ -841,6 +841,7 @@ export default function App() {
   const [controlloDettaglioData, setControlloDettaglioData] = useState<string | null>(null);
 
   const meseKey = useMemo(() => yyyymmFromDate(meseCorrente), [meseCorrente]);
+
   const [hoverClose, setHoverClose] = useState(false);
   const [hoverCloseTurno, setHoverCloseTurno] = useState(false);
 
@@ -895,9 +896,7 @@ export default function App() {
           new Notification(`${tipoLabel}: ${v.titolo}`, {
             body: `Tra ${formatOreItalianeFromMin(min)} ore • ${formattaDataBreve(v.data)} ${v.ora}`,
           });
-        } catch {
-          //
-        }
+        } catch {}
       }, diff);
 
       ids.push(id);
@@ -939,19 +938,11 @@ export default function App() {
             });
 
             sessionStorage.setItem(firedKey, "1");
-          } catch {
-            //
-          }
+          } catch {}
         }
       });
     });
   }
-
-
-
-
-
-
 
   useEffect(() => {
     const timer = setInterval(() => setAdesso(new Date()), 30000);
@@ -1025,6 +1016,29 @@ export default function App() {
   }, [voci, currentUserId]);
 
   useEffect(() => {
+    if (!currentUserId) return;
+
+    checkDueNotifications();
+
+    const interval = window.setInterval(() => {
+      checkDueNotifications();
+    }, 30000);
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        checkDueNotifications();
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [voci, currentUserId]);
+
+  useEffect(() => {
     setVoci((prev) => {
       let changed = false;
 
@@ -1052,31 +1066,6 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, [mostraForm, mostraTurnoForm]);
 
-
-
-    useEffect(() => {
-    if (!currentUserId) return;
-
-    checkDueNotifications();
-
-    const interval = window.setInterval(() => {
-      checkDueNotifications();
-    }, 30000);
-
-    const onVisible = () => {
-      if (document.visibilityState === "visible") {
-        checkDueNotifications();
-      }
-    };
-
-    document.addEventListener("visibilitychange", onVisible);
-
-    return () => {
-      window.clearInterval(interval);
-      document.removeEventListener("visibilitychange", onVisible);
-    };
-  }, [voci, currentUserId]);
-
   const ui = useMemo(() => {
     const glass = {
       border: "1px solid rgba(255,255,255,0.55)",
@@ -1096,13 +1085,6 @@ export default function App() {
 
     return { glass, card };
   }, []);
-
-
-
-
-
-
-
 
 
 
