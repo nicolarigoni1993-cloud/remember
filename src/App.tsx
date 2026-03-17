@@ -1747,7 +1747,6 @@ export default function App() {
 
 
 
-
   const eventiControlloMese = useMemo(() => {
     const eventiVoci = voci
       .filter((v) => stessoMeseSelezionato(v.data))
@@ -1823,6 +1822,15 @@ export default function App() {
         return false;
       }
 
+      return true;
+    });
+  }, [eventiControlloMese]);
+
+  const eventiControlloMeseVisibili = useMemo(() => {
+    return eventiControlloMese.filter((ev) => {
+      if (ev.tipo === "scadenza" || ev.tipo === "appuntamento") {
+        return giorniMancanti(ev.data) >= 0;
+      }
       return true;
     });
   }, [eventiControlloMese]);
@@ -5229,7 +5237,7 @@ function MiniCalendarioControllo({
             </div>
 
             <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
-              {eventiControlloMese.length === 0 ? (
+                 {eventiControlloMeseVisibili.length === 0 ? (
                 <div
                   style={{
                     padding: 12,
@@ -5244,10 +5252,11 @@ function MiniCalendarioControllo({
                   Nessun movimento o evento nel mese selezionato.
                 </div>
               ) : (
-                eventiControlloMese.map((ev) => {
+                eventiControlloMeseVisibili.map((ev) => {
                   const isEntrata = ev.movimento === "entrata";
                   const isVoce = ev.sorgente === "voce";
                   const isNota = ev.tipo === "nota";
+                  const isEvento = ev.tipo === "scadenza" || ev.tipo === "appuntamento" || ev.tipo === "nota";
 
                   return (
                     <div
@@ -5257,14 +5266,13 @@ function MiniCalendarioControllo({
                         borderRadius: 18,
                         border: "1px solid rgba(15,23,42,0.08)",
                         background: "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.88))",
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
+                        display: "grid",
+                        gridTemplateColumns: "minmax(0, 1fr) auto",
                         gap: 12,
-                        flexWrap: "wrap",
+                        alignItems: "start",
                       }}
                     >
-                      <div style={{ display: "grid", gap: 5 }}>
+                      <div style={{ display: "grid", gap: 6, minWidth: 0 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                           {isVoce ? (
                             badgeTipo(ev.tipo as Voce["tipo"])
@@ -5277,21 +5285,29 @@ function MiniCalendarioControllo({
                           {ev.urgente && badgeUrgente()}
                         </div>
 
-                        <div style={{ fontSize: 15, fontWeight: 950 }}>{ev.titolo}</div>
+                        <div style={{ fontSize: 15, fontWeight: 950, lineHeight: 1.25 }}>{ev.titolo}</div>
 
                         <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72 }}>
                           {formattaDataBreve(ev.data)} • {ev.ora}
                         </div>
 
                         {ev.nota && (
-                          <div style={{ fontSize: 12, fontWeight: 800, opacity: 0.68 }}>
+                          <div style={{ fontSize: 12, fontWeight: 800, opacity: 0.68, lineHeight: 1.35 }}>
                             {ev.nota}
                           </div>
                         )}
                       </div>
 
-                      <div style={{ display: "grid", gap: 8, justifyItems: "end" }}>
-                        {ev.importo !== null && (
+                      <div
+                        style={{
+                          display: "grid",
+                          gap: 8,
+                          justifyItems: "end",
+                          alignContent: "start",
+                          minWidth: 96,
+                        }}
+                      >
+                        {ev.importo !== null ? (
                           <div
                             style={{
                               padding: "7px 11px",
@@ -5303,16 +5319,21 @@ function MiniCalendarioControllo({
                               fontSize: 12,
                               fontWeight: 950,
                               color: isEntrata ? "rgba(5,150,105,0.96)" : "rgba(185,28,28,0.96)",
+                              whiteSpace: "nowrap",
                             }}
                           >
                             {ev.importo.toLocaleString("it-IT")} €
                           </div>
-                        )}
-
-                        {(ev.tipo === "scadenza" || ev.tipo === "appuntamento") && !isNota ? (
-                          <span style={styleBadgeScadenza(giorniMancanti(ev.data), ev.urgente)}>
-                            {ev.urgente ? "URGENTE" : labelGiorni(giorniMancanti(ev.data))}
-                          </span>
+                        ) : isEvento ? (
+                          <div style={{ minHeight: 34, display: "grid", alignItems: "center" }}>
+                            {(ev.tipo === "scadenza" || ev.tipo === "appuntamento") && !isNota ? (
+                              <span style={styleBadgeScadenza(giorniMancanti(ev.data), ev.urgente)}>
+                                {ev.urgente ? "URGENTE" : labelGiorni(giorniMancanti(ev.data))}
+                              </span>
+                            ) : (
+                              <div style={{ height: 34 }} />
+                            )}
+                          </div>
                         ) : null}
 
                         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
