@@ -4823,347 +4823,364 @@ function MiniCalendarioControllo({
           }}
           className="remember-grid-2"
         >
-          <div style={{ ...ui.card, padding: 18 }}>
-            <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Entrate del mese</div>
-            <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
-              Aggiungi manualmente ogni entrata con data, descrizione e importo
-            </div>
 
-            <div
-              style={{
-                marginTop: 16,
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                gap: 10,
-                alignItems: "end",
-              }}
-            >
-              <div>
-                <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Data</div>
-                <input
-                  type="date"
-                  value={nuovaEntrataData}
-                  onChange={(e) => setNuovaEntrataData(e.target.value)}
-                  style={inputLight(false)}
-                />
+
+
+
+
+
+
+
+<div style={{ ...ui.card, padding: 18, overflow: "hidden" }}>
+  <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Entrate del mese</div>
+  <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
+    Aggiungi manualmente ogni entrata con data, descrizione e importo
+  </div>
+
+  <div
+    style={{
+      marginTop: 16,
+      display: "grid",
+      gridTemplateColumns: "1fr",
+      gap: 10,
+      alignItems: "end",
+      maxWidth: "100%",
+      overflow: "hidden",
+    }}
+  >
+    <div>
+      <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Data</div>
+      <input
+        type="date"
+        value={nuovaEntrataData}
+        onChange={(e) => setNuovaEntrataData(e.target.value)}
+        style={inputLight(false)}
+      />
+    </div>
+
+    <div>
+      <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Descrizione</div>
+      <input
+        type="text"
+        value={nuovaEntrataDesc}
+        onChange={(e) => setNuovaEntrataDesc(e.target.value)}
+        placeholder="Es: Rimborso, straordinario, regalo..."
+        style={inputLight(false)}
+      />
+    </div>
+
+    <div>
+      <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Importo</div>
+      <input
+        type="text"
+        inputMode="decimal"
+        value={nuovaEntrataImporto}
+        onChange={(e) => setNuovaEntrataImporto(e.target.value)}
+        placeholder="Es: 150"
+        style={inputLight(false)}
+      />
+    </div>
+
+    <button
+      data-chip="1"
+      onClick={aggiungiEntrataExtra}
+      style={{
+        ...chip(true),
+        height: 48,
+        width: "100%",
+        background: "linear-gradient(180deg, rgba(16,185,129,0.24), rgba(5,150,105,0.14))",
+        border: "1px solid rgba(16,185,129,0.34)",
+        color: "rgba(6,95,70,0.98)",
+        boxShadow: "0 16px 30px rgba(16,185,129,0.16)",
+      }}
+    >
+      Aggiungi entrata
+    </button>
+  </div>
+
+  <div
+    style={{
+      marginTop: 16,
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+      gap: 10,
+    }}
+  >
+    <div
+      style={{
+        padding: 14,
+        borderRadius: 18,
+        border: "1px solid rgba(16,185,129,0.12)",
+        background: "linear-gradient(180deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03))",
+      }}
+    >
+      <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Entrate mese</div>
+      <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+        {entrateControlloMese.length}
+      </div>
+    </div>
+
+    <div
+      style={{
+        padding: 14,
+        borderRadius: 18,
+        border: "1px solid rgba(124,58,237,0.12)",
+        background: "linear-gradient(180deg, rgba(124,58,237,0.08), rgba(124,58,237,0.03))",
+      }}
+    >
+      <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Totale entrate mese</div>
+      <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+        {totaleEntrateExtra.toLocaleString("it-IT")} €
+      </div>
+    </div>
+  </div>
+
+  <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
+    {entrateExtraVal.length === 0 ? (
+      <div
+        style={{
+          padding: 12,
+          borderRadius: 16,
+          border: "1px solid rgba(15,23,42,0.08)",
+          background: "rgba(255,255,255,0.72)",
+          fontSize: 13,
+          fontWeight: 800,
+          opacity: 0.65,
+        }}
+      >
+        Nessuna entrata inserita.
+      </div>
+    ) : (
+      entrateExtraVal
+        .slice()
+        .sort((a, b) => a.data.localeCompare(b.data))
+        .map((x) => (
+          <div
+            key={x.id}
+            style={{
+              padding: 14,
+              borderRadius: 18,
+              border: "1px solid rgba(16,185,129,0.16)",
+              background: "linear-gradient(180deg, rgba(16,185,129,0.08), rgba(16,185,129,0.04))",
+              display: "grid",
+              gridTemplateColumns: "minmax(0, 1fr) auto",
+              gap: 12,
+              alignItems: "start",
+            }}
+          >
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.65 }}>
+                {formattaDataBreve(x.data)}
               </div>
-
-              <div>
-                <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Descrizione</div>
-                <input
-                  type="text"
-                  value={nuovaEntrataDesc}
-                  onChange={(e) => setNuovaEntrataDesc(e.target.value)}
-                  placeholder="Es: Rimborso, straordinario, regalo..."
-                  style={inputLight(false)}
-                />
+              <div style={{ marginTop: 3, fontSize: 14, fontWeight: 950 }}>
+                {x.descrizione}
               </div>
-
-              <div>
-                <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Importo</div>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={nuovaEntrataImporto}
-                  onChange={(e) => setNuovaEntrataImporto(e.target.value)}
-                  placeholder="Es: 150"
-                  style={inputLight(false)}
-                />
-              </div>
-
-              <button
-                data-chip="1"
-                onClick={aggiungiEntrataExtra}
-                style={{
-                  ...chip(true),
-                  height: 48,
-                  background: "linear-gradient(180deg, rgba(16,185,129,0.24), rgba(5,150,105,0.14))",
-                  border: "1px solid rgba(16,185,129,0.34)",
-                  color: "rgba(6,95,70,0.98)",
-                  boxShadow: "0 16px 30px rgba(16,185,129,0.16)",
-                }}
-              >
-                Aggiungi entrata
-              </button>
-            </div>
-
-            <div
-              style={{
-                marginTop: 16,
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                gap: 10,
-              }}
-            >
               <div
                 style={{
-                  padding: 14,
-                  borderRadius: 18,
-                  border: "1px solid rgba(16,185,129,0.12)",
-                  background: "linear-gradient(180deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03))",
+                  marginTop: 4,
+                  fontSize: 12,
+                  fontWeight: 900,
+                  color: "rgba(5,150,105,0.96)",
                 }}
               >
-                <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Entrate mese</div>
-                <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
-                  {entrateControlloMese.length}
-                </div>
-              </div>
-
-              <div
-                style={{
-                  padding: 14,
-                  borderRadius: 18,
-                  border: "1px solid rgba(124,58,237,0.12)",
-                  background: "linear-gradient(180deg, rgba(124,58,237,0.08), rgba(124,58,237,0.03))",
-                }}
-              >
-                <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Totale entrate mese</div>
-                <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
-                  {totaleEntrateExtra.toLocaleString("it-IT")} €
-                </div>
+                {x.importo.toLocaleString("it-IT")} €
               </div>
             </div>
 
-            <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
-              {entrateExtraVal.length === 0 ? (
-                <div
-                  style={{
-                    padding: 12,
-                    borderRadius: 16,
-                    border: "1px solid rgba(15,23,42,0.08)",
-                    background: "rgba(255,255,255,0.72)",
-                    fontSize: 13,
-                    fontWeight: 800,
-                    opacity: 0.65,
-                  }}
-                >
-                  Nessuna entrata inserita.
-                </div>
-              ) : (
-                entrateExtraVal
-                  .slice()
-                  .sort((a, b) => a.data.localeCompare(b.data))
-                  .map((x) => (
-                    <div
-                      key={x.id}
-                      style={{
-                        padding: 14,
-                        borderRadius: 18,
-                        border: "1px solid rgba(16,185,129,0.16)",
-                        background: "linear-gradient(180deg, rgba(16,185,129,0.08), rgba(16,185,129,0.04))",
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        gap: 12,
-                        flexWrap: "wrap",
-                      }}
-                    >
-                      <div>
-                        <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.65 }}>
-                          {formattaDataBreve(x.data)}
-                        </div>
-                        <div style={{ marginTop: 3, fontSize: 14, fontWeight: 950 }}>
-                          {x.descrizione}
-                        </div>
-                        <div
-                          style={{
-                            marginTop: 4,
-                            fontSize: 12,
-                            fontWeight: 900,
-                            color: "rgba(5,150,105,0.96)",
-                          }}
-                        >
-                          {x.importo.toLocaleString("it-IT")} €
-                        </div>
-                      </div>
+            <button data-chip="1" onClick={() => eliminaEntrataExtra(x.id)} style={chip(false)}>
+              Elimina
+            </button>
+          </div>
+        ))
+    )}
+  </div>
+</div>
 
-                      <button data-chip="1" onClick={() => eliminaEntrataExtra(x.id)} style={chip(false)}>
-                        Elimina
-                      </button>
-                    </div>
-                  ))
+<div style={{ ...ui.card, padding: 18, overflow: "hidden" }}>
+  <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Uscite extra del mese</div>
+  <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
+    Inserisci spese extra con data, descrizione, importo e nota
+  </div>
+
+  <div
+    style={{
+      marginTop: 16,
+      display: "grid",
+      gridTemplateColumns: "1fr",
+      gap: 10,
+      alignItems: "end",
+      maxWidth: "100%",
+      overflow: "hidden",
+    }}
+  >
+    <div>
+      <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Data</div>
+      <input
+        type="date"
+        value={nuovaUscitaData}
+        onChange={(e) => setNuovaUscitaData(e.target.value)}
+        style={inputLight(false)}
+      />
+    </div>
+
+    <div>
+      <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Descrizione</div>
+      <input
+        type="text"
+        value={nuovaUscitaDesc}
+        onChange={(e) => setNuovaUscitaDesc(e.target.value)}
+        placeholder="Es: Spesa extra, benzina, regalo..."
+        style={inputLight(false)}
+      />
+    </div>
+
+    <div>
+      <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Importo</div>
+      <input
+        type="text"
+        inputMode="decimal"
+        value={nuovaUscitaImporto}
+        onChange={(e) => setNuovaUscitaImporto(e.target.value)}
+        placeholder="Es: 35"
+        style={inputLight(false)}
+      />
+    </div>
+
+    <div>
+      <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Nota</div>
+      <input
+        type="text"
+        value={nuovaUscitaNota}
+        onChange={(e) => setNuovaUscitaNota(e.target.value)}
+        placeholder="Facoltativa"
+        style={inputLight(false)}
+      />
+    </div>
+
+    <button
+      data-chip="1"
+      onClick={aggiungiUscitaExtra}
+      style={{
+        ...chip(true),
+        height: 48,
+        width: "100%",
+        background: "linear-gradient(180deg, rgba(239,68,68,0.22), rgba(220,38,38,0.12))",
+        border: "1px solid rgba(239,68,68,0.30)",
+        color: "rgba(127,29,29,0.98)",
+        boxShadow: "0 16px 30px rgba(239,68,68,0.14)",
+      }}
+    >
+      Aggiungi uscita
+    </button>
+  </div>
+
+  <div
+    style={{
+      marginTop: 16,
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+      gap: 10,
+    }}
+  >
+    <div
+      style={{
+        padding: 14,
+        borderRadius: 18,
+        border: "1px solid rgba(239,68,68,0.12)",
+        background: "linear-gradient(180deg, rgba(239,68,68,0.08), rgba(239,68,68,0.03))",
+      }}
+    >
+      <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Uscite extra mese</div>
+      <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+        {usciteExtraVal.length}
+      </div>
+    </div>
+
+    <div
+      style={{
+        padding: 14,
+        borderRadius: 18,
+        border: "1px solid rgba(249,115,22,0.12)",
+        background: "linear-gradient(180deg, rgba(249,115,22,0.08), rgba(249,115,22,0.03))",
+      }}
+    >
+      <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Totale uscite extra</div>
+      <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+        {usciteExtraVal.reduce((s, x) => s + x.importo, 0).toLocaleString("it-IT")} €
+      </div>
+    </div>
+  </div>
+
+  <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
+    {usciteExtraVal.length === 0 ? (
+      <div
+        style={{
+          padding: 12,
+          borderRadius: 16,
+          border: "1px solid rgba(15,23,42,0.08)",
+          background: "rgba(255,255,255,0.72)",
+          fontSize: 13,
+          fontWeight: 800,
+          opacity: 0.65,
+        }}
+      >
+        Nessuna uscita extra inserita.
+      </div>
+    ) : (
+      usciteExtraVal
+        .slice()
+        .sort((a, b) => a.data.localeCompare(b.data))
+        .map((x) => (
+          <div
+            key={x.id}
+            style={{
+              padding: 14,
+              borderRadius: 18,
+              border: "1px solid rgba(239,68,68,0.16)",
+              background: "linear-gradient(180deg, rgba(239,68,68,0.08), rgba(239,68,68,0.04))",
+              display: "grid",
+              gridTemplateColumns: "minmax(0, 1fr) auto",
+              gap: 12,
+              alignItems: "start",
+            }}
+          >
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.65 }}>
+                {formattaDataBreve(x.data)}
+              </div>
+              <div style={{ marginTop: 3, fontSize: 14, fontWeight: 950 }}>
+                {x.descrizione}
+              </div>
+              <div
+                style={{
+                  marginTop: 4,
+                  fontSize: 12,
+                  fontWeight: 900,
+                  color: "rgba(185,28,28,0.96)",
+                }}
+              >
+                {x.importo.toLocaleString("it-IT")} €
+              </div>
+              {x.nota && (
+                <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, opacity: 0.72 }}>
+                  {x.nota}
+                </div>
               )}
             </div>
+
+            <button data-chip="1" onClick={() => eliminaUscitaExtra(x.id)} style={chip(false)}>
+              Elimina
+            </button>
           </div>
+        ))
+    )}
+  </div>
+</div>
 
-          <div style={{ ...ui.card, padding: 18 }}>
-            <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Uscite extra del mese</div>
-            <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
-              Inserisci spese extra con data, descrizione, importo e nota
-            </div>
 
-            <div
-              style={{
-                marginTop: 16,
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                gap: 10,
-                alignItems: "end",
-              }}
-            >
-              <div>
-                <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Data</div>
-                <input
-                  type="date"
-                  value={nuovaUscitaData}
-                  onChange={(e) => setNuovaUscitaData(e.target.value)}
-                  style={inputLight(false)}
-                />
-              </div>
 
-              <div>
-                <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Descrizione</div>
-                <input
-                  type="text"
-                  value={nuovaUscitaDesc}
-                  onChange={(e) => setNuovaUscitaDesc(e.target.value)}
-                  placeholder="Es: Spesa extra, benzina, regalo..."
-                  style={inputLight(false)}
-                />
-              </div>
 
-              <div>
-                <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Importo</div>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={nuovaUscitaImporto}
-                  onChange={(e) => setNuovaUscitaImporto(e.target.value)}
-                  placeholder="Es: 35"
-                  style={inputLight(false)}
-                />
-              </div>
 
-              <div>
-                <div style={{ fontSize: 12, opacity: 0.72, marginBottom: 8, fontWeight: 850 }}>Nota</div>
-                <input
-                  type="text"
-                  value={nuovaUscitaNota}
-                  onChange={(e) => setNuovaUscitaNota(e.target.value)}
-                  placeholder="Facoltativa"
-                  style={inputLight(false)}
-                />
-              </div>
-
-              <button
-                data-chip="1"
-                onClick={aggiungiUscitaExtra}
-                style={{
-                  ...chip(true),
-                  height: 48,
-                  background: "linear-gradient(180deg, rgba(239,68,68,0.22), rgba(220,38,38,0.12))",
-                  border: "1px solid rgba(239,68,68,0.30)",
-                  color: "rgba(127,29,29,0.98)",
-                  boxShadow: "0 16px 30px rgba(239,68,68,0.14)",
-                }}
-              >
-                Aggiungi uscita
-              </button>
-            </div>
-
-            <div
-              style={{
-                marginTop: 16,
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                gap: 10,
-              }}
-            >
-              <div
-                style={{
-                  padding: 14,
-                  borderRadius: 18,
-                  border: "1px solid rgba(239,68,68,0.12)",
-                  background: "linear-gradient(180deg, rgba(239,68,68,0.08), rgba(239,68,68,0.03))",
-                }}
-              >
-                <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Uscite extra mese</div>
-                <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
-                  {usciteExtraVal.length}
-                </div>
-              </div>
-
-              <div
-                style={{
-                  padding: 14,
-                  borderRadius: 18,
-                  border: "1px solid rgba(249,115,22,0.12)",
-                  background: "linear-gradient(180deg, rgba(249,115,22,0.08), rgba(249,115,22,0.03))",
-                }}
-              >
-                <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Totale uscite extra</div>
-                <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
-                  {usciteExtraVal.reduce((s, x) => s + x.importo, 0).toLocaleString("it-IT")} €
-                </div>
-              </div>
-            </div>
-
-            <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
-              {usciteExtraVal.length === 0 ? (
-                <div
-                  style={{
-                    padding: 12,
-                    borderRadius: 16,
-                    border: "1px solid rgba(15,23,42,0.08)",
-                    background: "rgba(255,255,255,0.72)",
-                    fontSize: 13,
-                    fontWeight: 800,
-                    opacity: 0.65,
-                  }}
-                >
-                  Nessuna uscita extra inserita.
-                </div>
-              ) : (
-                usciteExtraVal
-                  .slice()
-                  .sort((a, b) => a.data.localeCompare(b.data))
-                  .map((x) => (
-                    <div
-                      key={x.id}
-                      style={{
-                        padding: 14,
-                        borderRadius: 18,
-                        border: "1px solid rgba(239,68,68,0.16)",
-                        background: "linear-gradient(180deg, rgba(239,68,68,0.08), rgba(239,68,68,0.04))",
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        gap: 12,
-                        flexWrap: "wrap",
-                      }}
-                    >
-                      <div>
-                        <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.65 }}>
-                          {formattaDataBreve(x.data)}
-                        </div>
-                        <div style={{ marginTop: 3, fontSize: 14, fontWeight: 950 }}>
-                          {x.descrizione}
-                        </div>
-                        <div
-                          style={{
-                            marginTop: 4,
-                            fontSize: 12,
-                            fontWeight: 900,
-                            color: "rgba(185,28,28,0.96)",
-                          }}
-                        >
-                          {x.importo.toLocaleString("it-IT")} €
-                        </div>
-                        {x.nota && (
-                          <div style={{ marginTop: 4, fontSize: 12, fontWeight: 800, opacity: 0.72 }}>
-                            {x.nota}
-                          </div>
-                        )}
-                      </div>
-
-                      <button data-chip="1" onClick={() => eliminaUscitaExtra(x.id)} style={chip(false)}>
-                        Elimina
-                      </button>
-                    </div>
-                  ))
-              )}
-            </div>
-          </div>
 
           <div style={{ ...ui.card, padding: 18 }}>
             <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Movimenti ed eventi del mese</div>
@@ -6520,442 +6537,472 @@ function MiniCalendarioControllo({
 
 
 
-            {pagina === "archivio" && (
-          <>
-            <div style={{ maxWidth: 1060, margin: "0 auto", marginTop: 14, display: "grid", gap: 14 }}>
-              <div
-                style={{
-                  ...ui.card,
-                  padding: 18,
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                  gap: 12,
-                }}
-              >
-                <div
-                  style={{
-                    padding: 14,
-                    borderRadius: 18,
-                    border: "1px solid rgba(16,185,129,0.12)",
-                    background: "linear-gradient(180deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03))",
-                  }}
-                >
-                  <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Entrate mese</div>
-                  <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
-                    {entrateArchivioMese.toLocaleString("it-IT")} €
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    padding: 14,
-                    borderRadius: 18,
-                    border: "1px solid rgba(239,68,68,0.12)",
-                    background: "linear-gradient(180deg, rgba(239,68,68,0.08), rgba(239,68,68,0.03))",
-                  }}
-                >
-                  <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Uscite mese</div>
-                  <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
-                    {usciteArchivioMese.toLocaleString("it-IT")} €
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    padding: 14,
-                    borderRadius: 18,
-                    border: "1px solid rgba(59,130,246,0.12)",
-                    background: "linear-gradient(180deg, rgba(59,130,246,0.08), rgba(59,130,246,0.03))",
-                  }}
-                >
-                  <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Saldo mese</div>
-                  <div
-                    style={{
-                      marginTop: 6,
-                      fontSize: 20,
-                      fontWeight: 1000,
-                      color: saldoArchivioMese >= 0 ? "rgba(30,64,175,0.96)" : "rgba(185,28,28,0.96)",
-                    }}
-                  >
-                    {saldoArchivioMese.toLocaleString("it-IT")} €
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    padding: 14,
-                    borderRadius: 18,
-                    border: "1px solid rgba(124,58,237,0.12)",
-                    background: "linear-gradient(180deg, rgba(124,58,237,0.08), rgba(124,58,237,0.03))",
-                  }}
-                >
-                  <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Ore mese</div>
-                  <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
-                    {formatNumeroOre(oreArchivioMese)} h
-                  </div>
-                </div>
-              </div>
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-                  gap: 14,
-                }}
-                className="remember-grid-2"
-              >
-                <div style={{ ...ui.card, padding: 18 }}>
-                  <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Riepilogo anno</div>
-                  <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
-                    Totali annuali dell’anno selezionato
-                  </div>
-
-                  <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
-                    <div
-                      style={{
-                        padding: 14,
-                        borderRadius: 18,
-                        border: "1px solid rgba(16,185,129,0.12)",
-                        background: "linear-gradient(180deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03))",
-                      }}
-                    >
-                      <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Entrate anno</div>
-                      <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
-                        {entrateArchivioAnno.toLocaleString("it-IT")} €
-                      </div>
-                    </div>
-
-                    <div
-                      style={{
-                        padding: 14,
-                        borderRadius: 18,
-                        border: "1px solid rgba(239,68,68,0.12)",
-                        background: "linear-gradient(180deg, rgba(239,68,68,0.08), rgba(239,68,68,0.03))",
-                      }}
-                    >
-                      <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Uscite anno</div>
-                      <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
-                        {usciteArchivioAnno.toLocaleString("it-IT")} €
-                      </div>
-                    </div>
-
-                    <div
-                      style={{
-                        padding: 14,
-                        borderRadius: 18,
-                        border: "1px solid rgba(59,130,246,0.12)",
-                        background: "linear-gradient(180deg, rgba(59,130,246,0.08), rgba(59,130,246,0.03))",
-                      }}
-                    >
-                      <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Saldo anno</div>
-                      <div
-                        style={{
-                          marginTop: 6,
-                          fontSize: 20,
-                          fontWeight: 1000,
-                          color: saldoArchivioAnno >= 0 ? "rgba(30,64,175,0.96)" : "rgba(185,28,28,0.96)",
-                        }}
-                      >
-                        {saldoArchivioAnno.toLocaleString("it-IT")} €
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ ...ui.card, padding: 18 }}>
-                  <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Statistiche turni mese</div>
-                  <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
-                    Distribuzione sigle turni del mese selezionato
-                  </div>
-
-                  <div
-                    style={{
-                      marginTop: 16,
-                      display: "grid",
-                      gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-                      gap: 10,
-                    }}
-                  >
-                    {(["N", "M", "P", "S", "R", "T"] as const).map((sigla) => (
-                      <div
-                        key={sigla}
-                        style={{
-                          padding: 14,
-                          borderRadius: 18,
-                          border: "1px solid rgba(15,23,42,0.08)",
-                          background: "rgba(255,255,255,0.76)",
-                          textAlign: "center",
-                        }}
-                      >
-                        <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>{sigla}</div>
-                        <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
-                          {turniStatsArchivioMese[sigla]}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ ...ui.card, padding: 18 }}>
-                <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Storico del mese</div>
-                <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
-                  Eventi, entrate, uscite e voci registrate nel mese selezionato
-                </div>
-
-                <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
-                  {eventiArchivioMese.length === 0 ? (
-                    <div
-                      style={{
-                        padding: 12,
-                        borderRadius: 16,
-                        border: "1px solid rgba(15,23,42,0.08)",
-                        background: "rgba(255,255,255,0.72)",
-                        fontSize: 13,
-                        fontWeight: 800,
-                        opacity: 0.65,
-                      }}
-                    >
-                      Nessun elemento registrato nel mese selezionato.
-                    </div>
-                  ) : (
-                    eventiArchivioMese.map((ev) => {
-                      const isEntrata = ev.movimento === "entrata";
-                      const isVoce = ev.origine === "voce";
-                      const isNotaLibera = ev.tipo === "nota" && ev.nota.startsWith("[NOTA_LIBERA_MESE]");
-
-                      return (
-                        <div
-                          key={`${ev.origine}_${ev.id}`}
-                          style={{
-                            padding: 14,
-                            borderRadius: 18,
-                            border: "1px solid rgba(15,23,42,0.08)",
-                            background: "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.88))",
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            gap: 12,
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          <div style={{ display: "grid", gap: 5 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                              {isVoce ? (
-                                badgeTipo(ev.tipo as Voce["tipo"])
-                              ) : isEntrata ? (
-                                badgeMov("entrata")
-                              ) : (
-                                badgeMov("uscita")
-                              )}
-
-                              {ev.urgente && badgeUrgente()}
-                            </div>
-
-                            <div style={{ fontSize: 15, fontWeight: 950 }}>{ev.titolo}</div>
-
-                            <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72 }}>
-                              {isNotaLibera ? "Nota libera del mese" : `${formattaDataBreve(ev.data)} • ${ev.ora}`}
-                            </div>
-
-                            {ev.nota && (
-                              <div style={{ fontSize: 12, fontWeight: 800, opacity: 0.68 }}>
-                                {ev.nota.replace(/^\[NOTA_LIBERA_MESE\]\s*/i, "")}
-                              </div>
-                            )}
-                          </div>
-
-                          <div style={{ display: "grid", gap: 8, justifyItems: "end" }}>
-                            {ev.importo !== null && (
-                              <div
-                                style={{
-                                  padding: "7px 11px",
-                                  borderRadius: 999,
-                                  border: isEntrata
-                                    ? "2px solid rgba(16,185,129,0.28)"
-                                    : "2px solid rgba(239,68,68,0.28)",
-                                  background: isEntrata ? "rgba(236,253,245,0.96)" : "rgba(254,242,242,0.96)",
-                                  fontSize: 12,
-                                  fontWeight: 950,
-                                  color: isEntrata ? "rgba(5,150,105,0.96)" : "rgba(185,28,28,0.96)",
-                                }}
-                              >
-                                {ev.importo.toLocaleString("it-IT")} €
-                              </div>
-                            )}
-
-                            {ev.tipo === "scadenza" || ev.tipo === "appuntamento" ? (
-                              <span style={styleBadgeScadenza(giorniMancanti(ev.data), ev.urgente)}>
-                                {ev.urgente ? "URGENTE" : labelGiorni(giorniMancanti(ev.data))}
-                              </span>
-                            ) : null}
-
-                            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
-                              {isVoce && (
-                                <button
-                                  data-chip="1"
-                                  onClick={() => {
-                                    const voceOriginale = voci.find((x) => x.id === ev.id);
-                                    if (!voceOriginale) return;
-                                    apriModifica(voceOriginale);
-                                  }}
-                                  style={chip(false)}
-                                >
-                                  Modifica
-                                </button>
-                              )}
-
-                              <button
-                                data-chip="1"
-                                onClick={() => {
-                                  if (ev.origine === "voce") elimina(ev.id);
-                                  else if (ev.origine === "entrata") eliminaEntrataExtra(ev.id);
-                                  else if (ev.origine === "uscita-extra") eliminaUscitaExtra(ev.id);
-                                }}
-                                style={{
-                                  ...chip(false),
-                                  border: "1px solid rgba(239,68,68,0.22)",
-                                  color: "rgba(185,28,28,0.96)",
-                                  background: "rgba(254,242,242,0.92)",
-                                }}
-                              >
-                                Elimina
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              </div>
-
-              <div style={{ ...ui.card, padding: 18 }}>
-                <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Turni del mese</div>
-                <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
-                  Elenco turni registrati nel mese selezionato
-                </div>
-
-                <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
-                  {turniArchivioMese.length === 0 ? (
-                    <div
-                      style={{
-                        padding: 12,
-                        borderRadius: 16,
-                        border: "1px solid rgba(15,23,42,0.08)",
-                        background: "rgba(255,255,255,0.72)",
-                        fontSize: 13,
-                        fontWeight: 800,
-                        opacity: 0.65,
-                      }}
-                    >
-                      Nessun turno registrato nel mese selezionato.
-                    </div>
-                  ) : (
-                    turniArchivioMese
-                      .slice()
-                      .sort((a, b) => a.data.localeCompare(b.data) || a.inizio.localeCompare(b.inizio))
-                      .map((t) => {
-                        const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
-                        const descr = descrizioneTurnoBreve(t.inizio, t.fine, t.note);
-                        const isRiposo = sigla === "R";
-
-                        return (
-                          <div
-                            key={t.id}
-                            style={{
-                              padding: 14,
-                              borderRadius: 18,
-                              border: "1px solid rgba(15,23,42,0.08)",
-                              background: "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.88))",
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              gap: 12,
-                              flexWrap: "wrap",
-                            }}
-                          >
-                            <div style={{ display: "grid", gap: 5 }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                                <span
-                                  style={{
-                                    padding: "6px 10px",
-                                    borderRadius: 999,
-                                    fontSize: 12,
-                                    fontWeight: 950,
-                                    color: "rgba(255,255,255,0.98)",
-                                    background:
-                                      sigla === "R"
-                                        ? "linear-gradient(180deg, rgba(107,114,128,0.96), rgba(75,85,99,0.92))"
-                                        : sigla === "N"
-                                        ? "linear-gradient(180deg, rgba(67,56,202,0.96), rgba(49,46,129,0.92))"
-                                        : sigla === "M"
-                                        ? "linear-gradient(180deg, rgba(245,158,11,0.96), rgba(217,119,6,0.92))"
-                                        : sigla === "P"
-                                        ? "linear-gradient(180deg, rgba(249,115,22,0.96), rgba(234,88,12,0.92))"
-                                        : sigla === "S"
-                                        ? "linear-gradient(180deg, rgba(168,85,247,0.96), rgba(126,34,206,0.92))"
-                                        : "linear-gradient(180deg, rgba(59,130,246,0.96), rgba(37,99,235,0.92))",
-                                  }}
-                                >
-                                  {sigla}
-                                </span>
-
-                                <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72 }}>
-                                  {formattaDataBreve(t.data)}
-                                </div>
-                              </div>
-
-                              <div style={{ fontSize: 15, fontWeight: 950 }}>
-                                {descr}
-                                {!isRiposo ? ` • ${t.inizio} - ${t.fine}` : ""}
-                              </div>
-
-                              <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72 }}>
-                                {isRiposo
-                                  ? "Giornata di riposo"
-                                  : `Ord: ${formatNumeroOre(t.oreOrdinarie)}h • Straord: ${formatNumeroOre(
-                                      t.oreStraordinarie
-                                    )}h • Tot: ${formatNumeroOre(t.oreOrdinarie + t.oreStraordinarie)}h`}
-                              </div>
-                            </div>
-
-                            <button
-                              data-chip="1"
-                              onClick={() => eliminaTurno(t.id)}
-                              style={{
-                                ...chip(false),
-                                border: "1px solid rgba(239,68,68,0.22)",
-                                color: "rgba(185,28,28,0.96)",
-                                background: "rgba(254,242,242,0.92)",
-                              }}
-                            >
-                              Elimina
-                            </button>
-                          </div>
-                        );
-                      })
-                  )}
-                </div>
-              </div>
+       {pagina === "archivio" && (
+  <>
+    <div style={{ maxWidth: 1060, margin: "0 auto", marginTop: 14, display: "grid", gap: 14 }}>
+      <div
+        style={{
+          ...ui.card,
+          padding: 18,
+          display: "grid",
+          gap: 12,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 12,
+            flexWrap: "wrap",
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 18, fontWeight: 950, letterSpacing: -0.2 }}>Archivio Generale</div>
+            <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
+              Filtra mese e consulta storico eventi, soldi e turni
             </div>
-          </>
-        )}
+          </div>
+
+          <input
+            type="month"
+            value={`${meseCorrente.getFullYear()}-${String(meseCorrente.getMonth() + 1).padStart(2, "0")}`}
+            onChange={(e) => {
+              const [y, m] = e.target.value.split("-").map(Number);
+              if (!y || !m) return;
+              setMeseCorrente(new Date(y, m - 1, 1));
+            }}
+            style={{
+              ...inputLight(false),
+              width: "auto",
+              minWidth: 180,
+              maxWidth: "100%",
+              fontWeight: 900,
+            }}
+          />
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+            gap: 12,
+          }}
+        >
+          <div
+            style={{
+              padding: 14,
+              borderRadius: 18,
+              border: "1px solid rgba(16,185,129,0.12)",
+              background: "linear-gradient(180deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03))",
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Entrate mese</div>
+            <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+              {entrateArchivioMese.toLocaleString("it-IT")} €
+            </div>
+          </div>
+
+          <div
+            style={{
+              padding: 14,
+              borderRadius: 18,
+              border: "1px solid rgba(239,68,68,0.12)",
+              background: "linear-gradient(180deg, rgba(239,68,68,0.08), rgba(239,68,68,0.03))",
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Uscite mese</div>
+            <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+              {usciteArchivioMese.toLocaleString("it-IT")} €
+            </div>
+          </div>
+
+          <div
+            style={{
+              padding: 14,
+              borderRadius: 18,
+              border: "1px solid rgba(59,130,246,0.12)",
+              background: "linear-gradient(180deg, rgba(59,130,246,0.08), rgba(59,130,246,0.03))",
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Saldo mese</div>
+            <div
+              style={{
+                marginTop: 6,
+                fontSize: 20,
+                fontWeight: 1000,
+                color: saldoArchivioMese >= 0 ? "rgba(30,64,175,0.96)" : "rgba(185,28,28,0.96)",
+              }}
+            >
+              {saldoArchivioMese.toLocaleString("it-IT")} €
+            </div>
+          </div>
+
+          <div
+            style={{
+              padding: 14,
+              borderRadius: 18,
+              border: "1px solid rgba(124,58,237,0.12)",
+              background: "linear-gradient(180deg, rgba(124,58,237,0.08), rgba(124,58,237,0.03))",
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Ore mese</div>
+            <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+              {formatNumeroOre(oreArchivioMese)} h
+            </div>
+          </div>
+        </div>
       </div>
 
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+          gap: 14,
+        }}
+        className="remember-grid-2"
+      >
+        <div style={{ ...ui.card, padding: 18 }}>
+          <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Riepilogo anno</div>
+          <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
+            Totali annuali dell’anno selezionato
+          </div>
 
+          <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
+            <div
+              style={{
+                padding: 14,
+                borderRadius: 18,
+                border: "1px solid rgba(16,185,129,0.12)",
+                background: "linear-gradient(180deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03))",
+              }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Entrate anno</div>
+              <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+                {entrateArchivioAnno.toLocaleString("it-IT")} €
+              </div>
+            </div>
 
+            <div
+              style={{
+                padding: 14,
+                borderRadius: 18,
+                border: "1px solid rgba(239,68,68,0.12)",
+                background: "linear-gradient(180deg, rgba(239,68,68,0.08), rgba(239,68,68,0.03))",
+              }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Uscite anno</div>
+              <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+                {usciteArchivioAnno.toLocaleString("it-IT")} €
+              </div>
+            </div>
 
+            <div
+              style={{
+                padding: 14,
+                borderRadius: 18,
+                border: "1px solid rgba(59,130,246,0.12)",
+                background: "linear-gradient(180deg, rgba(59,130,246,0.08), rgba(59,130,246,0.03))",
+              }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Saldo anno</div>
+              <div
+                style={{
+                  marginTop: 6,
+                  fontSize: 20,
+                  fontWeight: 1000,
+                  color: saldoArchivioAnno >= 0 ? "rgba(30,64,175,0.96)" : "rgba(185,28,28,0.96)",
+                }}
+              >
+                {saldoArchivioAnno.toLocaleString("it-IT")} €
+              </div>
+            </div>
+          </div>
+        </div>
 
+        <div style={{ ...ui.card, padding: 18 }}>
+          <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Statistiche turni mese</div>
+          <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
+            Distribuzione sigle turni del mese selezionato
+          </div>
 
+          <div
+            style={{
+              marginTop: 16,
+              display: "grid",
+              gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+              gap: 10,
+            }}
+          >
+            {(["N", "M", "P", "S", "R", "T"] as const).map((sigla) => (
+              <div
+                key={sigla}
+                style={{
+                  padding: 14,
+                  borderRadius: 18,
+                  border: "1px solid rgba(15,23,42,0.08)",
+                  background: "rgba(255,255,255,0.76)",
+                  textAlign: "center",
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>{sigla}</div>
+                <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
+                  {turniStatsArchivioMese[sigla]}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
 
+      <div style={{ ...ui.card, padding: 18 }}>
+        <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Storico del mese</div>
+        <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
+          Eventi, entrate, uscite e voci registrate nel mese selezionato
+        </div>
 
+        <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
+          {eventiArchivioMese.length === 0 ? (
+            <div
+              style={{
+                padding: 12,
+                borderRadius: 16,
+                border: "1px solid rgba(15,23,42,0.08)",
+                background: "rgba(255,255,255,0.72)",
+                fontSize: 13,
+                fontWeight: 800,
+                opacity: 0.65,
+              }}
+            >
+              Nessun elemento registrato nel mese selezionato.
+            </div>
+          ) : (
+            eventiArchivioMese.map((ev) => {
+              const isEntrata = ev.movimento === "entrata";
+              const isVoce = ev.origine === "voce";
+              const isNotaLibera = ev.tipo === "nota" && ev.nota.startsWith("[NOTA_LIBERA_MESE]");
 
+              return (
+                <div
+                  key={`${ev.origine}_${ev.id}`}
+                  style={{
+                    padding: 14,
+                    borderRadius: 18,
+                    border: "1px solid rgba(15,23,42,0.08)",
+                    background: "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.88))",
+                    display: "grid",
+                    gridTemplateColumns: "minmax(0, 1fr) auto",
+                    gap: 12,
+                    alignItems: "start",
+                  }}
+                >
+                  <div style={{ display: "grid", gap: 6, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      {isVoce ? (
+                        badgeTipo(ev.tipo as Voce["tipo"])
+                      ) : isEntrata ? (
+                        badgeMov("entrata")
+                      ) : (
+                        badgeMov("uscita")
+                      )}
 
+                      {ev.urgente && badgeUrgente()}
+                    </div>
 
+                    <div style={{ fontSize: 15, fontWeight: 950 }}>{ev.titolo}</div>
 
+                    <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72 }}>
+                      {isNotaLibera ? "Nota libera del mese" : `${formattaDataBreve(ev.data)} • ${ev.ora}`}
+                    </div>
 
+                    {ev.nota && (
+                      <div style={{ fontSize: 12, fontWeight: 800, opacity: 0.68 }}>
+                        {ev.nota.replace(/^\[NOTA_LIBERA_MESE\]\s*/i, "")}
+                      </div>
+                    )}
+                  </div>
 
+                  <div style={{ display: "grid", gap: 8, justifyItems: "end", minWidth: 96 }}>
+                    {ev.importo !== null && (
+                      <div
+                        style={{
+                          padding: "7px 11px",
+                          borderRadius: 999,
+                          border: isEntrata
+                            ? "2px solid rgba(16,185,129,0.28)"
+                            : "2px solid rgba(239,68,68,0.28)",
+                          background: isEntrata ? "rgba(236,253,245,0.96)" : "rgba(254,242,242,0.96)",
+                          fontSize: 12,
+                          fontWeight: 950,
+                          color: isEntrata ? "rgba(5,150,105,0.96)" : "rgba(185,28,28,0.96)",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {ev.importo.toLocaleString("it-IT")} €
+                      </div>
+                    )}
+
+                    {(ev.tipo === "scadenza" || ev.tipo === "appuntamento") && (
+                      <span style={styleBadgeScadenza(giorniMancanti(ev.data), ev.urgente)}>
+                        {ev.urgente ? "URGENTE" : labelGiorni(giorniMancanti(ev.data))}
+                      </span>
+                    )}
+
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                      {isVoce && (
+                        <button
+                          data-chip="1"
+                          onClick={() => {
+                            const voceOriginale = voci.find((x) => x.id === ev.id);
+                            if (!voceOriginale) return;
+                            apriModifica(voceOriginale);
+                          }}
+                          style={chip(false)}
+                        >
+                          Modifica
+                        </button>
+                      )}
+
+                      <button
+                        data-chip="1"
+                        onClick={() => {
+                          if (ev.origine === "voce") elimina(ev.id);
+                          else if (ev.origine === "entrata") eliminaEntrataExtra(ev.id);
+                          else if (ev.origine === "uscita-extra") eliminaUscitaExtra(ev.id);
+                        }}
+                        style={{
+                          ...chip(false),
+                          border: "1px solid rgba(239,68,68,0.22)",
+                          color: "rgba(185,28,28,0.96)",
+                          background: "rgba(254,242,242,0.92)",
+                        }}
+                      >
+                        Elimina
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      <div style={{ ...ui.card, padding: 18 }}>
+        <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Turni del mese</div>
+        <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
+          Elenco turni registrati nel mese selezionato
+        </div>
+
+        <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
+          {turniArchivioMese.length === 0 ? (
+            <div
+              style={{
+                padding: 12,
+                borderRadius: 16,
+                border: "1px solid rgba(15,23,42,0.08)",
+                background: "rgba(255,255,255,0.72)",
+                fontSize: 13,
+                fontWeight: 800,
+                opacity: 0.65,
+              }}
+            >
+              Nessun turno registrato nel mese selezionato.
+            </div>
+          ) : (
+            turniArchivioMese
+              .slice()
+              .sort((a, b) => a.data.localeCompare(b.data) || a.inizio.localeCompare(b.inizio))
+              .map((t) => {
+                const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
+                const descr = descrizioneTurnoBreve(t.inizio, t.fine, t.note);
+                const isRiposo = sigla === "R";
+
+                return (
+                  <div
+                    key={t.id}
+                    style={{
+                      padding: 14,
+                      borderRadius: 18,
+                      border: "1px solid rgba(15,23,42,0.08)",
+                      background: "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.88))",
+                      display: "grid",
+                      gridTemplateColumns: "minmax(0, 1fr) auto",
+                      gap: 12,
+                      alignItems: "start",
+                    }}
+                  >
+                    <div style={{ display: "grid", gap: 6, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                        <span
+                          style={{
+                            padding: "6px 10px",
+                            borderRadius: 999,
+                            fontSize: 12,
+                            fontWeight: 950,
+                            color: "rgba(255,255,255,0.98)",
+                            background:
+                              sigla === "R"
+                                ? "linear-gradient(180deg, rgba(107,114,128,0.96), rgba(75,85,99,0.92))"
+                                : sigla === "N"
+                                ? "linear-gradient(180deg, rgba(67,56,202,0.96), rgba(49,46,129,0.92))"
+                                : sigla === "M"
+                                ? "linear-gradient(180deg, rgba(245,158,11,0.96), rgba(217,119,6,0.92))"
+                                : sigla === "P"
+                                ? "linear-gradient(180deg, rgba(249,115,22,0.96), rgba(234,88,12,0.92))"
+                                : sigla === "S"
+                                ? "linear-gradient(180deg, rgba(168,85,247,0.96), rgba(126,34,206,0.92))"
+                                : "linear-gradient(180deg, rgba(59,130,246,0.96), rgba(37,99,235,0.92))",
+                          }}
+                        >
+                          {sigla}
+                        </span>
+
+                        <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72 }}>
+                          {formattaDataBreve(t.data)}
+                        </div>
+                      </div>
+
+                      <div style={{ fontSize: 15, fontWeight: 950 }}>
+                        {descr}
+                        {!isRiposo ? ` • ${t.inizio} - ${t.fine}` : ""}
+                      </div>
+
+                      <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72 }}>
+                        {isRiposo
+                          ? "Giornata di riposo"
+                          : `Ord: ${formatNumeroOre(t.oreOrdinarie)}h • Straord: ${formatNumeroOre(
+                              t.oreStraordinarie
+                            )}h • Tot: ${formatNumeroOre(t.oreOrdinarie + t.oreStraordinarie)}h`}
+                      </div>
+                    </div>
+
+                    <button
+                      data-chip="1"
+                      onClick={() => eliminaTurno(t.id)}
+                      style={{
+                        ...chip(false),
+                        border: "1px solid rgba(239,68,68,0.22)",
+                        color: "rgba(185,28,28,0.96)",
+                        background: "rgba(254,242,242,0.92)",
+                      }}
+                    >
+                      Elimina
+                    </button>
+                  </div>
+                );
+              })
+          )}
+        </div>
+      </div>
+    </div>
+  </>
+)}
+     
+     
+          
+     
+      </div>
             {!mostraForm && !mostraTurnoForm && <DraggableFab onClick={apriNuova} label="Aggiungi" />}
           {mostraForm && (
         <div
@@ -7032,7 +7079,7 @@ function MiniCalendarioControllo({
                   />
                 </div>
 
-                <div style={sx.row2}>
+                <div style={{ ...sx.row2, gridTemplateColumns: "1fr" }}>
                   <div>
                     <div style={sx.sectionLabel}>
                       {tipo === "nota" ? "Data (facoltativa)" : "Data"}
@@ -7210,289 +7257,307 @@ function MiniCalendarioControllo({
 
 
 
-      {mostraTurnoForm && (
-        <div
-          style={sx.overlay}
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget) chiudiTurnoForm();
-          }}
+     {mostraTurnoForm && (
+  <div
+    style={sx.overlay}
+    onMouseDown={(e) => {
+      if (e.target === e.currentTarget) chiudiTurnoForm();
+    }}
+  >
+    <div
+      style={{
+        ...sx.modal,
+        maxWidth: 760,
+        width: "min(760px, 100%)",
+        borderRadius: 28,
+        border: "1px solid rgba(255,255,255,0.58)",
+        background: "linear-gradient(180deg, rgba(255,255,255,0.97), rgba(248,250,252,0.94))",
+        boxShadow: "0 32px 90px rgba(15,23,42,0.20)",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          ...sx.header,
+          paddingBottom: 14,
+          borderBottom: "1px solid rgba(15,23,42,0.06)",
+        }}
+      >
+        <div>
+          <div style={{ fontSize: 20, fontWeight: 1000, letterSpacing: -0.3 }}>
+            {turnoIdInModifica ? "Modifica turno" : "Nuovo turno"}
+          </div>
+          <div style={{ fontSize: 12, opacity: 0.65, marginTop: 5, fontWeight: 800 }}>
+            {turnoIdInModifica
+              ? "Modifica turno, ore ordinarie e straordinarie"
+              : "Inserisci turno, ore ordinarie e straordinarie"}
+          </div>
+        </div>
+
+        <button
+          type="button"
+          data-chip="1"
+          onMouseEnter={() => setHoverCloseTurno(true)}
+          onMouseLeave={() => setHoverCloseTurno(false)}
+          onClick={chiudiTurnoForm}
+          style={{ ...sx.closeBtn, ...(hoverCloseTurno ? sx.closeBtnHover : {}) }}
+          title="Chiudi"
         >
+          ✕
+        </button>
+      </div>
+
+      <div style={{ ...sx.body, paddingTop: 18 }}>
+        <div style={{ ...sx.content, display: "grid", gap: 18 }}>
           <div
             style={{
-              ...sx.modal,
-              maxWidth: 760,
-              borderRadius: 28,
-              border: "1px solid rgba(255,255,255,0.58)",
-              background: "linear-gradient(180deg, rgba(255,255,255,0.97), rgba(248,250,252,0.94))",
-              boxShadow: "0 32px 90px rgba(15,23,42,0.20)",
-              overflow: "hidden",
+              display: "grid",
+              gridTemplateColumns: "1fr",
+              gap: 14,
+              alignItems: "end",
+            }}
+          >
+            <div>
+              <div style={sx.sectionLabel}>Data</div>
+              <input
+                type="date"
+                value={turnoData}
+                onChange={(e) => setTurnoData(e.target.value)}
+                style={inputLight(false)}
+              />
+            </div>
+
+            <div
+              style={{
+                padding: "12px 14px",
+                borderRadius: 18,
+                border: "1px solid rgba(79,70,229,0.10)",
+                background:
+                  "linear-gradient(180deg, rgba(79,70,229,0.06), rgba(124,58,237,0.03))",
+                fontSize: 12,
+                fontWeight: 850,
+                color: "rgba(67,56,202,0.92)",
+                lineHeight: 1.45,
+                boxSizing: "border-box",
+                maxWidth: "100%",
+                overflowWrap: "break-word",
+              }}
+            >
+              Scegli un preset rapido oppure imposta manualmente orari e ore.
+            </div>
+          </div>
+
+          <div
+            style={{
+              padding: 16,
+              borderRadius: 22,
+              border: "1px solid rgba(15,23,42,0.06)",
+              background: "rgba(255,255,255,0.72)",
+              boxShadow: "0 10px 24px rgba(15,23,42,0.05)",
+              display: "grid",
+              gap: 14,
+              boxSizing: "border-box",
+              minWidth: 0,
+            }}
+          >
+            <div>
+              <div style={sx.sectionLabel}>Turno predefinito</div>
+
+              <select
+                value={turnoPreset}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setTurnoPreset(val);
+
+                  if (!val) return;
+
+                  if (val === "RIPOSO") {
+                    setTurnoInizio("RIPOSO");
+                    setTurnoFine("RIPOSO");
+                    setTurnoOreOrd("0");
+                    setTurnoOreStraord("");
+                    return;
+                  }
+
+                  if (val === "FERIE") {
+                    setTurnoInizio("FERIE");
+                    setTurnoFine("FERIE");
+                    setTurnoOreOrd("8");
+                    setTurnoOreStraord("");
+                    return;
+                  }
+
+                  const parti = val.split("-");
+                  if (parti.length !== 2) return;
+
+                  let start = parti[0].trim();
+                  let end = parti[1].trim();
+
+                  if (/^\d$/.test(start)) start = `0${start}`;
+                  if (/^\d$/.test(end)) end = `0${end}`;
+
+                  if (end === "24") end = "00";
+
+                  setTurnoInizio(`${start}:00`);
+                  setTurnoFine(`${end}:00`);
+                }}
+                style={{
+                  ...inputLight(false),
+                  background: "rgba(255,255,255,0.92)",
+                  fontWeight: 900,
+                  maxWidth: "100%",
+                  minWidth: 0,
+                }}
+                title="Seleziona turno predefinito"
+              >
+                <option value="">Seleziona turno predefinito</option>
+                {presetTurni
+                  .filter((p) => p !== "RIPOSO" && p !== "FERIE")
+                  .map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
+                <option value="RIPOSO">RIPOSO</option>
+                <option value="FERIE">FERIE</option>
+              </select>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr",
+                gap: 12,
+                alignItems: "start",
+              }}
+            >
+              <div>
+                <div style={sx.sectionLabel}>Inizio turno</div>
+                <input
+                  type={turnoInizio === "RIPOSO" || turnoInizio === "FERIE" ? "text" : "time"}
+                  value={turnoInizio}
+                  onChange={(e) => setTurnoInizio(e.target.value)}
+                  style={inputLight(false)}
+                />
+              </div>
+
+              <div>
+                <div style={sx.sectionLabel}>Fine turno</div>
+                <input
+                  type={turnoFine === "RIPOSO" || turnoFine === "FERIE" ? "text" : "time"}
+                  value={turnoFine}
+                  onChange={(e) => setTurnoFine(e.target.value)}
+                  style={inputLight(false)}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr",
+              gap: 14,
             }}
           >
             <div
               style={{
-                ...sx.header,
-                paddingBottom: 14,
-                borderBottom: "1px solid rgba(15,23,42,0.06)",
+                padding: 16,
+                borderRadius: 22,
+                border: "1px solid rgba(16,185,129,0.10)",
+                background:
+                  "linear-gradient(180deg, rgba(16,185,129,0.06), rgba(16,185,129,0.02))",
+                boxShadow: "0 10px 24px rgba(16,185,129,0.05)",
+                boxSizing: "border-box",
+                minWidth: 0,
               }}
             >
-              <div>
-                <div style={{ fontSize: 20, fontWeight: 1000, letterSpacing: -0.3 }}>
-                  {turnoIdInModifica ? "Modifica turno" : "Nuovo turno"}
-                </div>
-                <div style={{ fontSize: 12, opacity: 0.65, marginTop: 5, fontWeight: 800 }}>
-                  {turnoIdInModifica
-                    ? "Modifica turno, ore ordinarie e straordinarie"
-                    : "Inserisci turno, ore ordinarie e straordinarie"}
-                </div>
-              </div>
-
-              <button
-                type="button"
-                data-chip="1"
-                onMouseEnter={() => setHoverCloseTurno(true)}
-                onMouseLeave={() => setHoverCloseTurno(false)}
-                onClick={chiudiTurnoForm}
-                style={{ ...sx.closeBtn, ...(hoverCloseTurno ? sx.closeBtnHover : {}) }}
-                title="Chiudi"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div style={{ ...sx.body, paddingTop: 18 }}>
-              <div style={{ ...sx.content, display: "grid", gap: 18 }}>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "minmax(170px, 220px) 1fr",
-                    gap: 14,
-                    alignItems: "end",
-                  }}
-                >
-                  <div>
-                    <div style={sx.sectionLabel}>Data</div>
-                    <input
-                      type="date"
-                      value={turnoData}
-                      onChange={(e) => setTurnoData(e.target.value)}
-                      style={inputLight(false)}
-                    />
-                  </div>
-
-                  <div
-                    style={{
-                      padding: "12px 14px",
-                      borderRadius: 18,
-                      border: "1px solid rgba(79,70,229,0.10)",
-                      background:
-                        "linear-gradient(180deg, rgba(79,70,229,0.06), rgba(124,58,237,0.03))",
-                      fontSize: 12,
-                      fontWeight: 850,
-                      color: "rgba(67,56,202,0.92)",
-                    }}
-                  >
-                    Scegli un preset rapido oppure imposta manualmente orari e ore.
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    padding: 16,
-                    borderRadius: 22,
-                    border: "1px solid rgba(15,23,42,0.06)",
-                    background: "rgba(255,255,255,0.72)",
-                    boxShadow: "0 10px 24px rgba(15,23,42,0.05)",
-                    display: "grid",
-                    gap: 14,
-                  }}
-                >
-                  <div>
-                    <div style={sx.sectionLabel}>Turno predefinito</div>
-
-                    <select
-                      value={turnoPreset}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setTurnoPreset(val);
-
-                        if (!val) return;
-
-                        if (val === "RIPOSO") {
-                          setTurnoInizio("RIPOSO");
-                          setTurnoFine("RIPOSO");
-                          setTurnoOreOrd("0");
-                          setTurnoOreStraord("");
-                          return;
-                        }
-
-                        if (val === "FERIE") {
-                          setTurnoInizio("FERIE");
-                          setTurnoFine("FERIE");
-                          setTurnoOreOrd("8");
-                          setTurnoOreStraord("");
-                          return;
-                        }
-
-                        const parti = val.split("-");
-                        if (parti.length !== 2) return;
-
-                        let start = parti[0].trim();
-                        let end = parti[1].trim();
-
-                        if (/^\d$/.test(start)) start = `0${start}`;
-                        if (/^\d$/.test(end)) end = `0${end}`;
-
-                        if (end === "24") end = "00";
-
-                        setTurnoInizio(`${start}:00`);
-                        setTurnoFine(`${end}:00`);
-                      }}
-                      style={{
-                        ...inputLight(false),
-                        background: "rgba(255,255,255,0.92)",
-                        fontWeight: 900,
-                      }}
-                      title="Seleziona turno predefinito"
-                    >
-                            <option value="">Seleziona turno predefinito</option>
-{presetTurni
-  .filter((p) => p !== "RIPOSO" && p !== "FERIE")
-  .map((p) => (
-    <option key={p} value={p}>
-      {p}
-    </option>
-  ))}
-<option value="RIPOSO">RIPOSO</option>
-<option value="FERIE">FERIE</option>
-                    </select>
-                  </div>
-
-                  <div style={sx.row2}>
-                    <div>
-                      <div style={sx.sectionLabel}>Inizio turno</div>
-                      <input
-                        type={
-                          turnoInizio === "RIPOSO" || turnoInizio === "FERIE" ? "text" : "time"
-                        }
-                        value={turnoInizio}
-                        onChange={(e) => setTurnoInizio(e.target.value)}
-                        style={inputLight(false)}
-                      />
-                    </div>
-
-                    <div>
-                      <div style={sx.sectionLabel}>Fine turno</div>
-                      <input
-                        type={
-                          turnoFine === "RIPOSO" || turnoFine === "FERIE" ? "text" : "time"
-                        }
-                        value={turnoFine}
-                        onChange={(e) => setTurnoFine(e.target.value)}
-                        style={inputLight(false)}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                    gap: 14,
-                  }}
-                >
-                  <div
-                    style={{
-                      padding: 16,
-                      borderRadius: 22,
-                      border: "1px solid rgba(16,185,129,0.10)",
-                      background:
-                        "linear-gradient(180deg, rgba(16,185,129,0.06), rgba(16,185,129,0.02))",
-                      boxShadow: "0 10px 24px rgba(16,185,129,0.05)",
-                    }}
-                  >
-                    <div style={sx.sectionLabel}>Ore ordinarie</div>
-                    <input
-                      value={turnoOreOrd}
-                      onChange={(e) => setTurnoOreOrd(e.target.value)}
-                      placeholder="Es: 8"
-                      style={inputLight(false)}
-                      inputMode="decimal"
-                    />
-                    <div style={{ marginTop: 8, fontSize: 11, fontWeight: 800, opacity: 0.58 }}>
-                      Per FERIE puoi lasciare 8 come base.
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      padding: 16,
-                      borderRadius: 22,
-                      border: "1px solid rgba(249,115,22,0.10)",
-                      background:
-                        "linear-gradient(180deg, rgba(249,115,22,0.06), rgba(249,115,22,0.02))",
-                      boxShadow: "0 10px 24px rgba(249,115,22,0.05)",
-                    }}
-                  >
-                    <div style={sx.sectionLabel}>Ore straordinarie</div>
-                    <input
-                      value={turnoOreStraord}
-                      onChange={(e) => setTurnoOreStraord(e.target.value)}
-                      placeholder="Es: 2"
-                      style={inputLight(false)}
-                      inputMode="decimal"
-                    />
-                    <div style={{ marginTop: 8, fontSize: 11, fontWeight: 800, opacity: 0.58 }}>
-                      Campo facoltativo.
-                    </div>
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    padding: 16,
-                    borderRadius: 22,
-                    border: "1px solid rgba(15,23,42,0.06)",
-                    background: "rgba(255,255,255,0.72)",
-                    boxShadow: "0 10px 24px rgba(15,23,42,0.05)",
-                  }}
-                >
-                  <div style={sx.sectionLabel}>Note</div>
-                  <textarea
-                    value={turnoNote}
-                    onChange={(e) => setTurnoNote(e.target.value)}
-                    rows={4}
-                    placeholder="Note turno..."
-                    style={{
-                      ...inputLight(false),
-                      height: "auto",
-                      minHeight: 110,
-                      resize: "vertical",
-                      lineHeight: 1.4,
-                    }}
-                  />
-                </div>
+              <div style={sx.sectionLabel}>Ore ordinarie</div>
+              <input
+                value={turnoOreOrd}
+                onChange={(e) => setTurnoOreOrd(e.target.value)}
+                placeholder="Es: 8"
+                style={inputLight(false)}
+                inputMode="decimal"
+              />
+              <div style={{ marginTop: 8, fontSize: 11, fontWeight: 800, opacity: 0.58 }}>
+                Per FERIE puoi lasciare 8 come base.
               </div>
             </div>
 
             <div
               style={{
-                ...sx.footer,
-                borderTop: "1px solid rgba(15,23,42,0.06)",
-                background: "rgba(255,255,255,0.66)",
-                backdropFilter: "blur(8px)",
+                padding: 16,
+                borderRadius: 22,
+                border: "1px solid rgba(249,115,22,0.10)",
+                background:
+                  "linear-gradient(180deg, rgba(249,115,22,0.06), rgba(249,115,22,0.02))",
+                boxShadow: "0 10px 24px rgba(249,115,22,0.05)",
+                boxSizing: "border-box",
+                minWidth: 0,
               }}
             >
-              <button type="button" data-chip="1" onClick={chiudiTurnoForm} style={sx.actionBtn(false)}>
-                Annulla
-              </button>
-              <button type="button" data-chip="1" onClick={salvaTurno} style={sx.actionBtn(true)}>
-                {turnoIdInModifica ? "Salva modifiche" : "Salva turno"}
-              </button>
+              <div style={sx.sectionLabel}>Ore straordinarie</div>
+              <input
+                value={turnoOreStraord}
+                onChange={(e) => setTurnoOreStraord(e.target.value)}
+                placeholder="Es: 2"
+                style={inputLight(false)}
+                inputMode="decimal"
+              />
+              <div style={{ marginTop: 8, fontSize: 11, fontWeight: 800, opacity: 0.58 }}>
+                Campo facoltativo.
+              </div>
             </div>
           </div>
+
+          <div
+            style={{
+              padding: 16,
+              borderRadius: 22,
+              border: "1px solid rgba(15,23,42,0.06)",
+              background: "rgba(255,255,255,0.72)",
+              boxShadow: "0 10px 24px rgba(15,23,42,0.05)",
+              boxSizing: "border-box",
+              minWidth: 0,
+            }}
+          >
+            <div style={sx.sectionLabel}>Note</div>
+            <textarea
+              value={turnoNote}
+              onChange={(e) => setTurnoNote(e.target.value)}
+              rows={4}
+              placeholder="Note turno..."
+              style={{
+                ...inputLight(false),
+                height: "auto",
+                minHeight: 110,
+                resize: "vertical",
+                lineHeight: 1.4,
+              }}
+            />
+          </div>
         </div>
-      )}
+      </div>
+
+      <div
+        style={{
+          ...sx.footer,
+          borderTop: "1px solid rgba(15,23,42,0.06)",
+          background: "rgba(255,255,255,0.66)",
+          backdropFilter: "blur(8px)",
+        }}
+      >
+        <button type="button" data-chip="1" onClick={chiudiTurnoForm} style={sx.actionBtn(false)}>
+          Annulla
+        </button>
+        <button type="button" data-chip="1" onClick={salvaTurno} style={sx.actionBtn(true)}>
+          {turnoIdInModifica ? "Salva modifiche" : "Salva turno"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }
