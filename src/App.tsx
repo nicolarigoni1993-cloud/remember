@@ -1136,15 +1136,15 @@ const ui = useMemo(() => {
     backdropFilter: "blur(18px)",
   } as const;
 
-  const card = {
-    border: "1px solid rgba(255,255,255,0.08)",
-    background:
-      "linear-gradient(180deg, rgba(15,23,42,0.78), rgba(30,41,59,0.68))",
-    boxShadow:
-      "0 22px 60px rgba(2,6,23,0.42), inset 0 1px 0 rgba(255,255,255,0.04)",
-    borderRadius: 24,
-    backdropFilter: "blur(18px)",
-  } as const;
+const card = {
+  border: "1px solid rgba(255,255,255,0.08)",
+  background:
+    "linear-gradient(180deg, rgba(2,6,23,0.88), rgba(15,23,42,0.82))",
+  boxShadow:
+    "0 25px 70px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.04)",
+  borderRadius: 24,
+  backdropFilter: "blur(18px)",
+} as const;
 
   return { glass, card };
 }, []);;
