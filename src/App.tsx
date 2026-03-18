@@ -499,6 +499,9 @@ function ordinaIntelligente(lista: Voce[]) {
 }
 
 function RememberLogo({ size = 44, centered = false }: { size?: number; centered?: boolean }) {
+  const textSize = centered ? 40 : 32;
+  const subSize = centered ? 13 : 12;
+
   return (
     <div
       style={{
@@ -513,43 +516,99 @@ function RememberLogo({ size = 44, centered = false }: { size?: number; centered
           display: "inline-flex",
           alignItems: "center",
           justifyContent: "center",
-          gap: 14,
+          gap: 16,
           textAlign: centered ? "center" : "left",
+          flexWrap: "wrap",
         }}
       >
-        <svg
-          width={size}
-          height={size}
-          viewBox="0 0 72 72"
-          style={{ filter: "drop-shadow(0 16px 28px rgba(0,0,0,0.18))", flexShrink: 0 }}
+        <div
+          style={{
+            width: size,
+            height: size,
+            borderRadius: size * 0.32,
+            display: "grid",
+            placeItems: "center",
+            position: "relative",
+            flexShrink: 0,
+            background:
+              "linear-gradient(145deg, rgba(30,41,59,0.92), rgba(15,23,42,0.98))",
+            border: "1px solid rgba(255,255,255,0.10)",
+            boxShadow:
+              "0 18px 40px rgba(2,6,23,0.44), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 0 30px rgba(79,70,229,0.18)",
+            overflow: "hidden",
+            cursor: "default",
+            transition: "transform .22s ease, box-shadow .22s ease, filter .22s ease",
+          }}
+          title="Remember"
         >
-          <defs>
-            <linearGradient id="rmA" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stopColor="#4f46e5" />
-              <stop offset="0.52" stopColor="#7c3aed" />
-              <stop offset="1" stopColor="#ef4444" />
-            </linearGradient>
-            <linearGradient id="rmB" x1="0" y1="1" x2="1" y2="0">
-              <stop offset="0" stopColor="rgba(255,255,255,0.18)" />
-              <stop offset="1" stopColor="rgba(255,255,255,0.00)" />
-            </linearGradient>
-          </defs>
-
-          <rect x="6" y="6" width="60" height="60" rx="20" fill="url(#rmA)" />
-          <path d="M22 44V24h8l6 9 6-9h8v20h-7V34l-7 10-7-10v10z" fill="rgba(255,255,255,0.96)" />
-          <path d="M14 16c14-12 32-12 44 0" fill="none" stroke="url(#rmB)" strokeWidth="6" strokeLinecap="round" />
-        </svg>
-
-        <div style={{ display: "grid", justifyItems: centered ? "center" : "start" }}>
           <div
             style={{
-              fontSize: centered ? 40 : 32,
+              position: "absolute",
+              inset: 0,
+              background:
+                "radial-gradient(circle at 28% 24%, rgba(59,130,246,0.30), transparent 34%), radial-gradient(circle at 76% 22%, rgba(168,85,247,0.26), transparent 30%), radial-gradient(circle at 50% 100%, rgba(239,68,68,0.18), transparent 42%)",
+              pointerEvents: "none",
+            }}
+          />
+
+          <svg
+            width={size}
+            height={size}
+            viewBox="0 0 72 72"
+            style={{
+              position: "relative",
+              zIndex: 1,
+              filter: "drop-shadow(0 0 12px rgba(99,102,241,0.22))",
+            }}
+          >
+            <defs>
+              <linearGradient id="rememberLogoStroke" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#60a5fa" />
+                <stop offset="48%" stopColor="#818cf8" />
+                <stop offset="100%" stopColor="#c084fc" />
+              </linearGradient>
+
+              <linearGradient id="rememberLogoFill" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="rgba(255,255,255,0.98)" />
+                <stop offset="100%" stopColor="rgba(226,232,240,0.92)" />
+              </linearGradient>
+            </defs>
+
+            <path
+              d="M19 55V17h17.5c9 0 14 4.6 14 11.6 0 5.9-3.4 9.4-8.8 10.7l10.3 15.7H42.5L33.4 40.7H28v14.3H19zm9-21.2h7.4c4.1 0 6.2-1.8 6.2-4.8 0-3.2-2.2-4.9-6.2-4.9H28v9.7z"
+              fill="url(#rememberLogoFill)"
+            />
+
+            <path
+              d="M17 55V17h18.5c10.1 0 15.6 5.3 15.6 12.4 0 5.8-3.1 9.6-8.4 11.4L53 55"
+              fill="none"
+              stroke="url(#rememberLogoStroke)"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              opacity={0.95}
+            />
+          </svg>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            justifyItems: centered ? "center" : "start",
+            minWidth: 0,
+          }}
+        >
+          <div
+            style={{
+              fontSize: textSize,
               fontWeight: 1000,
-              letterSpacing: centered ? -1.4 : -1.15,
+              letterSpacing: centered ? -1.5 : -1.2,
               lineHeight: 1,
-              background: "linear-gradient(90deg, #4338ca 0%, #7c3aed 45%, #ef4444 100%)",
+              background:
+                "linear-gradient(90deg, #e2e8f0 0%, #93c5fd 22%, #818cf8 52%, #c084fc 78%, #f8fafc 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
+              textShadow: "0 0 24px rgba(99,102,241,0.12)",
             }}
           >
             REMEMBER
@@ -557,12 +616,13 @@ function RememberLogo({ size = 44, centered = false }: { size?: number; centered
 
           <div
             style={{
-              marginTop: 5,
-              fontSize: centered ? 13 : 12,
+              marginTop: 6,
+              fontSize: subSize,
               fontWeight: 900,
-              opacity: 0.66,
-              letterSpacing: 0.25,
+              opacity: 0.78,
+              letterSpacing: 0.35,
               textAlign: centered ? "center" : "left",
+              color: "rgba(191,219,254,0.92)",
             }}
           >
             agenda smart • scadenze • appuntamenti • denaro
@@ -1066,25 +1126,28 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, [mostraForm, mostraTurnoForm]);
 
-  const ui = useMemo(() => {
-    const glass = {
-      border: "1px solid rgba(255,255,255,0.55)",
-      background: "rgba(255,255,255,0.72)",
-      boxShadow: "0 24px 70px rgba(15,23,42,0.12), inset 0 1px 0 rgba(255,255,255,0.85)",
-      borderRadius: 26,
-      backdropFilter: "blur(16px)",
-    } as const;
+const ui = useMemo(() => {
+  const glass = {
+    border: "1px solid rgba(255,255,255,0.10)",
+    background: "rgba(15,23,42,0.72)",
+    boxShadow:
+      "0 30px 80px rgba(2,6,23,0.46), inset 0 1px 0 rgba(255,255,255,0.06)",
+    borderRadius: 26,
+    backdropFilter: "blur(18px)",
+  } as const;
 
-    const card = {
-      border: "1px solid rgba(255,255,255,0.62)",
-      background: "rgba(255,255,255,0.74)",
-      boxShadow: "0 20px 48px rgba(15,23,42,0.12)",
-      borderRadius: 24,
-      backdropFilter: "blur(16px)",
-    } as const;
+  const card = {
+    border: "1px solid rgba(255,255,255,0.08)",
+    background:
+      "linear-gradient(180deg, rgba(15,23,42,0.78), rgba(30,41,59,0.68))",
+    boxShadow:
+      "0 22px 60px rgba(2,6,23,0.42), inset 0 1px 0 rgba(255,255,255,0.04)",
+    borderRadius: 24,
+    backdropFilter: "blur(18px)",
+  } as const;
 
-    return { glass, card };
-  }, []);
+  return { glass, card };
+}, []);;
 
 
 
@@ -2070,14 +2133,14 @@ export default function App() {
     );
   }
 
-  const pageBg: React.CSSProperties = {
-    minHeight: "100vh",
-    padding: 18,
-    fontFamily: "Inter, system-ui, sans-serif",
-    color: "rgba(15,23,42,0.94)",
-    background:
-      "radial-gradient(1200px 900px at 0% 0%, rgba(79,70,229,0.14), transparent 60%), radial-gradient(1000px 800px at 100% 20%, rgba(236,72,153,0.12), transparent 55%), radial-gradient(1100px 900px at 50% 100%, rgba(14,165,233,0.10), transparent 55%), linear-gradient(180deg, #f8fafc, #edf2f7)",
-  };
+const pageBg: React.CSSProperties = {
+  minHeight: "100vh",
+  padding: 18,
+  fontFamily: "Inter, system-ui, sans-serif",
+  color: "rgba(241,245,249,0.96)",
+  background:
+    "radial-gradient(1200px 900px at 0% 0%, rgba(59,130,246,0.18), transparent 55%), radial-gradient(1000px 800px at 100% 10%, rgba(124,58,237,0.16), transparent 52%), radial-gradient(1000px 900px at 50% 100%, rgba(14,165,233,0.12), transparent 55%), linear-gradient(180deg, #020617 0%, #0f172a 42%, #111827 100%)",
+};
 
   const topBar: React.CSSProperties = {
     maxWidth: 1060,
@@ -2086,51 +2149,66 @@ export default function App() {
     gap: 14,
   };
 
-  const chip = (active: boolean): React.CSSProperties => ({
-    padding: "11px 13px",
-    borderRadius: 999,
-    border: `1px solid ${active ? "rgba(79,70,229,0.28)" : "rgba(15,23,42,0.08)"}`,
-    background: active
-      ? "linear-gradient(180deg, rgba(79,70,229,0.16), rgba(124,58,237,0.10))"
-      : "rgba(255,255,255,0.82)",
-    boxShadow: active ? "0 16px 32px rgba(79,70,229,0.14)" : "0 10px 22px rgba(15,23,42,0.08)",
-    cursor: "pointer",
-    fontWeight: 900,
-    fontSize: 13,
-    color: "rgba(15,23,42,0.88)",
-    transition: "transform .14s ease, box-shadow .14s ease, background .14s ease",
-    userSelect: "none",
-  });
+const chip = (active: boolean): React.CSSProperties => ({
+  padding: "11px 13px",
+  borderRadius: 999,
+  border: `1px solid ${
+    active ? "rgba(99,102,241,0.34)" : "rgba(255,255,255,0.10)"
+  }`,
+  background: active
+    ? "linear-gradient(180deg, rgba(79,70,229,0.34), rgba(124,58,237,0.20))"
+    : "rgba(15,23,42,0.82)",
+  boxShadow: active
+    ? "0 16px 34px rgba(79,70,229,0.24)"
+    : "0 10px 22px rgba(2,6,23,0.26)",
+  cursor: "pointer",
+  fontWeight: 900,
+  fontSize: 13,
+  color: active ? "rgba(255,255,255,0.98)" : "rgba(226,232,240,0.92)",
+  transition: "transform .14s ease, box-shadow .14s ease, background .14s ease",
+  userSelect: "none",
+});
 
-  const chipSmall = (active: boolean): React.CSSProperties => ({
-    padding: "9px 11px",
-    borderRadius: 999,
-    border: `1px solid ${active ? "rgba(79,70,229,0.26)" : "rgba(15,23,42,0.08)"}`,
-    background: active
-      ? "linear-gradient(180deg, rgba(79,70,229,0.16), rgba(124,58,237,0.10))"
-      : "rgba(255,255,255,0.82)",
-    boxShadow: active ? "0 12px 24px rgba(79,70,229,0.12)" : "0 10px 18px rgba(15,23,42,0.06)",
-    cursor: "pointer",
-    fontWeight: 900,
-    fontSize: 12,
-    color: "rgba(15,23,42,0.84)",
-    transition: "transform .12s ease, box-shadow .12s ease, background .12s ease",
-    userSelect: "none",
-  });
 
-  const inputLight = (focused = false): React.CSSProperties => ({
-    width: "100%",
-    height: 48,
-    padding: "10px 14px",
-    borderRadius: 18,
-    border: `1px solid ${focused ? "rgba(79,70,229,0.28)" : "rgba(15,23,42,0.10)"}`,
-    background: "rgba(255,255,255,0.88)",
-    color: "rgba(15,23,42,0.90)",
-    fontSize: 13,
-    outline: "none",
-    boxShadow: focused ? "0 0 0 4px rgba(79,70,229,0.12)" : "none",
-    boxSizing: "border-box",
-  });
+
+
+
+
+ const chipSmall = (active: boolean): React.CSSProperties => ({
+  padding: "9px 11px",
+  borderRadius: 999,
+  border: `1px solid ${
+    active ? "rgba(99,102,241,0.30)" : "rgba(255,255,255,0.10)"
+  }`,
+  background: active
+    ? "linear-gradient(180deg, rgba(79,70,229,0.30), rgba(124,58,237,0.18))"
+    : "rgba(15,23,42,0.80)",
+  boxShadow: active
+    ? "0 12px 24px rgba(79,70,229,0.20)"
+    : "0 10px 18px rgba(2,6,23,0.22)",
+  cursor: "pointer",
+  fontWeight: 900,
+  fontSize: 12,
+  color: active ? "rgba(255,255,255,0.98)" : "rgba(226,232,240,0.90)",
+  transition: "transform .12s ease, box-shadow .12s ease, background .12s ease",
+  userSelect: "none",
+});
+
+const inputLight = (focused = false): React.CSSProperties => ({
+  width: "100%",
+  height: 48,
+  padding: "10px 14px",
+  borderRadius: 18,
+  border: `1px solid ${
+    focused ? "rgba(99,102,241,0.36)" : "rgba(255,255,255,0.10)"
+  }`,
+  background: "rgba(15,23,42,0.84)",
+  color: "rgba(241,245,249,0.96)",
+  fontSize: 13,
+  outline: "none",
+  boxShadow: focused ? "0 0 0 4px rgba(79,70,229,0.16)" : "none",
+  boxSizing: "border-box",
+});
 
   const sx = useMemo(() => {
     const overlay: React.CSSProperties = {
