@@ -1129,25 +1129,25 @@ export default function App() {
 const ui = useMemo(() => {
   const glass = {
     border: "1px solid rgba(255,255,255,0.10)",
-    background: "rgba(15,23,42,0.72)",
+    background: "rgba(2,6,23,0.82)",
     boxShadow:
-      "0 30px 80px rgba(2,6,23,0.46), inset 0 1px 0 rgba(255,255,255,0.06)",
+      "0 35px 90px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.05)",
     borderRadius: 26,
-    backdropFilter: "blur(18px)",
+    backdropFilter: "blur(20px)",
   } as const;
 
-const card = {
-  border: "1px solid rgba(255,255,255,0.08)",
-  background:
-    "linear-gradient(180deg, rgba(2,6,23,0.88), rgba(15,23,42,0.82))",
-  boxShadow:
-    "0 25px 70px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.04)",
-  borderRadius: 24,
-  backdropFilter: "blur(18px)",
-} as const;
+  const card = {
+    border: "1px solid rgba(255,255,255,0.08)",
+    background:
+      "linear-gradient(180deg, rgba(2,6,23,0.96), rgba(15,23,42,0.90))",
+    boxShadow:
+      "0 30px 80px rgba(0,0,0,0.70), inset 0 1px 0 rgba(255,255,255,0.04)",
+    borderRadius: 24,
+    backdropFilter: "blur(20px)",
+  } as const;
 
   return { glass, card };
-}, []);;
+}, []);
 
 
 
@@ -2174,22 +2174,22 @@ const chip = (active: boolean): React.CSSProperties => ({
 
 
 
- const chipSmall = (active: boolean): React.CSSProperties => ({
+const chipSmall = (active: boolean): React.CSSProperties => ({
   padding: "9px 11px",
   borderRadius: 999,
   border: `1px solid ${
-    active ? "rgba(99,102,241,0.30)" : "rgba(255,255,255,0.10)"
+    active ? "rgba(99,102,241,0.32)" : "rgba(255,255,255,0.12)"
   }`,
   background: active
-    ? "linear-gradient(180deg, rgba(79,70,229,0.30), rgba(124,58,237,0.18))"
-    : "rgba(15,23,42,0.80)",
+    ? "linear-gradient(180deg, rgba(79,70,229,0.38), rgba(124,58,237,0.22))"
+    : "rgba(2,6,23,0.90)",
   boxShadow: active
-    ? "0 12px 24px rgba(79,70,229,0.20)"
-    : "0 10px 18px rgba(2,6,23,0.22)",
+    ? "0 12px 26px rgba(79,70,229,0.28)"
+    : "0 10px 20px rgba(0,0,0,0.35)",
   cursor: "pointer",
   fontWeight: 900,
   fontSize: 12,
-  color: active ? "rgba(255,255,255,0.98)" : "rgba(226,232,240,0.90)",
+  color: active ? "rgba(255,255,255,0.98)" : "rgba(226,232,240,0.95)",
   transition: "transform .12s ease, box-shadow .12s ease, background .12s ease",
   userSelect: "none",
 });
@@ -2200,14 +2200,15 @@ const inputLight = (focused = false): React.CSSProperties => ({
   padding: "10px 14px",
   borderRadius: 18,
   border: `1px solid ${
-    focused ? "rgba(99,102,241,0.36)" : "rgba(255,255,255,0.10)"
+    focused ? "rgba(99,102,241,0.40)" : "rgba(255,255,255,0.12)"
   }`,
-  background: "rgba(15,23,42,0.84)",
-  color: "rgba(241,245,249,0.96)",
+  background: "rgba(2,6,23,0.95)",
+  color: "rgba(241,245,249,0.98)",
   fontSize: 13,
   outline: "none",
-  boxShadow: focused ? "0 0 0 4px rgba(79,70,229,0.16)" : "none",
+  boxShadow: focused ? "0 0 0 4px rgba(79,70,229,0.18)" : "none",
   boxSizing: "border-box",
+  WebkitTextFillColor: "rgba(241,245,249,0.98)",
 });
 
   const sx = useMemo(() => {
