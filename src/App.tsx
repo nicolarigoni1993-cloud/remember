@@ -2137,7 +2137,7 @@ const pageBg: React.CSSProperties = {
   minHeight: "100vh",
   padding: 18,
   fontFamily: "Inter, system-ui, sans-serif",
-  color: "rgba(241,245,249,0.96)",
+  color: "rgba(15,23,42,0.94)",
   background:
     "radial-gradient(1200px 900px at 0% 0%, rgba(59,130,246,0.18), transparent 55%), radial-gradient(1000px 800px at 100% 10%, rgba(124,58,237,0.16), transparent 52%), radial-gradient(1000px 900px at 50% 100%, rgba(14,165,233,0.12), transparent 55%), linear-gradient(180deg, #020617 0%, #0f172a 42%, #111827 100%)",
 };
@@ -2211,135 +2211,141 @@ const inputLight = (focused = false): React.CSSProperties => ({
   WebkitTextFillColor: "rgba(241,245,249,0.98)",
 });
 
-  const sx = useMemo(() => {
-    const overlay: React.CSSProperties = {
-      position: "fixed",
-      inset: 0,
-      background: "rgba(15,23,42,0.34)",
-      backdropFilter: "blur(18px)",
-      display: "grid",
-      placeItems: "center",
-      padding: 18,
-      zIndex: 999,
-    };
+const sx = useMemo(() => {
+  const overlay: React.CSSProperties = {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(2,6,23,0.48)",
+    backdropFilter: "blur(18px)",
+    display: "grid",
+    placeItems: "center",
+    padding: 18,
+    zIndex: 999,
+  };
 
-    const modal: React.CSSProperties = {
-      width: "min(680px, 100%)",
-      borderRadius: 30,
-      background: "rgba(255,255,255,0.88)",
-      border: "1px solid rgba(255,255,255,0.62)",
-      boxShadow: "0 54px 140px rgba(15,23,42,0.28)",
-      overflow: "hidden",
-      position: "relative",
-      animation: "popIn .18s ease both",
-      maxHeight: "88vh",
-      display: "flex",
-      flexDirection: "column",
-      backdropFilter: "blur(18px)",
-    };
+  const modal: React.CSSProperties = {
+    width: "min(680px, 100%)",
+    borderRadius: 30,
+    background: "linear-gradient(180deg, rgba(248,250,252,0.98), rgba(241,245,249,0.96))",
+    border: "1px solid rgba(255,255,255,0.75)",
+    boxShadow: "0 54px 140px rgba(2,6,23,0.34)",
+    overflow: "hidden",
+    position: "relative",
+    animation: "popIn .18s ease both",
+    maxHeight: "88vh",
+    display: "flex",
+    flexDirection: "column",
+    backdropFilter: "blur(18px)",
+    color: "rgba(15,23,42,0.96)",
+  };
 
-    const header: React.CSSProperties = {
-      padding: "22px 24px",
-      borderBottom: "1px solid rgba(15,23,42,0.08)",
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      gap: 12,
-    };
+  const header: React.CSSProperties = {
+    padding: "22px 24px",
+    borderBottom: "1px solid rgba(15,23,42,0.08)",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+    color: "rgba(15,23,42,0.96)",
+  };
 
-    const closeBtn: React.CSSProperties = {
-      color: "rgba(15,23,42,0.88)",
-      width: 46,
-      height: 46,
-      borderRadius: 16,
-      border: "1px solid rgba(15,23,42,0.10)",
-      background: "rgba(255,255,255,0.92)",
-      cursor: "pointer",
-      fontSize: 18,
-      fontWeight: 900,
-      display: "grid",
-      placeItems: "center",
-      transition: "transform .12s ease, filter .12s ease",
-    };
+  const closeBtn: React.CSSProperties = {
+    color: "rgba(15,23,42,0.88)",
+    width: 46,
+    height: 46,
+    borderRadius: 16,
+    border: "1px solid rgba(15,23,42,0.10)",
+    background: "rgba(255,255,255,0.96)",
+    cursor: "pointer",
+    fontSize: 18,
+    fontWeight: 900,
+    display: "grid",
+    placeItems: "center",
+    transition: "transform .12s ease, filter .12s ease",
+  };
 
-    const closeBtnHover: React.CSSProperties = {
-      transform: "scale(1.03)",
-      filter: "brightness(1.02)",
-    };
+  const closeBtnHover: React.CSSProperties = {
+    transform: "scale(1.03)",
+    filter: "brightness(1.02)",
+  };
 
-    const body: React.CSSProperties = {
-      padding: 24,
-      display: "grid",
-      gap: 16,
-      position: "relative",
-      zIndex: 1,
-      justifyItems: "center",
-      overflowY: "auto",
-      flex: 1,
-    };
+  const body: React.CSSProperties = {
+    padding: 24,
+    display: "grid",
+    gap: 16,
+    position: "relative",
+    zIndex: 1,
+    justifyItems: "center",
+    overflowY: "auto",
+    flex: 1,
+    color: "rgba(15,23,42,0.94)",
+  };
 
-    const content: React.CSSProperties = {
-      width: "100%",
-      maxWidth: 560,
-      display: "grid",
-      gap: 16,
-    };
+  const content: React.CSSProperties = {
+    width: "100%",
+    maxWidth: 560,
+    display: "grid",
+    gap: 16,
+    color: "rgba(15,23,42,0.94)",
+  };
 
-    const sectionLabel: React.CSSProperties = {
-      fontSize: 12,
-      opacity: 0.72,
-      marginBottom: 8,
-      fontWeight: 800,
-    };
+  const sectionLabel: React.CSSProperties = {
+    fontSize: 12,
+    opacity: 0.82,
+    marginBottom: 8,
+    fontWeight: 900,
+    color: "rgba(30,41,59,0.96)",
+  };
 
-    const row2: React.CSSProperties = {
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-      gap: 12,
-      alignItems: "start",
-    };
+  const row2: React.CSSProperties = {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+    gap: 12,
+    alignItems: "start",
+  };
 
-    const pills2: React.CSSProperties = {
-      display: "grid",
-      gridTemplateColumns: "1fr 1fr",
-      gap: 12,
-    };
+  const pills2: React.CSSProperties = {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: 12,
+  };
 
-    const footer: React.CSSProperties = {
-      padding: 20,
-      borderTop: "1px solid rgba(15,23,42,0.08)",
-      display: "grid",
-      gridTemplateColumns: "1fr 1fr",
-      gap: 12,
-    };
+  const footer: React.CSSProperties = {
+    padding: 20,
+    borderTop: "1px solid rgba(15,23,42,0.08)",
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: 12,
+    background: "rgba(248,250,252,0.90)",
+  };
 
-    const actionBtn = (primary: boolean): React.CSSProperties => ({
-      padding: 14,
-      borderRadius: 18,
-      border: `1px solid ${primary ? "rgba(79,70,229,0.24)" : "rgba(15,23,42,0.10)"}`,
-      background: primary
-        ? "linear-gradient(180deg, rgba(79,70,229,0.18), rgba(124,58,237,0.10))"
-        : "rgba(255,255,255,0.82)",
-      color: "rgba(15,23,42,0.90)",
-      fontWeight: 900,
-      cursor: "pointer",
-    });
+  const actionBtn = (primary: boolean): React.CSSProperties => ({
+    padding: 14,
+    borderRadius: 18,
+    border: `1px solid ${primary ? "rgba(99,102,241,0.22)" : "rgba(15,23,42,0.10)"}`,
+    background: primary
+      ? "linear-gradient(180deg, rgba(99,102,241,0.18), rgba(124,58,237,0.12))"
+      : "rgba(255,255,255,0.92)",
+    color: "rgba(15,23,42,0.94)",
+    fontWeight: 950,
+    cursor: "pointer",
+  });
 
-    return {
-      overlay,
-      modal,
-      header,
-      closeBtn,
-      closeBtnHover,
-      body,
-      content,
-      sectionLabel,
-      row2,
-      pills2,
-      footer,
-      actionBtn,
-    };
-  }, []);
+  return {
+    overlay,
+    modal,
+    header,
+    closeBtn,
+    closeBtnHover,
+    body,
+    content,
+    sectionLabel,
+    row2,
+    pills2,
+    footer,
+    actionBtn,
+  };
+}, []);
 
   function entraCome(userId: string) {
     setCurrentUserId(userId);
