@@ -1129,21 +1129,23 @@ export default function App() {
 const ui = useMemo(() => {
   const glass = {
     border: "1px solid rgba(255,255,255,0.10)",
-    background: "rgba(2,6,23,0.82)",
+    background: "rgba(2,6,23,0.78)",
     boxShadow:
-      "0 35px 90px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.05)",
+      "0 34px 90px rgba(0,0,0,0.58), inset 0 1px 0 rgba(255,255,255,0.05)",
     borderRadius: 26,
     backdropFilter: "blur(20px)",
+    color: "rgba(241,245,249,0.97)",
   } as const;
 
   const card = {
     border: "1px solid rgba(255,255,255,0.08)",
     background:
-      "linear-gradient(180deg, rgba(2,6,23,0.96), rgba(15,23,42,0.90))",
+      "linear-gradient(180deg, rgba(2,6,23,0.95), rgba(15,23,42,0.90))",
     boxShadow:
-      "0 30px 80px rgba(0,0,0,0.70), inset 0 1px 0 rgba(255,255,255,0.04)",
+      "0 28px 80px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,255,255,0.04)",
     borderRadius: 24,
     backdropFilter: "blur(20px)",
+    color: "rgba(241,245,249,0.97)",
   } as const;
 
   return { glass, card };
@@ -2137,9 +2139,9 @@ const pageBg: React.CSSProperties = {
   minHeight: "100vh",
   padding: 18,
   fontFamily: "Inter, system-ui, sans-serif",
-  color: "rgba(15,23,42,0.94)",
+  color: "rgba(241,245,249,0.96)",
   background:
-    "radial-gradient(1200px 900px at 0% 0%, rgba(59,130,246,0.18), transparent 55%), radial-gradient(1000px 800px at 100% 10%, rgba(124,58,237,0.16), transparent 52%), radial-gradient(1000px 900px at 50% 100%, rgba(14,165,233,0.12), transparent 55%), linear-gradient(180deg, #020617 0%, #0f172a 42%, #111827 100%)",
+    "radial-gradient(1200px 900px at 0% 0%, rgba(79,70,229,0.22), transparent 56%), radial-gradient(1000px 760px at 100% 10%, rgba(168,85,247,0.16), transparent 52%), radial-gradient(1000px 900px at 50% 100%, rgba(14,165,233,0.12), transparent 56%), linear-gradient(180deg, #020617 0%, #081127 36%, #0f172a 72%, #111827 100%)",
 };
 
   const topBar: React.CSSProperties = {
@@ -2178,18 +2180,18 @@ const chipSmall = (active: boolean): React.CSSProperties => ({
   padding: "9px 11px",
   borderRadius: 999,
   border: `1px solid ${
-    active ? "rgba(99,102,241,0.32)" : "rgba(255,255,255,0.12)"
+    active ? "rgba(99,102,241,0.34)" : "rgba(255,255,255,0.12)"
   }`,
   background: active
-    ? "linear-gradient(180deg, rgba(79,70,229,0.38), rgba(124,58,237,0.22))"
-    : "rgba(2,6,23,0.90)",
+    ? "linear-gradient(180deg, rgba(79,70,229,0.34), rgba(124,58,237,0.20))"
+    : "rgba(15,23,42,0.86)",
   boxShadow: active
-    ? "0 12px 26px rgba(79,70,229,0.28)"
-    : "0 10px 20px rgba(0,0,0,0.35)",
+    ? "0 12px 26px rgba(79,70,229,0.24)"
+    : "0 10px 18px rgba(0,0,0,0.28)",
   cursor: "pointer",
   fontWeight: 900,
   fontSize: 12,
-  color: active ? "rgba(255,255,255,0.98)" : "rgba(226,232,240,0.95)",
+  color: active ? "rgba(255,255,255,0.99)" : "rgba(226,232,240,0.94)",
   transition: "transform .12s ease, box-shadow .12s ease, background .12s ease",
   userSelect: "none",
 });
@@ -2202,13 +2204,16 @@ const inputLight = (focused = false): React.CSSProperties => ({
   border: `1px solid ${
     focused ? "rgba(99,102,241,0.40)" : "rgba(255,255,255,0.12)"
   }`,
-  background: "rgba(2,6,23,0.95)",
-  color: "rgba(241,245,249,0.98)",
-  fontSize: 13,
+  background: "rgba(2,6,23,0.96)",
+  color: "rgba(248,250,252,0.99)",
+  fontSize: 15,
+  fontWeight: 700,
   outline: "none",
   boxShadow: focused ? "0 0 0 4px rgba(79,70,229,0.18)" : "none",
   boxSizing: "border-box",
-  WebkitTextFillColor: "rgba(241,245,249,0.98)",
+  WebkitTextFillColor: "rgba(248,250,252,0.99)",
+  caretColor: "rgba(255,255,255,0.98)",
+  colorScheme: "dark",
 });
 
 const sx = useMemo(() => {
@@ -5485,55 +5490,80 @@ function MiniCalendarioControllo({
 
  
   const GlobalStyle = (
-    <style>{`
-      @keyframes popIn {
-        from { opacity: 0; transform: translateY(10px) scale(0.985); }
-        to   { opacity: 1; transform: translateY(0) scale(1); }
-      }
+  <style>{`
+    @keyframes popIn {
+      from { opacity: 0; transform: translateY(10px) scale(0.985); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
 
-      @keyframes cardIn {
-        from { opacity: 0; transform: translateY(8px) scale(0.985); }
-        to   { opacity: 1; transform: translateY(0) scale(1); }
-      }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(8px) scale(0.985); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
 
-      @keyframes pulseUrgent {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.025); }
-      }
+    @keyframes pulseUrgent {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.025); }
+    }
 
-      @keyframes softGlow {
-        0%, 100% { box-shadow: 0 16px 32px rgba(79,70,229,0.12); }
-        50% { box-shadow: 0 24px 44px rgba(124,58,237,0.18); }
-      }
+    @keyframes softGlow {
+      0%, 100% { box-shadow: 0 16px 32px rgba(79,70,229,0.16); }
+      50% { box-shadow: 0 24px 44px rgba(124,58,237,0.22); }
+    }
 
-      button[data-chip="1"]{
-        transform: translateY(0);
-        transition: transform .12s ease, filter .12s ease;
-      }
+    button[data-chip="1"]{
+      transform: translateY(0);
+      transition: transform .12s ease, filter .12s ease;
+    }
 
-      button[data-chip="1"]:hover{
-        transform: translateY(-1px);
-        filter: brightness(1.02);
-      }
+    button[data-chip="1"]:hover{
+      transform: translateY(-1px);
+      filter: brightness(1.04);
+    }
 
-      button[data-chip="1"]:active{
-        transform: translateY(0px) scale(0.985);
-        filter: brightness(0.985);
-      }
+    button[data-chip="1"]:active{
+      transform: translateY(0px) scale(0.985);
+      filter: brightness(0.985);
+    }
 
-      @media (max-width: 820px) {
-        .remember-hide-mobile-fab {
-          display: none !important;
-        }
-      }
+    input::placeholder,
+    textarea::placeholder {
+      color: rgba(148,163,184,0.92);
+      opacity: 1;
+    }
 
-      @media (max-width: 760px) {
-        .remember-grid-2 {
-          grid-template-columns: 1fr !important;
-        }
+    input,
+    textarea,
+    select {
+      color: rgba(248,250,252,0.99);
+      -webkit-text-fill-color: rgba(248,250,252,0.99);
+      font-weight: 700;
+    }
+
+    select option {
+      background: #0f172a;
+      color: rgba(248,250,252,0.99);
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="time"]::-webkit-calendar-picker-indicator {
+      filter: invert(1) brightness(1.15);
+      cursor: pointer;
+    }
+
+    @media (max-width: 820px) {
+      .remember-hide-mobile-fab {
+        display: none !important;
       }
-    `}</style>
-  );
+    }
+
+    @media (max-width: 760px) {
+      .remember-grid-2 {
+        grid-template-columns: 1fr !important;
+      }
+    }
+  `}</style>
+);
 
   if (!currentUser) {
     return (
