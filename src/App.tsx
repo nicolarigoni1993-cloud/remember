@@ -5761,16 +5761,36 @@ function MiniCalendarioControllo({
       <div style={{ ...ui.card, padding: 26, textAlign: "center" }}>
         <RememberLogo size={64} centered />
 
-        <div
-          style={{
-            marginTop: 16,
-            fontSize: 18,
-            fontWeight: 900,
-            opacity: 0.75,
-          }}
-        >
-          Il tuo spazio personale per ricordare tutto
-        </div>
+     <div
+  style={{
+    marginTop: 18,
+    display: "grid",
+    gap: 6,
+    textAlign: "center",
+  }}
+>
+  <div
+    style={{
+      fontSize: 20,
+      fontWeight: 1000,
+      letterSpacing: -0.3,
+      color: "rgba(15,23,42,0.92)",
+    }}
+  >
+    Che cazzo scriviamo?
+  </div>
+
+  <div
+    style={{
+      fontSize: 13,
+      fontWeight: 800,
+      opacity: 0.6,
+      letterSpacing: 0.2,
+    }}
+  >
+    Anche qui dio cane, cosa scriviamo? Ma chi se ne frega, scrivi quello che cazzo vuoi, è il tuo spazio, fanculo.
+  </div>
+</div>
       </div>
 
       {/* BOTTONI PRINCIPALI */}
@@ -6661,9 +6681,7 @@ function MiniCalendarioControllo({
      
           
 
-      {!mostraForm && !mostraTurnoForm && (
-        <DraggableFab onClick={apriNuova} label="Aggiungi" />
-      )}
+  
 
       {mostraForm && (
         <div
