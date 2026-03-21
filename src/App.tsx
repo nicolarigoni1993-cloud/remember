@@ -5631,7 +5631,7 @@ function MiniCalendarioControllo({
   }
 
   return (
-   <d style={pageBg}>
+   <div style={pageBg}>
   {GlobalStyle}
 
   {pagina !== "home" && (
@@ -6659,7 +6659,7 @@ function MiniCalendarioControllo({
 )}
      
      
-        
+          
 
       {!mostraForm && !mostraTurnoForm && (
         <DraggableFab onClick={apriNuova} label="Aggiungi" />
