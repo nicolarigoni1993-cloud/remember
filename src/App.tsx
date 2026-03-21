@@ -1689,23 +1689,7 @@ const ui = useMemo(() => {
 
 
 
-    const vociAttiveOrdinate = useMemo(() => {
-    return ordinaIntelligente(voci.filter((v) => !v.fatto));
-  }, [voci]);
 
-  const prossimeScadenzeHome = useMemo(() => {
-    return vociAttiveOrdinate.filter((v) => v.tipo === "scadenza").slice(0, 5);
-  }, [vociAttiveOrdinate]);
-
-  const prossimiAppuntamentiHome = useMemo(() => {
-    return vociAttiveOrdinate.filter((v) => v.tipo === "appuntamento").slice(0, 5);
-  }, [vociAttiveOrdinate]);
-
-  const turniOrdinatiMese = useMemo(() => {
-    return turniMese
-      .slice()
-      .sort((a, b) => a.data.localeCompare(b.data) || a.inizio.localeCompare(b.inizio));
-  }, [turniMese]);
 
   const totaleTurniMese = useMemo(() => {
     return turniMese.filter((t) => {
@@ -1735,26 +1719,6 @@ const ui = useMemo(() => {
   const ferieOreResidue = useMemo(() => {
     return Math.max(0, ferieTotaliOreBase - ferieOreEffettuate);
   }, [ferieTotaliOreBase, ferieOreEffettuate]);
-
- 
-
-
-
-  const turniStatsMese = useMemo(() => {
-    const stats = { N: 0, M: 0, P: 0, S: 0, R: 0, T: 0 };
-
-    for (const t of turniMese) {
-      const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
-      stats[sigla as keyof typeof stats] += 1;
-    }
-
-    return stats;
-  }, [turniMese]);
-
- 
-
-  const appuntamentiCountHome = prossimiAppuntamentiHome.length;
-  const scadenzeCountHome = prossimeScadenzeHome.length;
 
 
     const tutteEntrateExtra = useMemo(() => {
@@ -2426,6 +2390,9 @@ const sx = useMemo(() => {
 
 
 
+
+
+ 
 
 
 
@@ -5785,520 +5752,96 @@ function MiniCalendarioControllo({
 
 
 
-                {pagina === "home" && (
-          <div style={{ maxWidth: 1060, margin: "0 auto", marginTop: 8, display: "grid", gap: 14 }}>
-            {/* HERO HOME */}
-            <div
-              style={{
-                ...ui.card,
-                padding: 20,
-                position: "relative",
-                overflow: "hidden",
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background:
-                    "radial-gradient(700px 260px at 0% 0%, rgba(79,70,229,0.08), transparent 60%), radial-gradient(700px 260px at 100% 0%, rgba(16,185,129,0.08), transparent 60%)",
-                  pointerEvents: "none",
-                }}
-              />
+       {pagina === "home" && (
+  <div style={{ minHeight: "70vh", display: "grid", placeItems: "center", padding: 16 }}>
+    <div style={{ width: "min(520px, 100%)", display: "grid", gap: 20 }}>
 
-              <div style={{ position: "relative", zIndex: 1 }}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
-                    gap: 14,
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <div>
-                    <div
-                      style={{
-                        fontSize: 24,
-                        fontWeight: 1000,
-                        letterSpacing: -0.6,
-                        color: "rgba(15,23,42,0.96)",
-                      }}
-                    >
-                      Home Dashboard
-                    </div>
-                    <div
-                      style={{
-                        marginTop: 6,
-                        fontSize: 13,
-                        fontWeight: 800,
-                        opacity: 0.68,
-                      }}
-                    >
-                      Panoramica rapida di scadenze, appuntamenti, turni, ore e saldo del mese
-                    </div>
-                  </div>
+      {/* LOGO */}
+      <div style={{ ...ui.card, padding: 26, textAlign: "center" }}>
+        <RememberLogo size={64} centered />
 
-                  <div
-                    style={{
-                      padding: "10px 14px",
-                      borderRadius: 999,
-                      background: "rgba(255,255,255,0.86)",
-                      border: "1px solid rgba(15,23,42,0.08)",
-                      boxShadow: "0 12px 24px rgba(15,23,42,0.08)",
-                      fontSize: 13,
-                      fontWeight: 900,
-                      textTransform: "capitalize",
-                    }}
-                  >
-                    {nomeMese(meseCorrente)}
-                  </div>
-                </div>
+        <div
+          style={{
+            marginTop: 16,
+            fontSize: 18,
+            fontWeight: 900,
+            opacity: 0.75,
+          }}
+        >
+          Il tuo spazio personale per ricordare tutto
+        </div>
+      </div>
 
-                <div
-                  style={{
-                    marginTop: 18,
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
-                    gap: 12,
-                  }}
-                >
-                  <div
-                    style={{
-                      padding: 16,
-                      borderRadius: 20,
-                      border: "1px solid rgba(239,68,68,0.14)",
-                      background: "linear-gradient(180deg, rgba(239,68,68,0.10), rgba(239,68,68,0.05))",
-                    }}
-                  >
-                    <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Prossime scadenze</div>
-                    <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000 }}>{scadenzeCountHome}</div>
-                  </div>
+      {/* BOTTONI PRINCIPALI */}
+      <div style={{ display: "grid", gap: 14 }}>
 
-                  <div
-                    style={{
-                      padding: 16,
-                      borderRadius: 20,
-                      border: "1px solid rgba(168,85,247,0.14)",
-                      background: "linear-gradient(180deg, rgba(168,85,247,0.10), rgba(168,85,247,0.05))",
-                    }}
-                  >
-                    <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Prossimi appuntamenti</div>
-                    <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000 }}>{appuntamentiCountHome}</div>
-                  </div>
+        {/* AGGIUNGI */}
+        <button
+          data-chip="1"
+          onClick={() => apriNuova()}
+          style={{
+            padding: "22px 18px",
+            borderRadius: 26,
+            border: "1px solid rgba(16,185,129,0.28)",
+            background:
+              "linear-gradient(180deg, rgba(16,185,129,0.30), rgba(5,150,105,0.18))",
+            color: "rgba(6,95,70,0.98)",
+            fontSize: 18,
+            fontWeight: 1000,
+            letterSpacing: 0.3,
+            boxShadow: "0 22px 50px rgba(16,185,129,0.25)",
+          }}
+        >
+          ➕ AGGIUNGI
+        </button>
 
-                  <div
-                    style={{
-                      padding: 16,
-                      borderRadius: 20,
-                      border: "1px solid rgba(59,130,246,0.14)",
-                      background: "linear-gradient(180deg, rgba(59,130,246,0.10), rgba(59,130,246,0.05))",
-                    }}
-                  >
-                  
-                  </div>
+        {/* CONSULTA */}
+        <button
+          data-chip="1"
+          onClick={() => setPagina("agenda")}
+          style={{
+            padding: "22px 18px",
+            borderRadius: 26,
+            border: "1px solid rgba(79,70,229,0.28)",
+            background:
+              "linear-gradient(180deg, rgba(79,70,229,0.30), rgba(124,58,237,0.18))",
+            color: "rgba(67,56,202,0.98)",
+            fontSize: 18,
+            fontWeight: 1000,
+            letterSpacing: 0.3,
+            boxShadow: "0 22px 50px rgba(79,70,229,0.25)",
+          }}
+        >
+          📊 CONSULTA
+        </button>
 
-                  <div
-                    style={{
-                      padding: 16,
-                      borderRadius: 20,
-                      border: "1px solid rgba(124,58,237,0.14)",
-                      background: "linear-gradient(180deg, rgba(124,58,237,0.10), rgba(124,58,237,0.05))",
-                    }}
-                  >
-                    <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Ore mese</div>
-                    <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000 }}>{formatNumeroOre(oreTotMese)} h</div>
-                  </div>
+        {/* NOTA RAPIDA */}
+        <button
+          data-chip="1"
+          onClick={() => {
+            setTipo("nota");
+            apriNuova();
+          }}
+          style={{
+            padding: "22px 18px",
+            borderRadius: 26,
+            border: "1px solid rgba(249,115,22,0.28)",
+            background:
+              "linear-gradient(180deg, rgba(249,115,22,0.30), rgba(234,88,12,0.18))",
+            color: "rgba(154,52,18,0.98)",
+            fontSize: 18,
+            fontWeight: 1000,
+            letterSpacing: 0.3,
+            boxShadow: "0 22px 50px rgba(249,115,22,0.25)",
+          }}
+        >
+          📝 NOTA RAPIDA
+        </button>
+      </div>
 
-                  <div
-                    style={{
-                      padding: 16,
-                      borderRadius: 20,
-                      border: "1px solid rgba(16,185,129,0.14)",
-                      background: "linear-gradient(180deg, rgba(16,185,129,0.10), rgba(16,185,129,0.05))",
-                    }}
-                  >
-                    <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Saldo mensile</div>
-                    <div
-                      style={{
-                        marginTop: 8,
-                        fontSize: 24,
-                        fontWeight: 1000,
-                        color: saldoMese >= 0 ? "rgba(5,150,105,0.96)" : "rgba(185,28,28,0.96)",
-                      }}
-                    >
-                      {saldoMese.toLocaleString("it-IT")} €
-                    </div>
-                  </div>
-
-              <div
-                  style={{
-                    padding: 16,
-                    borderRadius: 20,
-                    border: "1px solid rgba(59,130,246,0.14)",
-                    background: "linear-gradient(180deg, rgba(59,130,246,0.10), rgba(59,130,246,0.05))",
-                  }}
-                   >
-                  <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Turni del mese</div>
-                  <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000 }}>{totaleTurniMese}</div>
-                </div>
-                </div>
-              </div>
-            </div>
-
-            {/* RIGA CENTRALE */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 14,
-              }}
-              className="remember-grid-2"
-            >
-              <div style={{ ...ui.card, padding: 18 }}>
-                <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Prossime scadenze</div>
-                <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
-                  Le prime scadenze attive da tenere sotto controllo
-                </div>
-
-                <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
-                  {prossimeScadenzeHome.length === 0 ? (
-                    <div
-                      style={{
-                        padding: 12,
-                        borderRadius: 16,
-                        border: "1px solid rgba(15,23,42,0.08)",
-                        background: "rgba(255,255,255,0.72)",
-                        fontSize: 13,
-                        fontWeight: 800,
-                        opacity: 0.65,
-                      }}
-                    >
-                      Nessuna scadenza attiva.
-                    </div>
-                  ) : (
-                    prossimeScadenzeHome.map((v) => (
-                      <div
-                        key={v.id}
-                        style={{
-                          padding: 14,
-                          borderRadius: 18,
-                          border: "1px solid rgba(15,23,42,0.08)",
-                          background: "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.88))",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          gap: 12,
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        <div style={{ display: "grid", gap: 5 }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                            {badgeTipo(v.tipo)}
-                            {v.urgente && badgeUrgente()}
-                          </div>
-                          <div style={{ fontSize: 15, fontWeight: 950 }}>{v.titolo}</div>
-                          <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72 }}>
-                            {formattaDataBreve(v.data)} • {v.ora}
-                          </div>
-                        </div>
-
-                        <span style={styleBadgeScadenza(giorniMancanti(v.data), v.urgente)}>
-                          {v.urgente ? "URGENTE" : labelGiorni(giorniMancanti(v.data))}
-                        </span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              <div style={{ ...ui.card, padding: 18 }}>
-                <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Prossimi appuntamenti</div>
-                <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
-                  I prossimi appuntamenti in programma
-                </div>
-
-                <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
-                  {prossimiAppuntamentiHome.length === 0 ? (
-                    <div
-                      style={{
-                        padding: 12,
-                        borderRadius: 16,
-                        border: "1px solid rgba(15,23,42,0.08)",
-                        background: "rgba(255,255,255,0.72)",
-                        fontSize: 13,
-                        fontWeight: 800,
-                        opacity: 0.65,
-                      }}
-                    >
-                      Nessun appuntamento attivo.
-                    </div>
-                  ) : (
-                    prossimiAppuntamentiHome.map((v) => (
-                      <div
-                        key={v.id}
-                        style={{
-                          padding: 14,
-                          borderRadius: 18,
-                          border: "1px solid rgba(15,23,42,0.08)",
-                          background: "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.88))",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          gap: 12,
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        <div style={{ display: "grid", gap: 5 }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                            {badgeTipo(v.tipo)}
-                            {v.urgente && badgeUrgente()}
-                          </div>
-                          <div style={{ fontSize: 15, fontWeight: 950 }}>{v.titolo}</div>
-                          <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72 }}>
-                            {formattaDataBreve(v.data)} • {v.ora}
-                          </div>
-                        </div>
-
-                        <span style={styleBadgeScadenza(giorniMancanti(v.data), v.urgente)}>
-                          {v.urgente ? "URGENTE" : labelGiorni(giorniMancanti(v.data))}
-                        </span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* RIGA BASSA */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 14,
-              }}
-              className="remember-grid-2"
-            >
-              <div style={{ ...ui.card, padding: 18 }}>
-                <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Riepilogo turni del mese</div>
-                <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
-                  Statistiche rapide sulle sigle turno
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 14,
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(90px, 1fr))",
-                    gap: 10,
-                  }}
-                >
-                  {(["N", "M", "P", "S", "R", "T"] as const).map((sigla) => (
-                    <div
-                      key={sigla}
-                      style={{
-                        padding: 14,
-                        borderRadius: 18,
-                        border: "1px solid rgba(59,130,246,0.12)",
-                        background: "linear-gradient(180deg, rgba(59,130,246,0.08), rgba(59,130,246,0.03))",
-                        textAlign: "center",
-                      }}
-                    >
-                      <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>{sigla}</div>
-                      <div style={{ marginTop: 6, fontSize: 22, fontWeight: 1000 }}>
-                        {turniStatsMese[sigla]}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
-                  {turniOrdinatiMese.length === 0 ? (
-                    <div
-                      style={{
-                        padding: 12,
-                        borderRadius: 16,
-                        border: "1px solid rgba(15,23,42,0.08)",
-                        background: "rgba(255,255,255,0.72)",
-                        fontSize: 13,
-                        fontWeight: 800,
-                        opacity: 0.65,
-                      }}
-                    >
-                      Nessun turno inserito nel mese.
-                    </div>
-                  ) : (
-                    turniOrdinatiMese.slice(0, 5).map((t) => {
-                      const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
-                      const descr = descrizioneTurnoBreve(t.inizio, t.fine, t.note);
-                      const isRiposo = sigla === "R";
-
-                      return (
-                        <div
-                          key={t.id}
-                          style={{
-                            padding: 14,
-                            borderRadius: 18,
-                            border: "1px solid rgba(15,23,42,0.08)",
-                            background: "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.88))",
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            gap: 12,
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          <div style={{ display: "grid", gap: 5 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                              <span
-                                style={{
-                                  padding: "6px 10px",
-                                  borderRadius: 999,
-                                  fontSize: 12,
-                                  fontWeight: 950,
-                                  color: "rgba(255,255,255,0.98)",
-                                  background:
-                                    sigla === "R"
-                                      ? "linear-gradient(180deg, rgba(107,114,128,0.96), rgba(75,85,99,0.92))"
-                                      : sigla === "N"
-                                      ? "linear-gradient(180deg, rgba(67,56,202,0.96), rgba(49,46,129,0.92))"
-                                      : sigla === "M"
-                                      ? "linear-gradient(180deg, rgba(245,158,11,0.96), rgba(217,119,6,0.92))"
-                                      : sigla === "P"
-                                      ? "linear-gradient(180deg, rgba(249,115,22,0.96), rgba(234,88,12,0.92))"
-                                      : sigla === "S"
-                                      ? "linear-gradient(180deg, rgba(168,85,247,0.96), rgba(126,34,206,0.92))"
-                                      : "linear-gradient(180deg, rgba(59,130,246,0.96), rgba(37,99,235,0.92))",
-                                }}
-                              >
-                                {sigla}
-                              </span>
-
-                              <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72 }}>
-                                {formattaDataBreve(t.data)}
-                              </div>
-                            </div>
-
-                            <div style={{ fontSize: 15, fontWeight: 950 }}>
-                              {descr}
-                              {!isRiposo ? ` • ${t.inizio} - ${t.fine}` : ""}
-                            </div>
-                          </div>
-
-                          <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.75 }}>
-                            {isRiposo
-                              ? "Riposo"
-                              : `${formatNumeroOre(t.oreOrdinarie + t.oreStraordinarie)} h`}
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              </div>
-
-              <div style={{ ...ui.card, padding: 18 }}>
-                <div style={{ fontWeight: 950, letterSpacing: -0.2, fontSize: 18 }}>Centro controllo sintetico</div>
-                <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7, fontWeight: 800 }}>
-                  Vista veloce di economia e ore del mese
-                </div>
-
-                <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
-                  <div
-                    style={{
-                      padding: 14,
-                      borderRadius: 18,
-                      border: "1px solid rgba(16,185,129,0.12)",
-                      background: "linear-gradient(180deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03))",
-                    }}
-                  >
-                    <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Entrate mese</div>
-                    <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
-                      {entrateTotMese.toLocaleString("it-IT")} €
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      padding: 14,
-                      borderRadius: 18,
-                      border: "1px solid rgba(239,68,68,0.12)",
-                      background: "linear-gradient(180deg, rgba(239,68,68,0.08), rgba(239,68,68,0.03))",
-                    }}
-                  >
-                    <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Uscite mese</div>
-                    <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
-                      {usciteTotMese.toLocaleString("it-IT")} €
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      padding: 14,
-                      borderRadius: 18,
-                      border: "1px solid rgba(59,130,246,0.12)",
-                      background: "linear-gradient(180deg, rgba(59,130,246,0.08), rgba(59,130,246,0.03))",
-                    }}
-                  >
-                    <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Ore ordinarie</div>
-                    <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
-                      {formatNumeroOre(oreOrdMese)} h
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      padding: 14,
-                      borderRadius: 18,
-                      border: "1px solid rgba(249,115,22,0.12)",
-                      background: "linear-gradient(180deg, rgba(249,115,22,0.08), rgba(249,115,22,0.03))",
-                    }}
-                  >
-                    <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Ore straordinarie</div>
-                    <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
-                      {formatNumeroOre(oreStraMese)} h
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      padding: 14,
-                      borderRadius: 18,
-                      border: "1px solid rgba(124,58,237,0.12)",
-                      background: "linear-gradient(180deg, rgba(124,58,237,0.08), rgba(124,58,237,0.03))",
-                    }}
-                  >
-                    <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Ore totali mese</div>
-                    <div style={{ marginTop: 6, fontSize: 20, fontWeight: 1000 }}>
-                      {formatNumeroOre(oreTotMese)} h
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      padding: 14,
-                      borderRadius: 18,
-                      border: "1px solid rgba(15,23,42,0.08)",
-                      background: "rgba(255,255,255,0.78)",
-                    }}
-                  >
-                    <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7 }}>Saldo mensile</div>
-                    <div
-                      style={{
-                        marginTop: 6,
-                        fontSize: 22,
-                        fontWeight: 1000,
-                        color: saldoMese >= 0 ? "rgba(5,150,105,0.96)" : "rgba(185,28,28,0.96)",
-                      }}
-                    >
-                      {saldoMese.toLocaleString("it-IT")} €
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+    </div>
+  </div>
+)}
 
 
 
