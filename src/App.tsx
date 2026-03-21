@@ -166,7 +166,7 @@ const K_CURR = "scadenze_current_user";
 const kVoci = (userId: string) => `voci_scadenze__${userId}`;
 const kIncassi = (userId: string) => `incassi_mese__${userId}`;
 const kTurni = (userId: string) => `turni_mese__${userId}`;
-const K_FAB_POS = "remember_fab_position";
+
 
 function caricaUtenti(): User[] {
   const raw = localStorage.getItem(K_USERS);
@@ -633,10 +633,7 @@ function RememberLogo({ size = 44, centered = false }: { size?: number; centered
   );
 }
 
-type FabPos = {
-  x: number;
-  y: number;
-};
+
 
 
 
