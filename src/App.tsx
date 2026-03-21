@@ -5631,119 +5631,120 @@ function MiniCalendarioControllo({
   }
 
   return (
-    <div style={pageBg}>
-      {GlobalStyle}
+   <div style={pageBg}>
+  {GlobalStyle}
 
-            <div style={topBar}>
-        <div style={{ ...ui.glass, padding: 22 }}>
-          <div style={{ display: "grid", gap: 18 }}>
-            <RememberLogo size={54} centered />
+  {pagina !== "home" && (
+    <div style={topBar}>
+      <div style={{ ...ui.glass, padding: 22 }}>
+        <div style={{ display: "grid", gap: 18 }}>
+          <RememberLogo size={54} centered />
 
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: 10,
+              flexWrap: "wrap",
+            }}
+          >
             <div
               style={{
-                display: "flex",
-                justifyContent: "center",
+                display: "inline-flex",
                 alignItems: "center",
                 gap: 10,
-                flexWrap: "wrap",
-              }}
-            >
-              <div
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 10,
-                  padding: "11px 14px",
-                  borderRadius: 999,
-                  border: "1px solid rgba(79,70,229,0.12)",
-                  background: "rgba(255,255,255,0.82)",
-                  boxShadow: "0 18px 34px rgba(79,70,229,0.10)",
-                  fontSize: 13,
-                  fontWeight: 950,
-                  letterSpacing: -0.2,
-                  animation: "softGlow 2.4s ease-in-out infinite",
-                }}
-              >
-                <span style={{ opacity: 0.8 }}>🕒</span>
-                <span style={{ opacity: 0.88 }}>{formattaDataLunga(adesso)}</span>
-              </div>
-            </div>
-
-            <div
-              style={{
-                textAlign: "center",
+                padding: "11px 14px",
+                borderRadius: 999,
+                border: "1px solid rgba(79,70,229,0.12)",
+                background: "rgba(255,255,255,0.82)",
+                boxShadow: "0 18px 34px rgba(79,70,229,0.10)",
                 fontSize: 13,
-                fontWeight: 900,
-                opacity: 0.72,
+                fontWeight: 950,
+                letterSpacing: -0.2,
+                animation: "softGlow 2.4s ease-in-out infinite",
               }}
             >
-              Utente attivo: <span style={{ opacity: 1 }}>{currentUser.nome}</span>
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                gap: 12,
-                flexWrap: "wrap",
-                justifyContent: "center",
-              }}
-            >
-              <button
-                data-chip="1"
-                onClick={() => setPagina("home")}
-                style={pagina === "home" ? chip(true) : chip(false)}
-              >
-                Home
-              </button>
-
-              <button
-                data-chip="1"
-                onClick={() => setPagina("agenda")}
-                style={pagina === "agenda" ? chip(true) : chip(false)}
-              >
-                Agenda
-              </button>
-
-              <button
-                data-chip="1"
-                onClick={() => setPagina("controllo")}
-                style={pagina === "controllo" ? chip(true) : chip(false)}
-              >
-                Controllo
-              </button>
-
-              <button
-                data-chip="1"
-                onClick={() => setPagina("archivio")}
-                style={pagina === "archivio" ? chip(true) : chip(false)}
-              >
-                Archivio Generale
-              </button>
-
-              <button
-                data-chip="1"
-                onClick={apriNuova}
-                title="Nuova voce"
-                style={{
-                  ...chip(false),
-                  background: "linear-gradient(180deg, rgba(16,185,129,0.28), rgba(5,150,105,0.16))",
-                  border: "1px solid rgba(16,185,129,0.36)",
-                  boxShadow: "0 16px 34px rgba(16,185,129,0.22)",
-                  color: "rgba(6,95,70,0.98)",
-                  fontWeight: 1000,
-                }}
-              >
-                + Nuova
-              </button>
-
-              <button data-chip="1" onClick={esci} style={chip(false)}>
-                Esci
-              </button>
+              <span style={{ opacity: 0.8 }}>🕒</span>
+              <span style={{ opacity: 0.88 }}>{formattaDataLunga(adesso)}</span>
             </div>
           </div>
+
+          <div
+            style={{
+              textAlign: "center",
+              fontSize: 13,
+              fontWeight: 900,
+              opacity: 0.72,
+            }}
+          >
+            Utente attivo: <span style={{ opacity: 1 }}>{currentUser.nome}</span>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              gap: 12,
+              flexWrap: "wrap",
+              justifyContent: "center",
+            }}
+          >
+            <button
+              data-chip="1"
+              onClick={() => setPagina("home")}
+              style={chip(false)}
+            >
+              Home
+            </button>
+
+            <button
+              data-chip="1"
+              onClick={() => setPagina("agenda")}
+              style={pagina === "agenda" ? chip(true) : chip(false)}
+            >
+              Agenda
+            </button>
+
+            <button
+              data-chip="1"
+              onClick={() => setPagina("controllo")}
+              style={pagina === "controllo" ? chip(true) : chip(false)}
+            >
+              Controllo
+            </button>
+
+            <button
+              data-chip="1"
+              onClick={() => setPagina("archivio")}
+              style={pagina === "archivio" ? chip(true) : chip(false)}
+            >
+              Archivio Generale
+            </button>
+
+            <button
+              data-chip="1"
+              onClick={apriNuova}
+              title="Nuova voce"
+              style={{
+                ...chip(false),
+                background: "linear-gradient(180deg, rgba(16,185,129,0.28), rgba(5,150,105,0.16))",
+                border: "1px solid rgba(16,185,129,0.36)",
+                boxShadow: "0 16px 34px rgba(16,185,129,0.22)",
+                color: "rgba(6,95,70,0.98)",
+                fontWeight: 1000,
+              }}
+            >
+              + Nuova
+            </button>
+
+            <button data-chip="1" onClick={esci} style={chip(false)}>
+              Esci
+            </button>
+          </div>
         </div>
-
-
+      </div>
+    </div>
+  )}
 
 
 
@@ -6659,143 +6660,277 @@ function MiniCalendarioControllo({
      
      
           
-     
-      </div>
-            {!mostraForm && !mostraTurnoForm && <DraggableFab onClick={apriNuova} label="Aggiungi" />}
-          {mostraForm && (
+      {mostraTurnoForm && (
         <div
           style={sx.overlay}
           onMouseDown={(e) => {
-            if (e.target === e.currentTarget) chiudiForm();
+            if (e.target === e.currentTarget) chiudiTurnoForm();
           }}
         >
-          <div style={sx.modal}>
-            <div style={sx.header}>
+          <div
+            style={{
+              ...sx.modal,
+              maxWidth: 760,
+              width: "min(760px, 100%)",
+              borderRadius: 28,
+              border: "1px solid rgba(255,255,255,0.58)",
+              background: "linear-gradient(180deg, rgba(255,255,255,0.97), rgba(248,250,252,0.94))",
+              boxShadow: "0 32px 90px rgba(15,23,42,0.20)",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                ...sx.header,
+                paddingBottom: 14,
+                borderBottom: "1px solid rgba(15,23,42,0.06)",
+              }}
+            >
               <div>
-                <div style={{ fontSize: 18, fontWeight: 950, letterSpacing: -0.2 }}>
-                  {idInModifica ? "Modifica voce" : "Nuova voce"}
+                <div style={{ fontSize: 20, fontWeight: 1000, letterSpacing: -0.3 }}>
+                  {turnoIdInModifica ? "Modifica turno" : "Nuovo turno"}
                 </div>
-                <div style={{ fontSize: 12, opacity: 0.65, marginTop: 4, fontWeight: 800 }}>
-                  Inserisci i dati e salva
+                <div style={{ fontSize: 12, opacity: 0.65, marginTop: 5, fontWeight: 800 }}>
+                  {turnoIdInModifica
+                    ? "Modifica turno, ore ordinarie e straordinarie"
+                    : "Inserisci turno, ore ordinarie e straordinarie"}
                 </div>
               </div>
 
               <button
                 type="button"
                 data-chip="1"
-                onMouseEnter={() => setHoverClose(true)}
-                onMouseLeave={() => setHoverClose(false)}
-                onClick={chiudiForm}
-                style={{ ...sx.closeBtn, ...(hoverClose ? sx.closeBtnHover : {}) }}
+                onMouseEnter={() => setHoverCloseTurno(true)}
+                onMouseLeave={() => setHoverCloseTurno(false)}
+                onClick={chiudiTurnoForm}
+                style={{ ...sx.closeBtn, ...(hoverCloseTurno ? sx.closeBtnHover : {}) }}
                 title="Chiudi"
               >
                 ✕
               </button>
             </div>
 
-            <div style={sx.body}>
-              <div style={sx.content}>
-                <div>
-                  <div style={sx.sectionLabel}>Tipo</div>
-                  <div style={sx.pills2}>
-                    <button
-                      type="button"
-                      data-chip="1"
-                      onClick={() => setTipo("scadenza")}
-                      style={chipSmall(tipo === "scadenza")}
-                    >
-                      Scadenza
-                    </button>
-                    <button
-                      type="button"
-                      data-chip="1"
-                      onClick={() => setTipo("appuntamento")}
-                      style={chipSmall(tipo === "appuntamento")}
-                    >
-                      Appuntamento
-                    </button>
-                    <button
-                      type="button"
-                      data-chip="1"
-                      onClick={() => setTipo("nota")}
-                      style={chipSmall(tipo === "nota")}
-                    >
-                      Nota rapida
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <div style={sx.sectionLabel}>
-                    {tipo === "nota" ? "Titolo nota" : "Titolo"}
-                  </div>
-                  <input
-                    value={titolo}
-                    onChange={(e) => setTitolo(e.target.value)}
-                    placeholder={tipo === "nota" ? "Es: Da ricordare / Nota veloce" : "Es: Affitto / Dentista"}
-                    style={inputLight(false)}
-                  />
-                </div>
-
-                <div style={{ ...sx.row2, gridTemplateColumns: "1fr" }}>
+            <div style={{ ...sx.body, paddingTop: 18 }}>
+              <div style={{ ...sx.content, display: "grid", gap: 18 }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr",
+                    gap: 14,
+                    alignItems: "end",
+                  }}
+                >
                   <div>
-                    <div style={sx.sectionLabel}>
-                      {tipo === "nota" ? "Data (facoltativa)" : "Data"}
-                    </div>
+                    <div style={sx.sectionLabel}>Data</div>
                     <input
                       type="date"
-                      value={data}
-                      onChange={(e) => setData(e.target.value)}
+                      value={turnoData}
+                      onChange={(e) => setTurnoData(e.target.value)}
                       style={inputLight(false)}
                     />
                   </div>
 
-                  <div>
-                    <div style={sx.sectionLabel}>
-                      {tipo === "nota" ? "Ora (facoltativa)" : "Ora"}
-                    </div>
-                    <input
-                      type="time"
-                      value={ora}
-                      onChange={(e) => setOra(e.target.value)}
-                      style={inputLight(false)}
-                    />
+                  <div
+                    style={{
+                      padding: "12px 14px",
+                      borderRadius: 18,
+                      border: "1px solid rgba(79,70,229,0.10)",
+                      background:
+                        "linear-gradient(180deg, rgba(79,70,229,0.06), rgba(124,58,237,0.03))",
+                      fontSize: 12,
+                      fontWeight: 850,
+                      color: "rgba(67,56,202,0.92)",
+                      lineHeight: 1.45,
+                      boxSizing: "border-box",
+                      maxWidth: "100%",
+                      overflowWrap: "break-word",
+                    }}
+                  >
+                    Scegli un preset rapido oppure imposta manualmente orari e ore.
                   </div>
                 </div>
 
-                {tipo !== "nota" && (
+                <div
+                  style={{
+                    padding: 16,
+                    borderRadius: 22,
+                    border: "1px solid rgba(15,23,42,0.06)",
+                    background: "rgba(255,255,255,0.72)",
+                    boxShadow: "0 10px 24px rgba(15,23,42,0.05)",
+                    display: "grid",
+                    gap: 14,
+                    boxSizing: "border-box",
+                    minWidth: 0,
+                  }}
+                >
                   <div>
-                    <div style={sx.sectionLabel}>Importo uscita (€) facoltativo</div>
-                    <input
-                      type="number"
-                      inputMode="decimal"
-                      value={importo}
-                      onChange={(e) => setImporto(e.target.value)}
-                      placeholder="Es: 650"
-                      style={inputLight(false)}
-                    />
+                    <div style={sx.sectionLabel}>Turno predefinito</div>
 
-                    <div
-                      style={{
-                        marginTop: 8,
-                        fontSize: 12,
-                        fontWeight: 850,
-                        opacity: 0.72,
-                        lineHeight: 1.35,
+                    <select
+                      value={turnoPreset}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setTurnoPreset(val);
+
+                        if (!val) return;
+
+                        if (val === "RIPOSO") {
+                          setTurnoInizio("RIPOSO");
+                          setTurnoFine("RIPOSO");
+                          setTurnoOreOrd("0");
+                          setTurnoOreStraord("");
+                          return;
+                        }
+
+                        if (val === "FERIE") {
+                          setTurnoInizio("FERIE");
+                          setTurnoFine("FERIE");
+                          setTurnoOreOrd("8");
+                          setTurnoOreStraord("");
+                          return;
+                        }
+
+                        const parti = val.split("-");
+                        if (parti.length !== 2) return;
+
+                        let start = parti[0].trim();
+                        let end = parti[1].trim();
+
+                        if (/^\d$/.test(start)) start = `0${start}`;
+                        if (/^\d$/.test(end)) end = `0${end}`;
+
+                        if (end === "24") end = "00";
+
+                        setTurnoInizio(`${start}:00`);
+                        setTurnoFine(`${end}:00`);
                       }}
+                      style={{
+                        ...inputLight(false),
+                        background: "rgba(255,255,255,0.92)",
+                        fontWeight: 900,
+                        maxWidth: "100%",
+                        minWidth: 0,
+                      }}
+                      title="Seleziona turno predefinito"
                     >
-                      Qui inserisci solo eventuali uscite collegate a scadenze o appuntamenti. Le entrate si inseriscono solo nell’area Controllo.
+                      <option value="">Seleziona turno predefinito</option>
+                      {presetTurni
+                        .filter((p) => p !== "RIPOSO" && p !== "FERIE")
+                        .map((p) => (
+                          <option key={p} value={p}>
+                            {p}
+                          </option>
+                        ))}
+                      <option value="RIPOSO">RIPOSO</option>
+                      <option value="FERIE">FERIE</option>
+                    </select>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr",
+                      gap: 12,
+                      alignItems: "start",
+                    }}
+                  >
+                    <div>
+                      <div style={sx.sectionLabel}>Inizio turno</div>
+                      <input
+                        type={turnoInizio === "RIPOSO" || turnoInizio === "FERIE" ? "text" : "time"}
+                        value={turnoInizio}
+                        onChange={(e) => setTurnoInizio(e.target.value)}
+                        style={inputLight(false)}
+                      />
+                    </div>
+
+                    <div>
+                      <div style={sx.sectionLabel}>Fine turno</div>
+                      <input
+                        type={turnoFine === "RIPOSO" || turnoFine === "FERIE" ? "text" : "time"}
+                        value={turnoFine}
+                        onChange={(e) => setTurnoFine(e.target.value)}
+                        style={inputLight(false)}
+                      />
                     </div>
                   </div>
-                )}
+                </div>
 
-                <div>
-                  <div style={sx.sectionLabel}>{tipo === "nota" ? "Testo nota" : "Nota"}</div>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr",
+                    gap: 14,
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: 16,
+                      borderRadius: 22,
+                      border: "1px solid rgba(16,185,129,0.10)",
+                      background:
+                        "linear-gradient(180deg, rgba(16,185,129,0.06), rgba(16,185,129,0.02))",
+                      boxShadow: "0 10px 24px rgba(16,185,129,0.05)",
+                      boxSizing: "border-box",
+                      minWidth: 0,
+                    }}
+                  >
+                    <div style={sx.sectionLabel}>Ore ordinarie</div>
+                    <input
+                      value={turnoOreOrd}
+                      onChange={(e) => setTurnoOreOrd(e.target.value)}
+                      placeholder="Es: 8"
+                      style={inputLight(false)}
+                      inputMode="decimal"
+                    />
+                    <div style={{ marginTop: 8, fontSize: 11, fontWeight: 800, opacity: 0.58 }}>
+                      Per FERIE puoi lasciare 8 come base.
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      padding: 16,
+                      borderRadius: 22,
+                      border: "1px solid rgba(249,115,22,0.10)",
+                      background:
+                        "linear-gradient(180deg, rgba(249,115,22,0.06), rgba(249,115,22,0.02))",
+                      boxShadow: "0 10px 24px rgba(249,115,22,0.05)",
+                      boxSizing: "border-box",
+                      minWidth: 0,
+                    }}
+                  >
+                    <div style={sx.sectionLabel}>Ore straordinarie</div>
+                    <input
+                      value={turnoOreStraord}
+                      onChange={(e) => setTurnoOreStraord(e.target.value)}
+                      placeholder="Es: 2"
+                      style={inputLight(false)}
+                      inputMode="decimal"
+                    />
+                    <div style={{ marginTop: 8, fontSize: 11, fontWeight: 800, opacity: 0.58 }}>
+                      Campo facoltativo.
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    padding: 16,
+                    borderRadius: 22,
+                    border: "1px solid rgba(15,23,42,0.06)",
+                    background: "rgba(255,255,255,0.72)",
+                    boxShadow: "0 10px 24px rgba(15,23,42,0.05)",
+                    boxSizing: "border-box",
+                    minWidth: 0,
+                  }}
+                >
+                  <div style={sx.sectionLabel}>Note</div>
                   <textarea
-                    value={nota}
-                    onChange={(e) => setNota(e.target.value)}
+                    value={turnoNote}
+                    onChange={(e) => setTurnoNote(e.target.value)}
                     rows={4}
-                    placeholder={tipo === "nota" ? "Scrivi una nota veloce..." : "Scrivi una nota..."}
+                    placeholder="Note turno..."
                     style={{
                       ...inputLight(false),
                       height: "auto",
@@ -6805,417 +6940,27 @@ function MiniCalendarioControllo({
                     }}
                   />
                 </div>
-
-                {tipo !== "nota" && (
-                  <div>
-                    <div style={sx.sectionLabel}>Stato</div>
-                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                      <button
-                        type="button"
-                        data-chip="1"
-                        onClick={() => setUrgente((v) => !v)}
-                        style={{
-                          ...chipSmall(urgente),
-                          background: urgente
-                            ? "linear-gradient(180deg, rgba(239,68,68,0.22), rgba(220,38,38,0.12))"
-                            : "rgba(255,255,255,0.82)",
-                          border: urgente ? "1px solid rgba(239,68,68,0.30)" : "1px solid rgba(15,23,42,0.08)",
-                          boxShadow: urgente
-                            ? "0 14px 28px rgba(239,68,68,0.18)"
-                            : "0 10px 18px rgba(15,23,42,0.06)",
-                        }}
-                      >
-                        {urgente ? "Urgente attivo" : "Segna come urgente"}
-                      </button>
-
-                      {urgente && badgeUrgente()}
-                      {badgeTipo(tipo)}
-                    </div>
-                  </div>
-                )}
-
-                {tipo !== "nota" && (
-                  <div>
-                    <div style={sx.sectionLabel}>Notifiche (ore prima)</div>
-
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      {presetOre.map((p) => {
-                        const min = Math.max(1, Math.round(p.ore * 60));
-                        const active = notificheMinutiPrima.includes(min);
-                        return (
-                          <button
-                            type="button"
-                            data-chip="1"
-                            key={p.label}
-                            onClick={() => toggleNotificaOre(p.ore)}
-                            style={chipSmall(active)}
-                            title={`${p.ore} ore prima`}
-                          >
-                            {p.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: "1fr auto", gap: 10 }}>
-                      <input
-                        value={customNotificaOre}
-                        onChange={(e) => setCustomNotificaOre(e.target.value)}
-                        placeholder="Ore custom (es: 1,5)"
-                        style={inputLight(false)}
-                        inputMode="decimal"
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            addCustomNotificaOre();
-                          }
-                        }}
-                      />
-                      <button type="button" data-chip="1" onClick={addCustomNotificaOre} style={chip(true)}>
-                        Aggiungi
-                      </button>
-                    </div>
-
-                    <div style={{ marginTop: 10, fontSize: 12, fontWeight: 850, opacity: 0.7, lineHeight: 1.35 }}>
-                      Le notifiche sono in-app: funzionano se l’app resta aperta.
-                    </div>
-                  </div>
-                )}
-
-                {tipo === "nota" && (
-                  <div
-                    style={{
-                      padding: 12,
-                      borderRadius: 16,
-                      border: "1px solid rgba(15,23,42,0.08)",
-                      background: "rgba(248,250,252,0.88)",
-                      fontSize: 12,
-                      fontWeight: 850,
-                      opacity: 0.76,
-                      lineHeight: 1.4,
-                    }}
-                  >
-                Se lasci la data vuota, la nota verrà salvata come nota libera del mese corrente e comparirà solo in Archivio Generale.                  </div>
-                )}
               </div>
             </div>
 
-            <div style={sx.footer}>
-              <button type="button" data-chip="1" onClick={chiudiForm} style={sx.actionBtn(false)}>
+            <div
+              style={{
+                ...sx.footer,
+                borderTop: "1px solid rgba(15,23,42,0.06)",
+                background: "rgba(255,255,255,0.66)",
+                backdropFilter: "blur(8px)",
+              }}
+            >
+              <button type="button" data-chip="1" onClick={chiudiTurnoForm} style={sx.actionBtn(false)}>
                 Annulla
               </button>
-              <button type="button" data-chip="1" onClick={salva} style={sx.actionBtn(true)}>
-                Salva
+              <button type="button" data-chip="1" onClick={salvaTurno} style={sx.actionBtn(true)}>
+                {turnoIdInModifica ? "Salva modifiche" : "Salva turno"}
               </button>
             </div>
           </div>
         </div>
       )}
-
-
-
-
-     {mostraTurnoForm && (
-  <div
-    style={sx.overlay}
-    onMouseDown={(e) => {
-      if (e.target === e.currentTarget) chiudiTurnoForm();
-    }}
-  >
-    <div
-      style={{
-        ...sx.modal,
-        maxWidth: 760,
-        width: "min(760px, 100%)",
-        borderRadius: 28,
-        border: "1px solid rgba(255,255,255,0.58)",
-        background: "linear-gradient(180deg, rgba(255,255,255,0.97), rgba(248,250,252,0.94))",
-        boxShadow: "0 32px 90px rgba(15,23,42,0.20)",
-        overflow: "hidden",
-      }}
-    >
-      <div
-        style={{
-          ...sx.header,
-          paddingBottom: 14,
-          borderBottom: "1px solid rgba(15,23,42,0.06)",
-        }}
-      >
-        <div>
-          <div style={{ fontSize: 20, fontWeight: 1000, letterSpacing: -0.3 }}>
-            {turnoIdInModifica ? "Modifica turno" : "Nuovo turno"}
-          </div>
-          <div style={{ fontSize: 12, opacity: 0.65, marginTop: 5, fontWeight: 800 }}>
-            {turnoIdInModifica
-              ? "Modifica turno, ore ordinarie e straordinarie"
-              : "Inserisci turno, ore ordinarie e straordinarie"}
-          </div>
-        </div>
-
-        <button
-          type="button"
-          data-chip="1"
-          onMouseEnter={() => setHoverCloseTurno(true)}
-          onMouseLeave={() => setHoverCloseTurno(false)}
-          onClick={chiudiTurnoForm}
-          style={{ ...sx.closeBtn, ...(hoverCloseTurno ? sx.closeBtnHover : {}) }}
-          title="Chiudi"
-        >
-          ✕
-        </button>
-      </div>
-
-      <div style={{ ...sx.body, paddingTop: 18 }}>
-        <div style={{ ...sx.content, display: "grid", gap: 18 }}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr",
-              gap: 14,
-              alignItems: "end",
-            }}
-          >
-            <div>
-              <div style={sx.sectionLabel}>Data</div>
-              <input
-                type="date"
-                value={turnoData}
-                onChange={(e) => setTurnoData(e.target.value)}
-                style={inputLight(false)}
-              />
-            </div>
-
-            <div
-              style={{
-                padding: "12px 14px",
-                borderRadius: 18,
-                border: "1px solid rgba(79,70,229,0.10)",
-                background:
-                  "linear-gradient(180deg, rgba(79,70,229,0.06), rgba(124,58,237,0.03))",
-                fontSize: 12,
-                fontWeight: 850,
-                color: "rgba(67,56,202,0.92)",
-                lineHeight: 1.45,
-                boxSizing: "border-box",
-                maxWidth: "100%",
-                overflowWrap: "break-word",
-              }}
-            >
-              Scegli un preset rapido oppure imposta manualmente orari e ore.
-            </div>
-          </div>
-
-          <div
-            style={{
-              padding: 16,
-              borderRadius: 22,
-              border: "1px solid rgba(15,23,42,0.06)",
-              background: "rgba(255,255,255,0.72)",
-              boxShadow: "0 10px 24px rgba(15,23,42,0.05)",
-              display: "grid",
-              gap: 14,
-              boxSizing: "border-box",
-              minWidth: 0,
-            }}
-          >
-            <div>
-              <div style={sx.sectionLabel}>Turno predefinito</div>
-
-              <select
-                value={turnoPreset}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setTurnoPreset(val);
-
-                  if (!val) return;
-
-                  if (val === "RIPOSO") {
-                    setTurnoInizio("RIPOSO");
-                    setTurnoFine("RIPOSO");
-                    setTurnoOreOrd("0");
-                    setTurnoOreStraord("");
-                    return;
-                  }
-
-                  if (val === "FERIE") {
-                    setTurnoInizio("FERIE");
-                    setTurnoFine("FERIE");
-                    setTurnoOreOrd("8");
-                    setTurnoOreStraord("");
-                    return;
-                  }
-
-                  const parti = val.split("-");
-                  if (parti.length !== 2) return;
-
-                  let start = parti[0].trim();
-                  let end = parti[1].trim();
-
-                  if (/^\d$/.test(start)) start = `0${start}`;
-                  if (/^\d$/.test(end)) end = `0${end}`;
-
-                  if (end === "24") end = "00";
-
-                  setTurnoInizio(`${start}:00`);
-                  setTurnoFine(`${end}:00`);
-                }}
-                style={{
-                  ...inputLight(false),
-                  background: "rgba(255,255,255,0.92)",
-                  fontWeight: 900,
-                  maxWidth: "100%",
-                  minWidth: 0,
-                }}
-                title="Seleziona turno predefinito"
-              >
-                <option value="">Seleziona turno predefinito</option>
-                {presetTurni
-                  .filter((p) => p !== "RIPOSO" && p !== "FERIE")
-                  .map((p) => (
-                    <option key={p} value={p}>
-                      {p}
-                    </option>
-                  ))}
-                <option value="RIPOSO">RIPOSO</option>
-                <option value="FERIE">FERIE</option>
-              </select>
-            </div>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr",
-                gap: 12,
-                alignItems: "start",
-              }}
-            >
-              <div>
-                <div style={sx.sectionLabel}>Inizio turno</div>
-                <input
-                  type={turnoInizio === "RIPOSO" || turnoInizio === "FERIE" ? "text" : "time"}
-                  value={turnoInizio}
-                  onChange={(e) => setTurnoInizio(e.target.value)}
-                  style={inputLight(false)}
-                />
-              </div>
-
-              <div>
-                <div style={sx.sectionLabel}>Fine turno</div>
-                <input
-                  type={turnoFine === "RIPOSO" || turnoFine === "FERIE" ? "text" : "time"}
-                  value={turnoFine}
-                  onChange={(e) => setTurnoFine(e.target.value)}
-                  style={inputLight(false)}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr",
-              gap: 14,
-            }}
-          >
-            <div
-              style={{
-                padding: 16,
-                borderRadius: 22,
-                border: "1px solid rgba(16,185,129,0.10)",
-                background:
-                  "linear-gradient(180deg, rgba(16,185,129,0.06), rgba(16,185,129,0.02))",
-                boxShadow: "0 10px 24px rgba(16,185,129,0.05)",
-                boxSizing: "border-box",
-                minWidth: 0,
-              }}
-            >
-              <div style={sx.sectionLabel}>Ore ordinarie</div>
-              <input
-                value={turnoOreOrd}
-                onChange={(e) => setTurnoOreOrd(e.target.value)}
-                placeholder="Es: 8"
-                style={inputLight(false)}
-                inputMode="decimal"
-              />
-              <div style={{ marginTop: 8, fontSize: 11, fontWeight: 800, opacity: 0.58 }}>
-                Per FERIE puoi lasciare 8 come base.
-              </div>
-            </div>
-
-            <div
-              style={{
-                padding: 16,
-                borderRadius: 22,
-                border: "1px solid rgba(249,115,22,0.10)",
-                background:
-                  "linear-gradient(180deg, rgba(249,115,22,0.06), rgba(249,115,22,0.02))",
-                boxShadow: "0 10px 24px rgba(249,115,22,0.05)",
-                boxSizing: "border-box",
-                minWidth: 0,
-              }}
-            >
-              <div style={sx.sectionLabel}>Ore straordinarie</div>
-              <input
-                value={turnoOreStraord}
-                onChange={(e) => setTurnoOreStraord(e.target.value)}
-                placeholder="Es: 2"
-                style={inputLight(false)}
-                inputMode="decimal"
-              />
-              <div style={{ marginTop: 8, fontSize: 11, fontWeight: 800, opacity: 0.58 }}>
-                Campo facoltativo.
-              </div>
-            </div>
-          </div>
-
-          <div
-            style={{
-              padding: 16,
-              borderRadius: 22,
-              border: "1px solid rgba(15,23,42,0.06)",
-              background: "rgba(255,255,255,0.72)",
-              boxShadow: "0 10px 24px rgba(15,23,42,0.05)",
-              boxSizing: "border-box",
-              minWidth: 0,
-            }}
-          >
-            <div style={sx.sectionLabel}>Note</div>
-            <textarea
-              value={turnoNote}
-              onChange={(e) => setTurnoNote(e.target.value)}
-              rows={4}
-              placeholder="Note turno..."
-              style={{
-                ...inputLight(false),
-                height: "auto",
-                minHeight: 110,
-                resize: "vertical",
-                lineHeight: 1.4,
-              }}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div
-        style={{
-          ...sx.footer,
-          borderTop: "1px solid rgba(15,23,42,0.06)",
-          background: "rgba(255,255,255,0.66)",
-          backdropFilter: "blur(8px)",
-        }}
-      >
-        <button type="button" data-chip="1" onClick={chiudiTurnoForm} style={sx.actionBtn(false)}>
-          Annulla
-        </button>
-        <button type="button" data-chip="1" onClick={salvaTurno} style={sx.actionBtn(true)}>
-          {turnoIdInModifica ? "Salva modifiche" : "Salva turno"}
-        </button>
-      </div>
-    </div>
-  </div>
-)}
     </div>
   );
 }
