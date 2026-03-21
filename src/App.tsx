@@ -5631,7 +5631,7 @@ function MiniCalendarioControllo({
   }
 
   return (
-   <div style={pageBg}>
+   <d style={pageBg}>
   {GlobalStyle}
 
   {pagina !== "home" && (
@@ -6659,7 +6659,299 @@ function MiniCalendarioControllo({
 )}
      
      
-          
+        
+
+      {!mostraForm && !mostraTurnoForm && (
+        <DraggableFab onClick={apriNuova} label="Aggiungi" />
+      )}
+
+      {mostraForm && (
+        <div
+          style={sx.overlay}
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) chiudiForm();
+          }}
+        >
+          <div style={sx.modal}>
+            <div style={sx.header}>
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 950, letterSpacing: -0.2 }}>
+                  {idInModifica ? "Modifica voce" : "Nuova voce"}
+                </div>
+                <div style={{ fontSize: 12, opacity: 0.65, marginTop: 4, fontWeight: 800 }}>
+                  Inserisci i dati e salva
+                </div>
+              </div>
+
+              <button
+                type="button"
+                data-chip="1"
+                onMouseEnter={() => setHoverClose(true)}
+                onMouseLeave={() => setHoverClose(false)}
+                onClick={chiudiForm}
+                style={{ ...sx.closeBtn, ...(hoverClose ? sx.closeBtnHover : {}) }}
+                title="Chiudi"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={sx.body}>
+              <div style={sx.content}>
+                <div>
+                  <div style={sx.sectionLabel}>Tipo</div>
+                  <div style={sx.pills2}>
+                    <button
+                      type="button"
+                      data-chip="1"
+                      onClick={() => setTipo("scadenza")}
+                      style={chipSmall(tipo === "scadenza")}
+                    >
+                      Scadenza
+                    </button>
+                    <button
+                      type="button"
+                      data-chip="1"
+                      onClick={() => setTipo("appuntamento")}
+                      style={chipSmall(tipo === "appuntamento")}
+                    >
+                      Appuntamento
+                    </button>
+                    <button
+                      type="button"
+                      data-chip="1"
+                      onClick={() => setTipo("nota")}
+                      style={chipSmall(tipo === "nota")}
+                    >
+                      Nota rapida
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <div style={sx.sectionLabel}>
+                    {tipo === "nota" ? "Titolo nota" : "Titolo"}
+                  </div>
+                  <input
+                    value={titolo}
+                    onChange={(e) => setTitolo(e.target.value)}
+                    placeholder={
+                      tipo === "nota"
+                        ? "Es: Da ricordare / Nota veloce"
+                        : "Es: Affitto / Dentista"
+                    }
+                    style={inputLight(false)}
+                  />
+                </div>
+
+                <div style={{ ...sx.row2, gridTemplateColumns: "1fr" }}>
+                  <div>
+                    <div style={sx.sectionLabel}>
+                      {tipo === "nota" ? "Data (facoltativa)" : "Data"}
+                    </div>
+                    <input
+                      type="date"
+                      value={data}
+                      onChange={(e) => setData(e.target.value)}
+                      style={inputLight(false)}
+                    />
+                  </div>
+
+                  <div>
+                    <div style={sx.sectionLabel}>
+                      {tipo === "nota" ? "Ora (facoltativa)" : "Ora"}
+                    </div>
+                    <input
+                      type="time"
+                      value={ora}
+                      onChange={(e) => setOra(e.target.value)}
+                      style={inputLight(false)}
+                    />
+                  </div>
+                </div>
+
+                {tipo !== "nota" && (
+                  <div>
+                    <div style={sx.sectionLabel}>Importo uscita (€) facoltativo</div>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      value={importo}
+                      onChange={(e) => setImporto(e.target.value)}
+                      placeholder="Es: 650"
+                      style={inputLight(false)}
+                    />
+
+                    <div
+                      style={{
+                        marginTop: 8,
+                        fontSize: 12,
+                        fontWeight: 850,
+                        opacity: 0.72,
+                        lineHeight: 1.35,
+                      }}
+                    >
+                      Qui inserisci solo eventuali uscite collegate a scadenze o appuntamenti. Le entrate si inseriscono solo nell’area Controllo.
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <div style={sx.sectionLabel}>{tipo === "nota" ? "Testo nota" : "Nota"}</div>
+                  <textarea
+                    value={nota}
+                    onChange={(e) => setNota(e.target.value)}
+                    rows={4}
+                    placeholder={tipo === "nota" ? "Scrivi una nota veloce..." : "Scrivi una nota..."}
+                    style={{
+                      ...inputLight(false),
+                      height: "auto",
+                      minHeight: 110,
+                      resize: "vertical",
+                      lineHeight: 1.4,
+                    }}
+                  />
+                </div>
+
+                {tipo !== "nota" && (
+                  <div>
+                    <div style={sx.sectionLabel}>Stato</div>
+                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                      <button
+                        type="button"
+                        data-chip="1"
+                        onClick={() => setUrgente((v) => !v)}
+                        style={{
+                          ...chipSmall(urgente),
+                          background: urgente
+                            ? "linear-gradient(180deg, rgba(239,68,68,0.22), rgba(220,38,38,0.12))"
+                            : "rgba(255,255,255,0.82)",
+                          border: urgente
+                            ? "1px solid rgba(239,68,68,0.30)"
+                            : "1px solid rgba(15,23,42,0.08)",
+                          boxShadow: urgente
+                            ? "0 14px 28px rgba(239,68,68,0.18)"
+                            : "0 10px 18px rgba(15,23,42,0.06)",
+                        }}
+                      >
+                        {urgente ? "Urgente attivo" : "Segna come urgente"}
+                      </button>
+
+                      {urgente && badgeUrgente()}
+                      {badgeTipo(tipo)}
+                    </div>
+                  </div>
+                )}
+
+                {tipo !== "nota" && (
+                  <div>
+                    <div style={sx.sectionLabel}>Notifiche (ore prima)</div>
+
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      {presetOre.map((p) => {
+                        const min = Math.max(1, Math.round(p.ore * 60));
+                        const active = notificheMinutiPrima.includes(min);
+                        return (
+                          <button
+                            type="button"
+                            data-chip="1"
+                            key={p.label}
+                            onClick={() => toggleNotificaOre(p.ore)}
+                            style={chipSmall(active)}
+                            title={`${p.ore} ore prima`}
+                          >
+                            {p.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 10,
+                        display: "grid",
+                        gridTemplateColumns: "1fr auto",
+                        gap: 10,
+                      }}
+                    >
+                      <input
+                        value={customNotificaOre}
+                        onChange={(e) => setCustomNotificaOre(e.target.value)}
+                        placeholder="Ore custom (es: 1,5)"
+                        style={inputLight(false)}
+                        inputMode="decimal"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            addCustomNotificaOre();
+                          }
+                        }}
+                      />
+                      <button
+                        type="button"
+                        data-chip="1"
+                        onClick={addCustomNotificaOre}
+                        style={chip(true)}
+                      >
+                        Aggiungi
+                      </button>
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 10,
+                        fontSize: 12,
+                        fontWeight: 850,
+                        opacity: 0.7,
+                        lineHeight: 1.35,
+                      }}
+                    >
+                      Le notifiche sono in-app: funzionano se l’app resta aperta.
+                    </div>
+                  </div>
+                )}
+
+                {tipo === "nota" && (
+                  <div
+                    style={{
+                      padding: 12,
+                      borderRadius: 16,
+                      border: "1px solid rgba(15,23,42,0.08)",
+                      background: "rgba(248,250,252,0.88)",
+                      fontSize: 12,
+                      fontWeight: 850,
+                      opacity: 0.76,
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    Se lasci la data vuota, la nota verrà salvata come nota libera del mese corrente e comparirà solo in Archivio Generale.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div style={sx.footer}>
+              <button
+                type="button"
+                data-chip="1"
+                onClick={chiudiForm}
+                style={sx.actionBtn(false)}
+              >
+                Annulla
+              </button>
+              <button
+                type="button"
+                data-chip="1"
+                onClick={salva}
+                style={sx.actionBtn(true)}
+              >
+                Salva
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {mostraTurnoForm && (
         <div
           style={sx.overlay}
@@ -6951,10 +7243,20 @@ function MiniCalendarioControllo({
                 backdropFilter: "blur(8px)",
               }}
             >
-              <button type="button" data-chip="1" onClick={chiudiTurnoForm} style={sx.actionBtn(false)}>
+              <button
+                type="button"
+                data-chip="1"
+                onClick={chiudiTurnoForm}
+                style={sx.actionBtn(false)}
+              >
                 Annulla
               </button>
-              <button type="button" data-chip="1" onClick={salvaTurno} style={sx.actionBtn(true)}>
+              <button
+                type="button"
+                data-chip="1"
+                onClick={salvaTurno}
+                style={sx.actionBtn(true)}
+              >
                 {turnoIdInModifica ? "Salva modifiche" : "Salva turno"}
               </button>
             </div>
