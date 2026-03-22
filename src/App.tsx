@@ -5431,7 +5431,7 @@ function MiniCalendarioControllo({
    <div style={pageBg}>
   {GlobalStyle}
 
-  {pagina !== "home" && (
+  {pagina !== "home" && pagina !== "aggiungi" && (
     <div style={topBar}>
       <div style={{ ...ui.glass, padding: 22 }}>
         <div style={{ display: "grid", gap: 18 }}>
@@ -5558,34 +5558,37 @@ function MiniCalendarioControllo({
       <div style={{ ...ui.card, padding: 26, textAlign: "center" }}>
         <RememberLogo size={64} centered />
 
-     <div
+    <div
   style={{
     marginTop: 18,
     display: "grid",
-    gap: 6,
+    gap: 8,
     textAlign: "center",
   }}
 >
   <div
     style={{
-      fontSize: 20,
+      fontSize: 22,
       fontWeight: 1000,
-      letterSpacing: -0.3,
-      color: "rgba(15,23,42,0.92)",
+      letterSpacing: -0.4,
+      color: "rgba(241,245,249,0.98)",
+      textShadow: "0 10px 30px rgba(79,70,229,0.18)",
+      lineHeight: 1.08,
     }}
   >
-    Che cazzo scriviamo?
+    Scrivi qui il tuo titolo
   </div>
 
   <div
     style={{
-      fontSize: 13,
+      fontSize: 14,
       fontWeight: 800,
-      opacity: 0.6,
+      color: "rgba(191,219,254,0.88)",
       letterSpacing: 0.2,
+      lineHeight: 1.35,
     }}
   >
-    Anche qui dio cane, cosa scriviamo? Ma chi se ne frega, scrivi quello che cazzo vuoi, è il tuo spazio, fanculo.
+    Sottotitolo personalizzabile
   </div>
 </div>
       </div>
@@ -5671,258 +5674,268 @@ function MiniCalendarioControllo({
 
 
 
-      {pagina === "aggiungi" && (
-        <div style={{ maxWidth: 1060, margin: "0 auto", marginTop: 14, display: "grid", gap: 16 }}>
+     {pagina === "aggiungi" && (
+  <div style={{ maxWidth: 1060, margin: "0 auto", marginTop: 14, display: "grid", gap: 16 }}>
+    <div
+      style={{
+        ...ui.card,
+        padding: 22,
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "radial-gradient(700px 260px at 0% 0%, rgba(16,185,129,0.08), transparent 60%), radial-gradient(700px 260px at 100% 0%, rgba(79,70,229,0.08), transparent 60%)",
+          pointerEvents: "none",
+        }}
+      />
+
+      <div style={{ position: "relative", zIndex: 1, display: "grid", gap: 18 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            gap: 14,
+            flexWrap: "wrap",
+          }}
+        >
+          <div style={{ flex: 1, minWidth: 240 }}>
+            <RememberLogo size={56} />
+          </div>
+
+          <button
+            data-chip="1"
+            onClick={() => setPagina("home")}
+            style={chip(false)}
+          >
+            Torna Home
+          </button>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gap: 6,
+          }}
+        >
           <div
             style={{
-              ...ui.card,
-              padding: 20,
-              position: "relative",
-              overflow: "hidden",
+              fontSize: 26,
+              fontWeight: 1000,
+              letterSpacing: -0.6,
+              color: "rgba(241,245,249,0.98)",
+              textShadow: "0 12px 30px rgba(79,70,229,0.18)",
             }}
           >
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                background:
-                  "radial-gradient(700px 260px at 0% 0%, rgba(16,185,129,0.08), transparent 60%), radial-gradient(700px 260px at 100% 0%, rgba(79,70,229,0.08), transparent 60%)",
-                pointerEvents: "none",
-              }}
-            />
-
-            <div style={{ position: "relative", zIndex: 1 }}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                  gap: 14,
-                  flexWrap: "wrap",
-                }}
-              >
-                <div>
-                  <div
-                    style={{
-                      fontSize: 24,
-                      fontWeight: 1000,
-                      letterSpacing: -0.6,
-                      color: "rgba(15,23,42,0.96)",
-                    }}
-                  >
-                    Aggiungi
-                  </div>
-
-                  <div
-                    style={{
-                      marginTop: 6,
-                      fontSize: 13,
-                      fontWeight: 800,
-                      opacity: 0.68,
-                    }}
-                  >
-                    Scegli cosa vuoi inserire nell’app
-                  </div>
-                </div>
-
-                <button
-                  data-chip="1"
-                  onClick={() => setPagina("home")}
-                  style={chip(false)}
-                >
-                  Torna Home
-                </button>
-              </div>
-            </div>
+            Aggiungi
           </div>
 
           <div
             style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-              gap: 16,
+              fontSize: 14,
+              fontWeight: 800,
+              color: "rgba(191,219,254,0.86)",
+              lineHeight: 1.4,
             }}
-            className="remember-grid-2"
           >
-            <button
-              data-chip="1"
-              onClick={() => setPagina("controllo")}
-              style={{
-                ...ui.card,
-                padding: 22,
-                textAlign: "left",
-                border: "1px solid rgba(16,185,129,0.18)",
-                background:
-                  "linear-gradient(180deg, rgba(16,185,129,0.12), rgba(255,255,255,0.94))",
-                boxShadow: "0 18px 40px rgba(16,185,129,0.10)",
-                cursor: "pointer",
-                display: "grid",
-                gap: 12,
-              }}
-            >
-              <div
-                style={{
-                  width: 54,
-                  height: 54,
-                  borderRadius: 18,
-                  display: "grid",
-                  placeItems: "center",
-                  background: "linear-gradient(180deg, rgba(16,185,129,0.94), rgba(5,150,105,0.90))",
-                  color: "white",
-                  fontSize: 24,
-                  boxShadow: "0 14px 28px rgba(16,185,129,0.20)",
-                }}
-              >
-                €
-              </div>
-
-              <div>
-                <div
-                  style={{
-                    fontSize: 20,
-                    fontWeight: 1000,
-                    letterSpacing: -0.3,
-                    color: "rgba(15,23,42,0.96)",
-                  }}
-                >
-                  Entrata / Uscita
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 6,
-                    fontSize: 13,
-                    fontWeight: 800,
-                    opacity: 0.68,
-                    lineHeight: 1.45,
-                    color: "rgba(15,23,42,0.88)",
-                  }}
-                >
-                  Inserisci entrate extra e uscite extra in modo semplice e veloce
-                </div>
-              </div>
-            </button>
-
-            <button
-              data-chip="1"
-              onClick={() => apriNuova()}
-              style={{
-                ...ui.card,
-                padding: 22,
-                textAlign: "left",
-                border: "1px solid rgba(79,70,229,0.18)",
-                background:
-                  "linear-gradient(180deg, rgba(79,70,229,0.12), rgba(255,255,255,0.94))",
-                boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
-                cursor: "pointer",
-                display: "grid",
-                gap: 12,
-              }}
-            >
-              <div
-                style={{
-                  width: 54,
-                  height: 54,
-                  borderRadius: 18,
-                  display: "grid",
-                  placeItems: "center",
-                  background: "linear-gradient(180deg, rgba(79,70,229,0.94), rgba(124,58,237,0.90))",
-                  color: "white",
-                  fontSize: 24,
-                  boxShadow: "0 14px 28px rgba(79,70,229,0.20)",
-                }}
-              >
-                🗓
-              </div>
-
-              <div>
-                <div
-                  style={{
-                    fontSize: 20,
-                    fontWeight: 1000,
-                    letterSpacing: -0.3,
-                    color: "rgba(15,23,42,0.96)",
-                  }}
-                >
-                  Appuntamento / Scadenza
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 6,
-                    fontSize: 13,
-                    fontWeight: 800,
-                    opacity: 0.68,
-                    lineHeight: 1.45,
-                    color: "rgba(15,23,42,0.88)",
-                  }}
-                >
-                  Aggiungi velocemente nuovi eventi, date importanti e promemoria
-                </div>
-              </div>
-            </button>
-
-            <button
-              data-chip="1"
-              onClick={() => apriTurnoForm()}
-              style={{
-                ...ui.card,
-                padding: 22,
-                textAlign: "left",
-                border: "1px solid rgba(249,115,22,0.18)",
-                background:
-                  "linear-gradient(180deg, rgba(249,115,22,0.12), rgba(255,255,255,0.94))",
-                boxShadow: "0 18px 40px rgba(249,115,22,0.10)",
-                cursor: "pointer",
-                display: "grid",
-                gap: 12,
-              }}
-            >
-              <div
-                style={{
-                  width: 54,
-                  height: 54,
-                  borderRadius: 18,
-                  display: "grid",
-                  placeItems: "center",
-                  background: "linear-gradient(180deg, rgba(249,115,22,0.94), rgba(234,88,12,0.90))",
-                  color: "white",
-                  fontSize: 24,
-                  boxShadow: "0 14px 28px rgba(249,115,22,0.20)",
-                }}
-              >
-                ⏰
-              </div>
-
-              <div>
-                <div
-                  style={{
-                    fontSize: 20,
-                    fontWeight: 1000,
-                    letterSpacing: -0.3,
-                    color: "rgba(15,23,42,0.96)",
-                  }}
-                >
-                  Turno
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 6,
-                    fontSize: 13,
-                    fontWeight: 800,
-                    opacity: 0.68,
-                    lineHeight: 1.45,
-                    color: "rgba(15,23,42,0.88)",
-                  }}
-                >
-                  Inserisci un nuovo turno di lavoro, ferie o riposo
-                </div>
-              </div>
-            </button>
+            Scegli cosa vuoi inserire nell’app
           </div>
         </div>
-      )}
+      </div>
+    </div>
+
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+        gap: 16,
+      }}
+      className="remember-grid-2"
+    >
+      <button
+        data-chip="1"
+        onClick={() => setPagina("controllo")}
+        style={{
+          ...ui.card,
+          padding: 22,
+          textAlign: "left",
+          border: "1px solid rgba(16,185,129,0.18)",
+          background:
+            "linear-gradient(180deg, rgba(16,185,129,0.12), rgba(255,255,255,0.94))",
+          boxShadow: "0 18px 40px rgba(16,185,129,0.10)",
+          cursor: "pointer",
+          display: "grid",
+          gap: 12,
+        }}
+      >
+        <div
+          style={{
+            width: 54,
+            height: 54,
+            borderRadius: 18,
+            display: "grid",
+            placeItems: "center",
+            background: "linear-gradient(180deg, rgba(16,185,129,0.94), rgba(5,150,105,0.90))",
+            color: "white",
+            fontSize: 24,
+            boxShadow: "0 14px 28px rgba(16,185,129,0.20)",
+          }}
+        >
+          €
+        </div>
+
+        <div>
+          <div
+            style={{
+              fontSize: 20,
+              fontWeight: 1000,
+              letterSpacing: -0.3,
+              color: "rgba(15,23,42,0.96)",
+            }}
+          >
+            Entrata / Uscita
+          </div>
+
+          <div
+            style={{
+              marginTop: 6,
+              fontSize: 13,
+              fontWeight: 800,
+              opacity: 0.72,
+              lineHeight: 1.45,
+              color: "rgba(15,23,42,0.88)",
+            }}
+          >
+            Inserisci entrate extra e uscite extra in modo semplice e veloce
+          </div>
+        </div>
+      </button>
+
+      <button
+        data-chip="1"
+        onClick={() => apriNuova()}
+        style={{
+          ...ui.card,
+          padding: 22,
+          textAlign: "left",
+          border: "1px solid rgba(79,70,229,0.18)",
+          background:
+            "linear-gradient(180deg, rgba(79,70,229,0.12), rgba(255,255,255,0.94))",
+          boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
+          cursor: "pointer",
+          display: "grid",
+          gap: 12,
+        }}
+      >
+        <div
+          style={{
+            width: 54,
+            height: 54,
+            borderRadius: 18,
+            display: "grid",
+            placeItems: "center",
+            background: "linear-gradient(180deg, rgba(79,70,229,0.94), rgba(124,58,237,0.90))",
+            color: "white",
+            fontSize: 24,
+            boxShadow: "0 14px 28px rgba(79,70,229,0.20)",
+          }}
+        >
+          🗓
+        </div>
+
+        <div>
+          <div
+            style={{
+              fontSize: 20,
+              fontWeight: 1000,
+              letterSpacing: -0.3,
+              color: "rgba(15,23,42,0.96)",
+            }}
+          >
+            Appuntamento / Scadenza
+          </div>
+
+          <div
+            style={{
+              marginTop: 6,
+              fontSize: 13,
+              fontWeight: 800,
+              opacity: 0.72,
+              lineHeight: 1.45,
+              color: "rgba(15,23,42,0.88)",
+            }}
+          >
+            Aggiungi velocemente nuovi eventi, date importanti e promemoria
+          </div>
+        </div>
+      </button>
+
+      <button
+        data-chip="1"
+        onClick={() => apriTurnoForm()}
+        style={{
+          ...ui.card,
+          padding: 22,
+          textAlign: "left",
+          border: "1px solid rgba(249,115,22,0.18)",
+          background:
+            "linear-gradient(180deg, rgba(249,115,22,0.12), rgba(255,255,255,0.94))",
+          boxShadow: "0 18px 40px rgba(249,115,22,0.10)",
+          cursor: "pointer",
+          display: "grid",
+          gap: 12,
+        }}
+      >
+        <div
+          style={{
+            width: 54,
+            height: 54,
+            borderRadius: 18,
+            display: "grid",
+            placeItems: "center",
+            background: "linear-gradient(180deg, rgba(249,115,22,0.94), rgba(234,88,12,0.90))",
+            color: "white",
+            fontSize: 24,
+            boxShadow: "0 14px 28px rgba(249,115,22,0.20)",
+          }}
+        >
+          ⏰
+        </div>
+
+        <div>
+          <div
+            style={{
+              fontSize: 20,
+              fontWeight: 1000,
+              letterSpacing: -0.3,
+              color: "rgba(15,23,42,0.96)",
+            }}
+          >
+            Turno
+          </div>
+
+          <div
+            style={{
+              marginTop: 6,
+              fontSize: 13,
+              fontWeight: 800,
+              opacity: 0.72,
+              lineHeight: 1.45,
+              color: "rgba(15,23,42,0.88)",
+            }}
+          >
+            Inserisci un nuovo turno di lavoro, ferie o riposo
+          </div>
+        </div>
+      </button>
+    </div>
+  </div>
+)}
 
 
 
