@@ -159,6 +159,27 @@ function descrizioneTurnoBreve(inizio: string, fine: string, note?: string) {
 
 
 
+function componiDescrizioneMovimento(categoria: string, dettaglio?: string) {
+  const cat = categoria.trim();
+  const det = (dettaglio ?? "").trim();
+  return det ? `${cat} • ${det}` : cat;
+}
+
+function estraiCategoriaMovimento(descrizione: string) {
+  const raw = (descrizione || "").trim();
+  if (!raw) return "";
+  const parts = raw.split("•");
+  return (parts[0] ?? "").trim();
+}
+
+function estraiDettaglioMovimento(descrizione: string) {
+  const raw = (descrizione || "").trim();
+  if (!raw) return "";
+  const parts = raw.split("•");
+  if (parts.length <= 1) return "";
+  return parts.slice(1).join("•").trim();
+}
+
 
 
 const K_USERS = "scadenze_users";
@@ -1333,41 +1354,84 @@ function chiudiTurnoForm() {
   const entrateExtraVal = incassi[meseKey]?.entrateExtra ?? [];
   const usciteExtraVal = incassi[meseKey]?.usciteExtra ?? [];
 
-  function aggiungiEntrataExtra() {
-    const descrizione = nuovaEntrataDesc.trim();
-    const importoNum = Number(nuovaEntrataImporto.replace(",", "."));
+function aggiungiEntrataExtra() {
+  const importoNum = Number(nuovaEntrataImporto.replace(",", "."));
+  const dettaglio = nuovaEntrataDesc.trim();
 
-    if (!nuovaEntrataData) {
-      alert("Inserisci una data.");
-      return;
-    }
-    if (!descrizione) {
-      alert("Scrivi la descrizione dell’entrata.");
-      return;
-    }
-    if (!Number.isFinite(importoNum) || importoNum <= 0) {
-      alert("Inserisci un importo valido.");
-      return;
-    }
-
-    const nuova: EntrataExtra = {
-      id: safeUUID(),
-      data: nuovaEntrataData,
-      descrizione,
-      importo: importoNum,
-    };
-
-    setIncassi((prev) => ({
-      ...prev,
-      [meseKey]: {
-        entrateExtra: [...(prev[meseKey]?.entrateExtra ?? []), nuova],
-        usciteExtra: prev[meseKey]?.usciteExtra ?? [],
-      },
-    }));
-
-    setNuovaEntrataDesc("");
-    setNuovaEntrataImporto("");
+  if (!nuovaEntrataData) {
+    alert("Inserisci una data.");
+    return;
   }
+
+  let categoriaFinale = categoriaEntrata;
+
+  if (categoriaEntrata === "__altro__") {
+    const pulita = nuovaCategoriaEntrata.trim();
+
+    if (!pulita) {
+      alert("Scrivi la nuova categoria entrata.");
+      return;
+    }
+
+    const giaEsiste =
+      categorieEntrataBase.some((x) => x.toLowerCase() === pulita.toLowerCase()) ||
+      categorieEntrataCustom.some((x) => x.toLowerCase() === pulita.toLowerCase());
+
+    if (!giaEsiste) {
+      const updated = [...categorieEntrataCustom, pulita].sort((a, b) => a.localeCompare(b, "it"));
+      localStorage.setItem(K_CATEGORIE_ENTRATA_CUSTOM, JSON.stringify(updated));
+    }
+
+    categoriaFinale = pulita;
+  }
+
+  if (!categoriaFinale) {
+    alert("Seleziona una categoria entrata.");
+    return;
+  }
+
+  if (!Number.isFinite(importoNum) || importoNum <= 0) {
+    alert("Inserisci un importo valido.");
+    return;
+  }
+
+  const nuova: EntrataExtra = {
+    id: safeUUID(),
+    data: nuovaEntrataData,
+    descrizione: componiDescrizioneMovimento(categoriaFinale, dettaglio),
+    importo: importoNum,
+  };
+
+  setIncassi((prev) => ({
+    ...prev,
+    [meseKey]: {
+      entrateExtra: [...(prev[meseKey]?.entrateExtra ?? []), nuova],
+      usciteExtra: prev[meseKey]?.usciteExtra ?? [],
+    },
+  }));
+
+  if (categoriaEntrata === "__altro__") {
+    const nuovaLista = (() => {
+      try {
+        const raw = localStorage.getItem(K_CATEGORIE_ENTRATA_CUSTOM);
+        const parsed = raw ? (JSON.parse(raw) as string[]) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    })();
+    setCategoriaEntrata("");
+    setNuovaCategoriaEntrata("");
+    void nuovaLista;
+  } else {
+    setCategoriaEntrata("");
+    setNuovaCategoriaEntrata("");
+  }
+
+  setNuovaEntrataDesc("");
+  setNuovaEntrataImporto("");
+  setMovimentoAperto(null);
+}
 
   function eliminaEntrataExtra(id: string) {
     setIncassi((prev) => ({
@@ -1381,7 +1445,7 @@ function chiudiTurnoForm() {
 
 function aggiungiUscitaExtra() {
   const importoNum = Number(nuovaUscitaImporto.replace(",", "."));
-  const notaBreve = nuovaUscitaDesc.trim();
+  const dettaglio = nuovaUscitaDesc.trim();
 
   if (!nuovaUscitaData) {
     alert("Inserisci una data.");
@@ -1404,7 +1468,6 @@ function aggiungiUscitaExtra() {
 
     if (!giaEsiste) {
       const updated = [...categorieUscitaCustom, pulita].sort((a, b) => a.localeCompare(b, "it"));
-      setCategorieUscitaCustom(updated);
       localStorage.setItem(K_CATEGORIE_USCITA_CUSTOM, JSON.stringify(updated));
     }
 
@@ -1421,12 +1484,10 @@ function aggiungiUscitaExtra() {
     return;
   }
 
-  const descrizione = notaBreve ? `${categoriaFinale} • ${notaBreve}` : categoriaFinale;
-
   const nuova: UscitaExtra = {
     id: safeUUID(),
     data: nuovaUscitaData,
-    descrizione,
+    descrizione: componiDescrizioneMovimento(categoriaFinale, dettaglio),
     importo: importoNum,
     nota: nuovaUscitaNota.trim(),
   };
@@ -1439,11 +1500,27 @@ function aggiungiUscitaExtra() {
     },
   }));
 
+  if (categoriaUscita === "__altro__") {
+    const nuovaLista = (() => {
+      try {
+        const raw = localStorage.getItem(K_CATEGORIE_USCITA_CUSTOM);
+        const parsed = raw ? (JSON.parse(raw) as string[]) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    })();
+    setCategoriaUscita("");
+    setNuovaCategoriaUscita("");
+    void nuovaLista;
+  } else {
+    setCategoriaUscita("");
+    setNuovaCategoriaUscita("");
+  }
+
   setNuovaUscitaDesc("");
   setNuovaUscitaImporto("");
   setNuovaUscitaNota("");
-  setCategoriaUscita("");
-  setNuovaCategoriaUscita("");
   setMovimentoAperto(null);
 }
 
@@ -5195,11 +5272,25 @@ function MiniCalendarioControllo({
                           {ev.urgente && badgeUrgente()}
                         </div>
 
-                        <div style={{ fontSize: 15, fontWeight: 950, lineHeight: 1.25 }}>{ev.titolo}</div>
+                        <div style={{ fontSize: 15, fontWeight: 950, lineHeight: 1.25 }}>
+                            {ev.movimento === "entrata" || ev.movimento === "uscita"
+                              ? estraiCategoriaMovimento(ev.titolo)
+                              : ev.titolo}
+                          </div>
 
                         <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72 }}>
                           {formattaDataBreve(ev.data)} • {ev.ora}
                         </div>
+
+
+                              {(ev.movimento === "entrata" || ev.movimento === "uscita") &&
+                            estraiDettaglioMovimento(ev.titolo) && (
+                              <div style={{ fontSize: 12, fontWeight: 800, opacity: 0.68, lineHeight: 1.35 }}>
+                                {estraiDettaglioMovimento(ev.titolo)}
+                              </div>
+                            )}
+
+
 
                         {ev.nota && (
                           <div style={{ fontSize: 12, fontWeight: 800, opacity: 0.68, lineHeight: 1.35 }}>
@@ -6992,11 +7083,23 @@ function MiniCalendarioControllo({
                       {ev.urgente && badgeUrgente()}
                     </div>
 
-                    <div style={{ fontSize: 15, fontWeight: 950 }}>{ev.titolo}</div>
+                    <div style={{ fontSize: 15, fontWeight: 950 }}>
+                    {ev.movimento === "entrata" || ev.movimento === "uscita"
+                      ? estraiCategoriaMovimento(ev.titolo)
+                      : ev.titolo}
+                  </div>
 
                     <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72 }}>
                       {isNotaLibera ? "Nota libera del mese" : `${formattaDataBreve(ev.data)} • ${ev.ora}`}
                     </div>
+
+
+                    {(ev.movimento === "entrata" || ev.movimento === "uscita") &&
+                    estraiDettaglioMovimento(ev.titolo) && (
+                      <div style={{ fontSize: 12, fontWeight: 800, opacity: 0.68 }}>
+                        {estraiDettaglioMovimento(ev.titolo)}
+                      </div>
+                    )}
 
                     {ev.nota && (
                       <div style={{ fontSize: 12, fontWeight: 800, opacity: 0.68 }}>
