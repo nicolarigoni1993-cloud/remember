@@ -743,7 +743,7 @@ const [categorieUscitaCustom] = useState<string[]>(() => {
   }
 });
 
-  const [mostraTurnoForm, setMostraTurnoForm] = useState(false);
+   const [mostraTurnoForm, setMostraTurnoForm] = useState(false);
   const [turnoData, setTurnoData] = useState(new Date().toISOString().slice(0, 10));
   const [turnoInizio, setTurnoInizio] = useState("08:00");
   const [turnoFine, setTurnoFine] = useState("16:00");
@@ -753,7 +753,12 @@ const [categorieUscitaCustom] = useState<string[]>(() => {
   const [turnoPreset, setTurnoPreset] = useState("");
   const [turnoIdInModifica, setTurnoIdInModifica] = useState<string | null>(null);
 
-  const presetTurni = ["RIPOSO", "00-06", "06-12", "12-18", "18-24", "6-14", "14-22", "22-06", "8-18", "8-17"];
+  const [turnoTipo, setTurnoTipo] = useState<"lavoro" | "ferie" | "riposo">("lavoro");
+  const [turnoModoOreFerie, setTurnoModoOreFerie] = useState<"giorni" | "ore">("giorni");
+  const [turnoQuantitaFerie, setTurnoQuantitaFerie] = useState("");
+  const [turnoManuale, setTurnoManuale] = useState(false);
+
+  const presetTurni = ["00-06", "06-12", "12-18", "18-24", "6-14", "14-22", "22-06", "8-18", "8-17"];
 
   const [controlloDettaglioData, setControlloDettaglioData] = useState<string | null>(null);
 
@@ -1136,42 +1141,100 @@ function salva() {
   chiudiForm();
 }
 
-function apriTurnoForm(dataSelezionata?: string) {
-  setAggiungiSezione("menu");
-  setTurnoIdInModifica(null);
-  setTurnoData(dataSelezionata || new Date().toISOString().slice(0, 10));
-  setTurnoInizio("08:00");
-  setTurnoFine("16:00");
-  setTurnoOreOrd("");
-  setTurnoOreStraord("");
-  setTurnoNote("");
-  setTurnoPreset("");
-  setMostraTurnoForm(true);
-}
+  function applicaPresetTurno(val: string) {
+    setTurnoPreset(val);
+    setTurnoManuale(false);
+
+    const parti = val.split("-");
+    if (parti.length !== 2) return;
+
+    let start = parti[0].trim();
+    let end = parti[1].trim();
+
+    if (/^\d$/.test(start)) start = `0${start}`;
+    if (/^\d$/.test(end)) end = `0${end}`;
+    if (end === "24") end = "00";
+
+    setTurnoInizio(`${start}:00`);
+    setTurnoFine(`${end}:00`);
+
+    if (turnoOreOrd.trim() === "") {
+      const oreCalcolate =
+        ((Number(end === "00" ? "24" : end) - Number(start) + 24) % 24) || 0;
+      if (oreCalcolate > 0) setTurnoOreOrd(String(oreCalcolate));
+    }
+  }
+
+  function resetCampiTurnoBase(dataSelezionata?: string) {
+    setTurnoIdInModifica(null);
+    setTurnoData(dataSelezionata || new Date().toISOString().slice(0, 10));
+    setTurnoTipo("lavoro");
+    setTurnoModoOreFerie("giorni");
+    setTurnoQuantitaFerie("");
+    setTurnoInizio("08:00");
+    setTurnoFine("16:00");
+    setTurnoOreOrd("");
+    setTurnoOreStraord("");
+    setTurnoNote("");
+    setTurnoPreset("");
+    setTurnoManuale(false);
+  }
+
+  function apriTurnoForm(dataSelezionata?: string) {
+    setAggiungiSezione("menu");
+    resetCampiTurnoBase(dataSelezionata);
+    setMostraTurnoForm(true);
+  }
 
   function apriModificaTurno(t: Turno) {
     const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
 
     setTurnoIdInModifica(t.id);
     setTurnoData(t.data);
+    setTurnoOreStraord(t.oreStraordinarie ? String(t.oreStraordinarie) : "");
 
     if (sigla === "R") {
+      setTurnoTipo("riposo");
+      setTurnoModoOreFerie("giorni");
+      setTurnoQuantitaFerie("");
       setTurnoInizio("08:00");
       setTurnoFine("16:00");
-      setTurnoOreOrd("0");
-      setTurnoOreStraord("");
-      setTurnoPreset("RIPOSO");
+      setTurnoOreOrd("");
+      setTurnoPreset("");
+      setTurnoManuale(false);
+
+      const notaPulita = (t.note || "").replace(/^RIPOSO\s*•?\s*/i, "").trim();
+      setTurnoNote(notaPulita);
     } else if (sigla === "F") {
+      setTurnoTipo("ferie");
       setTurnoInizio("08:00");
       setTurnoFine("16:00");
-      setTurnoOreOrd(String(t.oreOrdinarie ?? ""));
-      setTurnoOreStraord(t.oreStraordinarie ? String(t.oreStraordinarie) : "");
-      setTurnoPreset("FERIE");
+      setTurnoPreset("");
+      setTurnoManuale(false);
+
+      const oreOrd = Number(t.oreOrdinarie || 0);
+      const oreStra = Number(t.oreStraordinarie || 0);
+      const totaleOreFerie = oreOrd + oreStra;
+
+      if (oreOrd === 8 && oreStra === 0) {
+        setTurnoModoOreFerie("giorni");
+        setTurnoQuantitaFerie("1");
+      } else {
+        setTurnoModoOreFerie("ore");
+        setTurnoQuantitaFerie(String(totaleOreFerie || oreOrd || ""));
+      }
+
+      setTurnoOreOrd(String(oreOrd || ""));
+      setTurnoOreStraord(oreStra ? String(oreStra) : "");
+
+      const notaPulita = (t.note || "").replace(/^FERIE\s*•?\s*/i, "").trim();
+      setTurnoNote(notaPulita);
     } else {
+      setTurnoTipo("lavoro");
       setTurnoInizio(t.inizio);
       setTurnoFine(t.fine);
       setTurnoOreOrd(String(t.oreOrdinarie ?? ""));
-      setTurnoOreStraord(t.oreStraordinarie ? String(t.oreStraordinarie) : "");
+      setTurnoNote(t.note ?? "");
 
       const key = `${t.inizio}-${t.fine}`
         .replace("06:00-14:00", "6-14")
@@ -1184,17 +1247,16 @@ function apriTurnoForm(dataSelezionata?: string) {
         .replace("08:00-18:00", "8-18")
         .replace("08:00-17:00", "8-17");
 
-      setTurnoPreset([...presetTurni, "FERIE"].includes(key) ? key : "");
-    }
+      if (presetTurni.includes(key)) {
+        setTurnoPreset(key);
+        setTurnoManuale(false);
+      } else {
+        setTurnoPreset("");
+        setTurnoManuale(true);
+      }
 
-    if (sigla === "R") {
-      const notaPulita = (t.note || "").replace(/^RIPOSO\s*•?\s*/i, "").trim();
-      setTurnoNote(notaPulita);
-    } else if (sigla === "F") {
-      const notaPulita = (t.note || "").replace(/^FERIE\s*•?\s*/i, "").trim();
-      setTurnoNote(notaPulita);
-    } else {
-      setTurnoNote(t.note ?? "");
+      setTurnoModoOreFerie("giorni");
+      setTurnoQuantitaFerie("");
     }
 
     setMostraTurnoForm(true);
@@ -1202,16 +1264,20 @@ function apriTurnoForm(dataSelezionata?: string) {
 
   void apriModificaTurno;
 
-function chiudiTurnoForm() {
-  setMostraTurnoForm(false);
-  setTurnoIdInModifica(null);
-  setTurnoOreOrd("");
-  setTurnoOreStraord("");
-  setTurnoNote("");
-  setTurnoPreset("");
-  setTurnoInizio("08:00");
-  setTurnoFine("16:00");
-}
+  function chiudiTurnoForm() {
+    setMostraTurnoForm(false);
+    setTurnoIdInModifica(null);
+    setTurnoTipo("lavoro");
+    setTurnoModoOreFerie("giorni");
+    setTurnoQuantitaFerie("");
+    setTurnoOreOrd("");
+    setTurnoOreStraord("");
+    setTurnoNote("");
+    setTurnoPreset("");
+    setTurnoInizio("08:00");
+    setTurnoFine("16:00");
+    setTurnoManuale(false);
+  }
 
   function salvaTurno() {
     if (!turnoData) {
@@ -1219,10 +1285,7 @@ function chiudiTurnoForm() {
       return;
     }
 
-    const isRiposo = turnoPreset === "RIPOSO";
-    const isFerie = turnoPreset === "FERIE";
-
-    if (isRiposo) {
+    if (turnoTipo === "riposo") {
       const aggiornato: Turno = {
         id: turnoIdInModifica ?? safeUUID(),
         data: turnoData,
@@ -1243,19 +1306,15 @@ function chiudiTurnoForm() {
       return;
     }
 
-    if (isFerie) {
-      const oreOrd = turnoOreOrd.trim() === "" ? 8 : parseOreItaliane(turnoOreOrd);
-      const oreStra = turnoOreStraord.trim() === "" ? 0 : parseOreItaliane(turnoOreStraord);
+    if (turnoTipo === "ferie") {
+      const quantita = parseOreItaliane(turnoQuantitaFerie);
 
-      if (oreOrd === null) {
-        alert("Inserisci ore ferie valide.");
+      if (quantita === null || quantita <= 0) {
+        alert(turnoModoOreFerie === "giorni" ? "Inserisci giorni ferie validi." : "Inserisci ore ferie valide.");
         return;
       }
 
-      if (oreStra === null) {
-        alert("Inserisci ore extra ferie valide.");
-        return;
-      }
+      const oreOrd = turnoModoOreFerie === "giorni" ? quantita * 8 : quantita;
 
       const aggiornato: Turno = {
         id: turnoIdInModifica ?? safeUUID(),
@@ -1263,8 +1322,10 @@ function chiudiTurnoForm() {
         inizio: "FERIE",
         fine: "FERIE",
         oreOrdinarie: oreOrd,
-        oreStraordinarie: oreStra,
-        note: turnoNote.trim() ? `FERIE • ${turnoNote.trim()}` : "FERIE",
+        oreStraordinarie: 0,
+        note:
+          `FERIE • ${turnoModoOreFerie === "giorni" ? `${quantita} g` : `${quantita} h`}` +
+          (turnoNote.trim() ? ` • ${turnoNote.trim()}` : ""),
       };
 
       if (turnoIdInModifica) {
@@ -1277,15 +1338,20 @@ function chiudiTurnoForm() {
       return;
     }
 
+    if (!turnoInizio || !turnoFine) {
+      alert("Inserisci inizio e fine turno.");
+      return;
+    }
+
     const oreOrd = parseOreItaliane(turnoOreOrd);
     const oreStra = turnoOreStraord.trim() === "" ? 0 : parseOreItaliane(turnoOreStraord);
 
-    if (oreOrd === null) {
+    if (oreOrd === null || oreOrd < 0) {
       alert("Inserisci ore ordinarie valide.");
       return;
     }
 
-    if (oreStra === null) {
+    if (oreStra === null || oreStra < 0) {
       alert("Inserisci ore straordinarie valide.");
       return;
     }
@@ -1532,7 +1598,7 @@ function aggiungiUscitaExtra() {
 
   const totaleEntrateExtra = useMemo(() => entrateExtraVal.reduce((s, x) => s + x.importo, 0), [entrateExtraVal]);
 
-  const turniMese = useMemo(() => turni.filter((t) => stessoMeseSelezionato(t.data)), [turni, meseCorrente]);
+ const turniMese = useMemo(() => turni.filter((t) => stessoMeseSelezionato(t.data)), [turni, meseCorrente]);
   const oreOrdMese = useMemo(() => turniMese.reduce((s, t) => s + t.oreOrdinarie, 0), [turniMese]);
   const oreStraMese = useMemo(() => turniMese.reduce((s, t) => s + t.oreStraordinarie, 0), [turniMese]);
   const oreTotMese = useMemo(() => oreOrdMese + oreStraMese, [oreOrdMese, oreStraMese]);
@@ -1632,7 +1698,7 @@ function aggiungiUscitaExtra() {
 
 
 
-  const totaleTurniMese = useMemo(() => {
+const totaleTurniMese = useMemo(() => {
     return turniMese.filter((t) => {
       const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
       return sigla !== "R";
@@ -1644,7 +1710,17 @@ function aggiungiUscitaExtra() {
   }, [turni]);
 
   const ferieGiorniEffettuati = useMemo(() => {
-    return turniFerie.length;
+    return turniFerie.reduce((tot, t) => {
+      const testo = `${t.note || ""}`;
+      const matchGiorni = testo.match(/FERIE\s*•\s*([\d.,]+)\s*g/i);
+      if (matchGiorni) {
+        const val = parseOreItaliane(matchGiorni[1]);
+        return tot + (val ?? 0);
+      }
+
+      const ore = Number(t.oreOrdinarie || 0) + Number(t.oreStraordinarie || 0);
+      return tot + (ore > 0 ? ore / 8 : 1);
+    }, 0);
   }, [turniFerie]);
 
   const ferieOreEffettuate = useMemo(() => {
@@ -1660,6 +1736,7 @@ function aggiungiUscitaExtra() {
   const ferieOreResidue = useMemo(() => {
     return Math.max(0, ferieTotaliOreBase - ferieOreEffettuate);
   }, [ferieTotaliOreBase, ferieOreEffettuate]);
+
 
 
     const tutteEntrateExtra = useMemo(() => {
@@ -7461,96 +7538,184 @@ function MiniCalendarioControllo({
 
     
 
-      {mostraTurnoForm && (
+  {mostraTurnoForm && (
+    <div
+      style={sx.overlay}
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) chiudiTurnoForm();
+      }}
+    >
+      <div
+        style={{
+          ...sx.modal,
+          maxWidth: 760,
+          width: "min(760px, 100%)",
+          borderRadius: 28,
+          border: "1px solid rgba(255,255,255,0.58)",
+          background: "linear-gradient(180deg, rgba(255,255,255,0.97), rgba(248,250,252,0.94))",
+          boxShadow: "0 32px 90px rgba(15,23,42,0.20)",
+          overflow: "hidden",
+        }}
+      >
         <div
-          style={sx.overlay}
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget) chiudiTurnoForm();
+          style={{
+            ...sx.header,
+            paddingBottom: 14,
+            borderBottom: "1px solid rgba(15,23,42,0.06)",
           }}
         >
-          <div
-            style={{
-              ...sx.modal,
-              maxWidth: 760,
-              width: "min(760px, 100%)",
-              borderRadius: 28,
-              border: "1px solid rgba(255,255,255,0.58)",
-              background: "linear-gradient(180deg, rgba(255,255,255,0.97), rgba(248,250,252,0.94))",
-              boxShadow: "0 32px 90px rgba(15,23,42,0.20)",
-              overflow: "hidden",
-            }}
+          <div>
+            <div style={{ fontSize: 20, fontWeight: 1000, letterSpacing: -0.3 }}>
+              {turnoIdInModifica ? "Modifica turno" : "Nuovo turno"}
+            </div>
+            <div style={{ fontSize: 12, opacity: 0.65, marginTop: 5, fontWeight: 800 }}>
+              Inserimento rapido, semplice e coerente con il resto dell'app.
+            </div>
+          </div>
+
+          <button
+            type="button"
+            data-chip="1"
+            onMouseEnter={() => setHoverCloseTurno(true)}
+            onMouseLeave={() => setHoverCloseTurno(false)}
+            onClick={chiudiTurnoForm}
+            style={{ ...sx.closeBtn, ...(hoverCloseTurno ? sx.closeBtnHover : {}) }}
+            title="Chiudi"
           >
+            ✕
+          </button>
+        </div>
+
+        <div style={{ ...sx.body, paddingTop: 18 }}>
+          <div style={{ ...sx.content, display: "grid", gap: 18 }}>
             <div
               style={{
-                ...sx.header,
-                paddingBottom: 14,
-                borderBottom: "1px solid rgba(15,23,42,0.06)",
+                display: "grid",
+                gridTemplateColumns: "1fr",
+                gap: 14,
+                alignItems: "end",
               }}
             >
               <div>
-                <div style={{ fontSize: 20, fontWeight: 1000, letterSpacing: -0.3 }}>
-                  {turnoIdInModifica ? "Modifica turno" : "Nuovo turno"}
-                </div>
-                <div style={{ fontSize: 12, opacity: 0.65, marginTop: 5, fontWeight: 800 }}>
-                  {turnoIdInModifica
-                    ? "Modifica turno, ore ordinarie e straordinarie"
-                    : "Inserisci turno, ore ordinarie e straordinarie"}
-                </div>
+                <div style={sx.sectionLabel}>Data</div>
+                <input
+                  type="date"
+                  value={turnoData}
+                  onChange={(e) => setTurnoData(e.target.value)}
+                  style={inputLight(false)}
+                />
               </div>
 
-              <button
-                type="button"
-                data-chip="1"
-                onMouseEnter={() => setHoverCloseTurno(true)}
-                onMouseLeave={() => setHoverCloseTurno(false)}
-                onClick={chiudiTurnoForm}
-                style={{ ...sx.closeBtn, ...(hoverCloseTurno ? sx.closeBtnHover : {}) }}
-                title="Chiudi"
+              <div
+                style={{
+                  padding: "12px 14px",
+                  borderRadius: 18,
+                  border: "1px solid rgba(79,70,229,0.10)",
+                  background: "linear-gradient(180deg, rgba(79,70,229,0.06), rgba(124,58,237,0.03))",
+                  fontSize: 12,
+                  fontWeight: 850,
+                  color: "rgba(67,56,202,0.92)",
+                  lineHeight: 1.45,
+                  boxSizing: "border-box",
+                  maxWidth: "100%",
+                  overflowWrap: "break-word",
+                }}
               >
-                ✕
-              </button>
+                Qui devi solo inserire il turno o le ferie in modo rapido. I riepiloghi grossi andranno nella sezione consulta/turni.
+              </div>
             </div>
 
-            <div style={{ ...sx.body, paddingTop: 18 }}>
-              <div style={{ ...sx.content, display: "grid", gap: 18 }}>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr",
-                    gap: 14,
-                    alignItems: "end",
-                  }}
-                >
-                  <div>
-                    <div style={sx.sectionLabel}>Data</div>
-                    <input
-                      type="date"
-                      value={turnoData}
-                      onChange={(e) => setTurnoData(e.target.value)}
-                      style={inputLight(false)}
-                    />
-                  </div>
+            <div
+              style={{
+                padding: 16,
+                borderRadius: 22,
+                border: "1px solid rgba(15,23,42,0.06)",
+                background: "rgba(255,255,255,0.72)",
+                boxShadow: "0 10px 24px rgba(15,23,42,0.05)",
+                display: "grid",
+                gap: 14,
+              }}
+            >
+              <div style={sx.sectionLabel}>Tipo</div>
 
-                  <div
-                    style={{
-                      padding: "12px 14px",
-                      borderRadius: 18,
-                      border: "1px solid rgba(79,70,229,0.10)",
-                      background:
-                        "linear-gradient(180deg, rgba(79,70,229,0.06), rgba(124,58,237,0.03))",
-                      fontSize: 12,
-                      fontWeight: 850,
-                      color: "rgba(67,56,202,0.92)",
-                      lineHeight: 1.45,
-                      boxSizing: "border-box",
-                      maxWidth: "100%",
-                      overflowWrap: "break-word",
-                    }}
-                  >
-                    Scegli un preset rapido oppure imposta manualmente orari e ore.
-                  </div>
-                </div>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                  gap: 10,
+                }}
+              >
+                {[
+                  { key: "lavoro", label: "Lavoro" },
+                  { key: "ferie", label: "Ferie" },
+                  { key: "riposo", label: "Riposo" },
+                ].map((item) => {
+                  const active = turnoTipo === item.key;
+                  return (
+                    <button
+                      key={item.key}
+                      type="button"
+                      data-chip="1"
+                      onClick={() => {
+                        const tipo = item.key as "lavoro" | "ferie" | "riposo";
+                        setTurnoTipo(tipo);
 
+                        if (tipo === "lavoro") {
+                          setTurnoPreset("");
+                          setTurnoManuale(false);
+                          setTurnoInizio("08:00");
+                          setTurnoFine("16:00");
+                          setTurnoOreOrd("");
+                          setTurnoOreStraord("");
+                        }
+
+                        if (tipo === "ferie") {
+                          setTurnoPreset("");
+                          setTurnoManuale(false);
+                          setTurnoModoOreFerie("giorni");
+                          setTurnoQuantitaFerie("1");
+                          setTurnoInizio("08:00");
+                          setTurnoFine("16:00");
+                          setTurnoOreOrd("8");
+                          setTurnoOreStraord("");
+                        }
+
+                        if (tipo === "riposo") {
+                          setTurnoPreset("");
+                          setTurnoManuale(false);
+                          setTurnoQuantitaFerie("");
+                          setTurnoInizio("08:00");
+                          setTurnoFine("16:00");
+                          setTurnoOreOrd("");
+                          setTurnoOreStraord("");
+                        }
+                      }}
+                      style={{
+                        padding: "14px 12px",
+                        borderRadius: 18,
+                        border: active
+                          ? "1px solid rgba(79,70,229,0.32)"
+                          : "1px solid rgba(15,23,42,0.08)",
+                        background: active
+                          ? "linear-gradient(180deg, rgba(79,70,229,0.16), rgba(124,58,237,0.08))"
+                          : "rgba(255,255,255,0.9)",
+                        boxShadow: active
+                          ? "0 10px 24px rgba(79,70,229,0.14)"
+                          : "0 6px 18px rgba(15,23,42,0.04)",
+                        fontWeight: 900,
+                        fontSize: 14,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {turnoTipo === "lavoro" && (
+              <>
                 <div
                   style={{
                     padding: 16,
@@ -7560,85 +7725,91 @@ function MiniCalendarioControllo({
                     boxShadow: "0 10px 24px rgba(15,23,42,0.05)",
                     display: "grid",
                     gap: 14,
-                    boxSizing: "border-box",
-                    minWidth: 0,
                   }}
                 >
-                  <div>
-                    <div style={sx.sectionLabel}>Turno predefinito</div>
-
-                    <select
-                      value={turnoPreset}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setTurnoPreset(val);
-
-                        if (!val) return;
-
-                        if (val === "RIPOSO") {
-                          setTurnoInizio("RIPOSO");
-                          setTurnoFine("RIPOSO");
-                          setTurnoOreOrd("0");
-                          setTurnoOreStraord("");
-                          return;
-                        }
-
-                        if (val === "FERIE") {
-                          setTurnoInizio("FERIE");
-                          setTurnoFine("FERIE");
-                          setTurnoOreOrd("8");
-                          setTurnoOreStraord("");
-                          return;
-                        }
-
-                        const parti = val.split("-");
-                        if (parti.length !== 2) return;
-
-                        let start = parti[0].trim();
-                        let end = parti[1].trim();
-
-                        if (/^\d$/.test(start)) start = `0${start}`;
-                        if (/^\d$/.test(end)) end = `0${end}`;
-
-                        if (end === "24") end = "00";
-
-                        setTurnoInizio(`${start}:00`);
-                        setTurnoFine(`${end}:00`);
-                      }}
-                      style={{
-                        ...inputLight(false),
-                        background: "rgba(255,255,255,0.92)",
-                        fontWeight: 900,
-                        maxWidth: "100%",
-                        minWidth: 0,
-                      }}
-                      title="Seleziona turno predefinito"
-                    >
-                      <option value="">Seleziona turno predefinito</option>
-                      {presetTurni
-                        .filter((p) => p !== "RIPOSO" && p !== "FERIE")
-                        .map((p) => (
-                          <option key={p} value={p}>
-                            {p}
-                          </option>
-                        ))}
-                      <option value="RIPOSO">RIPOSO</option>
-                      <option value="FERIE">FERIE</option>
-                    </select>
-                  </div>
+                  <div style={sx.sectionLabel}>Preset rapido</div>
 
                   <div
                     style={{
                       display: "grid",
+                      gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                      gap: 10,
+                    }}
+                  >
+                    {presetTurni.map((p) => {
+                      const active = turnoPreset === p && !turnoManuale;
+                      return (
+                        <button
+                          key={p}
+                          type="button"
+                          data-chip="1"
+                          onClick={() => applicaPresetTurno(p)}
+                          style={{
+                            padding: "12px 10px",
+                            borderRadius: 16,
+                            border: active
+                              ? "1px solid rgba(16,185,129,0.28)"
+                              : "1px solid rgba(15,23,42,0.08)",
+                            background: active
+                              ? "linear-gradient(180deg, rgba(16,185,129,0.14), rgba(16,185,129,0.06))"
+                              : "rgba(255,255,255,0.9)",
+                            boxShadow: active
+                              ? "0 10px 24px rgba(16,185,129,0.12)"
+                              : "0 6px 18px rgba(15,23,42,0.04)",
+                            fontWeight: 900,
+                            fontSize: 13,
+                            cursor: "pointer",
+                          }}
+                        >
+                          {p}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "flex-start" }}>
+                    <button
+                      type="button"
+                      data-chip="1"
+                      onClick={() => {
+                        setTurnoManuale((prev) => !prev);
+                        setTurnoPreset("");
+                      }}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: 999,
+                        border: turnoManuale
+                          ? "1px solid rgba(249,115,22,0.28)"
+                          : "1px solid rgba(15,23,42,0.08)",
+                        background: turnoManuale
+                          ? "linear-gradient(180deg, rgba(249,115,22,0.14), rgba(249,115,22,0.06))"
+                          : "rgba(255,255,255,0.9)",
+                        fontWeight: 900,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {turnoManuale ? "Manuale attivo" : "Passa a manuale"}
+                    </button>
+                  </div>
+                </div>
+
+                {(turnoManuale || !turnoPreset) && (
+                  <div
+                    style={{
+                      padding: 16,
+                      borderRadius: 22,
+                      border: "1px solid rgba(15,23,42,0.06)",
+                      background: "rgba(255,255,255,0.72)",
+                      boxShadow: "0 10px 24px rgba(15,23,42,0.05)",
+                      display: "grid",
                       gridTemplateColumns: "1fr",
                       gap: 12,
-                      alignItems: "start",
                     }}
                   >
                     <div>
                       <div style={sx.sectionLabel}>Inizio turno</div>
                       <input
-                        type={turnoInizio === "RIPOSO" || turnoInizio === "FERIE" ? "text" : "time"}
+                        type="time"
                         value={turnoInizio}
                         onChange={(e) => setTurnoInizio(e.target.value)}
                         style={inputLight(false)}
@@ -7648,14 +7819,14 @@ function MiniCalendarioControllo({
                     <div>
                       <div style={sx.sectionLabel}>Fine turno</div>
                       <input
-                        type={turnoFine === "RIPOSO" || turnoFine === "FERIE" ? "text" : "time"}
+                        type="time"
                         value={turnoFine}
                         onChange={(e) => setTurnoFine(e.target.value)}
                         style={inputLight(false)}
                       />
                     </div>
                   </div>
-                </div>
+                )}
 
                 <div
                   style={{
@@ -7669,11 +7840,8 @@ function MiniCalendarioControllo({
                       padding: 16,
                       borderRadius: 22,
                       border: "1px solid rgba(16,185,129,0.10)",
-                      background:
-                        "linear-gradient(180deg, rgba(16,185,129,0.06), rgba(16,185,129,0.02))",
+                      background: "linear-gradient(180deg, rgba(16,185,129,0.06), rgba(16,185,129,0.02))",
                       boxShadow: "0 10px 24px rgba(16,185,129,0.05)",
-                      boxSizing: "border-box",
-                      minWidth: 0,
                     }}
                   >
                     <div style={sx.sectionLabel}>Ore ordinarie</div>
@@ -7684,9 +7852,6 @@ function MiniCalendarioControllo({
                       style={inputLight(false)}
                       inputMode="decimal"
                     />
-                    <div style={{ marginTop: 8, fontSize: 11, fontWeight: 800, opacity: 0.58 }}>
-                      Per FERIE puoi lasciare 8 come base.
-                    </div>
                   </div>
 
                   <div
@@ -7694,11 +7859,8 @@ function MiniCalendarioControllo({
                       padding: 16,
                       borderRadius: 22,
                       border: "1px solid rgba(249,115,22,0.10)",
-                      background:
-                        "linear-gradient(180deg, rgba(249,115,22,0.06), rgba(249,115,22,0.02))",
+                      background: "linear-gradient(180deg, rgba(249,115,22,0.06), rgba(249,115,22,0.02))",
                       boxShadow: "0 10px 24px rgba(249,115,22,0.05)",
-                      boxSizing: "border-box",
-                      minWidth: 0,
                     }}
                   >
                     <div style={sx.sectionLabel}>Ore straordinarie</div>
@@ -7714,64 +7876,203 @@ function MiniCalendarioControllo({
                     </div>
                   </div>
                 </div>
+              </>
+            )}
 
+            {turnoTipo === "ferie" && (
+              <>
                 <div
                   style={{
                     padding: 16,
                     borderRadius: 22,
-                    border: "1px solid rgba(15,23,42,0.06)",
-                    background: "rgba(255,255,255,0.72)",
-                    boxShadow: "0 10px 24px rgba(15,23,42,0.05)",
-                    boxSizing: "border-box",
-                    minWidth: 0,
+                    border: "1px solid rgba(79,70,229,0.10)",
+                    background: "linear-gradient(180deg, rgba(79,70,229,0.06), rgba(124,58,237,0.03))",
+                    boxShadow: "0 10px 24px rgba(79,70,229,0.05)",
+                    display: "grid",
+                    gap: 14,
                   }}
                 >
-                  <div style={sx.sectionLabel}>Note</div>
-                  <textarea
-                    value={turnoNote}
-                    onChange={(e) => setTurnoNote(e.target.value)}
-                    rows={4}
-                    placeholder="Note turno..."
+                  <div style={sx.sectionLabel}>Ferie da scalare</div>
+
+                  <div
                     style={{
-                      ...inputLight(false),
-                      height: "auto",
-                      minHeight: 110,
-                      resize: "vertical",
-                      lineHeight: 1.4,
+                      display: "grid",
+                      gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                      gap: 10,
                     }}
-                  />
+                  >
+                    {[
+                      { key: "giorni", label: "In giorni" },
+                      { key: "ore", label: "In ore" },
+                    ].map((item) => {
+                      const active = turnoModoOreFerie === item.key;
+                      return (
+                        <button
+                          key={item.key}
+                          type="button"
+                          data-chip="1"
+                          onClick={() => {
+                            const modo = item.key as "giorni" | "ore";
+                            setTurnoModoOreFerie(modo);
+
+                            if (modo === "giorni") {
+                              setTurnoQuantitaFerie(turnoQuantitaFerie || "1");
+                              setTurnoOreOrd("8");
+                            } else {
+                              setTurnoQuantitaFerie(turnoQuantitaFerie === "1" ? "8" : turnoQuantitaFerie);
+                              setTurnoOreOrd(turnoQuantitaFerie === "1" ? "8" : turnoQuantitaFerie);
+                            }
+                          }}
+                          style={{
+                            padding: "14px 12px",
+                            borderRadius: 18,
+                            border: active
+                              ? "1px solid rgba(79,70,229,0.32)"
+                              : "1px solid rgba(15,23,42,0.08)",
+                            background: active
+                              ? "linear-gradient(180deg, rgba(79,70,229,0.16), rgba(124,58,237,0.08))"
+                              : "rgba(255,255,255,0.9)",
+                            boxShadow: active
+                              ? "0 10px 24px rgba(79,70,229,0.14)"
+                              : "0 6px 18px rgba(15,23,42,0.04)",
+                            fontWeight: 900,
+                            cursor: "pointer",
+                          }}
+                        >
+                          {item.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div>
+                    <div style={sx.sectionLabel}>
+                      {turnoModoOreFerie === "giorni" ? "Quantità giorni" : "Quantità ore"}
+                    </div>
+                    <input
+                      value={turnoQuantitaFerie}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setTurnoQuantitaFerie(val);
+                        if (turnoModoOreFerie === "giorni") {
+                          const parsed = parseOreItaliane(val);
+                          setTurnoOreOrd(parsed !== null ? String(parsed * 8) : "");
+                        } else {
+                          setTurnoOreOrd(val);
+                        }
+                      }}
+                      placeholder={turnoModoOreFerie === "giorni" ? "Es: 1" : "Es: 4 oppure 8"}
+                      style={inputLight(false)}
+                      inputMode="decimal"
+                    />
+                  </div>
+
+                  <div style={{ fontSize: 11, fontWeight: 800, opacity: 0.58 }}>
+                    Le ferie annuali base in giorni o ore restano gestite nella card dedicata, non qui dentro.
+                  </div>
                 </div>
+              </>
+            )}
+
+            {turnoTipo === "riposo" && (
+              <div
+                style={{
+                  padding: 16,
+                  borderRadius: 22,
+                  border: "1px solid rgba(148,163,184,0.12)",
+                  background: "linear-gradient(180deg, rgba(148,163,184,0.10), rgba(148,163,184,0.04))",
+                  boxShadow: "0 10px 24px rgba(15,23,42,0.04)",
+                  fontSize: 13,
+                  fontWeight: 800,
+                  lineHeight: 1.5,
+                  opacity: 0.8,
+                }}
+              >
+                Riposo rapido: salva solo la data e, se vuoi, una nota.
               </div>
-            </div>
+            )}
 
             <div
               style={{
-                ...sx.footer,
-                borderTop: "1px solid rgba(15,23,42,0.06)",
-                background: "rgba(255,255,255,0.66)",
-                backdropFilter: "blur(8px)",
+                padding: 16,
+                borderRadius: 22,
+                border: "1px solid rgba(15,23,42,0.06)",
+                background: "rgba(255,255,255,0.72)",
+                boxShadow: "0 10px 24px rgba(15,23,42,0.05)",
               }}
             >
-              <button
-                type="button"
-                data-chip="1"
-                onClick={chiudiTurnoForm}
-                style={sx.actionBtn(false)}
-              >
-                Annulla
-              </button>
-              <button
-                type="button"
-                data-chip="1"
-                onClick={salvaTurno}
-                style={sx.actionBtn(true)}
-              >
-                {turnoIdInModifica ? "Salva modifiche" : "Salva turno"}
-              </button>
+              <div style={sx.sectionLabel}>Note</div>
+              <textarea
+                value={turnoNote}
+                onChange={(e) => setTurnoNote(e.target.value)}
+                rows={4}
+                placeholder={
+                  turnoTipo === "lavoro"
+                    ? "Note turno..."
+                    : turnoTipo === "ferie"
+                    ? "Nota ferie..."
+                    : "Nota riposo..."
+                }
+                style={{
+                  ...inputLight(false),
+                  height: "auto",
+                  minHeight: 110,
+                  resize: "vertical",
+                  lineHeight: 1.4,
+                }}
+              />
             </div>
           </div>
         </div>
-      )}
+
+        <div
+          style={{
+            ...sx.footer,
+            borderTop: "1px solid rgba(15,23,42,0.06)",
+            background: "rgba(255,255,255,0.66)",
+            backdropFilter: "blur(8px)",
+          }}
+        >
+          <button
+            type="button"
+            data-chip="1"
+            onClick={chiudiTurnoForm}
+            style={sx.actionBtn(false)}
+          >
+            Annulla
+          </button>
+
+          {turnoIdInModifica && (
+            <button
+              type="button"
+              data-chip="1"
+              onClick={() => {
+                eliminaTurno(turnoIdInModifica);
+                chiudiTurnoForm();
+              }}
+              style={{
+                ...sx.actionBtn(false),
+                border: "1px solid rgba(239,68,68,0.20)",
+                color: "rgba(185,28,28,0.95)",
+                background: "rgba(254,242,242,0.92)",
+              }}
+            >
+              Elimina
+            </button>
+          )}
+
+          <button
+            type="button"
+            data-chip="1"
+            onClick={salvaTurno}
+            style={sx.actionBtn(true)}
+          >
+            {turnoIdInModifica ? "Salva modifiche" : "Salva turno"}
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
     </div>
   );
 }
