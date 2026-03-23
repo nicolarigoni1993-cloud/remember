@@ -1046,9 +1046,9 @@ function resetForm() {
   setCustomNotificaOre("");
 }
 
-function apriNuova(tipoDefault: Voce["tipo"] = "scadenza") {
+function apriNuova(tipoDefault: Voce["tipo"] = "appuntamento") {
   resetForm();
-  setTipo(tipoDefault);
+  setTipo("appuntamento");
   setOra("09:00");
   setMostraForm(false);
   setAggiungiSezione("eventi");
@@ -1058,7 +1058,7 @@ function apriNuovaConData(dataSelezionata: string, tipoDefault: Voce["tipo"]) {
   resetForm();
   setData(dataSelezionata);
   setOra("09:00");
-  setTipo(tipoDefault);
+  setTipo("appuntamento");
   setMostraForm(false);
   setAggiungiSezione("eventi");
 }
@@ -1096,29 +1096,6 @@ function salva() {
     return;
   }
 
-  const importoNum = importo.trim() === "" ? null : Number(importo.replace(",", "."));
-
-  if (importo.trim() !== "" && (!Number.isFinite(importoNum) || importoNum === null || importoNum < 0)) {
-    alert("Importo non valido");
-    return;
-  }
-
-  let notiUniq: number[] = [];
-
-  if (customNotificaOre.trim() !== "") {
-    const ore = parseOreItaliane(customNotificaOre);
-    if (ore === null) {
-      alert("Inserisci ore notifica valide");
-      return;
-    }
-
-    const minuti = Math.max(1, Math.round(ore * 60));
-    notiUniq = [minuti];
-    requestNotifyPermission();
-  }
-
-  const movimentoFinale: Movimento = importoNum !== null ? "uscita" : "nessuno";
-
   if (idInModifica) {
     setVoci((prev) =>
       prev.map((x) =>
@@ -1128,13 +1105,13 @@ function salva() {
               titolo: titolo.trim(),
               data: dataFinale,
               ora: oraFinale,
-              tipo,
-              urgente,
+              tipo: "appuntamento",
+              urgente: false,
               nota: "",
-              importo: importoNum,
-              movimento: movimentoFinale,
+              importo: null,
+              movimento: "nessuno" as Movimento,
               fatto: vocePassata(dataFinale, oraFinale),
-              notificheMinutiPrima: notiUniq,
+              notificheMinutiPrima: [],
             }
           : x
       )
@@ -1145,13 +1122,13 @@ function salva() {
       titolo: titolo.trim(),
       data: dataFinale,
       ora: oraFinale,
-      tipo,
-      urgente,
+      tipo: "appuntamento",
+      urgente: false,
       nota: "",
-      importo: importoNum,
-      movimento: movimentoFinale,
+      importo: null,
+      movimento: "nessuno",
       fatto: vocePassata(dataFinale, oraFinale),
-      notificheMinutiPrima: notiUniq,
+      notificheMinutiPrima: [],
     };
 
     setVoci((prev) => [nuova, ...prev]);
@@ -5830,36 +5807,36 @@ function MiniCalendarioControllo({
             gap: 6,
           }}
         >
-          <div
-            style={{
-              fontSize: 26,
-              fontWeight: 1000,
-              letterSpacing: -0.6,
-              color: "rgba(241,245,249,0.98)",
-              textShadow: "0 12px 30px rgba(79,70,229,0.18)",
-            }}
-          >
-            {aggiungiSezione === "menu"
-              ? "Aggiungi"
-              : aggiungiSezione === "movimenti"
-              ? "Entrata / Uscita"
-              : "Appuntamento / Scadenza"}
-          </div>
+  <div
+  style={{
+    fontSize: 26,
+    fontWeight: 1000,
+    letterSpacing: -0.6,
+    color: "rgba(241,245,249,0.98)",
+    textShadow: "0 12px 30px rgba(79,70,229,0.18)",
+  }}
+>
+  {aggiungiSezione === "menu"
+    ? "Aggiungi"
+    : aggiungiSezione === "movimenti"
+    ? "Entrata / Uscita"
+    : "Evento"}
+</div>
 
-          <div
-            style={{
-              fontSize: 14,
-              fontWeight: 800,
-              color: "rgba(191,219,254,0.86)",
-              lineHeight: 1.4,
-            }}
-          >
-            {aggiungiSezione === "menu"
-              ? "Scegli cosa vuoi inserire nell’app"
-              : aggiungiSezione === "movimenti"
-              ? "Inserisci entrate e uscite con categorie personalizzabili"
-              : "Inserisci appuntamenti e scadenze in una schermata dedicata"}
-          </div>
+<div
+  style={{
+    fontSize: 14,
+    fontWeight: 800,
+    color: "rgba(191,219,254,0.86)",
+    lineHeight: 1.4,
+  }}
+>
+  {aggiungiSezione === "menu"
+    ? "Scegli cosa vuoi inserire nell’app"
+    : aggiungiSezione === "movimenti"
+    ? "Inserisci entrate e uscite con categorie personalizzabili"
+    : "Inserisci un evento semplice con descrizione, data e ora"}
+</div>
         </div>
       </div>
     </div>
@@ -6455,109 +6432,43 @@ function MiniCalendarioControllo({
     >
       <div
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          gap: 12,
-          flexWrap: "wrap",
+          display: "grid",
+          gap: 6,
         }}
       >
-        <div style={{ display: "grid", gap: 6 }}>
-          <div
-            style={{
-              fontSize: 20,
-              fontWeight: 1000,
-              letterSpacing: -0.3,
-              color: "rgba(15,23,42,0.96)",
-            }}
-          >
-            {idInModifica ? "Modifica promemoria" : "Nuovo promemoria"}
-          </div>
-
-          <div
-            style={{
-              fontSize: 13,
-              fontWeight: 800,
-              lineHeight: 1.45,
-              color: "rgba(15,23,42,0.70)",
-            }}
-          >
-            Crea appuntamenti e scadenze in una schermata più ordinata e veloce
-          </div>
+        <div
+          style={{
+            fontSize: 20,
+            fontWeight: 1000,
+            letterSpacing: -0.3,
+            color: "rgba(15,23,42,0.96)",
+          }}
+        >
+          {idInModifica ? "Modifica evento" : "Nuovo evento"}
         </div>
 
         <div
           style={{
-            display: "flex",
-            gap: 8,
-            padding: 6,
-            borderRadius: 16,
-            background: "rgba(15,23,42,0.06)",
-            border: "1px solid rgba(15,23,42,0.08)",
+            fontSize: 13,
+            fontWeight: 800,
+            lineHeight: 1.45,
+            color: "rgba(15,23,42,0.70)",
           }}
         >
-          <button
-            type="button"
-            onClick={() => setTipo("appuntamento")}
-            style={{
-              border: "none",
-              borderRadius: 12,
-              padding: "10px 14px",
-              fontWeight: 900,
-              cursor: "pointer",
-              color: "white",
-              background:
-                tipo === "appuntamento"
-                  ? "linear-gradient(180deg, rgba(59,130,246,0.98), rgba(37,99,235,0.95))"
-                  : "rgba(15,23,42,0.34)",
-              boxShadow:
-                tipo === "appuntamento"
-                  ? "0 12px 24px rgba(59,130,246,0.22)"
-                  : "none",
-            }}
-          >
-            Appuntamento
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setTipo("scadenza")}
-            style={{
-              border: "none",
-              borderRadius: 12,
-              padding: "10px 14px",
-              fontWeight: 900,
-              cursor: "pointer",
-              color: "white",
-              background:
-                tipo === "scadenza"
-                  ? "linear-gradient(180deg, rgba(124,58,237,0.98), rgba(109,40,217,0.95))"
-                  : "rgba(15,23,42,0.34)",
-              boxShadow:
-                tipo === "scadenza"
-                  ? "0 12px 24px rgba(124,58,237,0.22)"
-                  : "none",
-            }}
-          >
-            Scadenza
-          </button>
+          Inserisci un evento semplice con descrizione, data e ora
         </div>
       </div>
 
       <div style={{ display: "grid", gap: 12 }}>
         <div style={{ display: "grid", gap: 8 }}>
           <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
-            Descrizione
+            Evento
           </label>
           <input
             type="text"
             value={titolo}
             onChange={(e) => setTitolo(e.target.value)}
-            placeholder={
-              tipo === "appuntamento"
-                ? "Es. Dentista, incontro, visita..."
-                : "Es. Affitto, bolletta, rata..."
-            }
+            placeholder="Es. Dentista, bollo, riunione, compleanno..."
             style={inputLight(false)}
           />
         </div>
@@ -6594,57 +6505,6 @@ function MiniCalendarioControllo({
           </div>
         </div>
 
-        <div style={{ display: "grid", gap: 8 }}>
-          <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
-            Importo facoltativo
-          </label>
-          <input
-            type="number"
-            inputMode="decimal"
-            step="0.01"
-            value={importo}
-            onChange={(e) => setImporto(e.target.value)}
-            placeholder="Es. 45"
-            style={inputLight(false)}
-          />
-        </div>
-
-        <div style={{ display: "grid", gap: 8 }}>
-          <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
-            Ore notifica prima
-          </label>
-          <input
-            type="text"
-            inputMode="decimal"
-            value={customNotificaOre}
-            onChange={(e) => setCustomNotificaOre(e.target.value)}
-            placeholder="Es. 1 oppure 2,5"
-            style={inputLight(false)}
-          />
-        </div>
-
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-          <button
-            type="button"
-            data-chip="1"
-            onClick={() => setUrgente((v) => !v)}
-            style={{
-              ...chipSmall(urgente),
-              background: urgente
-                ? "linear-gradient(180deg, rgba(239,68,68,0.22), rgba(220,38,38,0.12))"
-                : "rgba(255,255,255,0.86)",
-              border: urgente
-                ? "1px solid rgba(239,68,68,0.30)"
-                : "1px solid rgba(15,23,42,0.08)",
-              color: urgente ? "rgba(185,28,28,0.98)" : "rgba(15,23,42,0.84)",
-            }}
-          >
-            {urgente ? "Urgente attivo" : "Segna come urgente"}
-          </button>
-
-          {urgente && badgeUrgente()}
-        </div>
-
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <button
             type="button"
@@ -6676,13 +6536,8 @@ function MiniCalendarioControllo({
               cursor: "pointer",
               color: "white",
               background:
-                tipo === "appuntamento"
-                  ? "linear-gradient(180deg, rgba(59,130,246,0.98), rgba(37,99,235,0.95))"
-                  : "linear-gradient(180deg, rgba(124,58,237,0.98), rgba(109,40,217,0.95))",
-              boxShadow:
-                tipo === "appuntamento"
-                  ? "0 18px 34px rgba(59,130,246,0.20)"
-                  : "0 18px 34px rgba(124,58,237,0.20)",
+                "linear-gradient(180deg, rgba(79,70,229,0.98), rgba(124,58,237,0.95))",
+              boxShadow: "0 18px 34px rgba(79,70,229,0.20)",
             }}
           >
             {idInModifica ? "Salva modifiche" : "+ Aggiungi"}
@@ -6713,7 +6568,7 @@ function MiniCalendarioControllo({
             color: "rgba(15,23,42,0.96)",
           }}
         >
-          Prossimi promemoria
+          Eventi prossimi
         </div>
 
         <div
@@ -6725,7 +6580,7 @@ function MiniCalendarioControllo({
             color: "rgba(15,23,42,0.88)",
           }}
         >
-          Appuntamenti e scadenze in arrivo
+          I prossimi eventi salvati nel calendario
         </div>
       </div>
 
@@ -6743,12 +6598,11 @@ function MiniCalendarioControllo({
               color: "rgba(15,23,42,0.86)",
             }}
           >
-            Nessun appuntamento o scadenza imminente.
+            Nessun evento imminente.
           </div>
         ) : (
           eventiProssimiAggiungi.map((ev) => {
             const giorni = giorniMancanti(ev.data);
-            const isApp = ev.tipo === "appuntamento";
 
             return (
               <div
@@ -6756,21 +6610,13 @@ function MiniCalendarioControllo({
                 style={{
                   padding: 14,
                   borderRadius: 18,
-                  border: isApp
-                    ? "1px solid rgba(59,130,246,0.14)"
-                    : "1px solid rgba(124,58,237,0.14)",
-                  background: isApp
-                    ? "linear-gradient(180deg, rgba(59,130,246,0.08), rgba(59,130,246,0.03))"
-                    : "linear-gradient(180deg, rgba(124,58,237,0.08), rgba(124,58,237,0.03))",
+                  border: "1px solid rgba(79,70,229,0.14)",
+                  background:
+                    "linear-gradient(180deg, rgba(79,70,229,0.08), rgba(79,70,229,0.03))",
                   display: "grid",
                   gap: 6,
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                  {badgeTipo(ev.tipo)}
-                  {ev.urgente && badgeUrgente()}
-                </div>
-
                 <div style={{ fontSize: 15, fontWeight: 950, color: "rgba(15,23,42,0.96)" }}>
                   {ev.titolo}
                 </div>
@@ -6780,8 +6626,8 @@ function MiniCalendarioControllo({
                 </div>
 
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                  <span style={styleBadgeScadenza(giorni, ev.urgente)}>
-                    {ev.urgente ? "URGENTE" : labelGiorni(giorni)}
+                  <span style={styleBadgeScadenza(giorni, false)}>
+                    {labelGiorni(giorni)}
                   </span>
 
                   <button
