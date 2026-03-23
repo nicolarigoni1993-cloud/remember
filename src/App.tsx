@@ -643,7 +643,10 @@ function RememberLogo({ size = 44, centered = false }: { size?: number; centered
 export default function App() {
   const [users, setUsers] = useState<User[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const currentUser = useMemo(() => users.find((u) => u.id === currentUserId) ?? null, [users, currentUserId]);
+  const currentUser = useMemo(
+    () => users.find((u) => u.id === currentUserId) ?? null,
+    [users, currentUserId]
+  );
 
   const [loginNome, setLoginNome] = useState("");
   const [loginPick, setLoginPick] = useState<string | null>(null);
@@ -693,7 +696,18 @@ export default function App() {
   const [turnoPreset, setTurnoPreset] = useState("");
   const [turnoIdInModifica, setTurnoIdInModifica] = useState<string | null>(null);
 
-  const presetTurni = ["RIPOSO", "00-06", "06-12", "12-18", "18-24", "6-14", "14-22", "22-06", "8-18", "8-17"];
+  const presetTurni = [
+    "RIPOSO",
+    "00-06",
+    "06-12",
+    "12-18",
+    "18-24",
+    "6-14",
+    "14-22",
+    "22-06",
+    "8-18",
+    "8-17",
+  ];
 
   const [controlloDettaglioData, setControlloDettaglioData] = useState<string | null>(null);
 
@@ -702,60 +716,12 @@ export default function App() {
   const [hoverClose, setHoverClose] = useState(false);
   const [hoverCloseTurno, setHoverCloseTurno] = useState(false);
 
-
-
   const scheduledRef = useRef<Record<string, number[]>>({});
 
 
 
 
-// ==============================
-// CATEGORIE BASE (MODIFICABILI)
-// ==============================
-const CATEGORIE_USCITA_BASE = [
-  "Spesa",
-  "Carburante",
-  "Affitto",
-  "Bollette",
-  "Svago",
-  "Ristorante",
-  "Altro",
-];
 
-const CATEGORIE_ENTRATA_BASE = [
-  "Stipendio",
-  "Extra",
-  "Regalo",
-  "Rimborso",
-  "Altro",
-];
-
-// ==============================
-// LOCAL STORAGE KEY
-// ==============================
-const K_CATEGORIE_CUSTOM = "remember_categorie_custom";
-
-// ==============================
-// STATE FORM
-// ==============================
-const [tipoMovimento, setTipoMovimento] = useState<"entrata" | "uscita">("uscita");
-
-const [dataMov, setDataMov] = useState("");
-const [descMov, setDescMov] = useState("");
-const [importoMov, setImportoMov] = useState("");
-const [categoriaSelezionata, setCategoriaSelezionata] = useState("");
-const [nuovaCategoria, setNuovaCategoria] = useState("");
-
-// ==============================
-// CATEGORIE CUSTOM
-// ==============================
-const [categorieCustom, setCategorieCustom] = useState<string[]>(() => {
-  try {
-    return JSON.parse(localStorage.getItem(K_CATEGORIE_CUSTOM) || "[]");
-  } catch {
-    return [];
-  }
-});
 
 
 
@@ -1054,10 +1020,11 @@ function apriModifica(v: Voce) {
   setNota(v.nota ?? "");
   setImporto(v.movimento === "uscita" && v.importo !== null ? String(v.importo) : "");
   setNotificheMinutiPrima(v.notificheMinutiPrima ?? []);
+  setCustomNotificaOre("");
   setMostraForm(true);
 }
 
-  void apriModifica;
+void apriModifica;
 
 
 
@@ -5753,7 +5720,10 @@ function MiniCalendarioControllo({
 
 
 
-     {pagina === "aggiungi" && (
+
+
+
+{pagina === "aggiungi" && (
   <div style={{ maxWidth: 1060, margin: "0 auto", marginTop: 14, display: "grid", gap: 16 }}>
     <div
       style={{
@@ -5796,12 +5766,7 @@ function MiniCalendarioControllo({
           </button>
         </div>
 
-        <div
-          style={{
-            display: "grid",
-            gap: 6,
-          }}
-        >
+        <div style={{ display: "grid", gap: 6 }}>
           <div
             style={{
               fontSize: 26,
@@ -5822,7 +5787,7 @@ function MiniCalendarioControllo({
               lineHeight: 1.4,
             }}
           >
-            Scegli cosa vuoi inserire nell’app
+            Inserisci nuovi dati nell’app
           </div>
         </div>
       </div>
@@ -5831,190 +5796,534 @@ function MiniCalendarioControllo({
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+        gridTemplateColumns: "minmax(0, 1.3fr) minmax(280px, 0.7fr)",
         gap: 16,
       }}
       className="remember-grid-2"
     >
-      <button
-        data-chip="1"
-        onClick={() => setPagina("controllo")}
+      <div
         style={{
           ...ui.card,
           padding: 22,
-          textAlign: "left",
           border: "1px solid rgba(16,185,129,0.18)",
           background:
-            "linear-gradient(180deg, rgba(16,185,129,0.12), rgba(255,255,255,0.94))",
+            "linear-gradient(180deg, rgba(16,185,129,0.10), rgba(255,255,255,0.94))",
           boxShadow: "0 18px 40px rgba(16,185,129,0.10)",
-          cursor: "pointer",
           display: "grid",
-          gap: 12,
+          gap: 16,
         }}
       >
         <div
           style={{
-            width: 54,
-            height: 54,
-            borderRadius: 18,
-            display: "grid",
-            placeItems: "center",
-            background: "linear-gradient(180deg, rgba(16,185,129,0.94), rgba(5,150,105,0.90))",
-            color: "white",
-            fontSize: 24,
-            boxShadow: "0 14px 28px rgba(16,185,129,0.20)",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            gap: 12,
+            flexWrap: "wrap",
           }}
         >
-          €
-        </div>
+          <div style={{ display: "grid", gap: 6 }}>
+            <div
+              style={{
+                fontSize: 20,
+                fontWeight: 1000,
+                letterSpacing: -0.3,
+                color: "rgba(15,23,42,0.96)",
+              }}
+            >
+              Entrata / Uscita
+            </div>
 
-        <div>
-          <div
-            style={{
-              fontSize: 20,
-              fontWeight: 1000,
-              letterSpacing: -0.3,
-              color: "rgba(15,23,42,0.96)",
-            }}
-          >
-            Entrata / Uscita
-          </div>
-
-          <div
-            style={{
-              marginTop: 6,
-              fontSize: 13,
-              fontWeight: 800,
-              opacity: 0.72,
-              lineHeight: 1.45,
-              color: "rgba(15,23,42,0.88)",
-            }}
-          >
-            Inserisci entrate extra e uscite extra in modo semplice e veloce
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 800,
+                lineHeight: 1.45,
+                color: "rgba(15,23,42,0.70)",
+              }}
+            >
+              Inserisci un movimento rapido nella sezione finanza
+            </div>
           </div>
         </div>
-      </button>
 
-      <button
-        data-chip="1"
-        onClick={() => apriNuova()}
-        style={{
-          ...ui.card,
-          padding: 22,
-          textAlign: "left",
-          border: "1px solid rgba(79,70,229,0.18)",
-          background:
-            "linear-gradient(180deg, rgba(79,70,229,0.12), rgba(255,255,255,0.94))",
-          boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
-          cursor: "pointer",
-          display: "grid",
-          gap: 12,
-        }}
-      >
         <div
           style={{
-            width: 54,
-            height: 54,
-            borderRadius: 18,
             display: "grid",
-            placeItems: "center",
-            background: "linear-gradient(180deg, rgba(79,70,229,0.94), rgba(124,58,237,0.90))",
-            color: "white",
-            fontSize: 24,
-            boxShadow: "0 14px 28px rgba(79,70,229,0.20)",
+            gap: 14,
+            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
           }}
         >
-          🗓
-        </div>
-
-        <div>
           <div
             style={{
-              fontSize: 20,
-              fontWeight: 1000,
-              letterSpacing: -0.3,
-              color: "rgba(15,23,42,0.96)",
+              background: "rgba(255,255,255,0.86)",
+              border: "1px solid rgba(16,185,129,0.18)",
+              borderRadius: 20,
+              padding: 16,
+              display: "grid",
+              gap: 10,
+              boxShadow: "0 10px 28px rgba(16,185,129,0.10)",
             }}
           >
-            Appuntamento / Scadenza
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 10,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 18,
+                  fontWeight: 1000,
+                  color: "rgba(15,23,42,0.96)",
+                }}
+              >
+                Entrata
+              </div>
+
+              <div
+                style={{
+                  minWidth: 38,
+                  height: 38,
+                  borderRadius: 999,
+                  display: "grid",
+                  placeItems: "center",
+                  background: "linear-gradient(180deg, rgba(34,197,94,0.98), rgba(22,163,74,0.95))",
+                  color: "white",
+                  fontWeight: 1000,
+                  boxShadow: "0 10px 20px rgba(34,197,94,0.22)",
+                }}
+                title="Entrata"
+              >
+                +
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gap: 8 }}>
+              <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+                Data
+              </label>
+              <input
+                type="date"
+                title="Data entrata"
+                value={nuovaEntrataData}
+                onChange={(e) => setNuovaEntrataData(e.target.value)}
+                style={{
+                  width: "100%",
+                  minHeight: 46,
+                  borderRadius: 14,
+                  border: "1px solid rgba(15,23,42,0.12)",
+                  background: "rgba(255,255,255,0.98)",
+                  color: "rgba(15,23,42,0.96)",
+                  padding: "12px 14px",
+                  fontSize: 15,
+                  fontWeight: 700,
+                  outline: "none",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            <div style={{ display: "grid", gap: 8 }}>
+              <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+                Descrizione
+              </label>
+              <input
+                type="text"
+                title="Descrizione entrata"
+                value={nuovaEntrataDesc}
+                onChange={(e) => setNuovaEntrataDesc(e.target.value)}
+                placeholder="Es. stipendio, extra, regalo..."
+                style={{
+                  width: "100%",
+                  minHeight: 46,
+                  borderRadius: 14,
+                  border: "1px solid rgba(15,23,42,0.12)",
+                  background: "rgba(255,255,255,0.98)",
+                  color: "rgba(15,23,42,0.96)",
+                  padding: "12px 14px",
+                  fontSize: 15,
+                  fontWeight: 700,
+                  outline: "none",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            <div style={{ display: "grid", gap: 8 }}>
+              <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+                Importo
+              </label>
+              <input
+                type="number"
+                inputMode="decimal"
+                step="0.01"
+                title="Importo entrata"
+                value={nuovaEntrataImporto}
+                onChange={(e) => setNuovaEntrataImporto(e.target.value)}
+                placeholder="0,00"
+                style={{
+                  width: "100%",
+                  minHeight: 46,
+                  borderRadius: 14,
+                  border: "1px solid rgba(15,23,42,0.12)",
+                  background: "rgba(255,255,255,0.98)",
+                  color: "rgba(15,23,42,0.96)",
+                  padding: "12px 14px",
+                  fontSize: 15,
+                  fontWeight: 700,
+                  outline: "none",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            <button
+              type="button"
+              title="Aggiungi entrata"
+              onClick={() => aggiungiEntrataExtra()}
+              style={{
+                border: "none",
+                borderRadius: 16,
+                padding: "14px 16px",
+                fontSize: 15,
+                fontWeight: 1000,
+                cursor: "pointer",
+                color: "white",
+                background:
+                  "linear-gradient(180deg, rgba(34,197,94,0.98), rgba(22,163,74,0.95))",
+                boxShadow: "0 18px 34px rgba(34,197,94,0.20)",
+              }}
+            >
+              + Aggiungi Entrata
+            </button>
           </div>
 
           <div
             style={{
-              marginTop: 6,
-              fontSize: 13,
-              fontWeight: 800,
-              opacity: 0.72,
-              lineHeight: 1.45,
-              color: "rgba(15,23,42,0.88)",
+              background: "rgba(255,255,255,0.86)",
+              border: "1px solid rgba(239,68,68,0.18)",
+              borderRadius: 20,
+              padding: 16,
+              display: "grid",
+              gap: 10,
+              boxShadow: "0 10px 28px rgba(239,68,68,0.10)",
             }}
           >
-            Aggiungi velocemente nuovi eventi, date importanti e promemoria
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 10,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 18,
+                  fontWeight: 1000,
+                  color: "rgba(15,23,42,0.96)",
+                }}
+              >
+                Uscita
+              </div>
+
+              <div
+                style={{
+                  minWidth: 38,
+                  height: 38,
+                  borderRadius: 999,
+                  display: "grid",
+                  placeItems: "center",
+                  background: "linear-gradient(180deg, rgba(239,68,68,0.98), rgba(220,38,38,0.95))",
+                  color: "white",
+                  fontWeight: 1000,
+                  boxShadow: "0 10px 20px rgba(239,68,68,0.22)",
+                }}
+                title="Uscita"
+              >
+                -
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gap: 8 }}>
+              <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+                Data
+              </label>
+              <input
+                type="date"
+                title="Data uscita"
+                value={nuovaUscitaData}
+                onChange={(e) => setNuovaUscitaData(e.target.value)}
+                style={{
+                  width: "100%",
+                  minHeight: 46,
+                  borderRadius: 14,
+                  border: "1px solid rgba(15,23,42,0.12)",
+                  background: "rgba(255,255,255,0.98)",
+                  color: "rgba(15,23,42,0.96)",
+                  padding: "12px 14px",
+                  fontSize: 15,
+                  fontWeight: 700,
+                  outline: "none",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            <div style={{ display: "grid", gap: 8 }}>
+              <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+                Descrizione
+              </label>
+              <input
+                type="text"
+                title="Descrizione uscita"
+                value={nuovaUscitaDesc}
+                onChange={(e) => setNuovaUscitaDesc(e.target.value)}
+                placeholder="Es. spesa, benzina, bolletta..."
+                style={{
+                  width: "100%",
+                  minHeight: 46,
+                  borderRadius: 14,
+                  border: "1px solid rgba(15,23,42,0.12)",
+                  background: "rgba(255,255,255,0.98)",
+                  color: "rgba(15,23,42,0.96)",
+                  padding: "12px 14px",
+                  fontSize: 15,
+                  fontWeight: 700,
+                  outline: "none",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            <div style={{ display: "grid", gap: 8 }}>
+              <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+                Importo
+              </label>
+              <input
+                type="number"
+                inputMode="decimal"
+                step="0.01"
+                title="Importo uscita"
+                value={nuovaUscitaImporto}
+                onChange={(e) => setNuovaUscitaImporto(e.target.value)}
+                placeholder="0,00"
+                style={{
+                  width: "100%",
+                  minHeight: 46,
+                  borderRadius: 14,
+                  border: "1px solid rgba(15,23,42,0.12)",
+                  background: "rgba(255,255,255,0.98)",
+                  color: "rgba(15,23,42,0.96)",
+                  padding: "12px 14px",
+                  fontSize: 15,
+                  fontWeight: 700,
+                  outline: "none",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            <div style={{ display: "grid", gap: 8 }}>
+              <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+                Categoria / Nota
+              </label>
+              <input
+                type="text"
+                title="Categoria o nota uscita"
+                value={nuovaUscitaNota}
+                onChange={(e) => setNuovaUscitaNota(e.target.value)}
+                placeholder="Es. spesa, carburante, affitto..."
+                style={{
+                  width: "100%",
+                  minHeight: 46,
+                  borderRadius: 14,
+                  border: "1px solid rgba(15,23,42,0.12)",
+                  background: "rgba(255,255,255,0.98)",
+                  color: "rgba(15,23,42,0.96)",
+                  padding: "12px 14px",
+                  fontSize: 15,
+                  fontWeight: 700,
+                  outline: "none",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            <button
+              type="button"
+              title="Aggiungi uscita"
+              onClick={() => aggiungiUscitaExtra()}
+              style={{
+                border: "none",
+                borderRadius: 16,
+                padding: "14px 16px",
+                fontSize: 15,
+                fontWeight: 1000,
+                cursor: "pointer",
+                color: "white",
+                background:
+                  "linear-gradient(180deg, rgba(239,68,68,0.98), rgba(220,38,38,0.95))",
+                boxShadow: "0 18px 34px rgba(239,68,68,0.20)",
+              }}
+            >
+              + Aggiungi Uscita
+            </button>
           </div>
         </div>
-      </button>
+      </div>
 
-      <button
-        data-chip="1"
-        onClick={() => apriTurnoForm()}
-        style={{
-          ...ui.card,
-          padding: 22,
-          textAlign: "left",
-          border: "1px solid rgba(249,115,22,0.18)",
-          background:
-            "linear-gradient(180deg, rgba(249,115,22,0.12), rgba(255,255,255,0.94))",
-          boxShadow: "0 18px 40px rgba(249,115,22,0.10)",
-          cursor: "pointer",
-          display: "grid",
-          gap: 12,
-        }}
-      >
-        <div
+      <div style={{ display: "grid", gap: 16 }}>
+        <button
+          data-chip="1"
+          onClick={() => apriNuova()}
           style={{
-            width: 54,
-            height: 54,
-            borderRadius: 18,
+            ...ui.card,
+            padding: 22,
+            textAlign: "left",
+            border: "1px solid rgba(79,70,229,0.18)",
+            background:
+              "linear-gradient(180deg, rgba(79,70,229,0.12), rgba(255,255,255,0.94))",
+            boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
+            cursor: "pointer",
             display: "grid",
-            placeItems: "center",
-            background: "linear-gradient(180deg, rgba(249,115,22,0.94), rgba(234,88,12,0.90))",
-            color: "white",
-            fontSize: 24,
-            boxShadow: "0 14px 28px rgba(249,115,22,0.20)",
+            gap: 12,
           }}
+          title="Apri form appuntamento o scadenza"
         >
-          ⏰
-        </div>
-
-        <div>
           <div
             style={{
-              fontSize: 20,
-              fontWeight: 1000,
-              letterSpacing: -0.3,
-              color: "rgba(15,23,42,0.96)",
+              width: 54,
+              height: 54,
+              borderRadius: 18,
+              display: "grid",
+              placeItems: "center",
+              background: "linear-gradient(180deg, rgba(79,70,229,0.94), rgba(124,58,237,0.90))",
+              color: "white",
+              fontSize: 24,
+              boxShadow: "0 14px 28px rgba(79,70,229,0.20)",
             }}
           >
-            Turno
+            🗓
           </div>
 
+          <div>
+            <div
+              style={{
+                fontSize: 20,
+                fontWeight: 1000,
+                letterSpacing: -0.3,
+                color: "rgba(15,23,42,0.96)",
+              }}
+            >
+              Appuntamento / Scadenza
+            </div>
+
+            <div
+              style={{
+                marginTop: 6,
+                fontSize: 13,
+                fontWeight: 800,
+                opacity: 0.72,
+                lineHeight: 1.45,
+                color: "rgba(15,23,42,0.88)",
+              }}
+            >
+              Aggiungi velocemente nuovi eventi, date importanti e promemoria
+            </div>
+          </div>
+        </button>
+
+        <button
+          data-chip="1"
+          onClick={() => apriTurnoForm()}
+          style={{
+            ...ui.card,
+            padding: 22,
+            textAlign: "left",
+            border: "1px solid rgba(249,115,22,0.18)",
+            background:
+              "linear-gradient(180deg, rgba(249,115,22,0.12), rgba(255,255,255,0.94))",
+            boxShadow: "0 18px 40px rgba(249,115,22,0.10)",
+            cursor: "pointer",
+            display: "grid",
+            gap: 12,
+          }}
+          title="Apri form turno"
+        >
           <div
             style={{
-              marginTop: 6,
-              fontSize: 13,
-              fontWeight: 800,
-              opacity: 0.72,
-              lineHeight: 1.45,
-              color: "rgba(15,23,42,0.88)",
+              width: 54,
+              height: 54,
+              borderRadius: 18,
+              display: "grid",
+              placeItems: "center",
+              background: "linear-gradient(180deg, rgba(249,115,22,0.94), rgba(234,88,12,0.90))",
+              color: "white",
+              fontSize: 24,
+              boxShadow: "0 14px 28px rgba(249,115,22,0.20)",
             }}
           >
-            Inserisci un nuovo turno di lavoro, ferie o riposo
+            ⏰
           </div>
-        </div>
-      </button>
+
+          <div>
+            <div
+              style={{
+                fontSize: 20,
+                fontWeight: 1000,
+                letterSpacing: -0.3,
+                color: "rgba(15,23,42,0.96)",
+              }}
+            >
+              Turno
+            </div>
+
+            <div
+              style={{
+                marginTop: 6,
+                fontSize: 13,
+                fontWeight: 800,
+                opacity: 0.72,
+                lineHeight: 1.45,
+                color: "rgba(15,23,42,0.88)",
+              }}
+            >
+              Inserisci un nuovo turno di lavoro, ferie o riposo
+            </div>
+          </div>
+        </button>
+      </div>
     </div>
   </div>
 )}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
