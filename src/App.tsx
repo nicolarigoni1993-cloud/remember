@@ -1028,28 +1028,31 @@ const ui = useMemo(() => {
 
 
 
-   function chiudiForm() {
-    setMostraForm(false);
-    resetForm();
-  }
+function chiudiForm() {
+  resetForm();
+  setMostraForm(false);
+  setAggiungiSezione("menu");
+}
 
-  function resetForm() {
-    setIdInModifica(null);
-    setTitolo("");
-    setData("");
-    setOra("09:00");
-    setTipo("scadenza");
-    setUrgente(false);
-    setNota("");
-    setImporto("");
-    setNotificheMinutiPrima([]);
-    setCustomNotificaOre("");
-  }
+function resetForm() {
+  setIdInModifica(null);
+  setTitolo("");
+  setData("");
+  setOra("09:00");
+  setTipo("scadenza");
+  setUrgente(false);
+  setNota("");
+  setImporto("");
+  setNotificheMinutiPrima([]);
+  setCustomNotificaOre("");
+}
 
 function apriNuova(tipoDefault: Voce["tipo"] = "scadenza") {
   resetForm();
   setTipo(tipoDefault);
-  setMostraForm(true);
+  setOra("09:00");
+  setMostraForm(false);
+  setAggiungiSezione("eventi");
 }
 
 function apriNuovaConData(dataSelezionata: string, tipoDefault: Voce["tipo"]) {
@@ -1057,7 +1060,23 @@ function apriNuovaConData(dataSelezionata: string, tipoDefault: Voce["tipo"]) {
   setData(dataSelezionata);
   setOra("09:00");
   setTipo(tipoDefault);
-  setMostraForm(true);
+  setMostraForm(false);
+  setAggiungiSezione("eventi");
+}
+
+function apriModifica(v: Voce) {
+  setIdInModifica(v.id);
+  setTitolo(v.titolo);
+  setData(v.data);
+  setOra(v.ora);
+  setTipo(v.tipo === "nota" ? "scadenza" : v.tipo);
+  setUrgente(v.urgente);
+  setNota("");
+  setImporto(v.importo !== null ? String(v.importo) : "");
+  setNotificheMinutiPrima([]);
+  setCustomNotificaOre("");
+  setMostraForm(false);
+  setAggiungiSezione("eventi");
 }
 
 
@@ -1124,16 +1143,15 @@ function salvaEventoDaAggiungi() {
 
 function salva() {
   if (classNameIsEmpty(titolo)) {
-    alert("Compila almeno il titolo");
+    alert("Compila almeno la descrizione");
     return;
   }
 
-  const isNota = tipo === "nota";
   const dataFinale = data.trim();
   const oraFinale = ora.trim();
 
-  if (!isNota && (classNameIsEmpty(dataFinale) || classNameIsEmpty(oraFinale))) {
-    alert("Compila titolo, data e ora");
+  if (classNameIsEmpty(dataFinale) || classNameIsEmpty(oraFinale)) {
+    alert("Compila data e ora");
     return;
   }
 
@@ -1144,24 +1162,21 @@ function salva() {
     return;
   }
 
-  const notiUniq = Array.from(new Set(notificheMinutiPrima))
-    .filter((n) => Number.isFinite(n) && n > 0)
-    .sort((a, b) => b - a);
+  let notiUniq: number[] = [];
 
-  if (notiUniq.length > 0) {
+  if (customNotificaOre.trim() !== "") {
+    const ore = parseOreItaliane(customNotificaOre);
+    if (ore === null) {
+      alert("Inserisci ore notifica valide");
+      return;
+    }
+
+    const minuti = Math.max(1, Math.round(ore * 60));
+    notiUniq = [minuti];
     requestNotifyPermission();
   }
 
-  const meseCorrenteData = `${meseKey}-01`;
-  const voceData = isNota ? dataFinale || meseCorrenteData : dataFinale;
-  const voceOra = isNota ? oraFinale || "00:00" : oraFinale;
-
-  const notaFinale =
-    isNota && !dataFinale
-      ? `[NOTA_LIBERA_MESE] ${nota.trim()}`.trim()
-      : nota.trim().replace(/^\[NOTA_LIBERA_MESE\]\s*/i, "");
-
-  const movimentoFinale: Movimento = isNota ? "nessuno" : "uscita";
+  const movimentoFinale: Movimento = importoNum !== null ? "uscita" : "nessuno";
 
   if (idInModifica) {
     setVoci((prev) =>
@@ -1170,15 +1185,15 @@ function salva() {
           ? {
               ...x,
               titolo: titolo.trim(),
-              data: voceData,
-              ora: voceOra,
+              data: dataFinale,
+              ora: oraFinale,
               tipo,
-              urgente: isNota ? false : urgente,
-              nota: notaFinale,
-              importo: isNota ? null : importoNum,
+              urgente,
+              nota: "",
+              importo: importoNum,
               movimento: movimentoFinale,
-              fatto: voceData && voceOra ? vocePassata(voceData, voceOra) : false,
-              notificheMinutiPrima: isNota ? [] : notiUniq,
+              fatto: vocePassata(dataFinale, oraFinale),
+              notificheMinutiPrima: notiUniq,
             }
           : x
       )
@@ -1187,15 +1202,15 @@ function salva() {
     const nuova: Voce = {
       id: safeUUID(),
       titolo: titolo.trim(),
-      data: voceData,
-      ora: voceOra,
+      data: dataFinale,
+      ora: oraFinale,
       tipo,
-      urgente: isNota ? false : urgente,
-      nota: notaFinale,
-      importo: isNota ? null : importoNum,
+      urgente,
+      nota: "",
+      importo: importoNum,
       movimento: movimentoFinale,
-      fatto: voceData && voceOra ? vocePassata(voceData, voceOra) : false,
-      notificheMinutiPrima: isNota ? [] : notiUniq,
+      fatto: vocePassata(dataFinale, oraFinale),
+      notificheMinutiPrima: notiUniq,
     };
 
     setVoci((prev) => [nuova, ...prev]);
@@ -5962,274 +5977,605 @@ function MiniCalendarioControllo({
       </div>
     </div>
 
-    {aggiungiSezione === "menu" ? (
+{aggiungiSezione === "menu" ? (
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+      gap: 16,
+    }}
+    className="remember-grid-2"
+  >
+    <button
+      data-chip="1"
+      onClick={() => setAggiungiSezione("movimenti")}
+      style={{
+        ...ui.card,
+        padding: 22,
+        textAlign: "left",
+        border: "1px solid rgba(16,185,129,0.18)",
+        background:
+          "linear-gradient(180deg, rgba(16,185,129,0.12), rgba(255,255,255,0.94))",
+        boxShadow: "0 18px 40px rgba(16,185,129,0.10)",
+        cursor: "pointer",
+        display: "grid",
+        gap: 12,
+      }}
+    >
       <div
         style={{
+          width: 54,
+          height: 54,
+          borderRadius: 18,
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-          gap: 16,
+          placeItems: "center",
+          background: "linear-gradient(180deg, rgba(16,185,129,0.94), rgba(5,150,105,0.90))",
+          color: "white",
+          fontSize: 24,
+          boxShadow: "0 14px 28px rgba(16,185,129,0.20)",
         }}
-        className="remember-grid-2"
       >
-        <button
-          data-chip="1"
-          onClick={() => setAggiungiSezione("movimenti")}
-          style={{
-            ...ui.card,
-            padding: 22,
-            textAlign: "left",
-            border: "1px solid rgba(16,185,129,0.18)",
-            background:
-              "linear-gradient(180deg, rgba(16,185,129,0.12), rgba(255,255,255,0.94))",
-            boxShadow: "0 18px 40px rgba(16,185,129,0.10)",
-            cursor: "pointer",
-            display: "grid",
-            gap: 12,
-          }}
-        >
-          <div
-            style={{
-              width: 54,
-              height: 54,
-              borderRadius: 18,
-              display: "grid",
-              placeItems: "center",
-              background: "linear-gradient(180deg, rgba(16,185,129,0.94), rgba(5,150,105,0.90))",
-              color: "white",
-              fontSize: 24,
-              boxShadow: "0 14px 28px rgba(16,185,129,0.20)",
-            }}
-          >
-            €
-          </div>
-
-          <div>
-            <div
-              style={{
-                fontSize: 20,
-                fontWeight: 1000,
-                letterSpacing: -0.3,
-                color: "rgba(15,23,42,0.96)",
-              }}
-            >
-              Entrata / Uscita
-            </div>
-
-            <div
-              style={{
-                marginTop: 6,
-                fontSize: 13,
-                fontWeight: 800,
-                opacity: 0.72,
-                lineHeight: 1.45,
-                color: "rgba(15,23,42,0.88)",
-              }}
-            >
-              Nuova area dedicata ai movimenti economici
-            </div>
-          </div>
-        </button>
-
-        <button
-          data-chip="1"
-          onClick={() => {
-            resetForm();
-            setTipo("scadenza");
-            setAggiungiSezione("eventi");
-          }}
-          style={{
-            ...ui.card,
-            padding: 22,
-            textAlign: "left",
-            border: "1px solid rgba(79,70,229,0.18)",
-            background:
-              "linear-gradient(180deg, rgba(79,70,229,0.12), rgba(255,255,255,0.94))",
-            boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
-            cursor: "pointer",
-            display: "grid",
-            gap: 12,
-          }}
-        >
-          <div
-            style={{
-              width: 54,
-              height: 54,
-              borderRadius: 18,
-              display: "grid",
-              placeItems: "center",
-              background: "linear-gradient(180deg, rgba(79,70,229,0.94), rgba(124,58,237,0.90))",
-              color: "white",
-              fontSize: 24,
-              boxShadow: "0 14px 28px rgba(79,70,229,0.20)",
-            }}
-          >
-            🗓
-          </div>
-
-          <div>
-            <div
-              style={{
-                fontSize: 20,
-                fontWeight: 1000,
-                letterSpacing: -0.3,
-                color: "rgba(15,23,42,0.96)",
-              }}
-            >
-              Appuntamento / Scadenza
-            </div>
-
-            <div
-              style={{
-                marginTop: 6,
-                fontSize: 13,
-                fontWeight: 800,
-                opacity: 0.72,
-                lineHeight: 1.45,
-                color: "rgba(15,23,42,0.88)",
-              }}
-            >
-              Nuova area dedicata a promemoria, appuntamenti e scadenze
-            </div>
-          </div>
-        </button>
-
-        <button
-          data-chip="1"
-          onClick={() => apriTurnoForm()}
-          style={{
-            ...ui.card,
-            padding: 22,
-            textAlign: "left",
-            border: "1px solid rgba(249,115,22,0.18)",
-            background:
-              "linear-gradient(180deg, rgba(249,115,22,0.12), rgba(255,255,255,0.94))",
-            boxShadow: "0 18px 40px rgba(249,115,22,0.10)",
-            cursor: "pointer",
-            display: "grid",
-            gap: 12,
-          }}
-        >
-          <div
-            style={{
-              width: 54,
-              height: 54,
-              borderRadius: 18,
-              display: "grid",
-              placeItems: "center",
-              background: "linear-gradient(180deg, rgba(249,115,22,0.94), rgba(234,88,12,0.90))",
-              color: "white",
-              fontSize: 24,
-              boxShadow: "0 14px 28px rgba(249,115,22,0.20)",
-            }}
-          >
-            ⏰
-          </div>
-
-          <div>
-            <div
-              style={{
-                fontSize: 20,
-                fontWeight: 1000,
-                letterSpacing: -0.3,
-                color: "rgba(15,23,42,0.96)",
-              }}
-            >
-              Turno
-            </div>
-
-            <div
-              style={{
-                marginTop: 6,
-                fontSize: 13,
-                fontWeight: 800,
-                opacity: 0.72,
-                lineHeight: 1.45,
-                color: "rgba(15,23,42,0.88)",
-              }}
-            >
-              Inserisci un nuovo turno di lavoro, ferie o riposo
-            </div>
-          </div>
-        </button>
-
-        <button
-          data-chip="1"
-          onClick={() => apriNuova("nota")}
-          style={{
-            ...ui.card,
-            padding: 22,
-            textAlign: "left",
-            border: "1px solid rgba(244,114,182,0.18)",
-            background:
-              "linear-gradient(180deg, rgba(244,114,182,0.12), rgba(255,255,255,0.94))",
-            boxShadow: "0 18px 40px rgba(244,114,182,0.10)",
-            cursor: "pointer",
-            display: "grid",
-            gap: 12,
-          }}
-        >
-          <div
-            style={{
-              width: 54,
-              height: 54,
-              borderRadius: 18,
-              display: "grid",
-              placeItems: "center",
-              background: "linear-gradient(180deg, rgba(244,114,182,0.94), rgba(236,72,153,0.90))",
-              color: "white",
-              fontSize: 24,
-              boxShadow: "0 14px 28px rgba(244,114,182,0.20)",
-            }}
-          >
-            📝
-          </div>
-
-          <div>
-            <div
-              style={{
-                fontSize: 20,
-                fontWeight: 1000,
-                letterSpacing: -0.3,
-                color: "rgba(15,23,42,0.96)",
-              }}
-            >
-              Nota rapida
-            </div>
-
-            <div
-              style={{
-                marginTop: 6,
-                fontSize: 13,
-                fontWeight: 800,
-                opacity: 0.72,
-                lineHeight: 1.45,
-                color: "rgba(15,23,42,0.88)",
-              }}
-            >
-              Salva una nota libera o con data
-            </div>
-          </div>
-        </button>
+        €
       </div>
-    ) : aggiungiSezione === "movimenti" ? (
-      <div
-        style={{
-          ...ui.card,
-          padding: 22,
-          border: "1px solid rgba(16,185,129,0.18)",
-          background:
-            "linear-gradient(180deg, rgba(16,185,129,0.12), rgba(255,255,255,0.94))",
-          boxShadow: "0 18px 40px rgba(16,185,129,0.10)",
-          display: "grid",
-          gap: 16,
-        }}
-      >
+
+      <div>
         <div
           style={{
-            display: "grid",
-            gap: 8,
+            fontSize: 20,
+            fontWeight: 1000,
+            letterSpacing: -0.3,
+            color: "rgba(15,23,42,0.96)",
           }}
         >
+          Entrata / Uscita
+        </div>
+
+        <div
+          style={{
+            marginTop: 6,
+            fontSize: 13,
+            fontWeight: 800,
+            opacity: 0.72,
+            lineHeight: 1.45,
+            color: "rgba(15,23,42,0.88)",
+          }}
+        >
+          Nuova area dedicata ai movimenti economici
+        </div>
+      </div>
+    </button>
+
+    <button
+      data-chip="1"
+      onClick={() => {
+        resetForm();
+        setTipo("scadenza");
+        setAggiungiSezione("eventi");
+      }}
+      style={{
+        ...ui.card,
+        padding: 22,
+        textAlign: "left",
+        border: "1px solid rgba(79,70,229,0.18)",
+        background:
+          "linear-gradient(180deg, rgba(79,70,229,0.12), rgba(255,255,255,0.94))",
+        boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
+        cursor: "pointer",
+        display: "grid",
+        gap: 12,
+      }}
+    >
+      <div
+        style={{
+          width: 54,
+          height: 54,
+          borderRadius: 18,
+          display: "grid",
+          placeItems: "center",
+          background: "linear-gradient(180deg, rgba(79,70,229,0.94), rgba(124,58,237,0.90))",
+          color: "white",
+          fontSize: 24,
+          boxShadow: "0 14px 28px rgba(79,70,229,0.20)",
+        }}
+      >
+        🗓
+      </div>
+
+      <div>
+        <div
+          style={{
+            fontSize: 20,
+            fontWeight: 1000,
+            letterSpacing: -0.3,
+            color: "rgba(15,23,42,0.96)",
+          }}
+        >
+          Appuntamento / Scadenza
+        </div>
+
+        <div
+          style={{
+            marginTop: 6,
+            fontSize: 13,
+            fontWeight: 800,
+            opacity: 0.72,
+            lineHeight: 1.45,
+            color: "rgba(15,23,42,0.88)",
+          }}
+        >
+          Nuova area dedicata a promemoria, appuntamenti e scadenze
+        </div>
+      </div>
+    </button>
+
+    <button
+      data-chip="1"
+      onClick={() => apriTurnoForm()}
+      style={{
+        ...ui.card,
+        padding: 22,
+        textAlign: "left",
+        border: "1px solid rgba(249,115,22,0.18)",
+        background:
+          "linear-gradient(180deg, rgba(249,115,22,0.12), rgba(255,255,255,0.94))",
+        boxShadow: "0 18px 40px rgba(249,115,22,0.10)",
+        cursor: "pointer",
+        display: "grid",
+        gap: 12,
+      }}
+    >
+      <div
+        style={{
+          width: 54,
+          height: 54,
+          borderRadius: 18,
+          display: "grid",
+          placeItems: "center",
+          background: "linear-gradient(180deg, rgba(249,115,22,0.94), rgba(234,88,12,0.90))",
+          color: "white",
+          fontSize: 24,
+          boxShadow: "0 14px 28px rgba(249,115,22,0.20)",
+        }}
+      >
+        ⏰
+      </div>
+
+      <div>
+        <div
+          style={{
+            fontSize: 20,
+            fontWeight: 1000,
+            letterSpacing: -0.3,
+            color: "rgba(15,23,42,0.96)",
+          }}
+        >
+          Turno
+        </div>
+
+        <div
+          style={{
+            marginTop: 6,
+            fontSize: 13,
+            fontWeight: 800,
+            opacity: 0.72,
+            lineHeight: 1.45,
+            color: "rgba(15,23,42,0.88)",
+          }}
+        >
+          Inserisci un nuovo turno di lavoro, ferie o riposo
+        </div>
+      </div>
+    </button>
+
+    <button
+      data-chip="1"
+      onClick={() => apriNuova("nota")}
+      style={{
+        ...ui.card,
+        padding: 22,
+        textAlign: "left",
+        border: "1px solid rgba(244,114,182,0.18)",
+        background:
+          "linear-gradient(180deg, rgba(244,114,182,0.12), rgba(255,255,255,0.94))",
+        boxShadow: "0 18px 40px rgba(244,114,182,0.10)",
+        cursor: "pointer",
+        display: "grid",
+        gap: 12,
+      }}
+    >
+      <div
+        style={{
+          width: 54,
+          height: 54,
+          borderRadius: 18,
+          display: "grid",
+          placeItems: "center",
+          background: "linear-gradient(180deg, rgba(244,114,182,0.94), rgba(236,72,153,0.90))",
+          color: "white",
+          fontSize: 24,
+          boxShadow: "0 14px 28px rgba(244,114,182,0.20)",
+        }}
+      >
+        📝
+      </div>
+
+      <div>
+        <div
+          style={{
+            fontSize: 20,
+            fontWeight: 1000,
+            letterSpacing: -0.3,
+            color: "rgba(15,23,42,0.96)",
+          }}
+        >
+          Nota rapida
+        </div>
+
+        <div
+          style={{
+            marginTop: 6,
+            fontSize: 13,
+            fontWeight: 800,
+            opacity: 0.72,
+            lineHeight: 1.45,
+            color: "rgba(15,23,42,0.88)",
+          }}
+        >
+          Salva una nota libera o con data
+        </div>
+      </div>
+    </button>
+  </div>
+) : aggiungiSezione === "movimenti" ? (
+  <div
+    style={{
+      ...ui.card,
+      padding: 22,
+      border: "1px solid rgba(16,185,129,0.18)",
+      background:
+        "linear-gradient(180deg, rgba(16,185,129,0.12), rgba(255,255,255,0.94))",
+      boxShadow: "0 18px 40px rgba(16,185,129,0.10)",
+      display: "grid",
+      gap: 16,
+    }}
+  >
+    <div
+      style={{
+        display: "grid",
+        gap: 8,
+      }}
+    >
+      <div
+        style={{
+          fontSize: 20,
+          fontWeight: 1000,
+          letterSpacing: -0.3,
+          color: "rgba(15,23,42,0.96)",
+        }}
+      >
+        Area movimenti economici
+      </div>
+
+      <div
+        style={{
+          fontSize: 13,
+          fontWeight: 800,
+          color: "rgba(15,23,42,0.72)",
+          lineHeight: 1.45,
+        }}
+      >
+        Inserisci entrate e uscite con categorie, importi e note. Le categorie personalizzate restano salvate.
+      </div>
+    </div>
+
+    <div style={{ display: "grid", gap: 12 }}>
+      <button
+        type="button"
+        title="Apri o chiudi form entrata"
+        onClick={() => setMovimentoAperto((prev) => (prev === "entrata" ? null : "entrata"))}
+        style={{
+          border: "none",
+          borderRadius: 20,
+          padding: "16px 18px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+          cursor: "pointer",
+          color: "white",
+          fontWeight: 1000,
+          fontSize: 18,
+          background:
+            "linear-gradient(180deg, rgba(34,197,94,0.98), rgba(22,163,74,0.95))",
+          boxShadow: "0 18px 34px rgba(34,197,94,0.20)",
+        }}
+      >
+        <span>Entrata</span>
+        <span style={{ fontSize: 22 }}>{movimentoAperto === "entrata" ? "−" : "+"}</span>
+      </button>
+
+      {movimentoAperto === "entrata" && (
+        <div
+          style={{
+            background: "rgba(255,255,255,0.10)",
+            border: "1px solid rgba(16,185,129,0.16)",
+            borderRadius: 20,
+            padding: 16,
+            display: "grid",
+            gap: 12,
+            boxShadow: "0 10px 28px rgba(16,185,129,0.10)",
+          }}
+        >
+          <div style={{ display: "grid", gap: 8 }}>
+            <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>Data</label>
+            <input
+              type="date"
+              value={nuovaEntrataData}
+              onChange={(e) => setNuovaEntrataData(e.target.value)}
+              style={inputLight(false)}
+            />
+          </div>
+
+          <div style={{ display: "grid", gap: 8 }}>
+            <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>Categoria</label>
+            <select
+              value={categoriaEntrata}
+              onChange={(e) => setCategoriaEntrata(e.target.value)}
+              style={inputLight(false)}
+            >
+              <option value="">Seleziona categoria</option>
+              {categorieEntrataBase.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+              {categorieEntrataCustom.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+              <option value="__altro__">Altro...</option>
+            </select>
+          </div>
+
+          {categoriaEntrata === "__altro__" && (
+            <div style={{ display: "grid", gap: 8 }}>
+              <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>
+                Nuova categoria personalizzata
+              </label>
+              <input
+                type="text"
+                value={nuovaCategoriaEntrata}
+                onChange={(e) => setNuovaCategoriaEntrata(e.target.value)}
+                placeholder="Scrivi una nuova categoria"
+                style={inputLight(false)}
+              />
+            </div>
+          )}
+
+          <div style={{ display: "grid", gap: 8 }}>
+            <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>
+              Nota facoltativa
+            </label>
+            <input
+              type="text"
+              value={nuovaEntrataDesc}
+              onChange={(e) => setNuovaEntrataDesc(e.target.value)}
+              placeholder="Es. bonus marzo, regalo, rimborso..."
+              style={inputLight(false)}
+            />
+          </div>
+
+          <div style={{ display: "grid", gap: 8 }}>
+            <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>Importo</label>
+            <input
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              value={nuovaEntrataImporto}
+              onChange={(e) => setNuovaEntrataImporto(e.target.value)}
+              placeholder="0,00"
+              style={inputLight(false)}
+            />
+          </div>
+
+          <button
+            type="button"
+            onClick={aggiungiEntrataExtra}
+            style={{
+              border: "none",
+              borderRadius: 16,
+              padding: "14px 16px",
+              fontSize: 15,
+              fontWeight: 1000,
+              cursor: "pointer",
+              color: "white",
+              background:
+                "linear-gradient(180deg, rgba(34,197,94,0.98), rgba(22,163,74,0.95))",
+              boxShadow: "0 18px 34px rgba(34,197,94,0.20)",
+            }}
+          >
+            + Aggiungi Entrata
+          </button>
+        </div>
+      )}
+
+      <button
+        type="button"
+        title="Apri o chiudi form uscita"
+        onClick={() => setMovimentoAperto((prev) => (prev === "uscita" ? null : "uscita"))}
+        style={{
+          border: "none",
+          borderRadius: 20,
+          padding: "16px 18px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+          cursor: "pointer",
+          color: "white",
+          fontWeight: 1000,
+          fontSize: 18,
+          background:
+            "linear-gradient(180deg, rgba(239,68,68,0.98), rgba(220,38,38,0.95))",
+          boxShadow: "0 18px 34px rgba(239,68,68,0.20)",
+        }}
+      >
+        <span>Uscita</span>
+        <span style={{ fontSize: 22 }}>{movimentoAperto === "uscita" ? "−" : "+"}</span>
+      </button>
+
+      {movimentoAperto === "uscita" && (
+        <div
+          style={{
+            background: "rgba(255,255,255,0.10)",
+            border: "1px solid rgba(239,68,68,0.16)",
+            borderRadius: 20,
+            padding: 16,
+            display: "grid",
+            gap: 12,
+            boxShadow: "0 10px 28px rgba(239,68,68,0.10)",
+          }}
+        >
+          <div style={{ display: "grid", gap: 8 }}>
+            <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>Data</label>
+            <input
+              type="date"
+              value={nuovaUscitaData}
+              onChange={(e) => setNuovaUscitaData(e.target.value)}
+              style={inputLight(false)}
+            />
+          </div>
+
+          <div style={{ display: "grid", gap: 8 }}>
+            <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>Categoria</label>
+            <select
+              value={categoriaUscita}
+              onChange={(e) => setCategoriaUscita(e.target.value)}
+              style={inputLight(false)}
+            >
+              <option value="">Seleziona categoria</option>
+              {categorieUscitaBase.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+              {categorieUscitaCustom.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+              <option value="__altro__">Altro...</option>
+            </select>
+          </div>
+
+          {categoriaUscita === "__altro__" && (
+            <div style={{ display: "grid", gap: 8 }}>
+              <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>
+                Nuova categoria personalizzata
+              </label>
+              <input
+                type="text"
+                value={nuovaCategoriaUscita}
+                onChange={(e) => setNuovaCategoriaUscita(e.target.value)}
+                placeholder="Scrivi una nuova categoria"
+                style={inputLight(false)}
+              />
+            </div>
+          )}
+
+          <div style={{ display: "grid", gap: 8 }}>
+            <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>
+              Descrizione breve
+            </label>
+            <input
+              type="text"
+              value={nuovaUscitaDesc}
+              onChange={(e) => setNuovaUscitaDesc(e.target.value)}
+              placeholder="Es. supermercato, pieno auto..."
+              style={inputLight(false)}
+            />
+          </div>
+
+          <div style={{ display: "grid", gap: 8 }}>
+            <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>Importo</label>
+            <input
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              value={nuovaUscitaImporto}
+              onChange={(e) => setNuovaUscitaImporto(e.target.value)}
+              placeholder="0,00"
+              style={inputLight(false)}
+            />
+          </div>
+
+          <div style={{ display: "grid", gap: 8 }}>
+            <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>
+              Nota aggiuntiva
+            </label>
+            <input
+              type="text"
+              value={nuovaUscitaNota}
+              onChange={(e) => setNuovaUscitaNota(e.target.value)}
+              placeholder="Dettaglio extra facoltativo"
+              style={inputLight(false)}
+            />
+          </div>
+
+          <button
+            type="button"
+            onClick={aggiungiUscitaExtra}
+            style={{
+              border: "none",
+              borderRadius: 16,
+              padding: "14px 16px",
+              fontSize: 15,
+              fontWeight: 1000,
+              cursor: "pointer",
+              color: "white",
+              background:
+                "linear-gradient(180deg, rgba(239,68,68,0.98), rgba(220,38,38,0.95))",
+              boxShadow: "0 18px 34px rgba(239,68,68,0.20)",
+            }}
+          >
+            + Aggiungi Uscita
+          </button>
+        </div>
+      )}
+    </div>
+  </div>
+) : (
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "minmax(0, 1.05fr) minmax(280px, 0.95fr)",
+      gap: 16,
+    }}
+    className="remember-grid-2"
+  >
+    <div
+      style={{
+        ...ui.card,
+        padding: 22,
+        border: "1px solid rgba(79,70,229,0.18)",
+        background:
+          "linear-gradient(180deg, rgba(79,70,229,0.12), rgba(255,255,255,0.94))",
+        boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
+        display: "grid",
+        gap: 16,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          gap: 12,
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ display: "grid", gap: 6 }}>
           <div
             style={{
               fontSize: 20,
@@ -6238,715 +6584,336 @@ function MiniCalendarioControllo({
               color: "rgba(15,23,42,0.96)",
             }}
           >
-            Area movimenti economici
+            {idInModifica ? "Modifica promemoria" : "Nuovo promemoria"}
           </div>
 
           <div
             style={{
               fontSize: 13,
               fontWeight: 800,
-              color: "rgba(15,23,42,0.72)",
               lineHeight: 1.45,
+              color: "rgba(15,23,42,0.70)",
             }}
           >
-            Inserisci entrate e uscite con categorie, importi e note. Le categorie personalizzate restano salvate.
+            Crea appuntamenti e scadenze in una schermata più ordinata e veloce
           </div>
         </div>
 
-        <div style={{ display: "grid", gap: 12 }}>
-          <button
-            type="button"
-            title="Apri o chiudi form entrata"
-            onClick={() => setMovimentoAperto((prev) => (prev === "entrata" ? null : "entrata"))}
-            style={{
-              border: "none",
-              borderRadius: 20,
-              padding: "16px 18px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 12,
-              cursor: "pointer",
-              color: "white",
-              fontWeight: 1000,
-              fontSize: 18,
-              background:
-                "linear-gradient(180deg, rgba(34,197,94,0.98), rgba(22,163,74,0.95))",
-              boxShadow: "0 18px 34px rgba(34,197,94,0.20)",
-            }}
-          >
-            <span>Entrata</span>
-            <span style={{ fontSize: 22 }}>{movimentoAperto === "entrata" ? "−" : "+"}</span>
-          </button>
-
-          {movimentoAperto === "entrata" && (
-            <div
-              style={{
-                background: "rgba(255,255,255,0.10)",
-                border: "1px solid rgba(16,185,129,0.16)",
-                borderRadius: 20,
-                padding: 16,
-                display: "grid",
-                gap: 12,
-                boxShadow: "0 10px 28px rgba(16,185,129,0.10)",
-              }}
-            >
-              <div style={{ display: "grid", gap: 8 }}>
-                <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>Data</label>
-                <input
-                  type="date"
-                  value={nuovaEntrataData}
-                  onChange={(e) => setNuovaEntrataData(e.target.value)}
-                  style={inputLight(false)}
-                />
-              </div>
-
-              <div style={{ display: "grid", gap: 8 }}>
-                <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>Categoria</label>
-                <select
-                  value={categoriaEntrata}
-                  onChange={(e) => setCategoriaEntrata(e.target.value)}
-                  style={inputLight(false)}
-                >
-                  <option value="">Seleziona categoria</option>
-                  {categorieEntrataBase.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                  {categorieEntrataCustom.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                  <option value="__altro__">Altro...</option>
-                </select>
-              </div>
-
-              {categoriaEntrata === "__altro__" && (
-                <div style={{ display: "grid", gap: 8 }}>
-                  <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>
-                    Nuova categoria personalizzata
-                  </label>
-                  <input
-                    type="text"
-                    value={nuovaCategoriaEntrata}
-                    onChange={(e) => setNuovaCategoriaEntrata(e.target.value)}
-                    placeholder="Scrivi una nuova categoria"
-                    style={inputLight(false)}
-                  />
-                </div>
-              )}
-
-              <div style={{ display: "grid", gap: 8 }}>
-                <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>
-                  Nota facoltativa
-                </label>
-                <input
-                  type="text"
-                  value={nuovaEntrataDesc}
-                  onChange={(e) => setNuovaEntrataDesc(e.target.value)}
-                  placeholder="Es. bonus marzo, regalo, rimborso..."
-                  style={inputLight(false)}
-                />
-              </div>
-
-              <div style={{ display: "grid", gap: 8 }}>
-                <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>Importo</label>
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  step="0.01"
-                  value={nuovaEntrataImporto}
-                  onChange={(e) => setNuovaEntrataImporto(e.target.value)}
-                  placeholder="0,00"
-                  style={inputLight(false)}
-                />
-              </div>
-
-              <button
-                type="button"
-                onClick={aggiungiEntrataExtra}
-                style={{
-                  border: "none",
-                  borderRadius: 16,
-                  padding: "14px 16px",
-                  fontSize: 15,
-                  fontWeight: 1000,
-                  cursor: "pointer",
-                  color: "white",
-                  background:
-                    "linear-gradient(180deg, rgba(34,197,94,0.98), rgba(22,163,74,0.95))",
-                  boxShadow: "0 18px 34px rgba(34,197,94,0.20)",
-                }}
-              >
-                + Aggiungi Entrata
-              </button>
-            </div>
-          )}
-
-          <button
-            type="button"
-            title="Apri o chiudi form uscita"
-            onClick={() => setMovimentoAperto((prev) => (prev === "uscita" ? null : "uscita"))}
-            style={{
-              border: "none",
-              borderRadius: 20,
-              padding: "16px 18px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 12,
-              cursor: "pointer",
-              color: "white",
-              fontWeight: 1000,
-              fontSize: 18,
-              background:
-                "linear-gradient(180deg, rgba(239,68,68,0.98), rgba(220,38,38,0.95))",
-              boxShadow: "0 18px 34px rgba(239,68,68,0.20)",
-            }}
-          >
-            <span>Uscita</span>
-            <span style={{ fontSize: 22 }}>{movimentoAperto === "uscita" ? "−" : "+"}</span>
-          </button>
-
-          {movimentoAperto === "uscita" && (
-            <div
-              style={{
-                background: "rgba(255,255,255,0.10)",
-                border: "1px solid rgba(239,68,68,0.16)",
-                borderRadius: 20,
-                padding: 16,
-                display: "grid",
-                gap: 12,
-                boxShadow: "0 10px 28px rgba(239,68,68,0.10)",
-              }}
-            >
-              <div style={{ display: "grid", gap: 8 }}>
-                <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>Data</label>
-                <input
-                  type="date"
-                  value={nuovaUscitaData}
-                  onChange={(e) => setNuovaUscitaData(e.target.value)}
-                  style={inputLight(false)}
-                />
-              </div>
-
-              <div style={{ display: "grid", gap: 8 }}>
-                <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>Categoria</label>
-                <select
-                  value={categoriaUscita}
-                  onChange={(e) => setCategoriaUscita(e.target.value)}
-                  style={inputLight(false)}
-                >
-                  <option value="">Seleziona categoria</option>
-                  {categorieUscitaBase.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                  {categorieUscitaCustom.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                  <option value="__altro__">Altro...</option>
-                </select>
-              </div>
-
-              {categoriaUscita === "__altro__" && (
-                <div style={{ display: "grid", gap: 8 }}>
-                  <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>
-                    Nuova categoria personalizzata
-                  </label>
-                  <input
-                    type="text"
-                    value={nuovaCategoriaUscita}
-                    onChange={(e) => setNuovaCategoriaUscita(e.target.value)}
-                    placeholder="Scrivi una nuova categoria"
-                    style={inputLight(false)}
-                  />
-                </div>
-              )}
-
-              <div style={{ display: "grid", gap: 8 }}>
-                <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>
-                  Descrizione breve
-                </label>
-                <input
-                  type="text"
-                  value={nuovaUscitaDesc}
-                  onChange={(e) => setNuovaUscitaDesc(e.target.value)}
-                  placeholder="Es. supermercato, pieno auto..."
-                  style={inputLight(false)}
-                />
-              </div>
-
-              <div style={{ display: "grid", gap: 8 }}>
-                <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>Importo</label>
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  step="0.01"
-                  value={nuovaUscitaImporto}
-                  onChange={(e) => setNuovaUscitaImporto(e.target.value)}
-                  placeholder="0,00"
-                  style={inputLight(false)}
-                />
-              </div>
-
-              <div style={{ display: "grid", gap: 8 }}>
-                <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>
-                  Nota aggiuntiva
-                </label>
-                <input
-                  type="text"
-                  value={nuovaUscitaNota}
-                  onChange={(e) => setNuovaUscitaNota(e.target.value)}
-                  placeholder="Dettaglio extra facoltativo"
-                  style={inputLight(false)}
-                />
-              </div>
-
-              <button
-                type="button"
-                onClick={aggiungiUscitaExtra}
-                style={{
-                  border: "none",
-                  borderRadius: 16,
-                  padding: "14px 16px",
-                  fontSize: 15,
-                  fontWeight: 1000,
-                  cursor: "pointer",
-                  color: "white",
-                  background:
-                    "linear-gradient(180deg, rgba(239,68,68,0.98), rgba(220,38,38,0.95))",
-                  boxShadow: "0 18px 34px rgba(239,68,68,0.20)",
-                }}
-              >
-                + Aggiungi Uscita
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    ) : (
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(0, 1.05fr) minmax(280px, 0.95fr)",
-          gap: 16,
-        }}
-        className="remember-grid-2"
-      >
         <div
           style={{
-            ...ui.card,
-            padding: 22,
-            border: "1px solid rgba(79,70,229,0.18)",
-            background:
-              "linear-gradient(180deg, rgba(79,70,229,0.12), rgba(255,255,255,0.94))",
-            boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
-            display: "grid",
-            gap: 16,
+            display: "flex",
+            gap: 8,
+            padding: 6,
+            borderRadius: 16,
+            background: "rgba(15,23,42,0.06)",
+            border: "1px solid rgba(15,23,42,0.08)",
           }}
         >
+          <button
+            type="button"
+            onClick={() => setTipo("appuntamento")}
+            style={{
+              border: "none",
+              borderRadius: 12,
+              padding: "10px 14px",
+              fontWeight: 900,
+              cursor: "pointer",
+              color: "white",
+              background:
+                tipo === "appuntamento"
+                  ? "linear-gradient(180deg, rgba(59,130,246,0.98), rgba(37,99,235,0.95))"
+                  : "rgba(15,23,42,0.34)",
+              boxShadow:
+                tipo === "appuntamento"
+                  ? "0 12px 24px rgba(59,130,246,0.22)"
+                  : "none",
+            }}
+          >
+            Appuntamento
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setTipo("scadenza")}
+            style={{
+              border: "none",
+              borderRadius: 12,
+              padding: "10px 14px",
+              fontWeight: 900,
+              cursor: "pointer",
+              color: "white",
+              background:
+                tipo === "scadenza"
+                  ? "linear-gradient(180deg, rgba(124,58,237,0.98), rgba(109,40,217,0.95))"
+                  : "rgba(15,23,42,0.34)",
+              boxShadow:
+                tipo === "scadenza"
+                  ? "0 12px 24px rgba(124,58,237,0.22)"
+                  : "none",
+            }}
+          >
+            Scadenza
+          </button>
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gap: 12 }}>
+        <div style={{ display: "grid", gap: 8 }}>
+          <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+            Descrizione
+          </label>
+          <input
+            type="text"
+            value={titolo}
+            onChange={(e) => setTitolo(e.target.value)}
+            placeholder={
+              tipo === "appuntamento"
+                ? "Es. Dentista, incontro, visita..."
+                : "Es. Affitto, bolletta, rata..."
+            }
+            style={inputLight(false)}
+          />
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: 12,
+          }}
+        >
+          <div style={{ display: "grid", gap: 8 }}>
+            <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+              Data
+            </label>
+            <input
+              type="date"
+              value={data}
+              onChange={(e) => setData(e.target.value)}
+              style={inputLight(false)}
+            />
+          </div>
+
+          <div style={{ display: "grid", gap: 8 }}>
+            <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+              Ora
+            </label>
+            <input
+              type="time"
+              value={ora}
+              onChange={(e) => setOra(e.target.value)}
+              style={inputLight(false)}
+            />
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gap: 8 }}>
+          <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+            Importo facoltativo
+          </label>
+          <input
+            type="number"
+            inputMode="decimal"
+            step="0.01"
+            value={importo}
+            onChange={(e) => setImporto(e.target.value)}
+            placeholder="Es. 45"
+            style={inputLight(false)}
+          />
+        </div>
+
+        <div style={{ display: "grid", gap: 8 }}>
+          <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+            Ore notifica prima
+          </label>
+          <input
+            type="text"
+            inputMode="decimal"
+            value={customNotificaOre}
+            onChange={(e) => setCustomNotificaOre(e.target.value)}
+            placeholder="Es. 1 oppure 2,5"
+            style={inputLight(false)}
+          />
+        </div>
+
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          <button
+            type="button"
+            data-chip="1"
+            onClick={() => setUrgente((v) => !v)}
+            style={{
+              ...chipSmall(urgente),
+              background: urgente
+                ? "linear-gradient(180deg, rgba(239,68,68,0.22), rgba(220,38,38,0.12))"
+                : "rgba(255,255,255,0.86)",
+              border: urgente
+                ? "1px solid rgba(239,68,68,0.30)"
+                : "1px solid rgba(15,23,42,0.08)",
+              color: urgente ? "rgba(185,28,28,0.98)" : "rgba(15,23,42,0.84)",
+            }}
+          >
+            {urgente ? "Urgente attivo" : "Segna come urgente"}
+          </button>
+
+          {urgente && badgeUrgente()}
+        </div>
+
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <button
+            type="button"
+            onClick={chiudiForm}
+            style={{
+              border: "none",
+              borderRadius: 16,
+              padding: "14px 16px",
+              fontSize: 15,
+              fontWeight: 1000,
+              cursor: "pointer",
+              color: "rgba(15,23,42,0.88)",
+              background: "rgba(255,255,255,0.88)",
+              boxShadow: "0 14px 28px rgba(15,23,42,0.08)",
+            }}
+          >
+            Annulla
+          </button>
+
+          <button
+            type="button"
+            onClick={salva}
+            style={{
+              border: "none",
+              borderRadius: 16,
+              padding: "14px 16px",
+              fontSize: 15,
+              fontWeight: 1000,
+              cursor: "pointer",
+              color: "white",
+              background:
+                tipo === "appuntamento"
+                  ? "linear-gradient(180deg, rgba(59,130,246,0.98), rgba(37,99,235,0.95))"
+                  : "linear-gradient(180deg, rgba(124,58,237,0.98), rgba(109,40,217,0.95))",
+              boxShadow:
+                tipo === "appuntamento"
+                  ? "0 18px 34px rgba(59,130,246,0.20)"
+                  : "0 18px 34px rgba(124,58,237,0.20)",
+            }}
+          >
+            {idInModifica ? "Salva modifiche" : "+ Aggiungi"}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      style={{
+        ...ui.card,
+        padding: 22,
+        border: "1px solid rgba(79,70,229,0.18)",
+        background:
+          "linear-gradient(180deg, rgba(79,70,229,0.10), rgba(255,255,255,0.94))",
+        boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
+        display: "grid",
+        gap: 14,
+        alignContent: "start",
+      }}
+    >
+      <div>
+        <div
+          style={{
+            fontSize: 18,
+            fontWeight: 1000,
+            letterSpacing: -0.2,
+            color: "rgba(15,23,42,0.96)",
+          }}
+        >
+          Prossimi promemoria
+        </div>
+
+        <div
+          style={{
+            marginTop: 6,
+            fontSize: 12,
+            fontWeight: 800,
+            opacity: 0.7,
+            color: "rgba(15,23,42,0.88)",
+          }}
+        >
+          Appuntamenti e scadenze in arrivo
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gap: 10 }}>
+        {eventiProssimiAggiungi.length === 0 ? (
           <div
             style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "flex-start",
-              gap: 12,
-              flexWrap: "wrap",
+              padding: 12,
+              borderRadius: 16,
+              border: "1px solid rgba(15,23,42,0.08)",
+              background: "rgba(255,255,255,0.72)",
+              fontSize: 13,
+              fontWeight: 800,
+              opacity: 0.65,
+              color: "rgba(15,23,42,0.86)",
             }}
           >
-            <div style={{ display: "grid", gap: 6 }}>
-              <div
-                style={{
-                  fontSize: 20,
-                  fontWeight: 1000,
-                  letterSpacing: -0.3,
-                  color: "rgba(15,23,42,0.96)",
-                }}
-              >
-                Nuovo promemoria
-              </div>
-
-              <div
-                style={{
-                  fontSize: 13,
-                  fontWeight: 800,
-                  lineHeight: 1.45,
-                  color: "rgba(15,23,42,0.70)",
-                }}
-              >
-                Crea appuntamenti e scadenze in una schermata più ordinata e veloce
-              </div>
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                gap: 8,
-                padding: 6,
-                borderRadius: 16,
-                background: "rgba(15,23,42,0.06)",
-                border: "1px solid rgba(15,23,42,0.08)",
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => setTipo("appuntamento")}
-                style={{
-                  border: "none",
-                  borderRadius: 12,
-                  padding: "10px 14px",
-                  fontWeight: 900,
-                  cursor: "pointer",
-                  color: "white",
-                  background:
-                    tipo === "appuntamento"
-                      ? "linear-gradient(180deg, rgba(59,130,246,0.98), rgba(37,99,235,0.95))"
-                      : "rgba(15,23,42,0.34)",
-                  boxShadow:
-                    tipo === "appuntamento"
-                      ? "0 12px 24px rgba(59,130,246,0.22)"
-                      : "none",
-                }}
-              >
-                Appuntamento
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setTipo("scadenza")}
-                style={{
-                  border: "none",
-                  borderRadius: 12,
-                  padding: "10px 14px",
-                  fontWeight: 900,
-                  cursor: "pointer",
-                  color: "white",
-                  background:
-                    tipo === "scadenza"
-                      ? "linear-gradient(180deg, rgba(124,58,237,0.98), rgba(109,40,217,0.95))"
-                      : "rgba(15,23,42,0.34)",
-                  boxShadow:
-                    tipo === "scadenza"
-                      ? "0 12px 24px rgba(124,58,237,0.22)"
-                      : "none",
-                }}
-              >
-                Scadenza
-              </button>
-            </div>
+            Nessun appuntamento o scadenza imminente.
           </div>
+        ) : (
+          eventiProssimiAggiungi.map((ev) => {
+            const giorni = giorniMancanti(ev.data);
+            const isApp = ev.tipo === "appuntamento";
 
-          <div style={{ display: "grid", gap: 12 }}>
-            <div style={{ display: "grid", gap: 8 }}>
-              <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
-                Descrizione
-              </label>
-              <input
-                type="text"
-                value={titolo}
-                onChange={(e) => setTitolo(e.target.value)}
-                placeholder={
-                  tipo === "appuntamento"
-                    ? "Es. Dentista, incontro, visita..."
-                    : "Es. Affitto, bolletta, rata..."
-                }
-                style={inputLight(false)}
-              />
-            </div>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                gap: 12,
-              }}
-            >
-              <div style={{ display: "grid", gap: 8 }}>
-                <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
-                  Data
-                </label>
-                <input
-                  type="date"
-                  value={data}
-                  onChange={(e) => setData(e.target.value)}
-                  style={inputLight(false)}
-                />
-              </div>
-
-              <div style={{ display: "grid", gap: 8 }}>
-                <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
-                  Ora
-                </label>
-                <input
-                  type="time"
-                  value={ora}
-                  onChange={(e) => setOra(e.target.value)}
-                  style={inputLight(false)}
-                />
-              </div>
-            </div>
-
-            <div style={{ display: "grid", gap: 8 }}>
-              <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
-                Importo facoltativo
-              </label>
-              <input
-                type="number"
-                inputMode="decimal"
-                step="0.01"
-                value={importo}
-                onChange={(e) => setImporto(e.target.value)}
-                placeholder="Es. 45"
-                style={inputLight(false)}
-              />
-            </div>
-
-            <div style={{ display: "grid", gap: 8 }}>
-              <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
-                Nota facoltativa
-              </label>
-              <input
-                type="text"
-                value={nota}
-                onChange={(e) => setNota(e.target.value)}
-                placeholder="Dettaglio extra..."
-                style={inputLight(false)}
-              />
-            </div>
-
-            <div style={{ display: "grid", gap: 10 }}>
-              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
-                Notifica
-              </div>
-
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                {presetOre.map((p) => {
-                  const min = Math.max(1, Math.round(p.ore * 60));
-                  const active = notificheMinutiPrima.includes(min);
-                  return (
-                    <button
-                      key={p.label}
-                      type="button"
-                      data-chip="1"
-                      onClick={() => toggleNotificaOre(p.ore)}
-                      style={{
-                        ...chipSmall(active),
-                        background: active
-                          ? "linear-gradient(180deg, rgba(79,70,229,0.30), rgba(124,58,237,0.18))"
-                          : "rgba(255,255,255,0.86)",
-                        color: active ? "rgba(255,255,255,0.98)" : "rgba(15,23,42,0.84)",
-                        border: active
-                          ? "1px solid rgba(79,70,229,0.28)"
-                          : "1px solid rgba(15,23,42,0.08)",
-                      }}
-                    >
-                      {p.label}
-                    </button>
-                  );
-                })}
-              </div>
-
+            return (
               <div
+                key={ev.id}
                 style={{
+                  padding: 14,
+                  borderRadius: 18,
+                  border: isApp
+                    ? "1px solid rgba(59,130,246,0.14)"
+                    : "1px solid rgba(124,58,237,0.14)",
+                  background: isApp
+                    ? "linear-gradient(180deg, rgba(59,130,246,0.08), rgba(59,130,246,0.03))"
+                    : "linear-gradient(180deg, rgba(124,58,237,0.08), rgba(124,58,237,0.03))",
                   display: "grid",
-                  gridTemplateColumns: "1fr auto",
-                  gap: 10,
+                  gap: 6,
                 }}
               >
-                <input
-                  value={customNotificaOre}
-                  onChange={(e) => setCustomNotificaOre(e.target.value)}
-                  placeholder="Ore personalizzate (es. 1,5)"
-                  style={inputLight(false)}
-                  inputMode="decimal"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      addCustomNotificaOre();
-                    }
-                  }}
-                />
-                <button
-                  type="button"
-                  data-chip="1"
-                  onClick={addCustomNotificaOre}
-                  style={chip(true)}
-                >
-                  Aggiungi
-                </button>
-              </div>
-            </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  {badgeTipo(ev.tipo)}
+                  {ev.urgente && badgeUrgente()}
+                </div>
 
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-              <button
-                type="button"
-                data-chip="1"
-                onClick={() => setUrgente((v) => !v)}
-                style={{
-                  ...chipSmall(urgente),
-                  background: urgente
-                    ? "linear-gradient(180deg, rgba(239,68,68,0.22), rgba(220,38,38,0.12))"
-                    : "rgba(255,255,255,0.86)",
-                  border: urgente
-                    ? "1px solid rgba(239,68,68,0.30)"
-                    : "1px solid rgba(15,23,42,0.08)",
-                  color: urgente ? "rgba(185,28,28,0.98)" : "rgba(15,23,42,0.84)",
-                }}
-              >
-                {urgente ? "Urgente attivo" : "Segna come urgente"}
-              </button>
+                <div style={{ fontSize: 15, fontWeight: 950, color: "rgba(15,23,42,0.96)" }}>
+                  {ev.titolo}
+                </div>
 
-              {urgente && badgeUrgente()}
-            </div>
+                <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72, color: "rgba(15,23,42,0.86)" }}>
+                  {formattaDataBreve(ev.data)} • {ev.ora}
+                </div>
 
-            <button
-              type="button"
-              onClick={salvaEventoDaAggiungi}
-              style={{
-                border: "none",
-                borderRadius: 16,
-                padding: "14px 16px",
-                fontSize: 15,
-                fontWeight: 1000,
-                cursor: "pointer",
-                color: "white",
-                background:
-                  tipo === "appuntamento"
-                    ? "linear-gradient(180deg, rgba(59,130,246,0.98), rgba(37,99,235,0.95))"
-                    : "linear-gradient(180deg, rgba(124,58,237,0.98), rgba(109,40,217,0.95))",
-                boxShadow:
-                  tipo === "appuntamento"
-                    ? "0 18px 34px rgba(59,130,246,0.20)"
-                    : "0 18px 34px rgba(124,58,237,0.20)",
-              }}
-            >
-              + Aggiungi
-            </button>
-          </div>
-        </div>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                  <span style={styleBadgeScadenza(giorni, ev.urgente)}>
+                    {ev.urgente ? "URGENTE" : labelGiorni(giorni)}
+                  </span>
 
-        <div
-          style={{
-            ...ui.card,
-            padding: 22,
-            border: "1px solid rgba(79,70,229,0.18)",
-            background:
-              "linear-gradient(180deg, rgba(79,70,229,0.10), rgba(255,255,255,0.94))",
-            boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
-            display: "grid",
-            gap: 14,
-            alignContent: "start",
-          }}
-        >
-          <div>
-            <div
-              style={{
-                fontSize: 18,
-                fontWeight: 1000,
-                letterSpacing: -0.2,
-                color: "rgba(15,23,42,0.96)",
-              }}
-            >
-              Prossimi promemoria
-            </div>
-
-            <div
-              style={{
-                marginTop: 6,
-                fontSize: 12,
-                fontWeight: 800,
-                opacity: 0.7,
-                color: "rgba(15,23,42,0.88)",
-              }}
-            >
-              Appuntamenti e scadenze in arrivo
-            </div>
-          </div>
-
-          <div style={{ display: "grid", gap: 10 }}>
-            {eventiProssimiAggiungi.length === 0 ? (
-              <div
-                style={{
-                  padding: 12,
-                  borderRadius: 16,
-                  border: "1px solid rgba(15,23,42,0.08)",
-                  background: "rgba(255,255,255,0.72)",
-                  fontSize: 13,
-                  fontWeight: 800,
-                  opacity: 0.65,
-                  color: "rgba(15,23,42,0.86)",
-                }}
-              >
-                Nessun appuntamento o scadenza imminente.
-              </div>
-            ) : (
-              eventiProssimiAggiungi.map((ev) => {
-                const giorni = giorniMancanti(ev.data);
-                const isApp = ev.tipo === "appuntamento";
-
-                return (
-                  <div
-                    key={ev.id}
-                    style={{
-                      padding: 14,
-                      borderRadius: 18,
-                      border: isApp
-                        ? "1px solid rgba(59,130,246,0.14)"
-                        : "1px solid rgba(124,58,237,0.14)",
-                      background: isApp
-                        ? "linear-gradient(180deg, rgba(59,130,246,0.08), rgba(59,130,246,0.03))"
-                        : "linear-gradient(180deg, rgba(124,58,237,0.08), rgba(124,58,237,0.03))",
-                      display: "grid",
-                      gap: 6,
-                    }}
+                  <button
+                    type="button"
+                    data-chip="1"
+                    onClick={() => apriModifica(ev)}
+                    style={chip(false)}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      {badgeTipo(ev.tipo)}
-                      {ev.urgente && badgeUrgente()}
-                    </div>
-
-                    <div style={{ fontSize: 15, fontWeight: 950, color: "rgba(15,23,42,0.96)" }}>
-                      {ev.titolo}
-                    </div>
-
-                    <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72, color: "rgba(15,23,42,0.86)" }}>
-                      {formattaDataBreve(ev.data)} • {ev.ora}
-                    </div>
-
-                    {ev.nota && (
-                      <div style={{ fontSize: 12, fontWeight: 800, opacity: 0.68, color: "rgba(15,23,42,0.82)" }}>
-                        {ev.nota}
-                      </div>
-                    )}
-
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                      <span style={styleBadgeScadenza(giorni, ev.urgente)}>
-                        {ev.urgente ? "URGENTE" : labelGiorni(giorni)}
-                      </span>
-
-                      <button
-                        type="button"
-                        data-chip="1"
-                        onClick={() => apriModifica(ev)}
-                        style={chip(false)}
-                      >
-                        Modifica
-                      </button>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
+                    Modifica
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
-    )}
+    </div>
+  </div>
+)}
   </div>
 )}
 
@@ -7778,292 +7745,7 @@ function MiniCalendarioControllo({
 
   
 
-      {mostraForm && (
-        <div
-          style={sx.overlay}
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget) chiudiForm();
-          }}
-        >
-          <div style={sx.modal}>
-            <div style={sx.header}>
-              <div>
-                <div style={{ fontSize: 18, fontWeight: 950, letterSpacing: -0.2 }}>
-                  {idInModifica ? "Modifica voce" : "Nuova voce"}
-                </div>
-                <div style={{ fontSize: 12, opacity: 0.65, marginTop: 4, fontWeight: 800 }}>
-                  Inserisci i dati e salva
-                </div>
-              </div>
-
-              <button
-                type="button"
-                data-chip="1"
-                onMouseEnter={() => setHoverClose(true)}
-                onMouseLeave={() => setHoverClose(false)}
-                onClick={chiudiForm}
-                style={{ ...sx.closeBtn, ...(hoverClose ? sx.closeBtnHover : {}) }}
-                title="Chiudi"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div style={sx.body}>
-              <div style={sx.content}>
-                <div>
-                  <div style={sx.sectionLabel}>Tipo</div>
-                  <div style={sx.pills2}>
-                    <button
-                      type="button"
-                      data-chip="1"
-                      onClick={() => setTipo("scadenza")}
-                      style={chipSmall(tipo === "scadenza")}
-                    >
-                      Scadenza
-                    </button>
-                    <button
-                      type="button"
-                      data-chip="1"
-                      onClick={() => setTipo("appuntamento")}
-                      style={chipSmall(tipo === "appuntamento")}
-                    >
-                      Appuntamento
-                    </button>
-                    <button
-                      type="button"
-                      data-chip="1"
-                      onClick={() => setTipo("nota")}
-                      style={chipSmall(tipo === "nota")}
-                    >
-                      Nota rapida
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <div style={sx.sectionLabel}>
-                    {tipo === "nota" ? "Titolo nota" : "Titolo"}
-                  </div>
-                  <input
-                    value={titolo}
-                    onChange={(e) => setTitolo(e.target.value)}
-                    placeholder={
-                      tipo === "nota"
-                        ? "Es: Da ricordare / Nota veloce"
-                        : "Es: Affitto / Dentista"
-                    }
-                    style={inputLight(false)}
-                  />
-                </div>
-
-                <div style={{ ...sx.row2, gridTemplateColumns: "1fr" }}>
-                  <div>
-                    <div style={sx.sectionLabel}>
-                      {tipo === "nota" ? "Data (facoltativa)" : "Data"}
-                    </div>
-                    <input
-                      type="date"
-                      value={data}
-                      onChange={(e) => setData(e.target.value)}
-                      style={inputLight(false)}
-                    />
-                  </div>
-
-                  <div>
-                    <div style={sx.sectionLabel}>
-                      {tipo === "nota" ? "Ora (facoltativa)" : "Ora"}
-                    </div>
-                    <input
-                      type="time"
-                      value={ora}
-                      onChange={(e) => setOra(e.target.value)}
-                      style={inputLight(false)}
-                    />
-                  </div>
-                </div>
-
-                {tipo !== "nota" && (
-                  <div>
-                    <div style={sx.sectionLabel}>Importo uscita (€) facoltativo</div>
-                    <input
-                      type="number"
-                      inputMode="decimal"
-                      value={importo}
-                      onChange={(e) => setImporto(e.target.value)}
-                      placeholder="Es: 650"
-                      style={inputLight(false)}
-                    />
-
-                    <div
-                      style={{
-                        marginTop: 8,
-                        fontSize: 12,
-                        fontWeight: 850,
-                        opacity: 0.72,
-                        lineHeight: 1.35,
-                      }}
-                    >
-                      Qui inserisci solo eventuali uscite collegate a scadenze o appuntamenti. Le entrate si inseriscono solo nell’area Controllo.
-                    </div>
-                  </div>
-                )}
-
-                <div>
-                  <div style={sx.sectionLabel}>{tipo === "nota" ? "Testo nota" : "Nota"}</div>
-                  <textarea
-                    value={nota}
-                    onChange={(e) => setNota(e.target.value)}
-                    rows={4}
-                    placeholder={tipo === "nota" ? "Scrivi una nota veloce..." : "Scrivi una nota..."}
-                    style={{
-                      ...inputLight(false),
-                      height: "auto",
-                      minHeight: 110,
-                      resize: "vertical",
-                      lineHeight: 1.4,
-                    }}
-                  />
-                </div>
-
-                {tipo !== "nota" && (
-                  <div>
-                    <div style={sx.sectionLabel}>Stato</div>
-                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                      <button
-                        type="button"
-                        data-chip="1"
-                        onClick={() => setUrgente((v) => !v)}
-                        style={{
-                          ...chipSmall(urgente),
-                          background: urgente
-                            ? "linear-gradient(180deg, rgba(239,68,68,0.22), rgba(220,38,38,0.12))"
-                            : "rgba(255,255,255,0.82)",
-                          border: urgente
-                            ? "1px solid rgba(239,68,68,0.30)"
-                            : "1px solid rgba(15,23,42,0.08)",
-                          boxShadow: urgente
-                            ? "0 14px 28px rgba(239,68,68,0.18)"
-                            : "0 10px 18px rgba(15,23,42,0.06)",
-                        }}
-                      >
-                        {urgente ? "Urgente attivo" : "Segna come urgente"}
-                      </button>
-
-                      {urgente && badgeUrgente()}
-                      {badgeTipo(tipo)}
-                    </div>
-                  </div>
-                )}
-
-                {tipo !== "nota" && (
-                  <div>
-                    <div style={sx.sectionLabel}>Notifiche (ore prima)</div>
-
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      {presetOre.map((p) => {
-                        const min = Math.max(1, Math.round(p.ore * 60));
-                        const active = notificheMinutiPrima.includes(min);
-                        return (
-                          <button
-                            type="button"
-                            data-chip="1"
-                            key={p.label}
-                            onClick={() => toggleNotificaOre(p.ore)}
-                            style={chipSmall(active)}
-                            title={`${p.ore} ore prima`}
-                          >
-                            {p.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop: 10,
-                        display: "grid",
-                        gridTemplateColumns: "1fr auto",
-                        gap: 10,
-                      }}
-                    >
-                      <input
-                        value={customNotificaOre}
-                        onChange={(e) => setCustomNotificaOre(e.target.value)}
-                        placeholder="Ore custom (es: 1,5)"
-                        style={inputLight(false)}
-                        inputMode="decimal"
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            addCustomNotificaOre();
-                          }
-                        }}
-                      />
-                      <button
-                        type="button"
-                        data-chip="1"
-                        onClick={addCustomNotificaOre}
-                        style={chip(true)}
-                      >
-                        Aggiungi
-                      </button>
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop: 10,
-                        fontSize: 12,
-                        fontWeight: 850,
-                        opacity: 0.7,
-                        lineHeight: 1.35,
-                      }}
-                    >
-                      Le notifiche sono in-app: funzionano se l’app resta aperta.
-                    </div>
-                  </div>
-                )}
-
-                {tipo === "nota" && (
-                  <div
-                    style={{
-                      padding: 12,
-                      borderRadius: 16,
-                      border: "1px solid rgba(15,23,42,0.08)",
-                      background: "rgba(248,250,252,0.88)",
-                      fontSize: 12,
-                      fontWeight: 850,
-                      opacity: 0.76,
-                      lineHeight: 1.4,
-                    }}
-                  >
-                    Se lasci la data vuota, la nota verrà salvata come nota libera del mese corrente e comparirà solo in Archivio Generale.
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div style={sx.footer}>
-              <button
-                type="button"
-                data-chip="1"
-                onClick={chiudiForm}
-                style={sx.actionBtn(false)}
-              >
-                Annulla
-              </button>
-              <button
-                type="button"
-                data-chip="1"
-                onClick={salva}
-                style={sx.actionBtn(true)}
-              >
-                Salva
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+    
 
       {mostraTurnoForm && (
         <div
