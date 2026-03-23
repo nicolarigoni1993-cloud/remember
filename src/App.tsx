@@ -2309,14 +2309,6 @@ const sx = useMemo(() => {
   }
 
 
-  function toggleNotificaMin(min: number) {
-    setNotificheMinutiPrima((prev) => {
-      const has = prev.includes(min);
-      const next = has ? prev.filter((x) => x !== min) : [...prev, min];
-      return Array.from(new Set(next)).sort((a, b) => b - a);
-    });
-  }
-
 
   
   function MiniCalendario({
