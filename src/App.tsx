@@ -686,6 +686,44 @@ export default function App() {
   const [nuovaUscitaImporto, setNuovaUscitaImporto] = useState("");
   const [nuovaUscitaNota, setNuovaUscitaNota] = useState("");
 
+  const [movimentoAperto, setMovimentoAperto] = useState<"entrata" | "uscita" | null>(null);
+
+  const categorieEntrataBase = useMemo(
+    () => ["Stipendio", "Bonus", "Regalo", "Rimborso", "Vendita", "Extra"],
+    []
+  );
+  const categorieUscitaBase = useMemo(
+    () => ["Spesa", "Carburante", "Affitto", "Bollette", "Ristorante", "Svago", "Salute", "Casa"],
+    []
+  );
+
+  const K_CATEGORIE_ENTRATA_CUSTOM = "remember_categorie_entrata_custom";
+  const K_CATEGORIE_USCITA_CUSTOM = "remember_categorie_uscita_custom";
+
+  const [categoriaEntrata, setCategoriaEntrata] = useState("");
+  const [nuovaCategoriaEntrata, setNuovaCategoriaEntrata] = useState("");
+  const [categorieEntrataCustom, setCategorieEntrataCustom] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem("remember_categorie_entrata_custom");
+      const parsed = raw ? (JSON.parse(raw) as string[]) : [];
+      return Array.isArray(parsed) ? parsed.filter((x) => typeof x === "string" && x.trim()) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [categoriaUscita, setCategoriaUscita] = useState("");
+  const [nuovaCategoriaUscita, setNuovaCategoriaUscita] = useState("");
+  const [categorieUscitaCustom, setCategorieUscitaCustom] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem("remember_categorie_uscita_custom");
+      const parsed = raw ? (JSON.parse(raw) as string[]) : [];
+      return Array.isArray(parsed) ? parsed.filter((x) => typeof x === "string" && x.trim()) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const [mostraTurnoForm, setMostraTurnoForm] = useState(false);
   const [turnoData, setTurnoData] = useState(new Date().toISOString().slice(0, 10));
   const [turnoInizio, setTurnoInizio] = useState("08:00");
@@ -945,6 +983,15 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, [mostraForm, mostraTurnoForm]);
 
+
+
+
+
+
+
+
+
+
 const ui = useMemo(() => {
   const glass = {
     border: "1px solid rgba(255,255,255,0.10)",
@@ -967,10 +1014,30 @@ const ui = useMemo(() => {
     color: "rgba(241,245,249,0.97)",
   } as const;
 
-  return { glass, card };
+  const inputLight = {
+    width: "100%",
+    minHeight: 46,
+    borderRadius: 14,
+    border: "1px solid rgba(15,23,42,0.14)",
+    background: "rgba(248,250,252,0.98)",
+    color: "#0f172a",
+    padding: "12px 14px",
+    fontSize: 15,
+    fontWeight: 700,
+    outline: "none",
+    boxSizing: "border-box" as const,
+    boxShadow: "inset 0 1px 2px rgba(15,23,42,0.04)",
+  };
+
+  const labelDark = {
+    fontSize: 12,
+    fontWeight: 900,
+    color: "rgba(15,23,42,0.78)",
+    letterSpacing: 0.2,
+  } as const;
+
+  return { glass, card, inputLight, labelDark };
 }, []);
-
-
 
 
 
@@ -1303,213 +1370,271 @@ void apriModifica;
 
   void elimina;
 
-  function mesePrecedente() {
-    setMeseCorrente((d) => new Date(d.getFullYear(), d.getMonth() - 1, 1));
+
+
+
+
+
+
+function mesePrecedente() {
+  setMeseCorrente((d) => new Date(d.getFullYear(), d.getMonth() - 1, 1));
+}
+
+function meseSuccessivo() {
+  setMeseCorrente((d) => new Date(d.getFullYear(), d.getMonth() + 1, 1));
+}
+
+function nomeMese(d: Date) {
+  return d.toLocaleDateString("it-IT", { month: "long", year: "numeric" });
+}
+
+function stessoMeseSelezionato(dataStr: string) {
+  const [a, m, g] = dataStr.split("-").map(Number);
+  const d = new Date(a, (m ?? 1) - 1, g ?? 1);
+  return d.getFullYear() === meseCorrente.getFullYear() && d.getMonth() === meseCorrente.getMonth();
+}
+
+const entrateExtraVal = incassi[meseKey]?.entrateExtra ?? [];
+const usciteExtraVal = incassi[meseKey]?.usciteExtra ?? [];
+
+function salvaCategoriaEntrataCustom(cat: string) {
+  const pulita = cat.trim();
+  if (!pulita) return pulita;
+
+  const giaEsiste =
+    categorieEntrataBase.some((x) => x.toLowerCase() === pulita.toLowerCase()) ||
+    categorieEntrataCustom.some((x) => x.toLowerCase() === pulita.toLowerCase());
+
+  if (!giaEsiste) {
+    const updated = [...categorieEntrataCustom, pulita].sort((a, b) => a.localeCompare(b, "it"));
+    setCategorieEntrataCustom(updated);
+    localStorage.setItem(K_CATEGORIE_ENTRATA_CUSTOM, JSON.stringify(updated));
   }
 
-  function meseSuccessivo() {
-    setMeseCorrente((d) => new Date(d.getFullYear(), d.getMonth() + 1, 1));
+  return pulita;
+}
+
+function salvaCategoriaUscitaCustom(cat: string) {
+  const pulita = cat.trim();
+  if (!pulita) return pulita;
+
+  const giaEsiste =
+    categorieUscitaBase.some((x) => x.toLowerCase() === pulita.toLowerCase()) ||
+    categorieUscitaCustom.some((x) => x.toLowerCase() === pulita.toLowerCase());
+
+  if (!giaEsiste) {
+    const updated = [...categorieUscitaCustom, pulita].sort((a, b) => a.localeCompare(b, "it"));
+    setCategorieUscitaCustom(updated);
+    localStorage.setItem(K_CATEGORIE_USCITA_CUSTOM, JSON.stringify(updated));
   }
 
-  function nomeMese(d: Date) {
-    return d.toLocaleDateString("it-IT", { month: "long", year: "numeric" });
+  return pulita;
+}
+
+function aggiungiEntrataExtra() {
+  const importoNum = Number(nuovaEntrataImporto.replace(",", "."));
+  const notaExtra = nuovaEntrataDesc.trim();
+
+  if (!nuovaEntrataData) {
+    alert("Inserisci una data.");
+    return;
   }
 
-  function stessoMeseSelezionato(dataStr: string) {
-    const [a, m, g] = dataStr.split("-").map(Number);
-    const d = new Date(a, (m ?? 1) - 1, g ?? 1);
-    return d.getFullYear() === meseCorrente.getFullYear() && d.getMonth() === meseCorrente.getMonth();
+  let categoriaFinale = categoriaEntrata;
+
+  if (categoriaEntrata === "__altro__") {
+    categoriaFinale = salvaCategoriaEntrataCustom(nuovaCategoriaEntrata);
   }
 
-  const entrateExtraVal = incassi[meseKey]?.entrateExtra ?? [];
-  const usciteExtraVal = incassi[meseKey]?.usciteExtra ?? [];
-
-  function aggiungiEntrataExtra() {
-    const descrizione = nuovaEntrataDesc.trim();
-    const importoNum = Number(nuovaEntrataImporto.replace(",", "."));
-
-    if (!nuovaEntrataData) {
-      alert("Inserisci una data.");
-      return;
-    }
-    if (!descrizione) {
-      alert("Scrivi la descrizione dell’entrata.");
-      return;
-    }
-    if (!Number.isFinite(importoNum) || importoNum <= 0) {
-      alert("Inserisci un importo valido.");
-      return;
-    }
-
-    const nuova: EntrataExtra = {
-      id: safeUUID(),
-      data: nuovaEntrataData,
-      descrizione,
-      importo: importoNum,
-    };
-
-    setIncassi((prev) => ({
-      ...prev,
-      [meseKey]: {
-        entrateExtra: [...(prev[meseKey]?.entrateExtra ?? []), nuova],
-        usciteExtra: prev[meseKey]?.usciteExtra ?? [],
-      },
-    }));
-
-    setNuovaEntrataDesc("");
-    setNuovaEntrataImporto("");
+  if (!categoriaFinale) {
+    alert("Seleziona una categoria entrata.");
+    return;
   }
 
-
-
-
-
-
-
-
-
-
-
-  
-  function eliminaEntrataExtra(id: string) {
-    setIncassi((prev) => ({
-      ...prev,
-      [meseKey]: {
-        entrateExtra: (prev[meseKey]?.entrateExtra ?? []).filter((x) => x.id !== id),
-        usciteExtra: prev[meseKey]?.usciteExtra ?? [],
-      },
-    }));
+  if (!Number.isFinite(importoNum) || importoNum <= 0) {
+    alert("Inserisci un importo valido.");
+    return;
   }
 
-  function aggiungiUscitaExtra() {
-    const descrizione = nuovaUscitaDesc.trim();
-    const importoNum = Number(nuovaUscitaImporto.replace(",", "."));
+  const descrizione = notaExtra ? `${categoriaFinale} • ${notaExtra}` : categoriaFinale;
 
-    if (!nuovaUscitaData) {
-      alert("Inserisci una data.");
-      return;
-    }
-    if (!descrizione) {
-      alert("Scrivi la descrizione dell’uscita.");
-      return;
-    }
-    if (!Number.isFinite(importoNum) || importoNum <= 0) {
-      alert("Inserisci un importo valido.");
-      return;
-    }
+  const nuova: EntrataExtra = {
+    id: safeUUID(),
+    data: nuovaEntrataData,
+    descrizione,
+    importo: importoNum,
+  };
 
-    const nuova: UscitaExtra = {
-      id: safeUUID(),
-      data: nuovaUscitaData,
-      descrizione,
-      importo: importoNum,
-      nota: nuovaUscitaNota.trim(),
-    };
+  setIncassi((prev) => ({
+    ...prev,
+    [meseKey]: {
+      entrateExtra: [...(prev[meseKey]?.entrateExtra ?? []), nuova],
+      usciteExtra: prev[meseKey]?.usciteExtra ?? [],
+    },
+  }));
 
-    setIncassi((prev) => ({
-      ...prev,
-      [meseKey]: {
-        entrateExtra: prev[meseKey]?.entrateExtra ?? [],
-        usciteExtra: [...(prev[meseKey]?.usciteExtra ?? []), nuova],
-      },
-    }));
+  setNuovaEntrataDesc("");
+  setNuovaEntrataImporto("");
+  setCategoriaEntrata("");
+  setNuovaCategoriaEntrata("");
+}
 
-    setNuovaUscitaDesc("");
-    setNuovaUscitaImporto("");
-    setNuovaUscitaNota("");
+function eliminaEntrataExtra(id: string) {
+  setIncassi((prev) => ({
+    ...prev,
+    [meseKey]: {
+      entrateExtra: (prev[meseKey]?.entrateExtra ?? []).filter((x) => x.id !== id),
+      usciteExtra: prev[meseKey]?.usciteExtra ?? [],
+    },
+  }));
+}
+
+function aggiungiUscitaExtra() {
+  const importoNum = Number(nuovaUscitaImporto.replace(",", "."));
+  const notaBreve = nuovaUscitaDesc.trim();
+
+  if (!nuovaUscitaData) {
+    alert("Inserisci una data.");
+    return;
   }
 
-  function eliminaUscitaExtra(id: string) {
-    setIncassi((prev) => ({
-      ...prev,
-      [meseKey]: {
-        entrateExtra: prev[meseKey]?.entrateExtra ?? [],
-        usciteExtra: (prev[meseKey]?.usciteExtra ?? []).filter((x) => x.id !== id),
-      },
-    }));
+  let categoriaFinale = categoriaUscita;
+
+  if (categoriaUscita === "__altro__") {
+    categoriaFinale = salvaCategoriaUscitaCustom(nuovaCategoriaUscita);
   }
 
+  if (!categoriaFinale) {
+    alert("Seleziona una categoria uscita.");
+    return;
+  }
 
+  if (!Number.isFinite(importoNum) || importoNum <= 0) {
+    alert("Inserisci un importo valido.");
+    return;
+  }
 
+  const descrizione = notaBreve ? `${categoriaFinale} • ${notaBreve}` : categoriaFinale;
 
-  const totaleEntrateExtra = useMemo(() => entrateExtraVal.reduce((s, x) => s + x.importo, 0), [entrateExtraVal]);
+  const nuova: UscitaExtra = {
+    id: safeUUID(),
+    data: nuovaUscitaData,
+    descrizione,
+    importo: importoNum,
+    nota: nuovaUscitaNota.trim(),
+  };
 
-  const turniMese = useMemo(() => turni.filter((t) => stessoMeseSelezionato(t.data)), [turni, meseCorrente]);
-  const oreOrdMese = useMemo(() => turniMese.reduce((s, t) => s + t.oreOrdinarie, 0), [turniMese]);
-  const oreStraMese = useMemo(() => turniMese.reduce((s, t) => s + t.oreStraordinarie, 0), [turniMese]);
-  const oreTotMese = useMemo(() => oreOrdMese + oreStraMese, [oreOrdMese, oreStraMese]);
+  setIncassi((prev) => ({
+    ...prev,
+    [meseKey]: {
+      entrateExtra: prev[meseKey]?.entrateExtra ?? [],
+      usciteExtra: [...(prev[meseKey]?.usciteExtra ?? []), nuova],
+    },
+  }));
 
-  const vociMese = useMemo(() => voci.filter((v) => stessoMeseSelezionato(v.data)), [voci, meseCorrente]);
+  setNuovaUscitaDesc("");
+  setNuovaUscitaImporto("");
+  setNuovaUscitaNota("");
+  setCategoriaUscita("");
+  setNuovaCategoriaUscita("");
+}
 
+function eliminaUscitaExtra(id: string) {
+  setIncassi((prev) => ({
+    ...prev,
+    [meseKey]: {
+      entrateExtra: prev[meseKey]?.entrateExtra ?? [],
+      usciteExtra: (prev[meseKey]?.usciteExtra ?? []).filter((x) => x.id !== id),
+    },
+  }));
+}
 
+const totaleEntrateExtra = useMemo(() => entrateExtraVal.reduce((s, x) => s + x.importo, 0), [entrateExtraVal]);
 
-   const usciteTotMese = useMemo(() => {
-    const usciteDaVoci = vociMese
-      .filter((v) => v.importo !== null && v.movimento === "uscita")
-      .reduce((s, v) => s + (v.importo ?? 0), 0);
+const turniMese = useMemo(() => turni.filter((t) => stessoMeseSelezionato(t.data)), [turni, meseCorrente]);
+const oreOrdMese = useMemo(() => turniMese.reduce((s, t) => s + t.oreOrdinarie, 0), [turniMese]);
+const oreStraMese = useMemo(() => turniMese.reduce((s, t) => s + t.oreStraordinarie, 0), [turniMese]);
+const oreTotMese = useMemo(() => oreOrdMese + oreStraMese, [oreOrdMese, oreStraMese]);
 
-    const usciteDaExtra = usciteExtraVal.reduce((s, x) => s + x.importo, 0);
+const vociMese = useMemo(() => voci.filter((v) => stessoMeseSelezionato(v.data)), [voci, meseCorrente]);
 
-    return usciteDaVoci + usciteDaExtra;
-  }, [vociMese, usciteExtraVal]);
+const usciteTotMese = useMemo(() => {
+  const usciteDaVoci = vociMese
+    .filter((v) => v.importo !== null && v.movimento === "uscita")
+    .reduce((s, v) => s + (v.importo ?? 0), 0);
 
-  const entrateTotMese = totaleEntrateExtra;
-  const saldoMese = entrateTotMese - usciteTotMese;
+  const usciteDaExtra = usciteExtraVal.reduce((s, x) => s + x.importo, 0);
 
-  const entrateArchivioTotali = useMemo(() => {
-    return Object.values(incassi).reduce((acc, mese) => {
-      return acc + (mese.entrateExtra ?? []).reduce((s, x) => s + x.importo, 0);
-    }, 0);
-  }, [incassi]);
+  return usciteDaVoci + usciteDaExtra;
+}, [vociMese, usciteExtraVal]);
 
-  const usciteArchivioTotali = useMemo(() => {
-    return voci
-      .filter((v) => v.importo !== null && v.movimento === "uscita")
-      .reduce((s, v) => s + (v.importo ?? 0), 0);
-  }, [voci]);
+const entrateTotMese = totaleEntrateExtra;
+const saldoMese = entrateTotMese - usciteTotMese;
 
-  const saldoArchivioTotale = entrateArchivioTotali - usciteArchivioTotali;
-  void saldoArchivioTotale;
+const entrateArchivioTotali = useMemo(() => {
+  return Object.values(incassi).reduce((acc, mese) => {
+    return acc + (mese.entrateExtra ?? []).reduce((s, x) => s + x.importo, 0);
+  }, 0);
+}, [incassi]);
 
-  const turniArchivio = useMemo(
-    () => turni.filter((t) => !stessoMeseSelezionato(t.data) || vocePassata(t.data, "23:59")),
-    [turni, meseCorrente]
-  );
-  void turniArchivio;
+const usciteArchivioTotali = useMemo(() => {
+  return voci
+    .filter((v) => v.importo !== null && v.movimento === "uscita")
+    .reduce((s, v) => s + (v.importo ?? 0), 0);
+}, [voci]);
 
-  const vociArchivio = useMemo(() => voci.filter((v) => v.fatto), [voci]);
-  void vociArchivio;
+const saldoArchivioTotale = entrateArchivioTotali - usciteArchivioTotali;
+void saldoArchivioTotale;
 
-  const vociDelMesePerCalendario = useMemo(() => {
-    if (pagina === "agenda") return [];
-    if (pagina === "archivio") return voci.filter((v) => v.fatto).filter((v) => stessoMeseSelezionato(v.data));
-    return voci.filter((v) => !v.fatto).filter((v) => stessoMeseSelezionato(v.data));
-  }, [voci, meseCorrente, pagina]);
-  void vociDelMesePerCalendario;
+const turniArchivio = useMemo(
+  () => turni.filter((t) => !stessoMeseSelezionato(t.data) || vocePassata(t.data, "23:59")),
+  [turni, meseCorrente]
+);
+void turniArchivio;
 
+const vociArchivio = useMemo(() => voci.filter((v) => v.fatto), [voci]);
+void vociArchivio;
 
+const vociDelMesePerCalendario = useMemo(() => {
+  if (pagina === "agenda") return [];
+  if (pagina === "archivio") return voci.filter((v) => v.fatto).filter((v) => stessoMeseSelezionato(v.data));
+  return voci.filter((v) => !v.fatto).filter((v) => stessoMeseSelezionato(v.data));
+}, [voci, meseCorrente, pagina]);
+void vociDelMesePerCalendario;
 
+function vociFiltrate() {
+  const base = pagina === "archivio" ? voci.filter((v) => v.fatto) : voci.filter((v) => !v.fatto);
+  const nelMese = base.filter((v) => stessoMeseSelezionato(v.data));
 
+  if (filtro === null) return ordinaIntelligente(nelMese);
 
-  function vociFiltrate() {
-    const base = pagina === "archivio" ? voci.filter((v) => v.fatto) : voci.filter((v) => !v.fatto);
-    const nelMese = base.filter((v) => stessoMeseSelezionato(v.data));
+  const oggi = new Date();
+  const inizioOggi = new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDate());
 
+  if (filtro === "oggi") {
+    const filtrateOggi = nelMese.filter((v) => {
+      const [a, m, g] = v.data.split("-").map(Number);
+      const dataVoce = new Date(a, (m ?? 1) - 1, g ?? 1);
+      return dataVoce.getTime() === inizioOggi.getTime();
+    });
 
-    if (filtro === null) return ordinaIntelligente(nelMese);
+    return ordinaIntelligente(filtrateOggi);
+  }
 
-    const oggi = new Date();
-    const inizioOggi = new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDate());
+  const fine = new Date(inizioOggi);
 
-    if (filtro === "oggi") {
-      const filtrateOggi = nelMese.filter((v) => {
-        const [a, m, g] = v.data.split("-").map(Number);
-        const dataVoce = new Date(a, (m ?? 1) - 1, g ?? 1);
-        return dataVoce.getTime() === inizioOggi.getTime();
-      });
+  if (filtro === "7giorni") fine.setDate(fine.getDate() + 7);
+  else if (filtro === "30giorni") fine.setDate(fine.getDate() + 30);
 
-      return ordinaIntelligente(filtrateOggi);
-    }
+  const filtrate = nelMese.filter((v) => {
+    const [a, m, g] = v.data.split("-").map(Number);
+    const dataVoce = new Date(a, (m ?? 1) - 1, g ?? 1);
+    return dataVoce >= inizioOggi && dataVoce <= fine;
+  });
+
+  return ordinaIntelligente(filtrate);
+}
+void vociFiltrate;
 
 
     const fine = new Date(inizioOggi);
@@ -5815,364 +5940,311 @@ function MiniCalendarioControllo({
       >
         <div
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            gap: 12,
-            flexWrap: "wrap",
+            display: "grid",
+            gap: 8,
           }}
         >
-          <div style={{ display: "grid", gap: 6 }}>
-            <div
-              style={{
-                fontSize: 20,
-                fontWeight: 1000,
-                letterSpacing: -0.3,
-                color: "rgba(15,23,42,0.96)",
-              }}
-            >
-              Entrata / Uscita
-            </div>
+          <div
+            style={{
+              fontSize: 20,
+              fontWeight: 1000,
+              letterSpacing: -0.3,
+              color: "rgba(15,23,42,0.96)",
+            }}
+          >
+            Entrata / Uscita
+          </div>
 
-            <div
-              style={{
-                fontSize: 13,
-                fontWeight: 800,
-                lineHeight: 1.45,
-                color: "rgba(15,23,42,0.70)",
-              }}
-            >
-              Inserisci un movimento rapido nella sezione finanza
-            </div>
+          <div
+            style={{
+              fontSize: 13,
+              fontWeight: 800,
+              lineHeight: 1.45,
+              color: "rgba(15,23,42,0.70)",
+            }}
+          >
+            Tocca il pulsante verde o rosso per aprire il form relativo
           </div>
         </div>
 
-        <div
-          style={{
-            display: "grid",
-            gap: 14,
-            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-          }}
-        >
-          <div
+        <div style={{ display: "grid", gap: 12 }}>
+          <button
+            type="button"
+            title="Apri o chiudi form entrata"
+            onClick={() => setMovimentoAperto((prev) => (prev === "entrata" ? null : "entrata"))}
             style={{
-              background: "rgba(255,255,255,0.86)",
-              border: "1px solid rgba(16,185,129,0.18)",
+              border: "none",
               borderRadius: 20,
-              padding: 16,
-              display: "grid",
-              gap: 10,
-              boxShadow: "0 10px 28px rgba(16,185,129,0.10)",
+              padding: "16px 18px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              cursor: "pointer",
+              color: "white",
+              fontWeight: 1000,
+              fontSize: 18,
+              background:
+                "linear-gradient(180deg, rgba(34,197,94,0.98), rgba(22,163,74,0.95))",
+              boxShadow: "0 18px 34px rgba(34,197,94,0.20)",
             }}
           >
+            <span>Entrata</span>
+            <span style={{ fontSize: 22 }}>{movimentoAperto === "entrata" ? "−" : "+"}</span>
+          </button>
+
+          {movimentoAperto === "entrata" && (
             <div
               style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 10,
+                background: "rgba(255,255,255,0.92)",
+                border: "1px solid rgba(16,185,129,0.16)",
+                borderRadius: 20,
+                padding: 16,
+                display: "grid",
+                gap: 12,
+                boxShadow: "0 10px 28px rgba(16,185,129,0.10)",
               }}
             >
-              <div
-                style={{
-                  fontSize: 18,
-                  fontWeight: 1000,
-                  color: "rgba(15,23,42,0.96)",
-                }}
-              >
-                Entrata
+              <div style={{ display: "grid", gap: 8 }}>
+                <label style={ui.labelDark}>Data</label>
+                <input
+                  type="date"
+                  title="Data entrata"
+                  value={nuovaEntrataData}
+                  onChange={(e) => setNuovaEntrataData(e.target.value)}
+                  style={ui.inputLight}
+                />
               </div>
 
-              <div
+              <div style={{ display: "grid", gap: 8 }}>
+                <label style={ui.labelDark}>Categoria</label>
+                <select
+                  title="Categoria entrata"
+                  value={categoriaEntrata}
+                  onChange={(e) => setCategoriaEntrata(e.target.value)}
+                  style={ui.inputLight}
+                >
+                  <option value="">Seleziona categoria</option>
+                  {categorieEntrataBase.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                  {categorieEntrataCustom.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                  <option value="__altro__">Altro...</option>
+                </select>
+              </div>
+
+              {categoriaEntrata === "__altro__" && (
+                <div style={{ display: "grid", gap: 8 }}>
+                  <label style={ui.labelDark}>Nuova categoria personalizzata</label>
+                  <input
+                    type="text"
+                    title="Nuova categoria entrata"
+                    value={nuovaCategoriaEntrata}
+                    onChange={(e) => setNuovaCategoriaEntrata(e.target.value)}
+                    placeholder="Scrivi una nuova categoria"
+                    style={ui.inputLight}
+                  />
+                </div>
+              )}
+
+              <div style={{ display: "grid", gap: 8 }}>
+                <label style={ui.labelDark}>Nota facoltativa</label>
+                <input
+                  type="text"
+                  title="Nota entrata"
+                  value={nuovaEntrataDesc}
+                  onChange={(e) => setNuovaEntrataDesc(e.target.value)}
+                  placeholder="Es. bonus marzo, regalo compleanno..."
+                  style={ui.inputLight}
+                />
+              </div>
+
+              <div style={{ display: "grid", gap: 8 }}>
+                <label style={ui.labelDark}>Importo</label>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step="0.01"
+                  title="Importo entrata"
+                  value={nuovaEntrataImporto}
+                  onChange={(e) => setNuovaEntrataImporto(e.target.value)}
+                  placeholder="0,00"
+                  style={ui.inputLight}
+                />
+              </div>
+
+              <button
+                type="button"
+                title="Aggiungi entrata"
+                onClick={() => aggiungiEntrataExtra()}
                 style={{
-                  minWidth: 38,
-                  height: 38,
-                  borderRadius: 999,
-                  display: "grid",
-                  placeItems: "center",
-                  background: "linear-gradient(180deg, rgba(34,197,94,0.98), rgba(22,163,74,0.95))",
+                  border: "none",
+                  borderRadius: 16,
+                  padding: "14px 16px",
+                  fontSize: 15,
+                  fontWeight: 1000,
+                  cursor: "pointer",
                   color: "white",
-                  fontWeight: 1000,
-                  boxShadow: "0 10px 20px rgba(34,197,94,0.22)",
+                  background:
+                    "linear-gradient(180deg, rgba(34,197,94,0.98), rgba(22,163,74,0.95))",
+                  boxShadow: "0 18px 34px rgba(34,197,94,0.20)",
                 }}
-                title="Entrata"
               >
-                +
-              </div>
+                + Aggiungi Entrata
+              </button>
             </div>
+          )}
 
-            <div style={{ display: "grid", gap: 8 }}>
-              <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
-                Data
-              </label>
-              <input
-                type="date"
-                title="Data entrata"
-                value={nuovaEntrataData}
-                onChange={(e) => setNuovaEntrataData(e.target.value)}
-                style={{
-                  width: "100%",
-                  minHeight: 46,
-                  borderRadius: 14,
-                  border: "1px solid rgba(15,23,42,0.12)",
-                  background: "rgba(255,255,255,0.98)",
-                  color: "rgba(15,23,42,0.96)",
-                  padding: "12px 14px",
-                  fontSize: 15,
-                  fontWeight: 700,
-                  outline: "none",
-                  boxSizing: "border-box",
-                }}
-              />
-            </div>
-
-            <div style={{ display: "grid", gap: 8 }}>
-              <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
-                Descrizione
-              </label>
-              <input
-                type="text"
-                title="Descrizione entrata"
-                value={nuovaEntrataDesc}
-                onChange={(e) => setNuovaEntrataDesc(e.target.value)}
-                placeholder="Es. stipendio, extra, regalo..."
-                style={{
-                  width: "100%",
-                  minHeight: 46,
-                  borderRadius: 14,
-                  border: "1px solid rgba(15,23,42,0.12)",
-                  background: "rgba(255,255,255,0.98)",
-                  color: "rgba(15,23,42,0.96)",
-                  padding: "12px 14px",
-                  fontSize: 15,
-                  fontWeight: 700,
-                  outline: "none",
-                  boxSizing: "border-box",
-                }}
-              />
-            </div>
-
-            <div style={{ display: "grid", gap: 8 }}>
-              <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
-                Importo
-              </label>
-              <input
-                type="number"
-                inputMode="decimal"
-                step="0.01"
-                title="Importo entrata"
-                value={nuovaEntrataImporto}
-                onChange={(e) => setNuovaEntrataImporto(e.target.value)}
-                placeholder="0,00"
-                style={{
-                  width: "100%",
-                  minHeight: 46,
-                  borderRadius: 14,
-                  border: "1px solid rgba(15,23,42,0.12)",
-                  background: "rgba(255,255,255,0.98)",
-                  color: "rgba(15,23,42,0.96)",
-                  padding: "12px 14px",
-                  fontSize: 15,
-                  fontWeight: 700,
-                  outline: "none",
-                  boxSizing: "border-box",
-                }}
-              />
-            </div>
-
-            <button
-              type="button"
-              title="Aggiungi entrata"
-              onClick={() => aggiungiEntrataExtra()}
-              style={{
-                border: "none",
-                borderRadius: 16,
-                padding: "14px 16px",
-                fontSize: 15,
-                fontWeight: 1000,
-                cursor: "pointer",
-                color: "white",
-                background:
-                  "linear-gradient(180deg, rgba(34,197,94,0.98), rgba(22,163,74,0.95))",
-                boxShadow: "0 18px 34px rgba(34,197,94,0.20)",
-              }}
-            >
-              + Aggiungi Entrata
-            </button>
-          </div>
-
-          <div
+          <button
+            type="button"
+            title="Apri o chiudi form uscita"
+            onClick={() => setMovimentoAperto((prev) => (prev === "uscita" ? null : "uscita"))}
             style={{
-              background: "rgba(255,255,255,0.86)",
-              border: "1px solid rgba(239,68,68,0.18)",
+              border: "none",
               borderRadius: 20,
-              padding: 16,
-              display: "grid",
-              gap: 10,
-              boxShadow: "0 10px 28px rgba(239,68,68,0.10)",
+              padding: "16px 18px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              cursor: "pointer",
+              color: "white",
+              fontWeight: 1000,
+              fontSize: 18,
+              background:
+                "linear-gradient(180deg, rgba(239,68,68,0.98), rgba(220,38,38,0.95))",
+              boxShadow: "0 18px 34px rgba(239,68,68,0.20)",
             }}
           >
+            <span>Uscita</span>
+            <span style={{ fontSize: 22 }}>{movimentoAperto === "uscita" ? "−" : "+"}</span>
+          </button>
+
+          {movimentoAperto === "uscita" && (
             <div
               style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 10,
+                background: "rgba(255,255,255,0.92)",
+                border: "1px solid rgba(239,68,68,0.16)",
+                borderRadius: 20,
+                padding: 16,
+                display: "grid",
+                gap: 12,
+                boxShadow: "0 10px 28px rgba(239,68,68,0.10)",
               }}
             >
-              <div
-                style={{
-                  fontSize: 18,
-                  fontWeight: 1000,
-                  color: "rgba(15,23,42,0.96)",
-                }}
-              >
-                Uscita
+              <div style={{ display: "grid", gap: 8 }}>
+                <label style={ui.labelDark}>Data</label>
+                <input
+                  type="date"
+                  title="Data uscita"
+                  value={nuovaUscitaData}
+                  onChange={(e) => setNuovaUscitaData(e.target.value)}
+                  style={ui.inputLight}
+                />
               </div>
 
-              <div
+              <div style={{ display: "grid", gap: 8 }}>
+                <label style={ui.labelDark}>Categoria</label>
+                <select
+                  title="Categoria uscita"
+                  value={categoriaUscita}
+                  onChange={(e) => setCategoriaUscita(e.target.value)}
+                  style={ui.inputLight}
+                >
+                  <option value="">Seleziona categoria</option>
+                  {categorieUscitaBase.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                  {categorieUscitaCustom.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                  <option value="__altro__">Altro...</option>
+                </select>
+              </div>
+
+              {categoriaUscita === "__altro__" && (
+                <div style={{ display: "grid", gap: 8 }}>
+                  <label style={ui.labelDark}>Nuova categoria personalizzata</label>
+                  <input
+                    type="text"
+                    title="Nuova categoria uscita"
+                    value={nuovaCategoriaUscita}
+                    onChange={(e) => setNuovaCategoriaUscita(e.target.value)}
+                    placeholder="Scrivi una nuova categoria"
+                    style={ui.inputLight}
+                  />
+                </div>
+              )}
+
+              <div style={{ display: "grid", gap: 8 }}>
+                <label style={ui.labelDark}>Nota facoltativa</label>
+                <input
+                  type="text"
+                  title="Nota uscita"
+                  value={nuovaUscitaDesc}
+                  onChange={(e) => setNuovaUscitaDesc(e.target.value)}
+                  placeholder="Es. spesa supermercato, pieno auto..."
+                  style={ui.inputLight}
+                />
+              </div>
+
+              <div style={{ display: "grid", gap: 8 }}>
+                <label style={ui.labelDark}>Importo</label>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step="0.01"
+                  title="Importo uscita"
+                  value={nuovaUscitaImporto}
+                  onChange={(e) => setNuovaUscitaImporto(e.target.value)}
+                  placeholder="0,00"
+                  style={ui.inputLight}
+                />
+              </div>
+
+              <div style={{ display: "grid", gap: 8 }}>
+                <label style={ui.labelDark}>Nota aggiuntiva</label>
+                <input
+                  type="text"
+                  title="Nota aggiuntiva uscita"
+                  value={nuovaUscitaNota}
+                  onChange={(e) => setNuovaUscitaNota(e.target.value)}
+                  placeholder="Dettaglio extra facoltativo"
+                  style={ui.inputLight}
+                />
+              </div>
+
+              <button
+                type="button"
+                title="Aggiungi uscita"
+                onClick={() => aggiungiUscitaExtra()}
                 style={{
-                  minWidth: 38,
-                  height: 38,
-                  borderRadius: 999,
-                  display: "grid",
-                  placeItems: "center",
-                  background: "linear-gradient(180deg, rgba(239,68,68,0.98), rgba(220,38,38,0.95))",
+                  border: "none",
+                  borderRadius: 16,
+                  padding: "14px 16px",
+                  fontSize: 15,
+                  fontWeight: 1000,
+                  cursor: "pointer",
                   color: "white",
-                  fontWeight: 1000,
-                  boxShadow: "0 10px 20px rgba(239,68,68,0.22)",
+                  background:
+                    "linear-gradient(180deg, rgba(239,68,68,0.98), rgba(220,38,38,0.95))",
+                  boxShadow: "0 18px 34px rgba(239,68,68,0.20)",
                 }}
-                title="Uscita"
               >
-                -
-              </div>
+                + Aggiungi Uscita
+              </button>
             </div>
-
-            <div style={{ display: "grid", gap: 8 }}>
-              <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
-                Data
-              </label>
-              <input
-                type="date"
-                title="Data uscita"
-                value={nuovaUscitaData}
-                onChange={(e) => setNuovaUscitaData(e.target.value)}
-                style={{
-                  width: "100%",
-                  minHeight: 46,
-                  borderRadius: 14,
-                  border: "1px solid rgba(15,23,42,0.12)",
-                  background: "rgba(255,255,255,0.98)",
-                  color: "rgba(15,23,42,0.96)",
-                  padding: "12px 14px",
-                  fontSize: 15,
-                  fontWeight: 700,
-                  outline: "none",
-                  boxSizing: "border-box",
-                }}
-              />
-            </div>
-
-            <div style={{ display: "grid", gap: 8 }}>
-              <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
-                Descrizione
-              </label>
-              <input
-                type="text"
-                title="Descrizione uscita"
-                value={nuovaUscitaDesc}
-                onChange={(e) => setNuovaUscitaDesc(e.target.value)}
-                placeholder="Es. spesa, benzina, bolletta..."
-                style={{
-                  width: "100%",
-                  minHeight: 46,
-                  borderRadius: 14,
-                  border: "1px solid rgba(15,23,42,0.12)",
-                  background: "rgba(255,255,255,0.98)",
-                  color: "rgba(15,23,42,0.96)",
-                  padding: "12px 14px",
-                  fontSize: 15,
-                  fontWeight: 700,
-                  outline: "none",
-                  boxSizing: "border-box",
-                }}
-              />
-            </div>
-
-            <div style={{ display: "grid", gap: 8 }}>
-              <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
-                Importo
-              </label>
-              <input
-                type="number"
-                inputMode="decimal"
-                step="0.01"
-                title="Importo uscita"
-                value={nuovaUscitaImporto}
-                onChange={(e) => setNuovaUscitaImporto(e.target.value)}
-                placeholder="0,00"
-                style={{
-                  width: "100%",
-                  minHeight: 46,
-                  borderRadius: 14,
-                  border: "1px solid rgba(15,23,42,0.12)",
-                  background: "rgba(255,255,255,0.98)",
-                  color: "rgba(15,23,42,0.96)",
-                  padding: "12px 14px",
-                  fontSize: 15,
-                  fontWeight: 700,
-                  outline: "none",
-                  boxSizing: "border-box",
-                }}
-              />
-            </div>
-
-            <div style={{ display: "grid", gap: 8 }}>
-              <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
-                Categoria / Nota
-              </label>
-              <input
-                type="text"
-                title="Categoria o nota uscita"
-                value={nuovaUscitaNota}
-                onChange={(e) => setNuovaUscitaNota(e.target.value)}
-                placeholder="Es. spesa, carburante, affitto..."
-                style={{
-                  width: "100%",
-                  minHeight: 46,
-                  borderRadius: 14,
-                  border: "1px solid rgba(15,23,42,0.12)",
-                  background: "rgba(255,255,255,0.98)",
-                  color: "rgba(15,23,42,0.96)",
-                  padding: "12px 14px",
-                  fontSize: 15,
-                  fontWeight: 700,
-                  outline: "none",
-                  boxSizing: "border-box",
-                }}
-              />
-            </div>
-
-            <button
-              type="button"
-              title="Aggiungi uscita"
-              onClick={() => aggiungiUscitaExtra()}
-              style={{
-                border: "none",
-                borderRadius: 16,
-                padding: "14px 16px",
-                fontSize: 15,
-                fontWeight: 1000,
-                cursor: "pointer",
-                color: "white",
-                background:
-                  "linear-gradient(180deg, rgba(239,68,68,0.98), rgba(220,38,38,0.95))",
-                boxShadow: "0 18px 34px rgba(239,68,68,0.20)",
-              }}
-            >
-              + Aggiungi Uscita
-            </button>
-          </div>
+          )}
         </div>
       </div>
 
