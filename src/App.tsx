@@ -679,10 +679,10 @@ const [aggiungiSezione, setAggiungiSezione] = useState<"menu" | "movimenti" | "e
   const [ora, setOra] = useState("09:00");
   const [tipo, setTipo] = useState<Voce["tipo"]>("scadenza");
   const [urgente, setUrgente] = useState(false);
-  const [nota, setNota] = useState("");
+  const [, setNota] = useState("");
   const [importo, setImporto] = useState<string>("");
 
-  const [notificheMinutiPrima, setNotificheMinutiPrima] = useState<number[]>([]);
+  const [, setNotificheMinutiPrima] = useState<number[]>([]);
   const [customNotificaOre, setCustomNotificaOre] = useState<string>("");
 
   const [voci, setVoci] = useState<Voce[]>([]);
@@ -2317,12 +2317,8 @@ const sx = useMemo(() => {
     });
   }
 
-  function toggleNotificaOre(ore: number) {
-    const minuti = Math.max(1, Math.round(ore * 60));
-    toggleNotificaMin(minuti);
-  }
 
-         
+  
   function MiniCalendario({
     mese,
     vociDelMese,
