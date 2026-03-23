@@ -734,7 +734,7 @@ const [categorieEntrataCustom] = useState<string[]>(() => {
 
 const [categoriaUscita, setCategoriaUscita] = useState("");
 const [nuovaCategoriaUscita, setNuovaCategoriaUscita] = useState("");
-const [categorieUscitaCustom, setCategorieUscitaCustom] = useState<string[]>(() => {
+const [categorieUscitaCustom] = useState<string[]>(() => {
   try {
     const raw = localStorage.getItem(K_CATEGORIE_USCITA_CUSTOM);
     const parsed = raw ? (JSON.parse(raw) as string[]) : [];
