@@ -4535,9 +4535,9 @@ function MiniCalendarioControllo({
           eventi={eventiCalendarioControllo}
           onPrevMonth={mesePrecedente}
           onNextMonth={meseSuccessivo}
-          onAddScadenza={(dataSel) => apriNuovaConData(dataSel, "scadenza")}
-          onAddAppuntamento={(dataSel) => apriNuovaConData(dataSel, "appuntamento")}
-          onAddNota={(data) => apriNuovaConData(data, "nota")}
+          onAddScadenza={(dataSel) => apriNuovaConData(dataSel)}
+          onAddAppuntamento={(dataSel) => apriNuovaConData(dataSel)}
+          onAddNota={(data) => apriNuovaConData(data)}
           onOpenDayDetails={(dataSel) => setControlloDettaglioData(dataSel)}
         />
 
@@ -5689,7 +5689,7 @@ function MiniCalendarioControllo({
 
         {/* NOTA RAPIDA */}
         <button
-       onClick={() => apriNuova("nota")}
+       onClick={() => apriNuova()}
           style={{
             padding: "22px 18px",
             borderRadius: 26,
@@ -6014,7 +6014,7 @@ function MiniCalendarioControllo({
 
     <button
       data-chip="1"
-      onClick={() => apriNuova("nota")}
+      onClick={() => apriNuova()}
       style={{
         ...ui.card,
         padding: 22,
