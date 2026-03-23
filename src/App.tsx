@@ -677,14 +677,13 @@ const [aggiungiSezione, setAggiungiSezione] = useState<"menu" | "movimenti" | "e
   const [titolo, setTitolo] = useState("");
   const [data, setData] = useState("");
   const [ora, setOra] = useState("09:00");
-  const [tipo, setTipo] = useState<Voce["tipo"]>("scadenza");
-  const [urgente, setUrgente] = useState(false);
+  const [, setTipo] = useState<Voce["tipo"]>("scadenza");
+  const [, setUrgente] = useState(false);
   const [, setNota] = useState("");
-  const [importo, setImporto] = useState<string>("");
+  const [, setImporto] = useState<string>("");
 
   const [, setNotificheMinutiPrima] = useState<number[]>([]);
-  const [customNotificaOre, setCustomNotificaOre] = useState<string>("");
-
+  const [, setCustomNotificaOre] = useState<string>("");
   const [voci, setVoci] = useState<Voce[]>([]);
   const [turni, setTurni] = useState<Turno[]>([]);
   const [caricato, setCaricato] = useState(false);
@@ -1046,7 +1045,7 @@ function resetForm() {
   setCustomNotificaOre("");
 }
 
-function apriNuova(tipoDefault: Voce["tipo"] = "appuntamento") {
+function apriNuova() {
   resetForm();
   setTipo("appuntamento");
   setOra("09:00");
@@ -1054,7 +1053,7 @@ function apriNuova(tipoDefault: Voce["tipo"] = "appuntamento") {
   setAggiungiSezione("eventi");
 }
 
-function apriNuovaConData(dataSelezionata: string, tipoDefault: Voce["tipo"]) {
+function apriNuovaConData(dataSelezionata: string) {
   resetForm();
   setData(dataSelezionata);
   setOra("09:00");
@@ -2082,25 +2081,7 @@ const chip = (active: boolean): React.CSSProperties => ({
 
 
 
-const chipSmall = (active: boolean): React.CSSProperties => ({
-  padding: "9px 11px",
-  borderRadius: 999,
-  border: `1px solid ${
-    active ? "rgba(99,102,241,0.34)" : "rgba(255,255,255,0.12)"
-  }`,
-  background: active
-    ? "linear-gradient(180deg, rgba(79,70,229,0.34), rgba(124,58,237,0.20))"
-    : "rgba(15,23,42,0.86)",
-  boxShadow: active
-    ? "0 12px 26px rgba(79,70,229,0.24)"
-    : "0 10px 18px rgba(0,0,0,0.28)",
-  cursor: "pointer",
-  fontWeight: 900,
-  fontSize: 12,
-  color: active ? "rgba(255,255,255,0.99)" : "rgba(226,232,240,0.94)",
-  transition: "transform .12s ease, box-shadow .12s ease, background .12s ease",
-  userSelect: "none",
-});
+
 
 const inputLight = (focused = false): React.CSSProperties => ({
   width: "100%",
