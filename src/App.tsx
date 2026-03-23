@@ -701,7 +701,7 @@ const K_CATEGORIE_USCITA_CUSTOM = "remember_categorie_uscita_custom";
 
 const [categoriaEntrata, setCategoriaEntrata] = useState("");
 const [nuovaCategoriaEntrata, setNuovaCategoriaEntrata] = useState("");
-const [categorieEntrataCustom, setCategorieEntrataCustom] = useState<string[]>(() => {
+const [categorieEntrataCustom] = useState<string[]>(() => {
   try {
     const raw = localStorage.getItem(K_CATEGORIE_ENTRATA_CUSTOM);
     const parsed = raw ? (JSON.parse(raw) as string[]) : [];
@@ -5559,7 +5559,7 @@ function MiniCalendarioControllo({
 
             <button
               data-chip="1"
-              onClick={apriNuova}
+              onClick={() => apriNuova()}
               title="Nuova voce"
               style={{
                 ...chip(false),
