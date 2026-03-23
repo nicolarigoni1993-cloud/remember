@@ -1060,17 +1060,6 @@ function apriNuovaConData(dataSelezionata: string, tipoDefault: Voce["tipo"]) {
   setMostraForm(true);
 }
 
-function apriAggiungiEvento(tipoDefault: Voce["tipo"] = "scadenza") {
-  resetForm();
-  setTipo(tipoDefault);
-  setOra("09:00");
-  setAggiungiSezione("eventi");
-}
-
-function chiudiAggiungiEvento() {
-  resetForm();
-  setAggiungiSezione("menu");
-}
 
 function salvaEventoDaAggiungi() {
   if (classNameIsEmpty(titolo)) {
