@@ -702,7 +702,63 @@ export default function App() {
   const [hoverClose, setHoverClose] = useState(false);
   const [hoverCloseTurno, setHoverCloseTurno] = useState(false);
 
+
+
   const scheduledRef = useRef<Record<string, number[]>>({});
+
+
+
+
+// ==============================
+// CATEGORIE BASE (MODIFICABILI)
+// ==============================
+const CATEGORIE_USCITA_BASE = [
+  "Spesa",
+  "Carburante",
+  "Affitto",
+  "Bollette",
+  "Svago",
+  "Ristorante",
+  "Altro",
+];
+
+const CATEGORIE_ENTRATA_BASE = [
+  "Stipendio",
+  "Extra",
+  "Regalo",
+  "Rimborso",
+  "Altro",
+];
+
+// ==============================
+// LOCAL STORAGE KEY
+// ==============================
+const K_CATEGORIE_CUSTOM = "remember_categorie_custom";
+
+// ==============================
+// STATE FORM
+// ==============================
+const [tipoMovimento, setTipoMovimento] = useState<"entrata" | "uscita">("uscita");
+
+const [dataMov, setDataMov] = useState("");
+const [descMov, setDescMov] = useState("");
+const [importoMov, setImportoMov] = useState("");
+const [categoriaSelezionata, setCategoriaSelezionata] = useState("");
+const [nuovaCategoria, setNuovaCategoria] = useState("");
+
+// ==============================
+// CATEGORIE CUSTOM
+// ==============================
+const [categorieCustom, setCategorieCustom] = useState<string[]>(() => {
+  try {
+    return JSON.parse(localStorage.getItem(K_CATEGORIE_CUSTOM) || "[]");
+  } catch {
+    return [];
+  }
+});
+
+
+
 
   function clearScheduledForVoce(voceId: string) {
     const ids = scheduledRef.current[voceId] ?? [];
@@ -952,51 +1008,63 @@ const ui = useMemo(() => {
 
 
 
-   function chiudiForm() {
-    setMostraForm(false);
-    resetForm();
-  }
 
-  function resetForm() {
-    setIdInModifica(null);
-    setTitolo("");
-    setData("");
-    setOra("09:00");
-    setTipo("scadenza");
-    setUrgente(false);
-    setNota("");
-    setImporto("");
-    setNotificheMinutiPrima([]);
-    setCustomNotificaOre("");
-  }
 
-  function apriNuova() {
-    resetForm();
-    setMostraForm(true);
-  }
 
-  function apriNuovaConData(dataSelezionata: string, tipoDefault: Voce["tipo"]) {
-    resetForm();
-    setData(dataSelezionata);
-    setOra("09:00");
-    setTipo(tipoDefault);
-    setMostraForm(true);
-  }
 
-  function apriModifica(v: Voce) {
-    setIdInModifica(v.id);
-    setTitolo(v.titolo);
-    setData(v.data);
-    setOra(v.ora);
-    setTipo(v.tipo);
-    setUrgente(v.urgente);
-    setNota(v.nota ?? "");
-    setImporto(v.movimento === "uscita" && v.importo !== null ? String(v.importo) : "");
-    setNotificheMinutiPrima(v.notificheMinutiPrima ?? []);
-    setMostraForm(true);
-  }
+
+function chiudiForm() {
+  setMostraForm(false);
+  resetForm();
+}
+
+function resetForm() {
+  setIdInModifica(null);
+  setTitolo("");
+  setData("");
+  setOra("09:00");
+  setTipo("scadenza");
+  setUrgente(false);
+  setNota("");
+  setImporto("");
+  setNotificheMinutiPrima([]);
+  setCustomNotificaOre("");
+}
+
+function apriNuova() {
+  resetForm();
+  setMostraForm(true);
+}
+
+function apriNuovaConData(dataSelezionata: string, tipoDefault: Voce["tipo"]) {
+  resetForm();
+  setData(dataSelezionata);
+  setOra("09:00");
+  setTipo(tipoDefault);
+  setMostraForm(true);
+}
+
+function apriModifica(v: Voce) {
+  setIdInModifica(v.id);
+  setTitolo(v.titolo);
+  setData(v.data);
+  setOra(v.ora);
+  setTipo(v.tipo);
+  setUrgente(v.urgente);
+  setNota(v.nota ?? "");
+  setImporto(v.movimento === "uscita" && v.importo !== null ? String(v.importo) : "");
+  setNotificheMinutiPrima(v.notificheMinutiPrima ?? []);
+  setMostraForm(true);
+}
 
   void apriModifica;
+
+
+
+
+
+
+
 
   function salva() {
     if (classNameIsEmpty(titolo)) {
@@ -1325,6 +1393,17 @@ const ui = useMemo(() => {
     setNuovaEntrataImporto("");
   }
 
+
+
+
+
+
+
+
+
+
+
+  
   function eliminaEntrataExtra(id: string) {
     setIncassi((prev) => ({
       ...prev,
