@@ -669,8 +669,8 @@ export default function App() {
   const [loginNome, setLoginNome] = useState("");
   const [loginPick, setLoginPick] = useState<string | null>(null);
 
-  const [pagina, setPagina] = useState<"home" | "aggiungi" | "agenda" | "controllo" | "archivio">("home");
-const [aggiungiSezione, setAggiungiSezione] = useState<"menu" | "movimenti">("menu");
+ const [pagina, setPagina] = useState<"home" | "aggiungi" | "agenda" | "controllo" | "archivio">("home");
+const [aggiungiSezione, setAggiungiSezione] = useState<"menu" | "movimenti" | "eventi">("menu");
   const [mostraForm, setMostraForm] = useState(false);
   const [idInModifica, setIdInModifica] = useState<string | null>(null);
 
@@ -759,6 +759,21 @@ const [categorieUscitaCustom] = useState<string[]>(() => {
   const [controlloDettaglioData, setControlloDettaglioData] = useState<string | null>(null);
 
   const meseKey = useMemo(() => yyyymmFromDate(meseCorrente), [meseCorrente]);
+
+
+const eventiProssimiAggiungi = useMemo(() => {
+  return voci
+    .filter((v) => v.tipo === "scadenza" || v.tipo === "appuntamento")
+    .filter((v) => !v.fatto)
+    .slice()
+    .sort((a, b) => {
+      const d = a.data.localeCompare(b.data);
+      if (d !== 0) return d;
+      return a.ora.localeCompare(b.ora);
+    })
+    .slice(0, 7);
+}, [voci]);
+
 
   const [hoverClose, setHoverClose] = useState(false);
   const [hoverCloseTurno, setHoverCloseTurno] = useState(false);
@@ -1037,13 +1052,71 @@ function apriNuova(tipoDefault: Voce["tipo"] = "scadenza") {
   setMostraForm(true);
 }
 
-  function apriNuovaConData(dataSelezionata: string, tipoDefault: Voce["tipo"]) {
-    resetForm();
-    setData(dataSelezionata);
-    setOra("09:00");
-    setTipo(tipoDefault);
-    setMostraForm(true);
+function apriNuovaConData(dataSelezionata: string, tipoDefault: Voce["tipo"]) {
+  resetForm();
+  setData(dataSelezionata);
+  setOra("09:00");
+  setTipo(tipoDefault);
+  setMostraForm(true);
+}
+
+function apriAggiungiEvento(tipoDefault: Voce["tipo"] = "scadenza") {
+  resetForm();
+  setTipo(tipoDefault);
+  setOra("09:00");
+  setAggiungiSezione("eventi");
+}
+
+function chiudiAggiungiEvento() {
+  resetForm();
+  setAggiungiSezione("menu");
+}
+
+function salvaEventoDaAggiungi() {
+  if (classNameIsEmpty(titolo)) {
+    alert("Compila almeno la descrizione.");
+    return;
   }
+
+  if (classNameIsEmpty(data) || classNameIsEmpty(ora)) {
+    alert("Compila data e ora.");
+    return;
+  }
+
+  const importoNum = importo.trim() === "" ? null : Number(importo.replace(",", "."));
+
+  if (importo.trim() !== "" && (!Number.isFinite(importoNum) || importoNum === null || importoNum < 0)) {
+    alert("Importo non valido.");
+    return;
+  }
+
+  const notiUniq = Array.from(new Set(notificheMinutiPrima))
+    .filter((n) => Number.isFinite(n) && n > 0)
+    .sort((a, b) => b - a);
+
+  if (notiUniq.length > 0) {
+    requestNotifyPermission();
+  }
+
+  const nuova: Voce = {
+    id: safeUUID(),
+    titolo: titolo.trim(),
+    data: data.trim(),
+    ora: ora.trim(),
+    tipo,
+    urgente,
+    nota: nota.trim(),
+    importo: importoNum,
+    movimento: "uscita",
+    fatto: vocePassata(data.trim(), ora.trim()),
+    notificheMinutiPrima: notiUniq,
+  };
+
+  setVoci((prev) => [nuova, ...prev]);
+
+  resetForm();
+  setTipo("scadenza");
+}
 
   function apriModifica(v: Voce) {
     setIdInModifica(v.id);
@@ -1060,88 +1133,87 @@ function apriNuova(tipoDefault: Voce["tipo"] = "scadenza") {
 
   void apriModifica;
 
-  function salva() {
-    if (classNameIsEmpty(titolo)) {
-      alert("Compila almeno il titolo");
-      return;
-    }
-
-    const isNota = tipo === "nota";
-    const dataFinale = data.trim();
-    const oraFinale = ora.trim();
-
-    if (!isNota && (classNameIsEmpty(dataFinale) || classNameIsEmpty(oraFinale))) {
-      alert("Compila titolo, data e ora");
-      return;
-    }
-
-    const importoNum = importo.trim() === "" ? null : Number(importo.replace(",", "."));
-
-    if (importo.trim() !== "" && (!Number.isFinite(importoNum) || importoNum === null || importoNum < 0)) {
-      alert("Importo non valido");
-      return;
-    }
-
-    const notiUniq = Array.from(new Set(notificheMinutiPrima))
-      .filter((n) => Number.isFinite(n) && n > 0)
-      .sort((a, b) => b - a);
-
-          if (notiUniq.length > 0) {
-      requestNotifyPermission();
-    }
-
-    const meseCorrenteData = `${meseKey}-01`;
-    const voceData = isNota ? dataFinale || meseCorrenteData : dataFinale;
-
-    const voceOra = isNota ? oraFinale || "00:00" : oraFinale;
-
-    const notaFinale =
-      isNota && !dataFinale
-        ? `[NOTA_LIBERA_MESE] ${nota.trim()}`.trim()
-        : nota.trim().replace(/^\[NOTA_LIBERA_MESE\]\s*/i, "");
-
-    const movimentoFinale: Movimento = isNota ? "nessuno" : "uscita";
-
-    if (idInModifica) {
-      setVoci((prev) =>
-        prev.map((x) =>
-          x.id === idInModifica
-            ? {
-                ...x,
-                titolo: titolo.trim(),
-                data: voceData,
-                ora: voceOra,
-                tipo,
-                urgente: isNota ? false : urgente,
-                nota: notaFinale,
-                importo: isNota ? null : importoNum,
-                movimento: movimentoFinale,
-                fatto: voceData && voceOra ? vocePassata(voceData, voceOra) : false,
-                notificheMinutiPrima: isNota ? [] : notiUniq,
-              }
-            : x
-        )
-      );
-    } else {
-      const nuova: Voce = {
-        id: safeUUID(),
-        titolo: titolo.trim(),
-        data: voceData,
-        ora: voceOra,
-        tipo,
-        urgente: isNota ? false : urgente,
-        nota: notaFinale,
-        importo: isNota ? null : importoNum,
-        movimento: movimentoFinale,
-        fatto: voceData && voceOra ? vocePassata(voceData, voceOra) : false,
-        notificheMinutiPrima: isNota ? [] : notiUniq,
-      };
-
-      setVoci((prev) => [nuova, ...prev]);
-    }
-
-    chiudiForm();
+function salva() {
+  if (classNameIsEmpty(titolo)) {
+    alert("Compila almeno il titolo");
+    return;
   }
+
+  const isNota = tipo === "nota";
+  const dataFinale = data.trim();
+  const oraFinale = ora.trim();
+
+  if (!isNota && (classNameIsEmpty(dataFinale) || classNameIsEmpty(oraFinale))) {
+    alert("Compila titolo, data e ora");
+    return;
+  }
+
+  const importoNum = importo.trim() === "" ? null : Number(importo.replace(",", "."));
+
+  if (importo.trim() !== "" && (!Number.isFinite(importoNum) || importoNum === null || importoNum < 0)) {
+    alert("Importo non valido");
+    return;
+  }
+
+  const notiUniq = Array.from(new Set(notificheMinutiPrima))
+    .filter((n) => Number.isFinite(n) && n > 0)
+    .sort((a, b) => b - a);
+
+  if (notiUniq.length > 0) {
+    requestNotifyPermission();
+  }
+
+  const meseCorrenteData = `${meseKey}-01`;
+  const voceData = isNota ? dataFinale || meseCorrenteData : dataFinale;
+  const voceOra = isNota ? oraFinale || "00:00" : oraFinale;
+
+  const notaFinale =
+    isNota && !dataFinale
+      ? `[NOTA_LIBERA_MESE] ${nota.trim()}`.trim()
+      : nota.trim().replace(/^\[NOTA_LIBERA_MESE\]\s*/i, "");
+
+  const movimentoFinale: Movimento = isNota ? "nessuno" : "uscita";
+
+  if (idInModifica) {
+    setVoci((prev) =>
+      prev.map((x) =>
+        x.id === idInModifica
+          ? {
+              ...x,
+              titolo: titolo.trim(),
+              data: voceData,
+              ora: voceOra,
+              tipo,
+              urgente: isNota ? false : urgente,
+              nota: notaFinale,
+              importo: isNota ? null : importoNum,
+              movimento: movimentoFinale,
+              fatto: voceData && voceOra ? vocePassata(voceData, voceOra) : false,
+              notificheMinutiPrima: isNota ? [] : notiUniq,
+            }
+          : x
+      )
+    );
+  } else {
+    const nuova: Voce = {
+      id: safeUUID(),
+      titolo: titolo.trim(),
+      data: voceData,
+      ora: voceOra,
+      tipo,
+      urgente: isNota ? false : urgente,
+      nota: notaFinale,
+      importo: isNota ? null : importoNum,
+      movimento: movimentoFinale,
+      fatto: voceData && voceOra ? vocePassata(voceData, voceOra) : false,
+      notificheMinutiPrima: isNota ? [] : notiUniq,
+    };
+
+    setVoci((prev) => [nuova, ...prev]);
+  }
+
+  chiudiForm();
+}
 
 function apriTurnoForm(dataSelezionata?: string) {
   setAggiungiSezione("menu");
@@ -5799,7 +5871,6 @@ function MiniCalendarioControllo({
 
 
 
-
 {pagina === "aggiungi" && (
   <div style={{ maxWidth: 1060, margin: "0 auto", marginTop: 14, display: "grid", gap: 16 }}>
     <div
@@ -5838,7 +5909,10 @@ function MiniCalendarioControllo({
             {aggiungiSezione !== "menu" && (
               <button
                 data-chip="1"
-                onClick={() => setAggiungiSezione("menu")}
+                onClick={() => {
+                  resetForm();
+                  setAggiungiSezione("menu");
+                }}
                 style={chip(false)}
               >
                 Torna ad Aggiungi
@@ -5848,6 +5922,7 @@ function MiniCalendarioControllo({
             <button
               data-chip="1"
               onClick={() => {
+                resetForm();
                 setAggiungiSezione("menu");
                 setPagina("home");
               }}
@@ -5873,7 +5948,11 @@ function MiniCalendarioControllo({
               textShadow: "0 12px 30px rgba(79,70,229,0.18)",
             }}
           >
-            {aggiungiSezione === "menu" ? "Aggiungi" : "Entrata / Uscita"}
+            {aggiungiSezione === "menu"
+              ? "Aggiungi"
+              : aggiungiSezione === "movimenti"
+              ? "Entrata / Uscita"
+              : "Appuntamento / Scadenza"}
           </div>
 
           <div
@@ -5886,7 +5965,9 @@ function MiniCalendarioControllo({
           >
             {aggiungiSezione === "menu"
               ? "Scegli cosa vuoi inserire nell’app"
-              : "Inserisci entrate e uscite con categorie personalizzabili"}
+              : aggiungiSezione === "movimenti"
+              ? "Inserisci entrate e uscite con categorie personalizzabili"
+              : "Inserisci appuntamenti e scadenze in una schermata dedicata"}
           </div>
         </div>
       </div>
@@ -5961,10 +6042,13 @@ function MiniCalendarioControllo({
         </button>
 
         <button
-             onClick={() => apriNuova("scadenza")}
-         
-         
-             style={{
+          data-chip="1"
+          onClick={() => {
+            resetForm();
+            setTipo("scadenza");
+            setAggiungiSezione("eventi");
+          }}
+          style={{
             ...ui.card,
             padding: 22,
             textAlign: "left",
@@ -6015,7 +6099,7 @@ function MiniCalendarioControllo({
                 color: "rgba(15,23,42,0.88)",
               }}
             >
-              Aggiungi velocemente eventi, promemoria e scadenze
+              Nuova area dedicata a promemoria, appuntamenti e scadenze
             </div>
           </div>
         </button>
@@ -6080,9 +6164,8 @@ function MiniCalendarioControllo({
         </button>
 
         <button
-      onClick={() => apriNuova("nota")}
-
-
+          data-chip="1"
+          onClick={() => apriNuova("nota")}
           style={{
             ...ui.card,
             padding: 22,
@@ -6139,7 +6222,7 @@ function MiniCalendarioControllo({
           </div>
         </button>
       </div>
-    ) : (
+    ) : aggiungiSezione === "movimenti" ? (
       <div
         style={{
           ...ui.card,
@@ -6456,6 +6539,422 @@ function MiniCalendarioControllo({
               </button>
             </div>
           )}
+        </div>
+      </div>
+    ) : (
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 1.05fr) minmax(280px, 0.95fr)",
+          gap: 16,
+        }}
+        className="remember-grid-2"
+      >
+        <div
+          style={{
+            ...ui.card,
+            padding: 22,
+            border: "1px solid rgba(79,70,229,0.18)",
+            background:
+              "linear-gradient(180deg, rgba(79,70,229,0.12), rgba(255,255,255,0.94))",
+            boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
+            display: "grid",
+            gap: 16,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+              gap: 12,
+              flexWrap: "wrap",
+            }}
+          >
+            <div style={{ display: "grid", gap: 6 }}>
+              <div
+                style={{
+                  fontSize: 20,
+                  fontWeight: 1000,
+                  letterSpacing: -0.3,
+                  color: "rgba(15,23,42,0.96)",
+                }}
+              >
+                Nuovo promemoria
+              </div>
+
+              <div
+                style={{
+                  fontSize: 13,
+                  fontWeight: 800,
+                  lineHeight: 1.45,
+                  color: "rgba(15,23,42,0.70)",
+                }}
+              >
+                Crea appuntamenti e scadenze in una schermata più ordinata e veloce
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                gap: 8,
+                padding: 6,
+                borderRadius: 16,
+                background: "rgba(15,23,42,0.06)",
+                border: "1px solid rgba(15,23,42,0.08)",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setTipo("appuntamento")}
+                style={{
+                  border: "none",
+                  borderRadius: 12,
+                  padding: "10px 14px",
+                  fontWeight: 900,
+                  cursor: "pointer",
+                  color: "white",
+                  background:
+                    tipo === "appuntamento"
+                      ? "linear-gradient(180deg, rgba(59,130,246,0.98), rgba(37,99,235,0.95))"
+                      : "rgba(15,23,42,0.34)",
+                  boxShadow:
+                    tipo === "appuntamento"
+                      ? "0 12px 24px rgba(59,130,246,0.22)"
+                      : "none",
+                }}
+              >
+                Appuntamento
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setTipo("scadenza")}
+                style={{
+                  border: "none",
+                  borderRadius: 12,
+                  padding: "10px 14px",
+                  fontWeight: 900,
+                  cursor: "pointer",
+                  color: "white",
+                  background:
+                    tipo === "scadenza"
+                      ? "linear-gradient(180deg, rgba(124,58,237,0.98), rgba(109,40,217,0.95))"
+                      : "rgba(15,23,42,0.34)",
+                  boxShadow:
+                    tipo === "scadenza"
+                      ? "0 12px 24px rgba(124,58,237,0.22)"
+                      : "none",
+                }}
+              >
+                Scadenza
+              </button>
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gap: 12 }}>
+            <div style={{ display: "grid", gap: 8 }}>
+              <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+                Descrizione
+              </label>
+              <input
+                type="text"
+                value={titolo}
+                onChange={(e) => setTitolo(e.target.value)}
+                placeholder={
+                  tipo === "appuntamento"
+                    ? "Es. Dentista, incontro, visita..."
+                    : "Es. Affitto, bolletta, rata..."
+                }
+                style={inputLight(false)}
+              />
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                gap: 12,
+              }}
+            >
+              <div style={{ display: "grid", gap: 8 }}>
+                <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+                  Data
+                </label>
+                <input
+                  type="date"
+                  value={data}
+                  onChange={(e) => setData(e.target.value)}
+                  style={inputLight(false)}
+                />
+              </div>
+
+              <div style={{ display: "grid", gap: 8 }}>
+                <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+                  Ora
+                </label>
+                <input
+                  type="time"
+                  value={ora}
+                  onChange={(e) => setOra(e.target.value)}
+                  style={inputLight(false)}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gap: 8 }}>
+              <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+                Importo facoltativo
+              </label>
+              <input
+                type="number"
+                inputMode="decimal"
+                step="0.01"
+                value={importo}
+                onChange={(e) => setImporto(e.target.value)}
+                placeholder="Es. 45"
+                style={inputLight(false)}
+              />
+            </div>
+
+            <div style={{ display: "grid", gap: 8 }}>
+              <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+                Nota facoltativa
+              </label>
+              <input
+                type="text"
+                value={nota}
+                onChange={(e) => setNota(e.target.value)}
+                placeholder="Dettaglio extra..."
+                style={inputLight(false)}
+              />
+            </div>
+
+            <div style={{ display: "grid", gap: 10 }}>
+              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+                Notifica
+              </div>
+
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {presetOre.map((p) => {
+                  const min = Math.max(1, Math.round(p.ore * 60));
+                  const active = notificheMinutiPrima.includes(min);
+                  return (
+                    <button
+                      key={p.label}
+                      type="button"
+                      data-chip="1"
+                      onClick={() => toggleNotificaOre(p.ore)}
+                      style={{
+                        ...chipSmall(active),
+                        background: active
+                          ? "linear-gradient(180deg, rgba(79,70,229,0.30), rgba(124,58,237,0.18))"
+                          : "rgba(255,255,255,0.86)",
+                        color: active ? "rgba(255,255,255,0.98)" : "rgba(15,23,42,0.84)",
+                        border: active
+                          ? "1px solid rgba(79,70,229,0.28)"
+                          : "1px solid rgba(15,23,42,0.08)",
+                      }}
+                    >
+                      {p.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr auto",
+                  gap: 10,
+                }}
+              >
+                <input
+                  value={customNotificaOre}
+                  onChange={(e) => setCustomNotificaOre(e.target.value)}
+                  placeholder="Ore personalizzate (es. 1,5)"
+                  style={inputLight(false)}
+                  inputMode="decimal"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addCustomNotificaOre();
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  data-chip="1"
+                  onClick={addCustomNotificaOre}
+                  style={chip(true)}
+                >
+                  Aggiungi
+                </button>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+              <button
+                type="button"
+                data-chip="1"
+                onClick={() => setUrgente((v) => !v)}
+                style={{
+                  ...chipSmall(urgente),
+                  background: urgente
+                    ? "linear-gradient(180deg, rgba(239,68,68,0.22), rgba(220,38,38,0.12))"
+                    : "rgba(255,255,255,0.86)",
+                  border: urgente
+                    ? "1px solid rgba(239,68,68,0.30)"
+                    : "1px solid rgba(15,23,42,0.08)",
+                  color: urgente ? "rgba(185,28,28,0.98)" : "rgba(15,23,42,0.84)",
+                }}
+              >
+                {urgente ? "Urgente attivo" : "Segna come urgente"}
+              </button>
+
+              {urgente && badgeUrgente()}
+            </div>
+
+            <button
+              type="button"
+              onClick={salvaEventoDaAggiungi}
+              style={{
+                border: "none",
+                borderRadius: 16,
+                padding: "14px 16px",
+                fontSize: 15,
+                fontWeight: 1000,
+                cursor: "pointer",
+                color: "white",
+                background:
+                  tipo === "appuntamento"
+                    ? "linear-gradient(180deg, rgba(59,130,246,0.98), rgba(37,99,235,0.95))"
+                    : "linear-gradient(180deg, rgba(124,58,237,0.98), rgba(109,40,217,0.95))",
+                boxShadow:
+                  tipo === "appuntamento"
+                    ? "0 18px 34px rgba(59,130,246,0.20)"
+                    : "0 18px 34px rgba(124,58,237,0.20)",
+              }}
+            >
+              + Aggiungi
+            </button>
+          </div>
+        </div>
+
+        <div
+          style={{
+            ...ui.card,
+            padding: 22,
+            border: "1px solid rgba(79,70,229,0.18)",
+            background:
+              "linear-gradient(180deg, rgba(79,70,229,0.10), rgba(255,255,255,0.94))",
+            boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
+            display: "grid",
+            gap: 14,
+            alignContent: "start",
+          }}
+        >
+          <div>
+            <div
+              style={{
+                fontSize: 18,
+                fontWeight: 1000,
+                letterSpacing: -0.2,
+                color: "rgba(15,23,42,0.96)",
+              }}
+            >
+              Prossimi promemoria
+            </div>
+
+            <div
+              style={{
+                marginTop: 6,
+                fontSize: 12,
+                fontWeight: 800,
+                opacity: 0.7,
+                color: "rgba(15,23,42,0.88)",
+              }}
+            >
+              Appuntamenti e scadenze in arrivo
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gap: 10 }}>
+            {eventiProssimiAggiungi.length === 0 ? (
+              <div
+                style={{
+                  padding: 12,
+                  borderRadius: 16,
+                  border: "1px solid rgba(15,23,42,0.08)",
+                  background: "rgba(255,255,255,0.72)",
+                  fontSize: 13,
+                  fontWeight: 800,
+                  opacity: 0.65,
+                  color: "rgba(15,23,42,0.86)",
+                }}
+              >
+                Nessun appuntamento o scadenza imminente.
+              </div>
+            ) : (
+              eventiProssimiAggiungi.map((ev) => {
+                const giorni = giorniMancanti(ev.data);
+                const isApp = ev.tipo === "appuntamento";
+
+                return (
+                  <div
+                    key={ev.id}
+                    style={{
+                      padding: 14,
+                      borderRadius: 18,
+                      border: isApp
+                        ? "1px solid rgba(59,130,246,0.14)"
+                        : "1px solid rgba(124,58,237,0.14)",
+                      background: isApp
+                        ? "linear-gradient(180deg, rgba(59,130,246,0.08), rgba(59,130,246,0.03))"
+                        : "linear-gradient(180deg, rgba(124,58,237,0.08), rgba(124,58,237,0.03))",
+                      display: "grid",
+                      gap: 6,
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      {badgeTipo(ev.tipo)}
+                      {ev.urgente && badgeUrgente()}
+                    </div>
+
+                    <div style={{ fontSize: 15, fontWeight: 950, color: "rgba(15,23,42,0.96)" }}>
+                      {ev.titolo}
+                    </div>
+
+                    <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72, color: "rgba(15,23,42,0.86)" }}>
+                      {formattaDataBreve(ev.data)} • {ev.ora}
+                    </div>
+
+                    {ev.nota && (
+                      <div style={{ fontSize: 12, fontWeight: 800, opacity: 0.68, color: "rgba(15,23,42,0.82)" }}>
+                        {ev.nota}
+                      </div>
+                    )}
+
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                      <span style={styleBadgeScadenza(giorni, ev.urgente)}>
+                        {ev.urgente ? "URGENTE" : labelGiorni(giorni)}
+                      </span>
+
+                      <button
+                        type="button"
+                        data-chip="1"
+                        onClick={() => apriModifica(ev)}
+                        style={chip(false)}
+                      >
+                        Modifica
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
       </div>
     )}
