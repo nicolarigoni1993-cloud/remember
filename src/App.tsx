@@ -775,7 +775,6 @@ const eventiProssimiAggiungi = useMemo(() => {
 }, [voci]);
 
 
-  const [hoverClose, setHoverClose] = useState(false);
   const [hoverCloseTurno, setHoverCloseTurno] = useState(false);
 
   const scheduledRef = useRef<Record<string, number[]>>({});
@@ -1080,66 +1079,8 @@ function apriModifica(v: Voce) {
 }
 
 
-function salvaEventoDaAggiungi() {
-  if (classNameIsEmpty(titolo)) {
-    alert("Compila almeno la descrizione.");
-    return;
-  }
 
-  if (classNameIsEmpty(data) || classNameIsEmpty(ora)) {
-    alert("Compila data e ora.");
-    return;
-  }
 
-  const importoNum = importo.trim() === "" ? null : Number(importo.replace(",", "."));
-
-  if (importo.trim() !== "" && (!Number.isFinite(importoNum) || importoNum === null || importoNum < 0)) {
-    alert("Importo non valido.");
-    return;
-  }
-
-  const notiUniq = Array.from(new Set(notificheMinutiPrima))
-    .filter((n) => Number.isFinite(n) && n > 0)
-    .sort((a, b) => b - a);
-
-  if (notiUniq.length > 0) {
-    requestNotifyPermission();
-  }
-
-  const nuova: Voce = {
-    id: safeUUID(),
-    titolo: titolo.trim(),
-    data: data.trim(),
-    ora: ora.trim(),
-    tipo,
-    urgente,
-    nota: nota.trim(),
-    importo: importoNum,
-    movimento: "uscita",
-    fatto: vocePassata(data.trim(), ora.trim()),
-    notificheMinutiPrima: notiUniq,
-  };
-
-  setVoci((prev) => [nuova, ...prev]);
-
-  resetForm();
-  setTipo("scadenza");
-}
-
-  function apriModifica(v: Voce) {
-    setIdInModifica(v.id);
-    setTitolo(v.titolo);
-    setData(v.data);
-    setOra(v.ora);
-    setTipo(v.tipo);
-    setUrgente(v.urgente);
-    setNota(v.nota ?? "");
-    setImporto(v.movimento === "uscita" && v.importo !== null ? String(v.importo) : "");
-    setNotificheMinutiPrima(v.notificheMinutiPrima ?? []);
-    setMostraForm(true);
-  }
-
-  void apriModifica;
 
 function salva() {
   if (classNameIsEmpty(titolo)) {
@@ -2368,27 +2309,6 @@ const sx = useMemo(() => {
   }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const presetOre = [
-    { label: "24h", ore: 24 },
-    { label: "12h", ore: 12 },
-    { label: "2h", ore: 2 },
-    { label: "0,5h", ore: 0.5 },
-    { label: "0,25h", ore: 0.25 },
-  ];
-
   function toggleNotificaMin(min: number) {
     setNotificheMinutiPrima((prev) => {
       const has = prev.includes(min);
@@ -2401,27 +2321,6 @@ const sx = useMemo(() => {
     const minuti = Math.max(1, Math.round(ore * 60));
     toggleNotificaMin(minuti);
   }
-
-  function addCustomNotificaOre() {
-    const ore = parseOreItaliane(customNotificaOre);
-    if (ore === null) {
-      alert("Inserisci ore valide (es: 1,5 oppure 2).");
-      return;
-    }
-    setCustomNotificaOre("");
-    toggleNotificaOre(ore);
-  }
-
-
-
-
-
- 
-
-
-
-
-
 
          
   function MiniCalendario({
