@@ -643,10 +643,7 @@ function RememberLogo({ size = 44, centered = false }: { size?: number; centered
 export default function App() {
   const [users, setUsers] = useState<User[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const currentUser = useMemo(
-    () => users.find((u) => u.id === currentUserId) ?? null,
-    [users, currentUserId]
-  );
+  const currentUser = useMemo(() => users.find((u) => u.id === currentUserId) ?? null, [users, currentUserId]);
 
   const [loginNome, setLoginNome] = useState("");
   const [loginPick, setLoginPick] = useState<string | null>(null);
@@ -686,44 +683,6 @@ export default function App() {
   const [nuovaUscitaImporto, setNuovaUscitaImporto] = useState("");
   const [nuovaUscitaNota, setNuovaUscitaNota] = useState("");
 
-  const [movimentoAperto, setMovimentoAperto] = useState<"entrata" | "uscita" | null>(null);
-
-  const categorieEntrataBase = useMemo(
-    () => ["Stipendio", "Bonus", "Regalo", "Rimborso", "Vendita", "Extra"],
-    []
-  );
-  const categorieUscitaBase = useMemo(
-    () => ["Spesa", "Carburante", "Affitto", "Bollette", "Ristorante", "Svago", "Salute", "Casa"],
-    []
-  );
-
-  const K_CATEGORIE_ENTRATA_CUSTOM = "remember_categorie_entrata_custom";
-  const K_CATEGORIE_USCITA_CUSTOM = "remember_categorie_uscita_custom";
-
-  const [categoriaEntrata, setCategoriaEntrata] = useState("");
-  const [nuovaCategoriaEntrata, setNuovaCategoriaEntrata] = useState("");
-  const [categorieEntrataCustom, setCategorieEntrataCustom] = useState<string[]>(() => {
-    try {
-      const raw = localStorage.getItem("remember_categorie_entrata_custom");
-      const parsed = raw ? (JSON.parse(raw) as string[]) : [];
-      return Array.isArray(parsed) ? parsed.filter((x) => typeof x === "string" && x.trim()) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  const [categoriaUscita, setCategoriaUscita] = useState("");
-  const [nuovaCategoriaUscita, setNuovaCategoriaUscita] = useState("");
-  const [categorieUscitaCustom, setCategorieUscitaCustom] = useState<string[]>(() => {
-    try {
-      const raw = localStorage.getItem("remember_categorie_uscita_custom");
-      const parsed = raw ? (JSON.parse(raw) as string[]) : [];
-      return Array.isArray(parsed) ? parsed.filter((x) => typeof x === "string" && x.trim()) : [];
-    } catch {
-      return [];
-    }
-  });
-
   const [mostraTurnoForm, setMostraTurnoForm] = useState(false);
   const [turnoData, setTurnoData] = useState(new Date().toISOString().slice(0, 10));
   const [turnoInizio, setTurnoInizio] = useState("08:00");
@@ -734,18 +693,7 @@ export default function App() {
   const [turnoPreset, setTurnoPreset] = useState("");
   const [turnoIdInModifica, setTurnoIdInModifica] = useState<string | null>(null);
 
-  const presetTurni = [
-    "RIPOSO",
-    "00-06",
-    "06-12",
-    "12-18",
-    "18-24",
-    "6-14",
-    "14-22",
-    "22-06",
-    "8-18",
-    "8-17",
-  ];
+  const presetTurni = ["RIPOSO", "00-06", "06-12", "12-18", "18-24", "6-14", "14-22", "22-06", "8-18", "8-17"];
 
   const [controlloDettaglioData, setControlloDettaglioData] = useState<string | null>(null);
 
@@ -755,14 +703,6 @@ export default function App() {
   const [hoverCloseTurno, setHoverCloseTurno] = useState(false);
 
   const scheduledRef = useRef<Record<string, number[]>>({});
-
-
-
-
-
-
-
-
 
   function clearScheduledForVoce(voceId: string) {
     const ids = scheduledRef.current[voceId] ?? [];
@@ -983,15 +923,6 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, [mostraForm, mostraTurnoForm]);
 
-
-
-
-
-
-
-
-
-
 const ui = useMemo(() => {
   const glass = {
     border: "1px solid rgba(255,255,255,0.10)",
@@ -1014,91 +945,58 @@ const ui = useMemo(() => {
     color: "rgba(241,245,249,0.97)",
   } as const;
 
-  const inputLight = {
-    width: "100%",
-    minHeight: 46,
-    borderRadius: 14,
-    border: "1px solid rgba(15,23,42,0.14)",
-    background: "rgba(248,250,252,0.98)",
-    color: "#0f172a",
-    padding: "12px 14px",
-    fontSize: 15,
-    fontWeight: 700,
-    outline: "none",
-    boxSizing: "border-box" as const,
-    boxShadow: "inset 0 1px 2px rgba(15,23,42,0.04)",
-  };
-
-  const labelDark = {
-    fontSize: 12,
-    fontWeight: 900,
-    color: "rgba(15,23,42,0.78)",
-    letterSpacing: 0.2,
-  } as const;
-
-  return { glass, card, inputLight, labelDark };
+  return { glass, card };
 }, []);
 
 
 
 
 
+   function chiudiForm() {
+    setMostraForm(false);
+    resetForm();
+  }
 
+  function resetForm() {
+    setIdInModifica(null);
+    setTitolo("");
+    setData("");
+    setOra("09:00");
+    setTipo("scadenza");
+    setUrgente(false);
+    setNota("");
+    setImporto("");
+    setNotificheMinutiPrima([]);
+    setCustomNotificaOre("");
+  }
 
+  function apriNuova() {
+    resetForm();
+    setMostraForm(true);
+  }
 
-function chiudiForm() {
-  setMostraForm(false);
-  resetForm();
-}
+  function apriNuovaConData(dataSelezionata: string, tipoDefault: Voce["tipo"]) {
+    resetForm();
+    setData(dataSelezionata);
+    setOra("09:00");
+    setTipo(tipoDefault);
+    setMostraForm(true);
+  }
 
-function resetForm() {
-  setIdInModifica(null);
-  setTitolo("");
-  setData("");
-  setOra("09:00");
-  setTipo("scadenza");
-  setUrgente(false);
-  setNota("");
-  setImporto("");
-  setNotificheMinutiPrima([]);
-  setCustomNotificaOre("");
-}
+  function apriModifica(v: Voce) {
+    setIdInModifica(v.id);
+    setTitolo(v.titolo);
+    setData(v.data);
+    setOra(v.ora);
+    setTipo(v.tipo);
+    setUrgente(v.urgente);
+    setNota(v.nota ?? "");
+    setImporto(v.movimento === "uscita" && v.importo !== null ? String(v.importo) : "");
+    setNotificheMinutiPrima(v.notificheMinutiPrima ?? []);
+    setMostraForm(true);
+  }
 
-function apriNuova() {
-  resetForm();
-  setMostraForm(true);
-}
-
-function apriNuovaConData(dataSelezionata: string, tipoDefault: Voce["tipo"]) {
-  resetForm();
-  setData(dataSelezionata);
-  setOra("09:00");
-  setTipo(tipoDefault);
-  setMostraForm(true);
-}
-
-function apriModifica(v: Voce) {
-  setIdInModifica(v.id);
-  setTitolo(v.titolo);
-  setData(v.data);
-  setOra(v.ora);
-  setTipo(v.tipo);
-  setUrgente(v.urgente);
-  setNota(v.nota ?? "");
-  setImporto(v.movimento === "uscita" && v.importo !== null ? String(v.importo) : "");
-  setNotificheMinutiPrima(v.notificheMinutiPrima ?? []);
-  setCustomNotificaOre("");
-  setMostraForm(true);
-}
-
-void apriModifica;
-
-
-
-
-
-
-
+  void apriModifica;
 
   function salva() {
     if (classNameIsEmpty(titolo)) {
@@ -1370,271 +1268,202 @@ void apriModifica;
 
   void elimina;
 
-
-
-
-
-
-
-function mesePrecedente() {
-  setMeseCorrente((d) => new Date(d.getFullYear(), d.getMonth() - 1, 1));
-}
-
-function meseSuccessivo() {
-  setMeseCorrente((d) => new Date(d.getFullYear(), d.getMonth() + 1, 1));
-}
-
-function nomeMese(d: Date) {
-  return d.toLocaleDateString("it-IT", { month: "long", year: "numeric" });
-}
-
-function stessoMeseSelezionato(dataStr: string) {
-  const [a, m, g] = dataStr.split("-").map(Number);
-  const d = new Date(a, (m ?? 1) - 1, g ?? 1);
-  return d.getFullYear() === meseCorrente.getFullYear() && d.getMonth() === meseCorrente.getMonth();
-}
-
-const entrateExtraVal = incassi[meseKey]?.entrateExtra ?? [];
-const usciteExtraVal = incassi[meseKey]?.usciteExtra ?? [];
-
-function salvaCategoriaEntrataCustom(cat: string) {
-  const pulita = cat.trim();
-  if (!pulita) return pulita;
-
-  const giaEsiste =
-    categorieEntrataBase.some((x) => x.toLowerCase() === pulita.toLowerCase()) ||
-    categorieEntrataCustom.some((x) => x.toLowerCase() === pulita.toLowerCase());
-
-  if (!giaEsiste) {
-    const updated = [...categorieEntrataCustom, pulita].sort((a, b) => a.localeCompare(b, "it"));
-    setCategorieEntrataCustom(updated);
-    localStorage.setItem(K_CATEGORIE_ENTRATA_CUSTOM, JSON.stringify(updated));
+  function mesePrecedente() {
+    setMeseCorrente((d) => new Date(d.getFullYear(), d.getMonth() - 1, 1));
   }
 
-  return pulita;
-}
-
-function salvaCategoriaUscitaCustom(cat: string) {
-  const pulita = cat.trim();
-  if (!pulita) return pulita;
-
-  const giaEsiste =
-    categorieUscitaBase.some((x) => x.toLowerCase() === pulita.toLowerCase()) ||
-    categorieUscitaCustom.some((x) => x.toLowerCase() === pulita.toLowerCase());
-
-  if (!giaEsiste) {
-    const updated = [...categorieUscitaCustom, pulita].sort((a, b) => a.localeCompare(b, "it"));
-    setCategorieUscitaCustom(updated);
-    localStorage.setItem(K_CATEGORIE_USCITA_CUSTOM, JSON.stringify(updated));
+  function meseSuccessivo() {
+    setMeseCorrente((d) => new Date(d.getFullYear(), d.getMonth() + 1, 1));
   }
 
-  return pulita;
-}
-
-function aggiungiEntrataExtra() {
-  const importoNum = Number(nuovaEntrataImporto.replace(",", "."));
-  const notaExtra = nuovaEntrataDesc.trim();
-
-  if (!nuovaEntrataData) {
-    alert("Inserisci una data.");
-    return;
+  function nomeMese(d: Date) {
+    return d.toLocaleDateString("it-IT", { month: "long", year: "numeric" });
   }
 
-  let categoriaFinale = categoriaEntrata;
-
-  if (categoriaEntrata === "__altro__") {
-    categoriaFinale = salvaCategoriaEntrataCustom(nuovaCategoriaEntrata);
+  function stessoMeseSelezionato(dataStr: string) {
+    const [a, m, g] = dataStr.split("-").map(Number);
+    const d = new Date(a, (m ?? 1) - 1, g ?? 1);
+    return d.getFullYear() === meseCorrente.getFullYear() && d.getMonth() === meseCorrente.getMonth();
   }
 
-  if (!categoriaFinale) {
-    alert("Seleziona una categoria entrata.");
-    return;
+  const entrateExtraVal = incassi[meseKey]?.entrateExtra ?? [];
+  const usciteExtraVal = incassi[meseKey]?.usciteExtra ?? [];
+
+  function aggiungiEntrataExtra() {
+    const descrizione = nuovaEntrataDesc.trim();
+    const importoNum = Number(nuovaEntrataImporto.replace(",", "."));
+
+    if (!nuovaEntrataData) {
+      alert("Inserisci una data.");
+      return;
+    }
+    if (!descrizione) {
+      alert("Scrivi la descrizione dell’entrata.");
+      return;
+    }
+    if (!Number.isFinite(importoNum) || importoNum <= 0) {
+      alert("Inserisci un importo valido.");
+      return;
+    }
+
+    const nuova: EntrataExtra = {
+      id: safeUUID(),
+      data: nuovaEntrataData,
+      descrizione,
+      importo: importoNum,
+    };
+
+    setIncassi((prev) => ({
+      ...prev,
+      [meseKey]: {
+        entrateExtra: [...(prev[meseKey]?.entrateExtra ?? []), nuova],
+        usciteExtra: prev[meseKey]?.usciteExtra ?? [],
+      },
+    }));
+
+    setNuovaEntrataDesc("");
+    setNuovaEntrataImporto("");
   }
 
-  if (!Number.isFinite(importoNum) || importoNum <= 0) {
-    alert("Inserisci un importo valido.");
-    return;
+  function eliminaEntrataExtra(id: string) {
+    setIncassi((prev) => ({
+      ...prev,
+      [meseKey]: {
+        entrateExtra: (prev[meseKey]?.entrateExtra ?? []).filter((x) => x.id !== id),
+        usciteExtra: prev[meseKey]?.usciteExtra ?? [],
+      },
+    }));
   }
 
-  const descrizione = notaExtra ? `${categoriaFinale} • ${notaExtra}` : categoriaFinale;
+  function aggiungiUscitaExtra() {
+    const descrizione = nuovaUscitaDesc.trim();
+    const importoNum = Number(nuovaUscitaImporto.replace(",", "."));
 
-  const nuova: EntrataExtra = {
-    id: safeUUID(),
-    data: nuovaEntrataData,
-    descrizione,
-    importo: importoNum,
-  };
+    if (!nuovaUscitaData) {
+      alert("Inserisci una data.");
+      return;
+    }
+    if (!descrizione) {
+      alert("Scrivi la descrizione dell’uscita.");
+      return;
+    }
+    if (!Number.isFinite(importoNum) || importoNum <= 0) {
+      alert("Inserisci un importo valido.");
+      return;
+    }
 
-  setIncassi((prev) => ({
-    ...prev,
-    [meseKey]: {
-      entrateExtra: [...(prev[meseKey]?.entrateExtra ?? []), nuova],
-      usciteExtra: prev[meseKey]?.usciteExtra ?? [],
-    },
-  }));
+    const nuova: UscitaExtra = {
+      id: safeUUID(),
+      data: nuovaUscitaData,
+      descrizione,
+      importo: importoNum,
+      nota: nuovaUscitaNota.trim(),
+    };
 
-  setNuovaEntrataDesc("");
-  setNuovaEntrataImporto("");
-  setCategoriaEntrata("");
-  setNuovaCategoriaEntrata("");
-}
+    setIncassi((prev) => ({
+      ...prev,
+      [meseKey]: {
+        entrateExtra: prev[meseKey]?.entrateExtra ?? [],
+        usciteExtra: [...(prev[meseKey]?.usciteExtra ?? []), nuova],
+      },
+    }));
 
-function eliminaEntrataExtra(id: string) {
-  setIncassi((prev) => ({
-    ...prev,
-    [meseKey]: {
-      entrateExtra: (prev[meseKey]?.entrateExtra ?? []).filter((x) => x.id !== id),
-      usciteExtra: prev[meseKey]?.usciteExtra ?? [],
-    },
-  }));
-}
-
-function aggiungiUscitaExtra() {
-  const importoNum = Number(nuovaUscitaImporto.replace(",", "."));
-  const notaBreve = nuovaUscitaDesc.trim();
-
-  if (!nuovaUscitaData) {
-    alert("Inserisci una data.");
-    return;
+    setNuovaUscitaDesc("");
+    setNuovaUscitaImporto("");
+    setNuovaUscitaNota("");
   }
 
-  let categoriaFinale = categoriaUscita;
-
-  if (categoriaUscita === "__altro__") {
-    categoriaFinale = salvaCategoriaUscitaCustom(nuovaCategoriaUscita);
+  function eliminaUscitaExtra(id: string) {
+    setIncassi((prev) => ({
+      ...prev,
+      [meseKey]: {
+        entrateExtra: prev[meseKey]?.entrateExtra ?? [],
+        usciteExtra: (prev[meseKey]?.usciteExtra ?? []).filter((x) => x.id !== id),
+      },
+    }));
   }
 
-  if (!categoriaFinale) {
-    alert("Seleziona una categoria uscita.");
-    return;
-  }
 
-  if (!Number.isFinite(importoNum) || importoNum <= 0) {
-    alert("Inserisci un importo valido.");
-    return;
-  }
 
-  const descrizione = notaBreve ? `${categoriaFinale} • ${notaBreve}` : categoriaFinale;
 
-  const nuova: UscitaExtra = {
-    id: safeUUID(),
-    data: nuovaUscitaData,
-    descrizione,
-    importo: importoNum,
-    nota: nuovaUscitaNota.trim(),
-  };
+  const totaleEntrateExtra = useMemo(() => entrateExtraVal.reduce((s, x) => s + x.importo, 0), [entrateExtraVal]);
 
-  setIncassi((prev) => ({
-    ...prev,
-    [meseKey]: {
-      entrateExtra: prev[meseKey]?.entrateExtra ?? [],
-      usciteExtra: [...(prev[meseKey]?.usciteExtra ?? []), nuova],
-    },
-  }));
+  const turniMese = useMemo(() => turni.filter((t) => stessoMeseSelezionato(t.data)), [turni, meseCorrente]);
+  const oreOrdMese = useMemo(() => turniMese.reduce((s, t) => s + t.oreOrdinarie, 0), [turniMese]);
+  const oreStraMese = useMemo(() => turniMese.reduce((s, t) => s + t.oreStraordinarie, 0), [turniMese]);
+  const oreTotMese = useMemo(() => oreOrdMese + oreStraMese, [oreOrdMese, oreStraMese]);
 
-  setNuovaUscitaDesc("");
-  setNuovaUscitaImporto("");
-  setNuovaUscitaNota("");
-  setCategoriaUscita("");
-  setNuovaCategoriaUscita("");
-}
+  const vociMese = useMemo(() => voci.filter((v) => stessoMeseSelezionato(v.data)), [voci, meseCorrente]);
 
-function eliminaUscitaExtra(id: string) {
-  setIncassi((prev) => ({
-    ...prev,
-    [meseKey]: {
-      entrateExtra: prev[meseKey]?.entrateExtra ?? [],
-      usciteExtra: (prev[meseKey]?.usciteExtra ?? []).filter((x) => x.id !== id),
-    },
-  }));
-}
 
-const totaleEntrateExtra = useMemo(() => entrateExtraVal.reduce((s, x) => s + x.importo, 0), [entrateExtraVal]);
 
-const turniMese = useMemo(() => turni.filter((t) => stessoMeseSelezionato(t.data)), [turni, meseCorrente]);
-const oreOrdMese = useMemo(() => turniMese.reduce((s, t) => s + t.oreOrdinarie, 0), [turniMese]);
-const oreStraMese = useMemo(() => turniMese.reduce((s, t) => s + t.oreStraordinarie, 0), [turniMese]);
-const oreTotMese = useMemo(() => oreOrdMese + oreStraMese, [oreOrdMese, oreStraMese]);
+   const usciteTotMese = useMemo(() => {
+    const usciteDaVoci = vociMese
+      .filter((v) => v.importo !== null && v.movimento === "uscita")
+      .reduce((s, v) => s + (v.importo ?? 0), 0);
 
-const vociMese = useMemo(() => voci.filter((v) => stessoMeseSelezionato(v.data)), [voci, meseCorrente]);
+    const usciteDaExtra = usciteExtraVal.reduce((s, x) => s + x.importo, 0);
 
-const usciteTotMese = useMemo(() => {
-  const usciteDaVoci = vociMese
-    .filter((v) => v.importo !== null && v.movimento === "uscita")
-    .reduce((s, v) => s + (v.importo ?? 0), 0);
+    return usciteDaVoci + usciteDaExtra;
+  }, [vociMese, usciteExtraVal]);
 
-  const usciteDaExtra = usciteExtraVal.reduce((s, x) => s + x.importo, 0);
+  const entrateTotMese = totaleEntrateExtra;
+  const saldoMese = entrateTotMese - usciteTotMese;
 
-  return usciteDaVoci + usciteDaExtra;
-}, [vociMese, usciteExtraVal]);
+  const entrateArchivioTotali = useMemo(() => {
+    return Object.values(incassi).reduce((acc, mese) => {
+      return acc + (mese.entrateExtra ?? []).reduce((s, x) => s + x.importo, 0);
+    }, 0);
+  }, [incassi]);
 
-const entrateTotMese = totaleEntrateExtra;
-const saldoMese = entrateTotMese - usciteTotMese;
+  const usciteArchivioTotali = useMemo(() => {
+    return voci
+      .filter((v) => v.importo !== null && v.movimento === "uscita")
+      .reduce((s, v) => s + (v.importo ?? 0), 0);
+  }, [voci]);
 
-const entrateArchivioTotali = useMemo(() => {
-  return Object.values(incassi).reduce((acc, mese) => {
-    return acc + (mese.entrateExtra ?? []).reduce((s, x) => s + x.importo, 0);
-  }, 0);
-}, [incassi]);
+  const saldoArchivioTotale = entrateArchivioTotali - usciteArchivioTotali;
+  void saldoArchivioTotale;
 
-const usciteArchivioTotali = useMemo(() => {
-  return voci
-    .filter((v) => v.importo !== null && v.movimento === "uscita")
-    .reduce((s, v) => s + (v.importo ?? 0), 0);
-}, [voci]);
+  const turniArchivio = useMemo(
+    () => turni.filter((t) => !stessoMeseSelezionato(t.data) || vocePassata(t.data, "23:59")),
+    [turni, meseCorrente]
+  );
+  void turniArchivio;
 
-const saldoArchivioTotale = entrateArchivioTotali - usciteArchivioTotali;
-void saldoArchivioTotale;
+  const vociArchivio = useMemo(() => voci.filter((v) => v.fatto), [voci]);
+  void vociArchivio;
 
-const turniArchivio = useMemo(
-  () => turni.filter((t) => !stessoMeseSelezionato(t.data) || vocePassata(t.data, "23:59")),
-  [turni, meseCorrente]
-);
-void turniArchivio;
+  const vociDelMesePerCalendario = useMemo(() => {
+    if (pagina === "agenda") return [];
+    if (pagina === "archivio") return voci.filter((v) => v.fatto).filter((v) => stessoMeseSelezionato(v.data));
+    return voci.filter((v) => !v.fatto).filter((v) => stessoMeseSelezionato(v.data));
+  }, [voci, meseCorrente, pagina]);
+  void vociDelMesePerCalendario;
 
-const vociArchivio = useMemo(() => voci.filter((v) => v.fatto), [voci]);
-void vociArchivio;
 
-const vociDelMesePerCalendario = useMemo(() => {
-  if (pagina === "agenda") return [];
-  if (pagina === "archivio") return voci.filter((v) => v.fatto).filter((v) => stessoMeseSelezionato(v.data));
-  return voci.filter((v) => !v.fatto).filter((v) => stessoMeseSelezionato(v.data));
-}, [voci, meseCorrente, pagina]);
-void vociDelMesePerCalendario;
 
-function vociFiltrate() {
-  const base = pagina === "archivio" ? voci.filter((v) => v.fatto) : voci.filter((v) => !v.fatto);
-  const nelMese = base.filter((v) => stessoMeseSelezionato(v.data));
 
-  if (filtro === null) return ordinaIntelligente(nelMese);
 
-  const oggi = new Date();
-  const inizioOggi = new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDate());
+  function vociFiltrate() {
+    const base = pagina === "archivio" ? voci.filter((v) => v.fatto) : voci.filter((v) => !v.fatto);
+    const nelMese = base.filter((v) => stessoMeseSelezionato(v.data));
 
-  if (filtro === "oggi") {
-    const filtrateOggi = nelMese.filter((v) => {
-      const [a, m, g] = v.data.split("-").map(Number);
-      const dataVoce = new Date(a, (m ?? 1) - 1, g ?? 1);
-      return dataVoce.getTime() === inizioOggi.getTime();
-    });
 
-    return ordinaIntelligente(filtrateOggi);
-  }
+    if (filtro === null) return ordinaIntelligente(nelMese);
 
-  const fine = new Date(inizioOggi);
+    const oggi = new Date();
+    const inizioOggi = new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDate());
 
-  if (filtro === "7giorni") fine.setDate(fine.getDate() + 7);
-  else if (filtro === "30giorni") fine.setDate(fine.getDate() + 30);
+    if (filtro === "oggi") {
+      const filtrateOggi = nelMese.filter((v) => {
+        const [a, m, g] = v.data.split("-").map(Number);
+        const dataVoce = new Date(a, (m ?? 1) - 1, g ?? 1);
+        return dataVoce.getTime() === inizioOggi.getTime();
+      });
 
-  const filtrate = nelMese.filter((v) => {
-    const [a, m, g] = v.data.split("-").map(Number);
-    const dataVoce = new Date(a, (m ?? 1) - 1, g ?? 1);
-    return dataVoce >= inizioOggi && dataVoce <= fine;
-  });
-
-  return ordinaIntelligente(filtrate);
-}
-void vociFiltrate;
+      return ordinaIntelligente(filtrateOggi);
+    }
 
 
     const fine = new Date(inizioOggi);
@@ -5845,10 +5674,7 @@ function MiniCalendarioControllo({
 
 
 
-
-
-
-{pagina === "aggiungi" && (
+     {pagina === "aggiungi" && (
   <div style={{ maxWidth: 1060, margin: "0 auto", marginTop: 14, display: "grid", gap: 16 }}>
     <div
       style={{
@@ -5891,7 +5717,12 @@ function MiniCalendarioControllo({
           </button>
         </div>
 
-        <div style={{ display: "grid", gap: 6 }}>
+        <div
+          style={{
+            display: "grid",
+            gap: 6,
+          }}
+        >
           <div
             style={{
               fontSize: 26,
@@ -5912,7 +5743,7 @@ function MiniCalendarioControllo({
               lineHeight: 1.4,
             }}
           >
-            Inserisci nuovi dati nell’app
+            Scegli cosa vuoi inserire nell’app
           </div>
         </div>
       </div>
@@ -5921,29 +5752,44 @@ function MiniCalendarioControllo({
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "minmax(0, 1.3fr) minmax(280px, 0.7fr)",
+        gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
         gap: 16,
       }}
       className="remember-grid-2"
     >
-      <div
+      <button
+        data-chip="1"
+        onClick={() => setPagina("controllo")}
         style={{
           ...ui.card,
           padding: 22,
+          textAlign: "left",
           border: "1px solid rgba(16,185,129,0.18)",
           background:
-            "linear-gradient(180deg, rgba(16,185,129,0.10), rgba(255,255,255,0.94))",
+            "linear-gradient(180deg, rgba(16,185,129,0.12), rgba(255,255,255,0.94))",
           boxShadow: "0 18px 40px rgba(16,185,129,0.10)",
+          cursor: "pointer",
           display: "grid",
-          gap: 16,
+          gap: 12,
         }}
       >
         <div
           style={{
+            width: 54,
+            height: 54,
+            borderRadius: 18,
             display: "grid",
-            gap: 8,
+            placeItems: "center",
+            background: "linear-gradient(180deg, rgba(16,185,129,0.94), rgba(5,150,105,0.90))",
+            color: "white",
+            fontSize: 24,
+            boxShadow: "0 14px 28px rgba(16,185,129,0.20)",
           }}
         >
+          €
+        </div>
+
+        <div>
           <div
             style={{
               fontSize: 20,
@@ -5957,445 +5803,139 @@ function MiniCalendarioControllo({
 
           <div
             style={{
+              marginTop: 6,
               fontSize: 13,
               fontWeight: 800,
+              opacity: 0.72,
               lineHeight: 1.45,
-              color: "rgba(15,23,42,0.70)",
+              color: "rgba(15,23,42,0.88)",
             }}
           >
-            Tocca il pulsante verde o rosso per aprire il form relativo
+            Inserisci entrate extra e uscite extra in modo semplice e veloce
           </div>
         </div>
+      </button>
 
-        <div style={{ display: "grid", gap: 12 }}>
-          <button
-            type="button"
-            title="Apri o chiudi form entrata"
-            onClick={() => setMovimentoAperto((prev) => (prev === "entrata" ? null : "entrata"))}
-            style={{
-              border: "none",
-              borderRadius: 20,
-              padding: "16px 18px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 12,
-              cursor: "pointer",
-              color: "white",
-              fontWeight: 1000,
-              fontSize: 18,
-              background:
-                "linear-gradient(180deg, rgba(34,197,94,0.98), rgba(22,163,74,0.95))",
-              boxShadow: "0 18px 34px rgba(34,197,94,0.20)",
-            }}
-          >
-            <span>Entrata</span>
-            <span style={{ fontSize: 22 }}>{movimentoAperto === "entrata" ? "−" : "+"}</span>
-          </button>
-
-          {movimentoAperto === "entrata" && (
-            <div
-              style={{
-                background: "rgba(255,255,255,0.92)",
-                border: "1px solid rgba(16,185,129,0.16)",
-                borderRadius: 20,
-                padding: 16,
-                display: "grid",
-                gap: 12,
-                boxShadow: "0 10px 28px rgba(16,185,129,0.10)",
-              }}
-            >
-              <div style={{ display: "grid", gap: 8 }}>
-                <label style={ui.labelDark}>Data</label>
-                <input
-                  type="date"
-                  title="Data entrata"
-                  value={nuovaEntrataData}
-                  onChange={(e) => setNuovaEntrataData(e.target.value)}
-                  style={ui.inputLight}
-                />
-              </div>
-
-              <div style={{ display: "grid", gap: 8 }}>
-                <label style={ui.labelDark}>Categoria</label>
-                <select
-                  title="Categoria entrata"
-                  value={categoriaEntrata}
-                  onChange={(e) => setCategoriaEntrata(e.target.value)}
-                  style={ui.inputLight}
-                >
-                  <option value="">Seleziona categoria</option>
-                  {categorieEntrataBase.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                  {categorieEntrataCustom.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                  <option value="__altro__">Altro...</option>
-                </select>
-              </div>
-
-              {categoriaEntrata === "__altro__" && (
-                <div style={{ display: "grid", gap: 8 }}>
-                  <label style={ui.labelDark}>Nuova categoria personalizzata</label>
-                  <input
-                    type="text"
-                    title="Nuova categoria entrata"
-                    value={nuovaCategoriaEntrata}
-                    onChange={(e) => setNuovaCategoriaEntrata(e.target.value)}
-                    placeholder="Scrivi una nuova categoria"
-                    style={ui.inputLight}
-                  />
-                </div>
-              )}
-
-              <div style={{ display: "grid", gap: 8 }}>
-                <label style={ui.labelDark}>Nota facoltativa</label>
-                <input
-                  type="text"
-                  title="Nota entrata"
-                  value={nuovaEntrataDesc}
-                  onChange={(e) => setNuovaEntrataDesc(e.target.value)}
-                  placeholder="Es. bonus marzo, regalo compleanno..."
-                  style={ui.inputLight}
-                />
-              </div>
-
-              <div style={{ display: "grid", gap: 8 }}>
-                <label style={ui.labelDark}>Importo</label>
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  step="0.01"
-                  title="Importo entrata"
-                  value={nuovaEntrataImporto}
-                  onChange={(e) => setNuovaEntrataImporto(e.target.value)}
-                  placeholder="0,00"
-                  style={ui.inputLight}
-                />
-              </div>
-
-              <button
-                type="button"
-                title="Aggiungi entrata"
-                onClick={() => aggiungiEntrataExtra()}
-                style={{
-                  border: "none",
-                  borderRadius: 16,
-                  padding: "14px 16px",
-                  fontSize: 15,
-                  fontWeight: 1000,
-                  cursor: "pointer",
-                  color: "white",
-                  background:
-                    "linear-gradient(180deg, rgba(34,197,94,0.98), rgba(22,163,74,0.95))",
-                  boxShadow: "0 18px 34px rgba(34,197,94,0.20)",
-                }}
-              >
-                + Aggiungi Entrata
-              </button>
-            </div>
-          )}
-
-          <button
-            type="button"
-            title="Apri o chiudi form uscita"
-            onClick={() => setMovimentoAperto((prev) => (prev === "uscita" ? null : "uscita"))}
-            style={{
-              border: "none",
-              borderRadius: 20,
-              padding: "16px 18px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 12,
-              cursor: "pointer",
-              color: "white",
-              fontWeight: 1000,
-              fontSize: 18,
-              background:
-                "linear-gradient(180deg, rgba(239,68,68,0.98), rgba(220,38,38,0.95))",
-              boxShadow: "0 18px 34px rgba(239,68,68,0.20)",
-            }}
-          >
-            <span>Uscita</span>
-            <span style={{ fontSize: 22 }}>{movimentoAperto === "uscita" ? "−" : "+"}</span>
-          </button>
-
-          {movimentoAperto === "uscita" && (
-            <div
-              style={{
-                background: "rgba(255,255,255,0.92)",
-                border: "1px solid rgba(239,68,68,0.16)",
-                borderRadius: 20,
-                padding: 16,
-                display: "grid",
-                gap: 12,
-                boxShadow: "0 10px 28px rgba(239,68,68,0.10)",
-              }}
-            >
-              <div style={{ display: "grid", gap: 8 }}>
-                <label style={ui.labelDark}>Data</label>
-                <input
-                  type="date"
-                  title="Data uscita"
-                  value={nuovaUscitaData}
-                  onChange={(e) => setNuovaUscitaData(e.target.value)}
-                  style={ui.inputLight}
-                />
-              </div>
-
-              <div style={{ display: "grid", gap: 8 }}>
-                <label style={ui.labelDark}>Categoria</label>
-                <select
-                  title="Categoria uscita"
-                  value={categoriaUscita}
-                  onChange={(e) => setCategoriaUscita(e.target.value)}
-                  style={ui.inputLight}
-                >
-                  <option value="">Seleziona categoria</option>
-                  {categorieUscitaBase.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                  {categorieUscitaCustom.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                  <option value="__altro__">Altro...</option>
-                </select>
-              </div>
-
-              {categoriaUscita === "__altro__" && (
-                <div style={{ display: "grid", gap: 8 }}>
-                  <label style={ui.labelDark}>Nuova categoria personalizzata</label>
-                  <input
-                    type="text"
-                    title="Nuova categoria uscita"
-                    value={nuovaCategoriaUscita}
-                    onChange={(e) => setNuovaCategoriaUscita(e.target.value)}
-                    placeholder="Scrivi una nuova categoria"
-                    style={ui.inputLight}
-                  />
-                </div>
-              )}
-
-              <div style={{ display: "grid", gap: 8 }}>
-                <label style={ui.labelDark}>Nota facoltativa</label>
-                <input
-                  type="text"
-                  title="Nota uscita"
-                  value={nuovaUscitaDesc}
-                  onChange={(e) => setNuovaUscitaDesc(e.target.value)}
-                  placeholder="Es. spesa supermercato, pieno auto..."
-                  style={ui.inputLight}
-                />
-              </div>
-
-              <div style={{ display: "grid", gap: 8 }}>
-                <label style={ui.labelDark}>Importo</label>
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  step="0.01"
-                  title="Importo uscita"
-                  value={nuovaUscitaImporto}
-                  onChange={(e) => setNuovaUscitaImporto(e.target.value)}
-                  placeholder="0,00"
-                  style={ui.inputLight}
-                />
-              </div>
-
-              <div style={{ display: "grid", gap: 8 }}>
-                <label style={ui.labelDark}>Nota aggiuntiva</label>
-                <input
-                  type="text"
-                  title="Nota aggiuntiva uscita"
-                  value={nuovaUscitaNota}
-                  onChange={(e) => setNuovaUscitaNota(e.target.value)}
-                  placeholder="Dettaglio extra facoltativo"
-                  style={ui.inputLight}
-                />
-              </div>
-
-              <button
-                type="button"
-                title="Aggiungi uscita"
-                onClick={() => aggiungiUscitaExtra()}
-                style={{
-                  border: "none",
-                  borderRadius: 16,
-                  padding: "14px 16px",
-                  fontSize: 15,
-                  fontWeight: 1000,
-                  cursor: "pointer",
-                  color: "white",
-                  background:
-                    "linear-gradient(180deg, rgba(239,68,68,0.98), rgba(220,38,38,0.95))",
-                  boxShadow: "0 18px 34px rgba(239,68,68,0.20)",
-                }}
-              >
-                + Aggiungi Uscita
-              </button>
-            </div>
-          )}
+      <button
+        data-chip="1"
+        onClick={() => apriNuova()}
+        style={{
+          ...ui.card,
+          padding: 22,
+          textAlign: "left",
+          border: "1px solid rgba(79,70,229,0.18)",
+          background:
+            "linear-gradient(180deg, rgba(79,70,229,0.12), rgba(255,255,255,0.94))",
+          boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
+          cursor: "pointer",
+          display: "grid",
+          gap: 12,
+        }}
+      >
+        <div
+          style={{
+            width: 54,
+            height: 54,
+            borderRadius: 18,
+            display: "grid",
+            placeItems: "center",
+            background: "linear-gradient(180deg, rgba(79,70,229,0.94), rgba(124,58,237,0.90))",
+            color: "white",
+            fontSize: 24,
+            boxShadow: "0 14px 28px rgba(79,70,229,0.20)",
+          }}
+        >
+          🗓
         </div>
-      </div>
 
-      <div style={{ display: "grid", gap: 16 }}>
-        <button
-          data-chip="1"
-          onClick={() => apriNuova()}
-          style={{
-            ...ui.card,
-            padding: 22,
-            textAlign: "left",
-            border: "1px solid rgba(79,70,229,0.18)",
-            background:
-              "linear-gradient(180deg, rgba(79,70,229,0.12), rgba(255,255,255,0.94))",
-            boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
-            cursor: "pointer",
-            display: "grid",
-            gap: 12,
-          }}
-          title="Apri form appuntamento o scadenza"
-        >
+        <div>
           <div
             style={{
-              width: 54,
-              height: 54,
-              borderRadius: 18,
-              display: "grid",
-              placeItems: "center",
-              background: "linear-gradient(180deg, rgba(79,70,229,0.94), rgba(124,58,237,0.90))",
-              color: "white",
-              fontSize: 24,
-              boxShadow: "0 14px 28px rgba(79,70,229,0.20)",
+              fontSize: 20,
+              fontWeight: 1000,
+              letterSpacing: -0.3,
+              color: "rgba(15,23,42,0.96)",
             }}
           >
-            🗓
+            Appuntamento / Scadenza
           </div>
 
-          <div>
-            <div
-              style={{
-                fontSize: 20,
-                fontWeight: 1000,
-                letterSpacing: -0.3,
-                color: "rgba(15,23,42,0.96)",
-              }}
-            >
-              Appuntamento / Scadenza
-            </div>
-
-            <div
-              style={{
-                marginTop: 6,
-                fontSize: 13,
-                fontWeight: 800,
-                opacity: 0.72,
-                lineHeight: 1.45,
-                color: "rgba(15,23,42,0.88)",
-              }}
-            >
-              Aggiungi velocemente nuovi eventi, date importanti e promemoria
-            </div>
-          </div>
-        </button>
-
-        <button
-          data-chip="1"
-          onClick={() => apriTurnoForm()}
-          style={{
-            ...ui.card,
-            padding: 22,
-            textAlign: "left",
-            border: "1px solid rgba(249,115,22,0.18)",
-            background:
-              "linear-gradient(180deg, rgba(249,115,22,0.12), rgba(255,255,255,0.94))",
-            boxShadow: "0 18px 40px rgba(249,115,22,0.10)",
-            cursor: "pointer",
-            display: "grid",
-            gap: 12,
-          }}
-          title="Apri form turno"
-        >
           <div
             style={{
-              width: 54,
-              height: 54,
-              borderRadius: 18,
-              display: "grid",
-              placeItems: "center",
-              background: "linear-gradient(180deg, rgba(249,115,22,0.94), rgba(234,88,12,0.90))",
-              color: "white",
-              fontSize: 24,
-              boxShadow: "0 14px 28px rgba(249,115,22,0.20)",
+              marginTop: 6,
+              fontSize: 13,
+              fontWeight: 800,
+              opacity: 0.72,
+              lineHeight: 1.45,
+              color: "rgba(15,23,42,0.88)",
             }}
           >
-            ⏰
+            Aggiungi velocemente nuovi eventi, date importanti e promemoria
+          </div>
+        </div>
+      </button>
+
+      <button
+        data-chip="1"
+        onClick={() => apriTurnoForm()}
+        style={{
+          ...ui.card,
+          padding: 22,
+          textAlign: "left",
+          border: "1px solid rgba(249,115,22,0.18)",
+          background:
+            "linear-gradient(180deg, rgba(249,115,22,0.12), rgba(255,255,255,0.94))",
+          boxShadow: "0 18px 40px rgba(249,115,22,0.10)",
+          cursor: "pointer",
+          display: "grid",
+          gap: 12,
+        }}
+      >
+        <div
+          style={{
+            width: 54,
+            height: 54,
+            borderRadius: 18,
+            display: "grid",
+            placeItems: "center",
+            background: "linear-gradient(180deg, rgba(249,115,22,0.94), rgba(234,88,12,0.90))",
+            color: "white",
+            fontSize: 24,
+            boxShadow: "0 14px 28px rgba(249,115,22,0.20)",
+          }}
+        >
+          ⏰
+        </div>
+
+        <div>
+          <div
+            style={{
+              fontSize: 20,
+              fontWeight: 1000,
+              letterSpacing: -0.3,
+              color: "rgba(15,23,42,0.96)",
+            }}
+          >
+            Turno
           </div>
 
-          <div>
-            <div
-              style={{
-                fontSize: 20,
-                fontWeight: 1000,
-                letterSpacing: -0.3,
-                color: "rgba(15,23,42,0.96)",
-              }}
-            >
-              Turno
-            </div>
-
-            <div
-              style={{
-                marginTop: 6,
-                fontSize: 13,
-                fontWeight: 800,
-                opacity: 0.72,
-                lineHeight: 1.45,
-                color: "rgba(15,23,42,0.88)",
-              }}
-            >
-              Inserisci un nuovo turno di lavoro, ferie o riposo
-            </div>
+          <div
+            style={{
+              marginTop: 6,
+              fontSize: 13,
+              fontWeight: 800,
+              opacity: 0.72,
+              lineHeight: 1.45,
+              color: "rgba(15,23,42,0.88)",
+            }}
+          >
+            Inserisci un nuovo turno di lavoro, ferie o riposo
           </div>
-        </button>
-      </div>
+        </div>
+      </button>
     </div>
   </div>
 )}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
