@@ -6375,64 +6375,6 @@ function MiniCalendarioControllo({
       </div>
     </button>
 
-    <button
-      data-chip="1"
-      onClick={() => apriNuova()}
-      style={{
-        ...ui.card,
-        padding: 22,
-        textAlign: "left",
-        border: "1px solid rgba(244,114,182,0.18)",
-        background:
-          "linear-gradient(180deg, rgba(244,114,182,0.12), rgba(255,255,255,0.94))",
-        boxShadow: "0 18px 40px rgba(244,114,182,0.10)",
-        cursor: "pointer",
-        display: "grid",
-        gap: 12,
-      }}
-    >
-      <div
-        style={{
-          width: 54,
-          height: 54,
-          borderRadius: 18,
-          display: "grid",
-          placeItems: "center",
-          background: "linear-gradient(180deg, rgba(244,114,182,0.94), rgba(236,72,153,0.90))",
-          color: "white",
-          fontSize: 24,
-          boxShadow: "0 14px 28px rgba(244,114,182,0.20)",
-        }}
-      >
-        📝
-      </div>
-
-      <div>
-        <div
-          style={{
-            fontSize: 20,
-            fontWeight: 1000,
-            letterSpacing: -0.3,
-            color: "rgba(15,23,42,0.96)",
-          }}
-        >
-          Nota rapida
-        </div>
-
-        <div
-          style={{
-            marginTop: 6,
-            fontSize: 13,
-            fontWeight: 800,
-            opacity: 0.72,
-            lineHeight: 1.45,
-            color: "rgba(15,23,42,0.88)",
-          }}
-        >
-          Salva una nota libera o con data
-        </div>
-      </div>
-    </button>
   </div>
 ) : aggiungiSezione === "movimenti" ? (
   <div
