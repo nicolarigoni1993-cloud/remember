@@ -1552,6 +1552,108 @@ function eliminaTurno(id: string) {
 
 void eliminaTurno;
 
+
+
+
+function MiniCalendarioSettimanaTurni({
+  turni,
+  onEditTurno,
+}: {
+  turni: Turno[];
+  onEditTurno: (t: Turno) => void;
+}) {
+  const oggi = new Date();
+
+  const inizioSettimana = new Date(oggi);
+  const giorno = (oggi.getDay() + 6) % 7; // lunedì = 0
+  inizioSettimana.setDate(oggi.getDate() - giorno);
+
+  const giorniSettimana: Date[] = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(inizioSettimana);
+    d.setDate(inizioSettimana.getDate() + i);
+    giorniSettimana.push(d);
+  }
+
+  const giorniLabel = ["L", "M", "M", "G", "V", "S", "D"];
+
+  function getTurnoGiorno(data: string) {
+    return turni.find((t) => t.data === data);
+  }
+
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(7, 1fr)",
+        gap: 8,
+        marginTop: 12,
+      }}
+    >
+      {giorniSettimana.map((d, idx) => {
+        const key = d.toISOString().slice(0, 10);
+        const turno = getTurnoGiorno(key);
+
+        const sigla = turno
+          ? normalizeTurnoLabel(turno.inizio, turno.fine, turno.note)
+          : "";
+
+        return (
+          <div
+            key={key}
+            onClick={() => {
+              if (turno) onEditTurno(turno);
+            }}
+            style={{
+              padding: "10px 6px",
+              borderRadius: 14,
+              border: "1px solid rgba(15,23,42,0.08)",
+              background: "rgba(255,255,255,0.9)",
+              display: "grid",
+              justifyItems: "center",
+              gap: 4,
+              cursor: turno ? "pointer" : "default",
+              boxShadow: "0 6px 14px rgba(15,23,42,0.06)",
+            }}
+          >
+            {/* giorno */}
+            <div style={{ fontSize: 10, fontWeight: 900, opacity: 0.7 }}>
+              {giorniLabel[idx]}
+            </div>
+
+            {/* numero */}
+            <div style={{ fontSize: 16, fontWeight: 1000 }}>
+              {d.getDate()}
+            </div>
+
+            {/* turno */}
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 1000,
+                marginTop: 2,
+                color:
+                  sigla === "R"
+                    ? "#6b7280"
+                    : sigla === "F"
+                    ? "#7c3aed"
+                    : sigla === "A"
+                    ? "#ef4444"
+                    : "#2563eb",
+              }}
+            >
+              {sigla || "-"}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+
+
+
 function elimina(id: string) {
   const ok = confirm("Vuoi eliminare questa voce?");
   if (!ok) return;
@@ -6902,7 +7004,7 @@ function MiniCalendarioControllo({
 
 
 
-               {pagina === "agenda" && (
+               {false && (
           <>
             <MiniCalendario
               mese={meseCorrente}
@@ -7230,7 +7332,7 @@ function MiniCalendarioControllo({
             </div>
           </>
         )}
-        {pagina === "controllo" && renderAreaControllo()}
+        {false && renderAreaControllo()}
 
         
        
@@ -7772,6 +7874,10 @@ function MiniCalendarioControllo({
 
       <div style={{ ...sx.body, paddingTop: 18 }}>
         <div style={{ ...sx.content, display: "grid", gap: 18 }}>
+          <MiniCalendarioSettimanaTurni
+              turni={turni}
+              onEditTurno={apriModificaTurno}
+            />
           <div
             style={{
               display: "grid",
