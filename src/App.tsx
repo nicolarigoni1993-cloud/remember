@@ -3193,8 +3193,10 @@ background: isToday
                           padding: isTouchDevice ? "4px 0" : "5px 10px",
                           borderRadius: 999,
                           border: "1px solid rgba(59,130,246,0.22)",
-                          background: "rgba(239,246,255,0.95)",
-                          color: "rgba(30,64,175,0.95)",
+                        background: isTouchDevice
+  ? "linear-gradient(180deg, rgba(219,234,254,0.98), rgba(239,246,255,0.96))"
+  : "rgba(239,246,255,0.95)",
+color: "rgba(29,78,216,0.98)",
                           fontSize: isTouchDevice ? 11 : 12,
                           fontWeight: 1000,
                           cursor: "pointer",
