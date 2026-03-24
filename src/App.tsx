@@ -2755,7 +2755,22 @@ const sx = useMemo(() => {
 
     return (
       <div style={{ maxWidth: 1060, margin: "0 auto", marginTop: 14 }}>
-        <div style={{ ...ui.card, padding: isTouchDevice ? 12 : 18, overflow: "visible" }}>
+        <div
+  style={{
+    ...ui.card,
+    padding: isTouchDevice ? 12 : 18,
+    overflow: "visible",
+    background: isTouchDevice
+      ? "linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.10))"
+      : ui.card.background,
+    border: isTouchDevice
+      ? "1px solid rgba(255,255,255,0.18)"
+      : ui.card.border,
+    boxShadow: isTouchDevice
+      ? "0 18px 40px rgba(15,23,42,0.20)"
+      : ui.card.boxShadow,
+  }}
+>
           <div
             style={{
               display: "grid",
@@ -2849,20 +2864,21 @@ const sx = useMemo(() => {
               </span>
             </button>
 
-            <div
-              style={{
-                textAlign: "center",
-                fontSize: isTouchDevice ? 18 : 28,
-                fontWeight: 1000,
-                letterSpacing: -0.7,
-                textTransform: "capitalize",
-                color: "rgba(15,23,42,0.96)",
-                lineHeight: 1.05,
-                minWidth: 0,
-              }}
-            >
-              {titoloMese}
-            </div>
+          <div
+  style={{
+    textAlign: "center",
+    fontSize: isTouchDevice ? 20 : 28,
+    fontWeight: 1000,
+    letterSpacing: -0.7,
+    textTransform: "capitalize",
+    color: isTouchDevice ? "rgba(255,255,255,0.98)" : "rgba(15,23,42,0.96)",
+    textShadow: isTouchDevice ? "0 6px 18px rgba(15,23,42,0.28)" : "none",
+    lineHeight: 1.05,
+    minWidth: 0,
+  }}
+>
+  {titoloMese}
+</div>
 
             <button
               type="button"
@@ -3005,9 +3021,11 @@ const sx = useMemo(() => {
                         : isToday
                         ? "2px solid rgba(255,59,48,0.40)"
                         : "1px solid rgba(15,23,42,0.08)",
-                      background: isToday
-                        ? "linear-gradient(180deg, rgba(255,245,244,0.98), rgba(255,251,251,0.96))"
-                        : "linear-gradient(180deg, rgba(255,255,255,0.92), rgba(248,250,252,0.86))",
+background: isToday
+  ? "linear-gradient(180deg, rgba(255,245,244,0.99), rgba(255,251,251,0.98))"
+  : isTouchDevice
+  ? "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96))"
+  : "linear-gradient(180deg, rgba(255,255,255,0.92), rgba(248,250,252,0.86))",
                       boxShadow: info?.urgent
                         ? "0 18px 36px rgba(239,68,68,0.14)"
                         : isToday
@@ -3224,21 +3242,21 @@ const sx = useMemo(() => {
                           ...previewStyle,
                         }}
                     >
-                      <div
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 950,
-                          opacity: 0.72,
-                          marginBottom: 10,
-                          textTransform: "capitalize",
-                        }}
-                      >
-                        {new Date(y, m0, d).toLocaleDateString("it-IT", {
-                          weekday: "long",
-                          day: "numeric",
-                          month: "long",
-                        })}
-                      </div>
+                   <div
+  style={{
+    fontSize: 12,
+    fontWeight: 950,
+    marginBottom: 10,
+    textTransform: "capitalize",
+    color: "rgba(15,23,42,0.78)",
+  }}
+>
+  {new Date(y, m0, d).toLocaleDateString("it-IT", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  })}
+</div>
 
                       <div style={{ display: "grid", gap: 8 }}>
                         {previewItems.map((v) => {
@@ -3346,19 +3364,22 @@ const sx = useMemo(() => {
                                 e.stopPropagation();
                                 onEditTurno(t);
                               }}
-                              style={{
-                                padding: 11,
-                                borderRadius: 18,
-                                background: isRiposo ? "rgba(107,114,128,0.08)" : "rgba(59,130,246,0.08)",
-                                border: isRiposo
-                                  ? "1px solid rgba(107,114,128,0.18)"
-                                  : "1px solid rgba(59,130,246,0.14)",
-                                display: "grid",
-                                gap: 5,
-                                width: "100%",
-                                textAlign: "left",
-                                cursor: "pointer",
-                              }}
+                         style={{
+                            padding: 11,
+                            borderRadius: 18,
+                            background: isRiposo
+                              ? "linear-gradient(180deg, rgba(243,244,246,0.98), rgba(229,231,235,0.94))"
+                              : "linear-gradient(180deg, rgba(219,234,254,0.98), rgba(239,246,255,0.94))",
+                            border: isRiposo
+                              ? "1px solid rgba(107,114,128,0.26)"
+                              : "1px solid rgba(59,130,246,0.24)",
+                            display: "grid",
+                            gap: 5,
+                            width: "100%",
+                            textAlign: "left",
+                            cursor: "pointer",
+                            boxShadow: "0 8px 18px rgba(15,23,42,0.08)",
+}}
                               title="Modifica turno"
                             >
                               <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
@@ -3381,26 +3402,26 @@ const sx = useMemo(() => {
                               </div>
 
                              <div
-  style={{
-    fontSize: 12,
-    fontWeight: 850,
-    color: "rgba(15,23,42,0.72)",
-  }}
->
+                                style={{
+                                  fontSize: 12,
+                                  fontWeight: 850,
+                                  color: "rgba(15,23,42,0.72)",
+                                }}
+                              >
                                 {isRiposo
                                   ? "Giornata di riposo"
                                   : `Ord: ${formatNumeroOre(t.oreOrdinarie)}h • Straord: ${formatNumeroOre(t.oreStraordinarie)}h`}
                               </div>
 
-                              <div
-  style={{
-    fontSize: 11,
-    fontWeight: 900,
-    color: "rgba(15,23,42,0.58)",
-  }}
->
-                                Tocca/clicca per modificare
-                              </div>
+                          <div
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 900,
+                        color: "rgba(15,23,42,0.58)",
+                      }}
+                    >
+                      Tocca/clicca per modificare
+                    </div>
                             </button>
                           );
                         })}
@@ -3426,21 +3447,21 @@ const sx = useMemo(() => {
                         zIndex: 60,
                       }}
                     >
-                      <div
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 950,
-                          opacity: 0.72,
-                          marginBottom: 10,
-                          textTransform: "capitalize",
-                        }}
-                      >
-                        {new Date(y, m0, d).toLocaleDateString("it-IT", {
-                          weekday: "long",
-                          day: "numeric",
-                          month: "long",
-                        })}
-                      </div>
+                        <div
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 950,
+                              marginBottom: 10,
+                              textTransform: "capitalize",
+                              color: "rgba(15,23,42,0.78)",
+                            }}
+                          >
+                            {new Date(y, m0, d).toLocaleDateString("it-IT", {
+                              weekday: "long",
+                              day: "numeric",
+                              month: "long",
+                            })}
+                          </div>
 
                       <div style={{ display: "grid", gap: 8 }}>
                         {previewItems.map((v) => (
@@ -3512,12 +3533,12 @@ const sx = useMemo(() => {
                               </div>
 
                               <div
-  style={{
-    fontSize: 11,
-    fontWeight: 900,
-    color: "rgba(15,23,42,0.58)",
-  }}
->
+                                              style={{
+                                                fontSize: 11,
+                                                fontWeight: 900,
+                                                color: "rgba(15,23,42,0.58)",
+                                              }}
+                                            >
                                 Tocca per modificare
                               </div>
                             </button>
@@ -4013,9 +4034,11 @@ function MiniCalendarioControllo({
                     : isToday
                     ? "2px solid rgba(59,130,246,0.28)"
                     : "1px solid rgba(15,23,42,0.08)",
-                  background: isToday
-                    ? "linear-gradient(180deg, rgba(239,246,255,0.96), rgba(248,250,252,0.92))"
-                    : "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.88))",
+               background: isToday
+  ? "linear-gradient(180deg, rgba(255,245,244,0.99), rgba(255,251,251,0.98))"
+  : isTouchDevice
+  ? "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96))"
+  : "linear-gradient(180deg, rgba(255,255,255,0.92), rgba(248,250,252,0.86))",
                   boxShadow: "0 10px 20px rgba(15,23,42,0.07)",
                   padding: isTouchDevice ? "6px 4px" : "10px",
                   display: "grid",
@@ -8605,7 +8628,13 @@ function MiniCalendarioControllo({
                         {!isRiposo ? ` • ${t.inizio} - ${t.fine}` : ""}
                       </div>
 
-                      <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72 }}>
+                      <div
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 850,
+                              color: "rgba(15,23,42,0.72)",
+                            }}
+                          >
                         {isRiposo
                           ? "Giornata di riposo"
                           : `Ord: ${formatNumeroOre(t.oreOrdinarie)}h • Straord: ${formatNumeroOre(
