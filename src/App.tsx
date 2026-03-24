@@ -682,7 +682,7 @@ export default function App() {
   const [loginNome, setLoginNome] = useState("");
   const [loginPick, setLoginPick] = useState<string | null>(null);
 
- const [pagina, setPagina] = useState<"home" | "aggiungi" | "agenda" | "controllo" | "archivio">("home");
+ const [pagina, setPagina] = useState<"home" | "aggiungi" | "consulta" | "agenda" | "controllo" | "archivio">("home");
 const [aggiungiSezione, setAggiungiSezione] = useState<"menu" | "movimenti" | "eventi">("menu");
   const [mostraForm, setMostraForm] = useState(false);
   const [idInModifica, setIdInModifica] = useState<string | null>(null);
@@ -5845,121 +5845,101 @@ function MiniCalendarioControllo({
    <div style={pageBg}>
   {GlobalStyle}
 
-  {pagina !== "home" && pagina !== "aggiungi" && (
-    <div style={topBar}>
-      <div style={{ ...ui.glass, padding: 22 }}>
-        <div style={{ display: "grid", gap: 18 }}>
-          <RememberLogo size={54} centered />
+{pagina !== "home" && pagina !== "aggiungi" && (
+  <div style={topBar}>
+    <div style={{ ...ui.glass, padding: 22 }}>
+      <div style={{ display: "grid", gap: 18 }}>
+        <RememberLogo size={54} centered />
 
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 10,
+            flexWrap: "wrap",
+          }}
+        >
           <div
             style={{
-              display: "flex",
-              justifyContent: "center",
+              display: "inline-flex",
               alignItems: "center",
               gap: 10,
-              flexWrap: "wrap",
-            }}
-          >
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 10,
-                padding: "11px 14px",
-                borderRadius: 999,
-                border: "1px solid rgba(79,70,229,0.12)",
-                background: "rgba(255,255,255,0.82)",
-                boxShadow: "0 18px 34px rgba(79,70,229,0.10)",
-                fontSize: 13,
-                fontWeight: 950,
-                letterSpacing: -0.2,
-                animation: "softGlow 2.4s ease-in-out infinite",
-              }}
-            >
-              <span style={{ opacity: 0.8 }}>🕒</span>
-              <span style={{ opacity: 0.88 }}>{formattaDataLunga(adesso)}</span>
-            </div>
-          </div>
-
-          <div
-            style={{
-              textAlign: "center",
+              padding: "11px 14px",
+              borderRadius: 999,
+              border: "1px solid rgba(79,70,229,0.12)",
+              background: "rgba(255,255,255,0.82)",
+              boxShadow: "0 18px 34px rgba(79,70,229,0.10)",
               fontSize: 13,
-              fontWeight: 900,
-              opacity: 0.72,
+              fontWeight: 950,
+              letterSpacing: -0.2,
+              animation: "softGlow 2.4s ease-in-out infinite",
             }}
           >
-            Utente attivo: <span style={{ opacity: 1 }}>{currentUser.nome}</span>
+            <span style={{ opacity: 0.8 }}>🕒</span>
+            <span style={{ opacity: 0.88 }}>{formattaDataLunga(adesso)}</span>
           </div>
+        </div>
 
-          <div
-            style={{
-              display: "flex",
-              gap: 12,
-              flexWrap: "wrap",
-              justifyContent: "center",
-            }}
+        <div
+          style={{
+            textAlign: "center",
+            fontSize: 13,
+            fontWeight: 900,
+            opacity: 0.72,
+          }}
+        >
+          Utente attivo: <span style={{ opacity: 1 }}>{currentUser.nome}</span>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            gap: 12,
+            flexWrap: "wrap",
+            justifyContent: "center",
+          }}
+        >
+          <button
+            data-chip="1"
+            onClick={() => setPagina("home")}
+            style={chip(false)}
           >
+            Home
+          </button>
+
+          {pagina === "consulta" && (
             <button
               data-chip="1"
-              onClick={() => setPagina("home")}
-              style={chip(false)}
+              onClick={() => setPagina("consulta")}
+              style={chip(true)}
             >
-              Home
+              Consulta
             </button>
+          )}
 
-            <button
-              data-chip="1"
-              onClick={() => setPagina("agenda")}
-              style={pagina === "agenda" ? chip(true) : chip(false)}
-            >
-              Agenda
-            </button>
+          <button
+            data-chip="1"
+            onClick={() => setPagina("aggiungi")}
+            style={chip(false)}
+          >
+            Aggiungi
+          </button>
 
-            <button
-              data-chip="1"
-              onClick={() => setPagina("controllo")}
-              style={pagina === "controllo" ? chip(true) : chip(false)}
-            >
-              Controllo
-            </button>
-
-            <button
-              data-chip="1"
-              onClick={() => setPagina("archivio")}
-              style={pagina === "archivio" ? chip(true) : chip(false)}
-            >
-              Archivio Generale
-            </button>
-
-            <button
-              data-chip="1"
-              onClick={() => apriNuova()}
-              title="Nuova voce"
-              style={{
-                ...chip(false),
-                background: "linear-gradient(180deg, rgba(16,185,129,0.28), rgba(5,150,105,0.16))",
-                border: "1px solid rgba(16,185,129,0.36)",
-                boxShadow: "0 16px 34px rgba(16,185,129,0.22)",
-                color: "rgba(6,95,70,0.98)",
-                fontWeight: 1000,
-              }}
-            >
-              + Nuova
-            </button>
-
-            <button data-chip="1" onClick={esci} style={chip(false)}>
-              Esci
-            </button>
-          </div>
+          <button
+            data-chip="1"
+            onClick={esci}
+            style={chip(false)}
+          >
+            Esci
+          </button>
         </div>
       </div>
     </div>
-  )}
+  </div>
+)}
 
 
-
-{/* Secondo blocco*/}
 
 
 
@@ -6032,8 +6012,8 @@ function MiniCalendarioControllo({
 
         {/* CONSULTA */}
         <button
-          data-chip="1"
-          onClick={() => setPagina("agenda")}
+            data-chip="1"
+            onClick={() => setPagina("consulta")}
           style={{
             padding: "22px 18px",
             borderRadius: 26,
@@ -6078,7 +6058,286 @@ function MiniCalendarioControllo({
 
 
 
+{pagina === "consulta" && (
+  <div style={{ minHeight: "70vh", display: "grid", placeItems: "start center", padding: 16 }}>
+    <div style={{ width: "min(1100px, 100%)", display: "grid", gap: 18 }}>
+      <div
+        style={{
+          ...ui.card,
+          padding: 22,
+          display: "grid",
+          gap: 10,
+          border: "1px solid rgba(79,70,229,0.18)",
+          background:
+            "linear-gradient(180deg, rgba(79,70,229,0.12), rgba(255,255,255,0.94))",
+          boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
+        }}
+      >
+        <div
+          style={{
+            fontSize: 26,
+            fontWeight: 1000,
+            letterSpacing: -0.5,
+            color: "rgba(15,23,42,0.96)",
+          }}
+        >
+          Consulta
+        </div>
 
+        <div
+          style={{
+            fontSize: 14,
+            fontWeight: 800,
+            color: "rgba(15,23,42,0.72)",
+            lineHeight: 1.45,
+          }}
+        >
+          Area principale di consultazione dell’app. Da qui accederai a turni, finanza, eventi e archivio generale.
+        </div>
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+          gap: 16,
+        }}
+      >
+        <button
+          data-chip="1"
+          style={{
+            ...ui.card,
+            padding: 22,
+            textAlign: "left",
+            border: "1px solid rgba(249,115,22,0.18)",
+            background:
+              "linear-gradient(180deg, rgba(249,115,22,0.12), rgba(255,255,255,0.94))",
+            boxShadow: "0 18px 40px rgba(249,115,22,0.10)",
+            cursor: "pointer",
+            display: "grid",
+            gap: 12,
+          }}
+        >
+          <div
+            style={{
+              width: 54,
+              height: 54,
+              borderRadius: 18,
+              display: "grid",
+              placeItems: "center",
+              background: "linear-gradient(180deg, rgba(249,115,22,0.94), rgba(234,88,12,0.90))",
+              color: "white",
+              fontSize: 24,
+              boxShadow: "0 14px 28px rgba(249,115,22,0.20)",
+            }}
+          >
+            ⏰
+          </div>
+
+          <div>
+            <div
+              style={{
+                fontSize: 20,
+                fontWeight: 1000,
+                letterSpacing: -0.3,
+                color: "rgba(15,23,42,0.96)",
+              }}
+            >
+              Turni
+            </div>
+
+            <div
+              style={{
+                marginTop: 6,
+                fontSize: 13,
+                fontWeight: 800,
+                opacity: 0.72,
+                lineHeight: 1.45,
+                color: "rgba(15,23,42,0.88)",
+              }}
+            >
+              Calendario mensile, riepiloghi e gestione completa dei turni
+            </div>
+          </div>
+        </button>
+
+        <button
+          data-chip="1"
+          style={{
+            ...ui.card,
+            padding: 22,
+            textAlign: "left",
+            border: "1px solid rgba(16,185,129,0.18)",
+            background:
+              "linear-gradient(180deg, rgba(16,185,129,0.12), rgba(255,255,255,0.94))",
+            boxShadow: "0 18px 40px rgba(16,185,129,0.10)",
+            cursor: "pointer",
+            display: "grid",
+            gap: 12,
+          }}
+        >
+          <div
+            style={{
+              width: 54,
+              height: 54,
+              borderRadius: 18,
+              display: "grid",
+              placeItems: "center",
+              background: "linear-gradient(180deg, rgba(16,185,129,0.94), rgba(5,150,105,0.90))",
+              color: "white",
+              fontSize: 24,
+              boxShadow: "0 14px 28px rgba(16,185,129,0.20)",
+            }}
+          >
+            €
+          </div>
+
+          <div>
+            <div
+              style={{
+                fontSize: 20,
+                fontWeight: 1000,
+                letterSpacing: -0.3,
+                color: "rgba(15,23,42,0.96)",
+              }}
+            >
+              Finanza
+            </div>
+
+            <div
+              style={{
+                marginTop: 6,
+                fontSize: 13,
+                fontWeight: 800,
+                opacity: 0.72,
+                lineHeight: 1.45,
+                color: "rgba(15,23,42,0.88)",
+              }}
+            >
+              Entrate, uscite, movimenti e riepiloghi economici
+            </div>
+          </div>
+        </button>
+
+        <button
+          data-chip="1"
+          style={{
+            ...ui.card,
+            padding: 22,
+            textAlign: "left",
+            border: "1px solid rgba(79,70,229,0.18)",
+            background:
+              "linear-gradient(180deg, rgba(79,70,229,0.12), rgba(255,255,255,0.94))",
+            boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
+            cursor: "pointer",
+            display: "grid",
+            gap: 12,
+          }}
+        >
+          <div
+            style={{
+              width: 54,
+              height: 54,
+              borderRadius: 18,
+              display: "grid",
+              placeItems: "center",
+              background: "linear-gradient(180deg, rgba(79,70,229,0.94), rgba(124,58,237,0.90))",
+              color: "white",
+              fontSize: 24,
+              boxShadow: "0 14px 28px rgba(79,70,229,0.20)",
+            }}
+          >
+            🗓
+          </div>
+
+          <div>
+            <div
+              style={{
+                fontSize: 20,
+                fontWeight: 1000,
+                letterSpacing: -0.3,
+                color: "rgba(15,23,42,0.96)",
+              }}
+            >
+              Eventi
+            </div>
+
+            <div
+              style={{
+                marginTop: 6,
+                fontSize: 13,
+                fontWeight: 800,
+                opacity: 0.72,
+                lineHeight: 1.45,
+                color: "rgba(15,23,42,0.88)",
+              }}
+            >
+              Eventi, promemoria e gestione del calendario eventi
+            </div>
+          </div>
+        </button>
+
+        <button
+          data-chip="1"
+          style={{
+            ...ui.card,
+            padding: 22,
+            textAlign: "left",
+            border: "1px solid rgba(148,163,184,0.18)",
+            background:
+              "linear-gradient(180deg, rgba(148,163,184,0.12), rgba(255,255,255,0.94))",
+            boxShadow: "0 18px 40px rgba(148,163,184,0.10)",
+            cursor: "pointer",
+            display: "grid",
+            gap: 12,
+          }}
+        >
+          <div
+            style={{
+              width: 54,
+              height: 54,
+              borderRadius: 18,
+              display: "grid",
+              placeItems: "center",
+              background: "linear-gradient(180deg, rgba(100,116,139,0.94), rgba(71,85,105,0.90))",
+              color: "white",
+              fontSize: 24,
+              boxShadow: "0 14px 28px rgba(100,116,139,0.20)",
+            }}
+          >
+            🗂
+          </div>
+
+          <div>
+            <div
+              style={{
+                fontSize: 20,
+                fontWeight: 1000,
+                letterSpacing: -0.3,
+                color: "rgba(15,23,42,0.96)",
+              }}
+            >
+              Archivio
+            </div>
+
+            <div
+              style={{
+                marginTop: 6,
+                fontSize: 13,
+                fontWeight: 800,
+                opacity: 0.72,
+                lineHeight: 1.45,
+                color: "rgba(15,23,42,0.88)",
+              }}
+            >
+              Archivio generale con storico dati e riepiloghi futuri
+            </div>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
 
 
