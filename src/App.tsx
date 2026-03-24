@@ -683,6 +683,7 @@ export default function App() {
   const [loginPick, setLoginPick] = useState<string | null>(null);
 
  const [pagina, setPagina] = useState<"home" | "aggiungi" | "consulta" | "agenda" | "controllo" | "archivio">("home");
+ const [consultaSezione, setConsultaSezione] = useState<"menu" | "turni" | "finanza" | "eventi" | "archivio">("menu");
 const [aggiungiSezione, setAggiungiSezione] = useState<"menu" | "movimenti" | "eventi">("menu");
   const [mostraForm, setMostraForm] = useState(false);
   const [idInModifica, setIdInModifica] = useState<string | null>(null);
@@ -5911,7 +5912,10 @@ function MiniCalendarioControllo({
           {pagina === "consulta" && (
             <button
               data-chip="1"
-              onClick={() => setPagina("consulta")}
+              onClick={() => {
+                  setConsultaSezione("menu");
+                  setPagina("consulta");
+                }}
               style={chip(true)}
             >
               Consulta
@@ -6013,7 +6017,10 @@ function MiniCalendarioControllo({
         {/* CONSULTA */}
         <button
             data-chip="1"
-            onClick={() => setPagina("consulta")}
+            onClick={() => {
+                setConsultaSezione("menu");
+                setPagina("consulta");
+              }}
           style={{
             padding: "22px 18px",
             borderRadius: 26,
@@ -6061,280 +6068,679 @@ function MiniCalendarioControllo({
 {pagina === "consulta" && (
   <div style={{ minHeight: "70vh", display: "grid", placeItems: "start center", padding: 16 }}>
     <div style={{ width: "min(1100px, 100%)", display: "grid", gap: 18 }}>
-      <div
-        style={{
-          ...ui.card,
-          padding: 22,
-          display: "grid",
-          gap: 10,
-          border: "1px solid rgba(79,70,229,0.18)",
-          background:
-            "linear-gradient(180deg, rgba(79,70,229,0.12), rgba(255,255,255,0.94))",
-          boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
-        }}
-      >
+      {consultaSezione === "menu" ? (
+        <>
+          <div
+            style={{
+              ...ui.card,
+              padding: 22,
+              display: "grid",
+              gap: 10,
+              border: "1px solid rgba(79,70,229,0.18)",
+              background:
+                "linear-gradient(180deg, rgba(79,70,229,0.12), rgba(255,255,255,0.94))",
+              boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 26,
+                fontWeight: 1000,
+                letterSpacing: -0.5,
+                color: "rgba(15,23,42,0.96)",
+              }}
+            >
+              Consulta
+            </div>
+
+            <div
+              style={{
+                fontSize: 14,
+                fontWeight: 800,
+                color: "rgba(15,23,42,0.72)",
+                lineHeight: 1.45,
+              }}
+            >
+              Area principale di consultazione dell’app. Da qui accederai a turni, finanza, eventi e archivio generale.
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+              gap: 16,
+            }}
+          >
+            <button
+              data-chip="1"
+              onClick={() => setConsultaSezione("turni")}
+              style={{
+                ...ui.card,
+                padding: 22,
+                textAlign: "left",
+                border: "1px solid rgba(249,115,22,0.18)",
+                background:
+                  "linear-gradient(180deg, rgba(249,115,22,0.12), rgba(255,255,255,0.94))",
+                boxShadow: "0 18px 40px rgba(249,115,22,0.10)",
+                cursor: "pointer",
+                display: "grid",
+                gap: 12,
+              }}
+            >
+              <div
+                style={{
+                  width: 54,
+                  height: 54,
+                  borderRadius: 18,
+                  display: "grid",
+                  placeItems: "center",
+                  background: "linear-gradient(180deg, rgba(249,115,22,0.94), rgba(234,88,12,0.90))",
+                  color: "white",
+                  fontSize: 24,
+                  boxShadow: "0 14px 28px rgba(249,115,22,0.20)",
+                }}
+              >
+                ⏰
+              </div>
+
+              <div>
+                <div
+                  style={{
+                    fontSize: 20,
+                    fontWeight: 1000,
+                    letterSpacing: -0.3,
+                    color: "rgba(15,23,42,0.96)",
+                  }}
+                >
+                  Turni
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 6,
+                    fontSize: 13,
+                    fontWeight: 800,
+                    opacity: 0.72,
+                    lineHeight: 1.45,
+                    color: "rgba(15,23,42,0.88)",
+                  }}
+                >
+                  Calendario mensile, riepiloghi e gestione completa dei turni
+                </div>
+              </div>
+            </button>
+
+            <button
+              data-chip="1"
+              onClick={() => setConsultaSezione("finanza")}
+              style={{
+                ...ui.card,
+                padding: 22,
+                textAlign: "left",
+                border: "1px solid rgba(16,185,129,0.18)",
+                background:
+                  "linear-gradient(180deg, rgba(16,185,129,0.12), rgba(255,255,255,0.94))",
+                boxShadow: "0 18px 40px rgba(16,185,129,0.10)",
+                cursor: "pointer",
+                display: "grid",
+                gap: 12,
+              }}
+            >
+              <div
+                style={{
+                  width: 54,
+                  height: 54,
+                  borderRadius: 18,
+                  display: "grid",
+                  placeItems: "center",
+                  background: "linear-gradient(180deg, rgba(16,185,129,0.94), rgba(5,150,105,0.90))",
+                  color: "white",
+                  fontSize: 24,
+                  boxShadow: "0 14px 28px rgba(16,185,129,0.20)",
+                }}
+              >
+                €
+              </div>
+
+              <div>
+                <div
+                  style={{
+                    fontSize: 20,
+                    fontWeight: 1000,
+                    letterSpacing: -0.3,
+                    color: "rgba(15,23,42,0.96)",
+                  }}
+                >
+                  Finanza
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 6,
+                    fontSize: 13,
+                    fontWeight: 800,
+                    opacity: 0.72,
+                    lineHeight: 1.45,
+                    color: "rgba(15,23,42,0.88)",
+                  }}
+                >
+                  Entrate, uscite, movimenti e riepiloghi economici
+                </div>
+              </div>
+            </button>
+
+            <button
+              data-chip="1"
+              onClick={() => setConsultaSezione("eventi")}
+              style={{
+                ...ui.card,
+                padding: 22,
+                textAlign: "left",
+                border: "1px solid rgba(79,70,229,0.18)",
+                background:
+                  "linear-gradient(180deg, rgba(79,70,229,0.12), rgba(255,255,255,0.94))",
+                boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
+                cursor: "pointer",
+                display: "grid",
+                gap: 12,
+              }}
+            >
+              <div
+                style={{
+                  width: 54,
+                  height: 54,
+                  borderRadius: 18,
+                  display: "grid",
+                  placeItems: "center",
+                  background: "linear-gradient(180deg, rgba(79,70,229,0.94), rgba(124,58,237,0.90))",
+                  color: "white",
+                  fontSize: 24,
+                  boxShadow: "0 14px 28px rgba(79,70,229,0.20)",
+                }}
+              >
+                🗓
+              </div>
+
+              <div>
+                <div
+                  style={{
+                    fontSize: 20,
+                    fontWeight: 1000,
+                    letterSpacing: -0.3,
+                    color: "rgba(15,23,42,0.96)",
+                  }}
+                >
+                  Eventi
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 6,
+                    fontSize: 13,
+                    fontWeight: 800,
+                    opacity: 0.72,
+                    lineHeight: 1.45,
+                    color: "rgba(15,23,42,0.88)",
+                  }}
+                >
+                  Eventi, promemoria e gestione del calendario eventi
+                </div>
+              </div>
+            </button>
+
+            <button
+              data-chip="1"
+              onClick={() => setConsultaSezione("archivio")}
+              style={{
+                ...ui.card,
+                padding: 22,
+                textAlign: "left",
+                border: "1px solid rgba(148,163,184,0.18)",
+                background:
+                  "linear-gradient(180deg, rgba(148,163,184,0.12), rgba(255,255,255,0.94))",
+                boxShadow: "0 18px 40px rgba(148,163,184,0.10)",
+                cursor: "pointer",
+                display: "grid",
+                gap: 12,
+              }}
+            >
+              <div
+                style={{
+                  width: 54,
+                  height: 54,
+                  borderRadius: 18,
+                  display: "grid",
+                  placeItems: "center",
+                  background: "linear-gradient(180deg, rgba(100,116,139,0.94), rgba(71,85,105,0.90))",
+                  color: "white",
+                  fontSize: 24,
+                  boxShadow: "0 14px 28px rgba(100,116,139,0.20)",
+                }}
+              >
+                🗂
+              </div>
+
+              <div>
+                <div
+                  style={{
+                    fontSize: 20,
+                    fontWeight: 1000,
+                    letterSpacing: -0.3,
+                    color: "rgba(15,23,42,0.96)",
+                  }}
+                >
+                  Archivio
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 6,
+                    fontSize: 13,
+                    fontWeight: 800,
+                    opacity: 0.72,
+                    lineHeight: 1.45,
+                    color: "rgba(15,23,42,0.88)",
+                  }}
+                >
+                  Archivio generale con storico dati e riepiloghi futuri
+                </div>
+              </div>
+            </button>
+          </div>
+        </>
+      ) : consultaSezione === "turni" ? (
+        <>
+          <div
+            style={{
+              ...ui.card,
+              padding: 22,
+              display: "grid",
+              gap: 12,
+              border: "1px solid rgba(249,115,22,0.18)",
+              background:
+                "linear-gradient(180deg, rgba(249,115,22,0.12), rgba(255,255,255,0.94))",
+              boxShadow: "0 18px 40px rgba(249,115,22,0.10)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 12,
+                flexWrap: "wrap",
+              }}
+            >
+              <div style={{ display: "grid", gap: 6 }}>
+                <div
+                  style={{
+                    fontSize: 24,
+                    fontWeight: 1000,
+                    letterSpacing: -0.4,
+                    color: "rgba(15,23,42,0.96)",
+                  }}
+                >
+                  Consulta turni
+                </div>
+
+                <div
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 800,
+                    color: "rgba(15,23,42,0.72)",
+                    lineHeight: 1.45,
+                  }}
+                >
+                  Calendario mensile turni con navigazione mese, riepilogo compatto e modifica rapida.
+                </div>
+              </div>
+
+              <button
+                data-chip="1"
+                onClick={() => setConsultaSezione("menu")}
+                style={chip(false)}
+              >
+                Torna a Consulta
+              </button>
+            </div>
+          </div>
+
+          <MiniCalendario
+            mese={meseCorrente}
+            vociDelMese={[]}
+            turniDelMese={turniMese}
+            onPrevMonth={mesePrecedente}
+            onNextMonth={meseSuccessivo}
+            onEditTurno={apriModificaTurno}
+          />
+
+          <div
+            style={{
+              maxWidth: 1060,
+              margin: "0 auto",
+              marginTop: 14,
+              display: "grid",
+              gap: 14,
+            }}
+          >
+            <div
+              style={{
+                ...ui.card,
+                padding: 18,
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
+                gap: 14,
+                border: "1px solid rgba(255,255,255,0.55)",
+                boxShadow: "0 18px 40px rgba(15,23,42,0.08)",
+                background:
+                  "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92))",
+              }}
+            >
+              <div
+                style={{
+                  padding: 16,
+                  borderRadius: 22,
+                  border: "1px solid rgba(14,165,233,0.14)",
+                  background:
+                    "linear-gradient(180deg, rgba(14,165,233,0.10), rgba(14,165,233,0.04))",
+                  boxShadow: "0 10px 24px rgba(14,165,233,0.08)",
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 950, opacity: 0.7, letterSpacing: 0.2 }}>
+                  Totale turni
+                </div>
+                <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000, lineHeight: 1 }}>
+                  {totaleTurniMese}
+                </div>
+                <div style={{ marginTop: 6, fontSize: 12, fontWeight: 800, opacity: 0.58 }}>
+                  Esclusi i riposi
+                </div>
+              </div>
+
+              <div
+                style={{
+                  padding: 16,
+                  borderRadius: 22,
+                  border: "1px solid rgba(16,185,129,0.14)",
+                  background:
+                    "linear-gradient(180deg, rgba(16,185,129,0.10), rgba(16,185,129,0.04))",
+                  boxShadow: "0 10px 24px rgba(16,185,129,0.08)",
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 950, opacity: 0.7, letterSpacing: 0.2 }}>
+                  Ore ordinarie
+                </div>
+                <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000, lineHeight: 1 }}>
+                  {formatNumeroOre(oreOrdMese)} h
+                </div>
+                <div style={{ marginTop: 6, fontSize: 12, fontWeight: 800, opacity: 0.58 }}>
+                  Monte ore base
+                </div>
+              </div>
+
+              <div
+                style={{
+                  padding: 16,
+                  borderRadius: 22,
+                  border: "1px solid rgba(249,115,22,0.14)",
+                  background:
+                    "linear-gradient(180deg, rgba(249,115,22,0.10), rgba(249,115,22,0.04))",
+                  boxShadow: "0 10px 24px rgba(249,115,22,0.08)",
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 950, opacity: 0.7, letterSpacing: 0.2 }}>
+                  Ore straordinarie
+                </div>
+                <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000, lineHeight: 1 }}>
+                  {formatNumeroOre(oreStraMese)} h
+                </div>
+                <div style={{ marginTop: 6, fontSize: 12, fontWeight: 800, opacity: 0.58 }}>
+                  Extra mensili
+                </div>
+              </div>
+
+              <div
+                style={{
+                  padding: 16,
+                  borderRadius: 22,
+                  border: "1px solid rgba(124,58,237,0.14)",
+                  background:
+                    "linear-gradient(180deg, rgba(124,58,237,0.10), rgba(124,58,237,0.04))",
+                  boxShadow: "0 10px 24px rgba(124,58,237,0.08)",
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 950, opacity: 0.7, letterSpacing: 0.2 }}>
+                  Ore totali
+                </div>
+                <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000, lineHeight: 1 }}>
+                  {formatNumeroOre(oreTotMese)} h
+                </div>
+                <div style={{ marginTop: 6, fontSize: 12, fontWeight: 800, opacity: 0.58 }}>
+                  Totale mese
+                </div>
+              </div>
+            </div>
+
+            <div
+              style={{
+                ...ui.card,
+                padding: 18,
+                display: "grid",
+                gap: 14,
+                border: "1px solid rgba(255,255,255,0.55)",
+                boxShadow: "0 18px 40px rgba(15,23,42,0.08)",
+                background:
+                  "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92))",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 12,
+                  flexWrap: "wrap",
+                }}
+              >
+                <div style={{ display: "grid", gap: 4 }}>
+                  <div style={{ fontSize: 18, fontWeight: 1000, letterSpacing: -0.3 }}>
+                    Monitoraggio ferie
+                  </div>
+                  <div style={{ fontSize: 12, fontWeight: 800, opacity: 0.62 }}>
+                    Base ferie personalizzabile: giorni e ore modificabili direttamente da qui
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: 999,
+                    border: "1px solid rgba(16,185,129,0.14)",
+                    background: "rgba(240,253,244,0.92)",
+                    fontSize: 12,
+                    fontWeight: 900,
+                    color: "rgba(21,128,61,0.95)",
+                    boxShadow: "0 8px 18px rgba(34,197,94,0.08)",
+                  }}
+                >
+                  Sigla calendario: F
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                  gap: 14,
+                }}
+              >
+                <div
+                  style={{
+                    padding: 16,
+                    borderRadius: 22,
+                    border: "1px solid rgba(59,130,246,0.14)",
+                    background:
+                      "linear-gradient(180deg, rgba(59,130,246,0.10), rgba(59,130,246,0.04))",
+                    boxShadow: "0 10px 24px rgba(59,130,246,0.08)",
+                  }}
+                >
+                  <div style={{ fontSize: 12, fontWeight: 950, opacity: 0.7, letterSpacing: 0.2 }}>
+                    Base ferie giorni
+                  </div>
+                  <input
+                    value={String(ferieTotaliGiorniBase)}
+                    onChange={(e) => {
+                      const n = Number(e.target.value);
+                      setFerieTotaliGiorniBase(Number.isFinite(n) && n >= 0 ? n : 0);
+                    }}
+                    inputMode="numeric"
+                    style={{
+                      ...inputLight(false),
+                      marginTop: 10,
+                      background: "rgba(255,255,255,0.92)",
+                      fontWeight: 900,
+                    }}
+                  />
+                </div>
+
+                <div
+                  style={{
+                    padding: 16,
+                    borderRadius: 22,
+                    border: "1px solid rgba(168,85,247,0.14)",
+                    background:
+                      "linear-gradient(180deg, rgba(168,85,247,0.10), rgba(168,85,247,0.04))",
+                    boxShadow: "0 10px 24px rgba(168,85,247,0.08)",
+                  }}
+                >
+                  <div style={{ fontSize: 12, fontWeight: 950, opacity: 0.7, letterSpacing: 0.2 }}>
+                    Base ferie ore
+                  </div>
+                  <input
+                    value={String(ferieTotaliOreBase)}
+                    onChange={(e) => {
+                      const n = Number(e.target.value.replace(",", "."));
+                      setFerieTotaliOreBase(Number.isFinite(n) && n >= 0 ? n : 0);
+                    }}
+                    inputMode="decimal"
+                    style={{
+                      ...inputLight(false),
+                      marginTop: 10,
+                      background: "rgba(255,255,255,0.92)",
+                      fontWeight: 900,
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
+                  gap: 14,
+                }}
+              >
+                <div
+                  style={{
+                    padding: 16,
+                    borderRadius: 22,
+                    border: "1px solid rgba(34,197,94,0.14)",
+                    background:
+                      "linear-gradient(180deg, rgba(34,197,94,0.10), rgba(34,197,94,0.04))",
+                    boxShadow: "0 10px 24px rgba(34,197,94,0.08)",
+                  }}
+                >
+                  <div style={{ fontSize: 12, fontWeight: 950, opacity: 0.7, letterSpacing: 0.2 }}>
+                    Giorni ferie effettuati
+                  </div>
+                  <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000, lineHeight: 1 }}>
+                    {ferieGiorniEffettuati}
+                  </div>
+                  <div style={{ marginTop: 6, fontSize: 12, fontWeight: 800, opacity: 0.58 }}>
+                    Conteggio automatico dai turni F
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    padding: 16,
+                    borderRadius: 22,
+                    border: "1px solid rgba(59,130,246,0.14)",
+                    background:
+                      "linear-gradient(180deg, rgba(59,130,246,0.10), rgba(59,130,246,0.04))",
+                    boxShadow: "0 10px 24px rgba(59,130,246,0.08)",
+                  }}
+                >
+                  <div style={{ fontSize: 12, fontWeight: 950, opacity: 0.7, letterSpacing: 0.2 }}>
+                    Giorni ferie residui
+                  </div>
+                  <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000, lineHeight: 1 }}>
+                    {ferieGiorniResidui}
+                  </div>
+                  <div style={{ marginTop: 6, fontSize: 12, fontWeight: 800, opacity: 0.58 }}>
+                    Somma ore ferie inserite
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    padding: 16,
+                    borderRadius: 22,
+                    border: "1px solid rgba(168,85,247,0.14)",
+                    background:
+                      "linear-gradient(180deg, rgba(168,85,247,0.10), rgba(168,85,247,0.04))",
+                    boxShadow: "0 10px 24px rgba(168,85,247,0.08)",
+                  }}
+                >
+                  <div style={{ fontSize: 12, fontWeight: 950, opacity: 0.7, letterSpacing: 0.2 }}>
+                    Ore ferie effettuate
+                  </div>
+                  <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000, lineHeight: 1 }}>
+                    {formatNumeroOre(ferieOreEffettuate)} h
+                  </div>
+                  <div style={{ marginTop: 6, fontSize: 12, fontWeight: 800, opacity: 0.58 }}>
+                    Valore ore ferie
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    padding: 16,
+                    borderRadius: 22,
+                    border: "1px solid rgba(244,114,182,0.14)",
+                    background:
+                      "linear-gradient(180deg, rgba(244,114,182,0.10), rgba(244,114,182,0.04))",
+                    boxShadow: "0 10px 24px rgba(244,114,182,0.08)",
+                  }}
+                >
+                  <div style={{ fontSize: 12, fontWeight: 950, opacity: 0.7, letterSpacing: 0.2 }}>
+                    Ore ferie residue
+                  </div>
+                  <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000, lineHeight: 1 }}>
+                    {formatNumeroOre(ferieOreResidue)} h
+                  </div>
+                  <div style={{ marginTop: 6, fontSize: 12, fontWeight: 800, opacity: 0.58 }}>
+                    Residuo calcolato automaticamente
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
         <div
           style={{
-            fontSize: 26,
-            fontWeight: 1000,
-            letterSpacing: -0.5,
-            color: "rgba(15,23,42,0.96)",
+            ...ui.card,
+            padding: 22,
+            fontSize: 16,
+            fontWeight: 900,
+            color: "rgba(15,23,42,0.82)",
           }}
         >
-          Consulta
+          Sezione in preparazione
         </div>
-
-        <div
-          style={{
-            fontSize: 14,
-            fontWeight: 800,
-            color: "rgba(15,23,42,0.72)",
-            lineHeight: 1.45,
-          }}
-        >
-          Area principale di consultazione dell’app. Da qui accederai a turni, finanza, eventi e archivio generale.
-        </div>
-      </div>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-          gap: 16,
-        }}
-      >
-        <button
-          data-chip="1"
-          style={{
-            ...ui.card,
-            padding: 22,
-            textAlign: "left",
-            border: "1px solid rgba(249,115,22,0.18)",
-            background:
-              "linear-gradient(180deg, rgba(249,115,22,0.12), rgba(255,255,255,0.94))",
-            boxShadow: "0 18px 40px rgba(249,115,22,0.10)",
-            cursor: "pointer",
-            display: "grid",
-            gap: 12,
-          }}
-        >
-          <div
-            style={{
-              width: 54,
-              height: 54,
-              borderRadius: 18,
-              display: "grid",
-              placeItems: "center",
-              background: "linear-gradient(180deg, rgba(249,115,22,0.94), rgba(234,88,12,0.90))",
-              color: "white",
-              fontSize: 24,
-              boxShadow: "0 14px 28px rgba(249,115,22,0.20)",
-            }}
-          >
-            ⏰
-          </div>
-
-          <div>
-            <div
-              style={{
-                fontSize: 20,
-                fontWeight: 1000,
-                letterSpacing: -0.3,
-                color: "rgba(15,23,42,0.96)",
-              }}
-            >
-              Turni
-            </div>
-
-            <div
-              style={{
-                marginTop: 6,
-                fontSize: 13,
-                fontWeight: 800,
-                opacity: 0.72,
-                lineHeight: 1.45,
-                color: "rgba(15,23,42,0.88)",
-              }}
-            >
-              Calendario mensile, riepiloghi e gestione completa dei turni
-            </div>
-          </div>
-        </button>
-
-        <button
-          data-chip="1"
-          style={{
-            ...ui.card,
-            padding: 22,
-            textAlign: "left",
-            border: "1px solid rgba(16,185,129,0.18)",
-            background:
-              "linear-gradient(180deg, rgba(16,185,129,0.12), rgba(255,255,255,0.94))",
-            boxShadow: "0 18px 40px rgba(16,185,129,0.10)",
-            cursor: "pointer",
-            display: "grid",
-            gap: 12,
-          }}
-        >
-          <div
-            style={{
-              width: 54,
-              height: 54,
-              borderRadius: 18,
-              display: "grid",
-              placeItems: "center",
-              background: "linear-gradient(180deg, rgba(16,185,129,0.94), rgba(5,150,105,0.90))",
-              color: "white",
-              fontSize: 24,
-              boxShadow: "0 14px 28px rgba(16,185,129,0.20)",
-            }}
-          >
-            €
-          </div>
-
-          <div>
-            <div
-              style={{
-                fontSize: 20,
-                fontWeight: 1000,
-                letterSpacing: -0.3,
-                color: "rgba(15,23,42,0.96)",
-              }}
-            >
-              Finanza
-            </div>
-
-            <div
-              style={{
-                marginTop: 6,
-                fontSize: 13,
-                fontWeight: 800,
-                opacity: 0.72,
-                lineHeight: 1.45,
-                color: "rgba(15,23,42,0.88)",
-              }}
-            >
-              Entrate, uscite, movimenti e riepiloghi economici
-            </div>
-          </div>
-        </button>
-
-        <button
-          data-chip="1"
-          style={{
-            ...ui.card,
-            padding: 22,
-            textAlign: "left",
-            border: "1px solid rgba(79,70,229,0.18)",
-            background:
-              "linear-gradient(180deg, rgba(79,70,229,0.12), rgba(255,255,255,0.94))",
-            boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
-            cursor: "pointer",
-            display: "grid",
-            gap: 12,
-          }}
-        >
-          <div
-            style={{
-              width: 54,
-              height: 54,
-              borderRadius: 18,
-              display: "grid",
-              placeItems: "center",
-              background: "linear-gradient(180deg, rgba(79,70,229,0.94), rgba(124,58,237,0.90))",
-              color: "white",
-              fontSize: 24,
-              boxShadow: "0 14px 28px rgba(79,70,229,0.20)",
-            }}
-          >
-            🗓
-          </div>
-
-          <div>
-            <div
-              style={{
-                fontSize: 20,
-                fontWeight: 1000,
-                letterSpacing: -0.3,
-                color: "rgba(15,23,42,0.96)",
-              }}
-            >
-              Eventi
-            </div>
-
-            <div
-              style={{
-                marginTop: 6,
-                fontSize: 13,
-                fontWeight: 800,
-                opacity: 0.72,
-                lineHeight: 1.45,
-                color: "rgba(15,23,42,0.88)",
-              }}
-            >
-              Eventi, promemoria e gestione del calendario eventi
-            </div>
-          </div>
-        </button>
-
-        <button
-          data-chip="1"
-          style={{
-            ...ui.card,
-            padding: 22,
-            textAlign: "left",
-            border: "1px solid rgba(148,163,184,0.18)",
-            background:
-              "linear-gradient(180deg, rgba(148,163,184,0.12), rgba(255,255,255,0.94))",
-            boxShadow: "0 18px 40px rgba(148,163,184,0.10)",
-            cursor: "pointer",
-            display: "grid",
-            gap: 12,
-          }}
-        >
-          <div
-            style={{
-              width: 54,
-              height: 54,
-              borderRadius: 18,
-              display: "grid",
-              placeItems: "center",
-              background: "linear-gradient(180deg, rgba(100,116,139,0.94), rgba(71,85,105,0.90))",
-              color: "white",
-              fontSize: 24,
-              boxShadow: "0 14px 28px rgba(100,116,139,0.20)",
-            }}
-          >
-            🗂
-          </div>
-
-          <div>
-            <div
-              style={{
-                fontSize: 20,
-                fontWeight: 1000,
-                letterSpacing: -0.3,
-                color: "rgba(15,23,42,0.96)",
-              }}
-            >
-              Archivio
-            </div>
-
-            <div
-              style={{
-                marginTop: 6,
-                fontSize: 13,
-                fontWeight: 800,
-                opacity: 0.72,
-                lineHeight: 1.45,
-                color: "rgba(15,23,42,0.88)",
-              }}
-            >
-              Archivio generale con storico dati e riepiloghi futuri
-            </div>
-          </div>
-        </button>
-      </div>
+      )}
     </div>
   </div>
 )}
