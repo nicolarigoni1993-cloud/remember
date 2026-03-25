@@ -1561,537 +1561,6 @@ void eliminaTurno;
 
 
 
-function ConsultaCalendarioTurniModern({
-  mese,
-  turniDelMese,
-  onPrevMonth,
-  onNextMonth,
-  onEditTurno,
-  onAddTurno,
-}: {
-  mese: Date;
-  turniDelMese: Turno[];
-  onPrevMonth: () => void;
-  onNextMonth: () => void;
-  onEditTurno: (turno: Turno) => void;
-  onAddTurno: (data: string) => void;
-}) {
-  const [isTouchDevice, setIsTouchDevice] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return (
-      window.matchMedia("(hover: none)").matches ||
-      window.matchMedia("(pointer: coarse)").matches ||
-      "ontouchstart" in window ||
-      window.innerWidth <= 820
-    );
-  });
-
-  useEffect(() => {
-    let raf = 0;
-
-    const checkTouch = () => {
-      cancelAnimationFrame(raf);
-      raf = window.requestAnimationFrame(() => {
-        const touch =
-          window.matchMedia("(hover: none)").matches ||
-          window.matchMedia("(pointer: coarse)").matches ||
-          "ontouchstart" in window ||
-          window.innerWidth <= 820;
-
-        setIsTouchDevice((prev) => (prev !== touch ? touch : prev));
-      });
-    };
-
-    checkTouch();
-    window.addEventListener("resize", checkTouch, { passive: true });
-
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("resize", checkTouch);
-    };
-  }, []);
-
-  function keyFromDate(d: Date) {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${y}-${m}-${day}`;
-  }
-
-  const oggi = new Date();
-  const oggiKey = keyFromDate(oggi);
-
-  const y = mese.getFullYear();
-  const m0 = mese.getMonth();
-
-  const first = new Date(y, m0, 1);
-  const jsDay = first.getDay();
-  const offset = (jsDay + 6) % 7;
-
-  const dim = new Date(y, m0 + 1, 0).getDate();
-
-  const cells: Array<string | null> = [];
-  for (let i = 0; i < offset; i++) cells.push(null);
-  for (let d = 1; d <= dim; d++) cells.push(keyFromDate(new Date(y, m0, d)));
-  while (cells.length % 7 !== 0) cells.push(null);
-
-  const titoloMese = mese.toLocaleDateString("it-IT", {
-    month: "long",
-    year: "numeric",
-  });
-
-  const giorniSettimana = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
-
-  const turniPerData = useMemo(() => {
-    const map = new Map<string, Turno[]>();
-
-    for (const t of turniDelMese) {
-      const prev = map.get(t.data) ?? [];
-      prev.push(t);
-      map.set(t.data, prev);
-    }
-
-    for (const arr of map.values()) {
-      arr.sort((a, b) => a.inizio.localeCompare(b.inizio));
-    }
-
-    return map;
-  }, [turniDelMese]);
-
-  function getTurnoChipStyle(sigla: string): React.CSSProperties {
-    if (sigla === "R") {
-      return {
-        background: "linear-gradient(180deg, rgba(107,114,128,0.96), rgba(75,85,99,0.92))",
-        color: "white",
-      };
-    }
-
-    if (sigla === "F") {
-      return {
-        background: "linear-gradient(180deg, rgba(124,58,237,0.96), rgba(109,40,217,0.92))",
-        color: "white",
-      };
-    }
-
-    if (sigla === "A") {
-      return {
-        background: "linear-gradient(180deg, rgba(239,68,68,0.96), rgba(220,38,38,0.92))",
-        color: "white",
-      };
-    }
-
-    if (sigla === "N") {
-      return {
-        background: "linear-gradient(180deg, rgba(37,99,235,0.96), rgba(29,78,216,0.92))",
-        color: "white",
-      };
-    }
-
-    if (sigla === "M") {
-      return {
-        background: "linear-gradient(180deg, rgba(245,158,11,0.96), rgba(217,119,6,0.92))",
-        color: "white",
-      };
-    }
-
-    if (sigla === "P") {
-      return {
-        background: "linear-gradient(180deg, rgba(249,115,22,0.96), rgba(234,88,12,0.92))",
-        color: "white",
-      };
-    }
-
-    if (sigla === "S") {
-      return {
-        background: "linear-gradient(180deg, rgba(168,85,247,0.96), rgba(126,34,206,0.92))",
-        color: "white",
-      };
-    }
-
-    return {
-      background: "linear-gradient(180deg, rgba(59,130,246,0.96), rgba(37,99,235,0.92))",
-      color: "white",
-    };
-  }
-
-  const navBtnStyle: React.CSSProperties = {
-    width: isTouchDevice ? 42 : 50,
-    height: isTouchDevice ? 42 : 50,
-    borderRadius: isTouchDevice ? 16 : 18,
-    border: "1px solid rgba(255,255,255,0.68)",
-    background: "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(245,248,252,0.92))",
-    boxShadow: "0 12px 30px rgba(15,23,42,0.10), inset 0 1px 0 rgba(255,255,255,0.92)",
-    display: "grid",
-    placeItems: "center",
-    cursor: "pointer",
-    color: "rgba(30,41,59,0.86)",
-    padding: 0,
-    flexShrink: 0,
-    outline: "none",
-    WebkitTapHighlightColor: "transparent",
-    backdropFilter: "blur(10px)",
-  };
-
-  return (
-    <div style={{ maxWidth: 1060, margin: "0 auto", marginTop: 14 }}>
-      <div
-        style={{
-          ...ui.card,
-          padding: isTouchDevice ? 12 : 18,
-          overflow: "hidden",
-          border: "1px solid rgba(255,255,255,0.58)",
-          background: "linear-gradient(180deg, rgba(255,255,255,0.97), rgba(248,250,252,0.95))",
-          boxShadow: "0 22px 56px rgba(15,23,42,0.14)",
-        }}
-      >
-        <div style={{ display: "grid", gap: 14 }}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: isTouchDevice ? "42px minmax(0, 1fr) 42px" : "50px 1fr 50px",
-              alignItems: "center",
-              gap: isTouchDevice ? 10 : 14,
-            }}
-          >
-            <button
-              type="button"
-              onClick={onPrevMonth}
-              style={navBtnStyle}
-              title="Mese precedente"
-              aria-label="Mese precedente"
-            >
-              <span
-                style={{
-                  position: "relative",
-                  display: "block",
-                  width: isTouchDevice ? 15 : 18,
-                  height: isTouchDevice ? 15 : 18,
-                }}
-              >
-                <span
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    margin: "auto",
-                    width: isTouchDevice ? 9 : 10,
-                    height: isTouchDevice ? 9 : 10,
-                    borderLeft: "2.6px solid currentColor",
-                    borderBottom: "2.6px solid currentColor",
-                    transform: "rotate(45deg)",
-                    borderRadius: 1,
-                    boxSizing: "border-box",
-                  }}
-                />
-              </span>
-            </button>
-
-            <div style={{ textAlign: "center", minWidth: 0 }}>
-              <div
-                style={{
-                  fontSize: isTouchDevice ? 20 : 30,
-                  fontWeight: 1000,
-                  letterSpacing: -0.8,
-                  textTransform: "capitalize",
-                  color: "rgba(15,23,42,0.98)",
-                  lineHeight: 1.05,
-                }}
-              >
-                {titoloMese}
-              </div>
-
-              <div
-                style={{
-                  marginTop: 4,
-                  fontSize: isTouchDevice ? 11 : 12,
-                  fontWeight: 850,
-                  color: "rgba(15,23,42,0.58)",
-                }}
-              >
-                Tocca un giorno per aggiungere o modificare il turno
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={onNextMonth}
-              style={navBtnStyle}
-              title="Mese successivo"
-              aria-label="Mese successivo"
-            >
-              <span
-                style={{
-                  position: "relative",
-                  display: "block",
-                  width: isTouchDevice ? 15 : 18,
-                  height: isTouchDevice ? 15 : 18,
-                }}
-              >
-                <span
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    margin: "auto",
-                    width: isTouchDevice ? 9 : 10,
-                    height: isTouchDevice ? 9 : 10,
-                    borderTop: "2.6px solid currentColor",
-                    borderRight: "2.6px solid currentColor",
-                    transform: "rotate(45deg)",
-                    borderRadius: 1,
-                    boxSizing: "border-box",
-                  }}
-                />
-              </span>
-            </button>
-          </div>
-
-          <div
-            style={{
-              borderRadius: 26,
-              border: "1px solid rgba(99,102,241,0.10)",
-              background: "linear-gradient(180deg, rgba(238,242,255,0.72), rgba(255,255,255,0.82))",
-              padding: isTouchDevice ? 10 : 14,
-              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.9)",
-            }}
-          >
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
-                gap: isTouchDevice ? 6 : 10,
-                marginBottom: isTouchDevice ? 8 : 10,
-              }}
-            >
-              {giorniSettimana.map((g, idx) => {
-                const weekend = idx >= 5;
-
-                return (
-                  <div
-                    key={g}
-                    style={{
-                      textAlign: "center",
-                      fontSize: isTouchDevice ? 10 : 12,
-                      fontWeight: 950,
-                      letterSpacing: 0.3,
-                      textTransform: "uppercase",
-                      color: weekend ? "rgba(220,38,38,0.82)" : "rgba(15,23,42,0.62)",
-                      padding: isTouchDevice ? "2px 0" : "4px 0",
-                    }}
-                  >
-                    {g}
-                  </div>
-                );
-              })}
-            </div>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
-                gap: isTouchDevice ? 6 : 10,
-              }}
-            >
-              {cells.map((key, idx) => {
-                if (!key) {
-                  return (
-                    <div
-                      key={`empty_${idx}`}
-                      style={{
-                        minHeight: isTouchDevice ? 74 : 112,
-                        borderRadius: 18,
-                        background: "transparent",
-                      }}
-                    />
-                  );
-                }
-
-                const dayNum = Number(key.slice(-2));
-                const dayTurni = turniPerData.get(key) ?? [];
-                const primoTurno = dayTurni[0] ?? null;
-                const countTurni = dayTurni.length;
-
-                const sigla = primoTurno
-                  ? normalizeTurnoLabel(primoTurno.inizio, primoTurno.fine, primoTurno.note)
-                  : "";
-
-                const descr = primoTurno
-                  ? descrizioneTurnoBreve(primoTurno.inizio, primoTurno.fine, primoTurno.note)
-                  : "";
-
-                const thisDate = new Date(
-                  Number(key.slice(0, 4)),
-                  Number(key.slice(5, 7)) - 1,
-                  Number(key.slice(8, 10))
-                );
-
-                const weekDay = thisDate.getDay();
-                const weekend = weekDay === 0 || weekDay === 6;
-                const isToday = key === oggiKey;
-
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => {
-                      if (primoTurno) {
-                        onEditTurno(primoTurno);
-                      } else {
-                        onAddTurno(key);
-                      }
-                    }}
-                    style={{
-                      minHeight: isTouchDevice ? 78 : 118,
-                      borderRadius: isTouchDevice ? 18 : 22,
-                      border: isToday
-                        ? "2px solid rgba(99,102,241,0.36)"
-                        : "1px solid rgba(15,23,42,0.08)",
-                      background: isToday
-                        ? "linear-gradient(180deg, rgba(238,242,255,1), rgba(255,255,255,0.98))"
-                        : "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96))",
-                      boxShadow: isToday
-                        ? "0 14px 30px rgba(99,102,241,0.14)"
-                        : "0 10px 20px rgba(15,23,42,0.06)",
-                      padding: isTouchDevice ? "8px 6px" : "10px 8px",
-                      display: "grid",
-                      alignContent: "space-between",
-                      justifyItems: "center",
-                      gap: 8,
-                      cursor: "pointer",
-                      textAlign: "center",
-                    }}
-                    title={key}
-                  >
-                    <div
-                      style={{
-                        width: "100%",
-                        display: "grid",
-                        gap: 4,
-                        justifyItems: "center",
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: isTouchDevice ? 20 : 26,
-                          fontWeight: 1000,
-                          lineHeight: 1,
-                          color: weekend ? "rgba(220,38,38,0.98)" : "rgba(21,128,61,0.98)",
-                        }}
-                      >
-                        {dayNum}
-                      </div>
-
-                      <div
-                        style={{
-                          minHeight: isTouchDevice ? 26 : 30,
-                          display: "grid",
-                          placeItems: "center",
-                        }}
-                      >
-                        {primoTurno ? (
-                          <div
-                            style={{
-                              minWidth: isTouchDevice ? 34 : 40,
-                              padding: isTouchDevice ? "5px 10px" : "6px 12px",
-                              borderRadius: 999,
-                              fontSize: isTouchDevice ? 12 : 13,
-                              fontWeight: 1000,
-                              letterSpacing: 0.2,
-                              boxShadow: "0 8px 16px rgba(15,23,42,0.12)",
-                              ...getTurnoChipStyle(sigla),
-                            }}
-                          >
-                            {sigla}
-                          </div>
-                        ) : (
-                          <div
-                            style={{
-                              fontSize: isTouchDevice ? 11 : 12,
-                              fontWeight: 900,
-                              color: "rgba(15,23,42,0.28)",
-                            }}
-                          >
-                            —
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div
-                      style={{
-                        width: "100%",
-                        display: "grid",
-                        gap: 2,
-                        justifyItems: "center",
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: isTouchDevice ? 10 : 11,
-                          fontWeight: 900,
-                          color: "rgba(15,23,42,0.72)",
-                          lineHeight: 1.2,
-                        }}
-                      >
-                        {primoTurno ? descr : "Aggiungi turno"}
-                      </div>
-
-                      {countTurni > 1 && (
-                        <div
-                          style={{
-                            fontSize: 10,
-                            fontWeight: 900,
-                            color: "rgba(79,70,229,0.92)",
-                          }}
-                        >
-                          +{countTurni - 1} altro
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              gap: 8,
-              flexWrap: "wrap",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 11,
-              fontWeight: 900,
-              color: "rgba(15,23,42,0.78)",
-              marginTop: 2,
-            }}
-          >
-            {[
-              { label: "N = Notte" },
-              { label: "M = Mattina" },
-              { label: "P = Pomeriggio" },
-              { label: "S = Sera" },
-              { label: "F = Ferie" },
-              { label: "R = Riposo" },
-              { label: "A = Assenza" },
-            ].map((item) => (
-              <span
-                key={item.label}
-                style={{
-                  padding: "6px 10px",
-                  borderRadius: 999,
-                  background: "rgba(255,255,255,0.88)",
-                  border: "1px solid rgba(15,23,42,0.08)",
-                }}
-              >
-                {item.label}
-              </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
   
 
 
@@ -3166,7 +2635,7 @@ const sx = useMemo(() => {
 
 
   
- function MiniCalendario({
+function MiniCalendario({
   mese,
   vociDelMese: _vociDelMese,
   turniDelMese,
@@ -3225,6 +2694,8 @@ const sx = useMemo(() => {
   const oggi = new Date();
   const oggiKey = ymd(oggi.getFullYear(), oggi.getMonth(), oggi.getDate());
 
+  const giorniSettimana = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
+
   const giorni: Array<string | null> = [];
   for (let i = 0; i < offset; i++) giorni.push(null);
   for (let d = 1; d <= dim; d++) giorni.push(ymd(y, m0, d));
@@ -3235,17 +2706,81 @@ const sx = useMemo(() => {
     year: "numeric",
   });
 
-  const giorniSettimana = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
+  const turniPerData = useMemo(() => {
+    const map = new Map<string, Turno[]>();
+
+    for (const t of turniDelMese) {
+      const prev = map.get(t.data) ?? [];
+      prev.push(t);
+      map.set(t.data, prev);
+    }
+
+    for (const arr of map.values()) {
+      arr.sort((a, b) => a.inizio.localeCompare(b.inizio));
+    }
+
+    return map;
+  }, [turniDelMese]);
+
+  function getTurnoChipStyle(sigla: string): React.CSSProperties {
+    if (sigla === "R") {
+      return {
+        background: "linear-gradient(180deg, rgba(107,114,128,0.96), rgba(75,85,99,0.92))",
+        color: "white",
+      };
+    }
+    if (sigla === "F") {
+      return {
+        background: "linear-gradient(180deg, rgba(124,58,237,0.96), rgba(109,40,217,0.92))",
+        color: "white",
+      };
+    }
+    if (sigla === "A") {
+      return {
+        background: "linear-gradient(180deg, rgba(239,68,68,0.96), rgba(220,38,38,0.92))",
+        color: "white",
+      };
+    }
+    if (sigla === "N") {
+      return {
+        background: "linear-gradient(180deg, rgba(37,99,235,0.96), rgba(29,78,216,0.92))",
+        color: "white",
+      };
+    }
+    if (sigla === "M") {
+      return {
+        background: "linear-gradient(180deg, rgba(245,158,11,0.96), rgba(217,119,6,0.92))",
+        color: "white",
+      };
+    }
+    if (sigla === "P") {
+      return {
+        background: "linear-gradient(180deg, rgba(249,115,22,0.96), rgba(234,88,12,0.92))",
+        color: "white",
+      };
+    }
+    if (sigla === "S") {
+      return {
+        background: "linear-gradient(180deg, rgba(168,85,247,0.96), rgba(126,34,206,0.92))",
+        color: "white",
+      };
+    }
+
+    return {
+      background: "linear-gradient(180deg, rgba(59,130,246,0.96), rgba(37,99,235,0.92))",
+      color: "white",
+    };
+  }
 
   const navBtnStyle: React.CSSProperties = {
-    width: isTouchDevice ? 42 : 50,
-    height: isTouchDevice ? 42 : 50,
-    borderRadius: isTouchDevice ? 16 : 20,
+    width: isTouchDevice ? 40 : 50,
+    height: isTouchDevice ? 40 : 50,
+    borderRadius: isTouchDevice ? 14 : 18,
     border: "1px solid rgba(255,255,255,0.68)",
     background:
       "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(245,248,252,0.92))",
     boxShadow:
-      "0 12px 30px rgba(15,23,42,0.10), inset 0 1px 0 rgba(255,255,255,0.92), inset 0 -1px 0 rgba(148,163,184,0.08)",
+      "0 12px 30px rgba(15,23,42,0.10), inset 0 1px 0 rgba(255,255,255,0.92)",
     display: "grid",
     placeItems: "center",
     cursor: "pointer",
@@ -3256,63 +2791,6 @@ const sx = useMemo(() => {
     WebkitTapHighlightColor: "transparent",
     backdropFilter: "blur(10px)",
   };
-
-  function getTurniGiorno(data: string) {
-    return turniDelMese
-      .filter((t) => t.data === data)
-      .slice()
-      .sort((a, b) => a.inizio.localeCompare(b.inizio));
-  }
-
-  function getTurnoColor(sigla: string) {
-    if (sigla === "R") {
-      return {
-        bg: "linear-gradient(180deg, rgba(107,114,128,0.96), rgba(75,85,99,0.92))",
-        text: "rgba(255,255,255,0.98)",
-      };
-    }
-    if (sigla === "F") {
-      return {
-        bg: "linear-gradient(180deg, rgba(124,58,237,0.96), rgba(109,40,217,0.92))",
-        text: "rgba(255,255,255,0.98)",
-      };
-    }
-    if (sigla === "A") {
-      return {
-        bg: "linear-gradient(180deg, rgba(239,68,68,0.96), rgba(220,38,38,0.92))",
-        text: "rgba(255,255,255,0.98)",
-      };
-    }
-    if (sigla === "N") {
-      return {
-        bg: "linear-gradient(180deg, rgba(37,99,235,0.96), rgba(29,78,216,0.92))",
-        text: "rgba(255,255,255,0.98)",
-      };
-    }
-    if (sigla === "M") {
-      return {
-        bg: "linear-gradient(180deg, rgba(245,158,11,0.96), rgba(217,119,6,0.92))",
-        text: "rgba(255,255,255,0.98)",
-      };
-    }
-    if (sigla === "P") {
-      return {
-        bg: "linear-gradient(180deg, rgba(249,115,22,0.96), rgba(234,88,12,0.92))",
-        text: "rgba(255,255,255,0.98)",
-      };
-    }
-    if (sigla === "S") {
-      return {
-        bg: "linear-gradient(180deg, rgba(168,85,247,0.96), rgba(126,34,206,0.92))",
-        text: "rgba(255,255,255,0.98)",
-      };
-    }
-
-    return {
-      bg: "linear-gradient(180deg, rgba(59,130,246,0.96), rgba(37,99,235,0.92))",
-      text: "rgba(255,255,255,0.98)",
-    };
-  }
 
   return (
     <div style={{ maxWidth: 1060, margin: "0 auto", marginTop: 14 }}>
@@ -3331,7 +2809,7 @@ const sx = useMemo(() => {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: isTouchDevice ? "42px minmax(0, 1fr) 42px" : "50px 1fr 50px",
+              gridTemplateColumns: isTouchDevice ? "40px minmax(0, 1fr) 40px" : "50px 1fr 50px",
               alignItems: "center",
               gap: isTouchDevice ? 10 : 14,
             }}
@@ -3347,8 +2825,8 @@ const sx = useMemo(() => {
                 style={{
                   position: "relative",
                   display: "block",
-                  width: isTouchDevice ? 15 : 18,
-                  height: isTouchDevice ? 15 : 18,
+                  width: isTouchDevice ? 14 : 18,
+                  height: isTouchDevice ? 14 : 18,
                 }}
               >
                 <span
@@ -3356,8 +2834,8 @@ const sx = useMemo(() => {
                     position: "absolute",
                     inset: 0,
                     margin: "auto",
-                    width: isTouchDevice ? 9 : 10,
-                    height: isTouchDevice ? 9 : 10,
+                    width: isTouchDevice ? 8 : 10,
+                    height: isTouchDevice ? 8 : 10,
                     borderLeft: "2.6px solid currentColor",
                     borderBottom: "2.6px solid currentColor",
                     transform: "rotate(45deg)",
@@ -3382,16 +2860,18 @@ const sx = useMemo(() => {
                 {titoloMese}
               </div>
 
-              <div
-                style={{
-                  marginTop: 4,
-                  fontSize: isTouchDevice ? 11 : 12,
-                  fontWeight: 850,
-                  color: "rgba(15,23,42,0.62)",
-                }}
-              >
-                Tocca un giorno per inserire o modificare
-              </div>
+              {!isTouchDevice && (
+                <div
+                  style={{
+                    marginTop: 4,
+                    fontSize: 12,
+                    fontWeight: 850,
+                    color: "rgba(15,23,42,0.62)",
+                  }}
+                >
+                  Clicca sul giorno per inserire o modificare il turno
+                </div>
+              )}
             </div>
 
             <button
@@ -3405,8 +2885,8 @@ const sx = useMemo(() => {
                 style={{
                   position: "relative",
                   display: "block",
-                  width: isTouchDevice ? 15 : 18,
-                  height: isTouchDevice ? 15 : 18,
+                  width: isTouchDevice ? 14 : 18,
+                  height: isTouchDevice ? 14 : 18,
                 }}
               >
                 <span
@@ -3414,8 +2894,8 @@ const sx = useMemo(() => {
                     position: "absolute",
                     inset: 0,
                     margin: "auto",
-                    width: isTouchDevice ? 9 : 10,
-                    height: isTouchDevice ? 9 : 10,
+                    width: isTouchDevice ? 8 : 10,
+                    height: isTouchDevice ? 8 : 10,
                     borderTop: "2.6px solid currentColor",
                     borderRight: "2.6px solid currentColor",
                     transform: "rotate(45deg)",
@@ -3479,8 +2959,9 @@ const sx = useMemo(() => {
                     <div
                       key={`empty_${idx}`}
                       style={{
-                        minHeight: isTouchDevice ? 58 : 110,
-                        borderRadius: 16,
+                        aspectRatio: "1 / 1",
+                        minHeight: isTouchDevice ? 44 : 90,
+                        borderRadius: isTouchDevice ? 14 : 20,
                         background: "transparent",
                       }}
                     />
@@ -3488,7 +2969,7 @@ const sx = useMemo(() => {
                 }
 
                 const d = Number(key.slice(-2));
-                const dayTurni = getTurniGiorno(key);
+                const dayTurni = turniPerData.get(key) ?? [];
                 const primoTurno = dayTurni[0] ?? null;
                 const countTurni = dayTurni.length;
                 const isToday = key === oggiKey;
@@ -3504,7 +2985,7 @@ const sx = useMemo(() => {
                   ? descrizioneTurnoBreve(primoTurno.inizio, primoTurno.fine, primoTurno.note)
                   : "";
 
-                const turnoStyle = sigla ? getTurnoColor(sigla) : null;
+                const turnoStyle = sigla ? getTurnoChipStyle(sigla) : null;
 
                 return (
                   <button
@@ -3519,8 +3000,9 @@ const sx = useMemo(() => {
                     }}
                     style={{
                       width: "100%",
-                      minHeight: isTouchDevice ? 64 : 114,
-                      borderRadius: isTouchDevice ? 16 : 22,
+                      aspectRatio: isTouchDevice ? "1 / 1.06" : "1 / 1.02",
+                      minHeight: isTouchDevice ? 54 : 108,
+                      borderRadius: isTouchDevice ? 14 : 22,
                       border: isToday
                         ? "2px solid rgba(99,102,241,0.34)"
                         : "1px solid rgba(15,23,42,0.08)",
@@ -3530,11 +3012,12 @@ const sx = useMemo(() => {
                       boxShadow: isToday
                         ? "0 12px 26px rgba(99,102,241,0.12)"
                         : "0 8px 18px rgba(15,23,42,0.05)",
-                      padding: isTouchDevice ? "6px 3px" : "10px 8px",
+                      padding: isTouchDevice ? "5px 3px" : "10px 8px",
                       display: "grid",
-                      alignContent: "space-between",
+                      gridTemplateRows: isTouchDevice ? "auto 1fr auto" : "auto 1fr auto",
+                      alignItems: "center",
                       justifyItems: "center",
-                      gap: isTouchDevice ? 4 : 8,
+                      gap: isTouchDevice ? 2 : 6,
                       cursor: "pointer",
                       textAlign: "center",
                     }}
@@ -3542,95 +3025,106 @@ const sx = useMemo(() => {
                   >
                     <div
                       style={{
+                        fontWeight: 1000,
+                        fontSize: isTouchDevice ? 15 : 26,
+                        lineHeight: 1,
+                        color: isWeekend ? "rgba(220,38,38,0.98)" : "rgba(21,128,61,0.98)",
+                        alignSelf: "start",
+                      }}
+                    >
+                      {d}
+                    </div>
+
+                    <div
+                      style={{
                         display: "grid",
-                        gap: isTouchDevice ? 2 : 4,
-                        justifyItems: "center",
+                        placeItems: "center",
+                        alignSelf: "center",
+                        minHeight: isTouchDevice ? 18 : 28,
                         width: "100%",
                       }}
                     >
-                      <div
-                        style={{
-                          fontWeight: 1000,
-                          fontSize: isTouchDevice ? 16 : 26,
-                          lineHeight: 1,
-                          color: isWeekend ? "rgba(220,38,38,0.98)" : "rgba(21,128,61,0.98)",
-                        }}
-                      >
-                        {d}
-                      </div>
-
-                      <div
-                        style={{
-                          minHeight: isTouchDevice ? 20 : 28,
-                          display: "grid",
-                          placeItems: "center",
-                          width: "100%",
-                        }}
-                      >
-                        {primoTurno ? (
-                          <div
-                            style={{
-                              minWidth: isTouchDevice ? 24 : 38,
-                              padding: isTouchDevice ? "3px 7px" : "6px 12px",
-                              borderRadius: 999,
-                              fontSize: isTouchDevice ? 10 : 13,
-                              fontWeight: 1000,
-                              letterSpacing: 0.2,
-                              boxShadow: "0 8px 16px rgba(15,23,42,0.12)",
-                              background: turnoStyle?.bg,
-                              color: turnoStyle?.text,
-                            }}
-                          >
-                            {sigla}
-                          </div>
-                        ) : (
-                          <div
-                            style={{
-                              fontSize: isTouchDevice ? 9 : 12,
-                              fontWeight: 900,
-                              color: "rgba(15,23,42,0.24)",
-                            }}
-                          >
-                            +
-                          </div>
-                        )}
-                      </div>
+                      {primoTurno ? (
+                        <div
+                          style={{
+                            minWidth: isTouchDevice ? 22 : 38,
+                            padding: isTouchDevice ? "3px 7px" : "6px 12px",
+                            borderRadius: 999,
+                            fontSize: isTouchDevice ? 10 : 13,
+                            fontWeight: 1000,
+                            letterSpacing: 0.2,
+                            boxShadow: "0 8px 16px rgba(15,23,42,0.12)",
+                            background: turnoStyle?.background,
+                            color: turnoStyle?.color,
+                          }}
+                        >
+                          {sigla}
+                        </div>
+                      ) : (
+                        <div
+                          style={{
+                            fontSize: isTouchDevice ? 11 : 14,
+                            fontWeight: 900,
+                            color: "rgba(15,23,42,0.24)",
+                          }}
+                        >
+                          +
+                        </div>
+                      )}
                     </div>
 
                     <div
                       style={{
                         width: "100%",
                         display: "grid",
-                        gap: 2,
+                        gap: 1,
                         justifyItems: "center",
+                        alignSelf: "end",
                       }}
                     >
-                      <div
-                        style={{
-                          fontSize: isTouchDevice ? 8 : 11,
-                          fontWeight: 900,
-                          color: "rgba(15,23,42,0.72)",
-                          lineHeight: 1.15,
-                          maxWidth: "100%",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: isTouchDevice ? "nowrap" : "normal",
-                        }}
-                      >
-                        {primoTurno ? desc : isTouchDevice ? "" : "Aggiungi turno"}
-                      </div>
+                      {!isTouchDevice ? (
+                        <>
+                          <div
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 900,
+                              color: "rgba(15,23,42,0.72)",
+                              lineHeight: 1.15,
+                              maxWidth: "100%",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {primoTurno ? desc : "Aggiungi turno"}
+                          </div>
 
-                      {countTurni > 1 && (
-                        <div
-                          style={{
-                            fontSize: isTouchDevice ? 8 : 10,
-                            fontWeight: 900,
-                            color: "rgba(79,70,229,0.92)",
-                            lineHeight: 1,
-                          }}
-                        >
-                          +{countTurni - 1}
-                        </div>
+                          {countTurni > 1 && (
+                            <div
+                              style={{
+                                fontSize: 10,
+                                fontWeight: 900,
+                                color: "rgba(79,70,229,0.92)",
+                                lineHeight: 1,
+                              }}
+                            >
+                              +{countTurni - 1} altri
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        countTurni > 1 && (
+                          <div
+                            style={{
+                              fontSize: 8,
+                              fontWeight: 900,
+                              color: "rgba(79,70,229,0.92)",
+                              lineHeight: 1,
+                            }}
+                          >
+                            +{countTurni - 1}
+                          </div>
+                        )
                       )}
                     </div>
                   </button>
@@ -3639,54 +3133,58 @@ const sx = useMemo(() => {
             </div>
           </div>
 
-          <div
-            style={{
-              marginTop: 6,
-              display: "flex",
-              gap: 8,
-              flexWrap: "wrap",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 11,
-              fontWeight: 900,
-              color: "rgba(15,23,42,0.78)",
-            }}
-          >
-            {[
-              "N = Notte",
-              "M = Mattina",
-              "P = Pomeriggio",
-              "S = Sera",
-              "F = Ferie",
-              "R = Riposo",
-              "A = Assenza",
-            ].map((label) => (
-              <span
-                key={label}
+          {!isTouchDevice && (
+            <>
+              <div
                 style={{
-                  padding: isTouchDevice ? "5px 8px" : "6px 10px",
-                  borderRadius: 999,
-                  background: "rgba(255,255,255,0.88)",
-                  border: "1px solid rgba(15,23,42,0.08)",
-                  fontSize: isTouchDevice ? 10 : 11,
+                  marginTop: 6,
+                  display: "flex",
+                  gap: 8,
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 11,
+                  fontWeight: 900,
+                  color: "rgba(15,23,42,0.78)",
                 }}
               >
-                {label}
-              </span>
-            ))}
-          </div>
+                {[
+                  "N = Notte",
+                  "M = Mattina",
+                  "P = Pomeriggio",
+                  "S = Sera",
+                  "F = Ferie",
+                  "R = Riposo",
+                  "A = Assenza",
+                ].map((label) => (
+                  <span
+                    key={label}
+                    style={{
+                      padding: "6px 10px",
+                      borderRadius: 999,
+                      background: "rgba(255,255,255,0.88)",
+                      border: "1px solid rgba(15,23,42,0.08)",
+                      fontSize: 11,
+                    }}
+                  >
+                    {label}
+                  </span>
+                ))}
+              </div>
 
-          <div
-            style={{
-              fontSize: 12,
-              fontWeight: 850,
-              color: "rgba(15,23,42,0.70)",
-              lineHeight: 1.35,
-              textAlign: "center",
-            }}
-          >
-            Tocca o clicca il giorno per aprire subito il turno esistente oppure crearne uno nuovo.
-          </div>
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 850,
+                  color: "rgba(15,23,42,0.70)",
+                  lineHeight: 1.35,
+                  textAlign: "center",
+                }}
+              >
+                Tocca o clicca il giorno per aprire subito il turno esistente oppure crearne uno nuovo.
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -6479,14 +5977,7 @@ function MiniCalendarioControllo({
             </div>
           </div>
 
-          <ConsultaCalendarioTurniModern
-            mese={meseCorrente}
-            turniDelMese={turniMese}
-            onPrevMonth={mesePrecedente}
-            onNextMonth={meseSuccessivo}
-            onEditTurno={apriModificaTurno}
-            onAddTurno={apriTurnoForm}
-          />
+     
 
           <div
             style={{
