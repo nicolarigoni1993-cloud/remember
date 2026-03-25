@@ -3168,7 +3168,7 @@ const sx = useMemo(() => {
   
  function MiniCalendario({
   mese,
-  vociDelMese,
+  vociDelMese: _vociDelMese,
   turniDelMese,
   onPrevMonth,
   onNextMonth,
