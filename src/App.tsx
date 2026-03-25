@@ -2085,12 +2085,12 @@ function ConsultaCalendarioTurniModern({
               >
                 {item.label}
               </span>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
+    );
   }
   
 
