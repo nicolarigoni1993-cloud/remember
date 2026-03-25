@@ -7898,7 +7898,7 @@ function MiniCalendarioControllo({
         style={{
           fontSize: 12,
           fontWeight: 800,
-          color: "rgba(15,23,42,0.68)",
+          color: "rgba(15,23,42,0.72)",
           lineHeight: 1.45,
         }}
       >
@@ -7933,10 +7933,10 @@ function MiniCalendarioControllo({
       style={{
         padding: 16,
         borderRadius: 22,
-        border: "1px solid rgba(59,130,246,0.22)",
+        border: "1px solid rgba(59,130,246,0.24)",
         background:
-          "linear-gradient(180deg, rgba(219,234,254,0.88), rgba(239,246,255,1))",
-        boxShadow: "0 10px 24px rgba(59,130,246,0.10)",
+          "linear-gradient(180deg, rgba(219,234,254,1), rgba(239,246,255,1))",
+        boxShadow: "0 10px 24px rgba(59,130,246,0.12)",
       }}
     >
       <div
@@ -7944,7 +7944,7 @@ function MiniCalendarioControllo({
           fontSize: 13,
           fontWeight: 950,
           letterSpacing: 0.2,
-          color: "rgba(30,64,175,0.96)",
+          color: "rgba(30,64,175,0.98)",
         }}
       >
         Base ferie giorni
@@ -7962,7 +7962,9 @@ function MiniCalendarioControllo({
           background: "rgba(255,255,255,1)",
           fontWeight: 900,
           color: "rgba(15,23,42,0.98)",
-          border: "1px solid rgba(59,130,246,0.20)",
+          WebkitTextFillColor: "rgba(15,23,42,0.98)",
+          caretColor: "rgba(15,23,42,0.98)",
+          border: "1px solid rgba(59,130,246,0.22)",
         }}
       />
     </div>
@@ -7971,10 +7973,10 @@ function MiniCalendarioControllo({
       style={{
         padding: 16,
         borderRadius: 22,
-        border: "1px solid rgba(168,85,247,0.22)",
+        border: "1px solid rgba(168,85,247,0.24)",
         background:
-          "linear-gradient(180deg, rgba(243,232,255,0.88), rgba(250,245,255,1))",
-        boxShadow: "0 10px 24px rgba(168,85,247,0.10)",
+          "linear-gradient(180deg, rgba(243,232,255,1), rgba(250,245,255,1))",
+        boxShadow: "0 10px 24px rgba(168,85,247,0.12)",
       }}
     >
       <div
@@ -7982,7 +7984,7 @@ function MiniCalendarioControllo({
           fontSize: 13,
           fontWeight: 950,
           letterSpacing: 0.2,
-          color: "rgba(107,33,168,0.96)",
+          color: "rgba(107,33,168,0.98)",
         }}
       >
         Base ferie ore
@@ -8000,7 +8002,9 @@ function MiniCalendarioControllo({
           background: "rgba(255,255,255,1)",
           fontWeight: 900,
           color: "rgba(15,23,42,0.98)",
-          border: "1px solid rgba(168,85,247,0.20)",
+          WebkitTextFillColor: "rgba(15,23,42,0.98)",
+          caretColor: "rgba(15,23,42,0.98)",
+          border: "1px solid rgba(168,85,247,0.22)",
         }}
       />
     </div>
@@ -8017,10 +8021,10 @@ function MiniCalendarioControllo({
       style={{
         padding: 16,
         borderRadius: 22,
-        border: "1px solid rgba(34,197,94,0.22)",
+        border: "1px solid rgba(34,197,94,0.24)",
         background:
-          "linear-gradient(180deg, rgba(220,252,231,0.88), rgba(240,253,244,1))",
-        boxShadow: "0 10px 24px rgba(34,197,94,0.10)",
+          "linear-gradient(180deg, rgba(220,252,231,1), rgba(240,253,244,1))",
+        boxShadow: "0 10px 24px rgba(34,197,94,0.12)",
       }}
     >
       <div
@@ -8028,7 +8032,7 @@ function MiniCalendarioControllo({
           fontSize: 13,
           fontWeight: 950,
           letterSpacing: 0.2,
-          color: "rgba(21,128,61,0.96)",
+          color: "rgba(21,128,61,0.98)",
         }}
       >
         Giorni ferie effettuati
@@ -8049,7 +8053,7 @@ function MiniCalendarioControllo({
           marginTop: 6,
           fontSize: 12,
           fontWeight: 800,
-          color: "rgba(15,23,42,0.70)",
+          color: "rgba(15,23,42,0.74)",
         }}
       >
         Conteggio automatico dai turni F
@@ -8060,10 +8064,10 @@ function MiniCalendarioControllo({
       style={{
         padding: 16,
         borderRadius: 22,
-        border: "1px solid rgba(59,130,246,0.22)",
+        border: "1px solid rgba(59,130,246,0.24)",
         background:
-          "linear-gradient(180deg, rgba(219,234,254,0.88), rgba(239,246,255,1))",
-        boxShadow: "0 10px 24px rgba(59,130,246,0.10)",
+          "linear-gradient(180deg, rgba(219,234,254,1), rgba(239,246,255,1))",
+        boxShadow: "0 10px 24px rgba(59,130,246,0.12)",
       }}
     >
       <div
@@ -8071,7 +8075,7 @@ function MiniCalendarioControllo({
           fontSize: 13,
           fontWeight: 950,
           letterSpacing: 0.2,
-          color: "rgba(30,64,175,0.96)",
+          color: "rgba(30,64,175,0.98)",
         }}
       >
         Giorni ferie residui
@@ -8092,7 +8096,7 @@ function MiniCalendarioControllo({
           marginTop: 6,
           fontSize: 12,
           fontWeight: 800,
-          color: "rgba(15,23,42,0.70)",
+          color: "rgba(15,23,42,0.74)",
         }}
       >
         Somma ore ferie inserite
@@ -8103,10 +8107,10 @@ function MiniCalendarioControllo({
       style={{
         padding: 16,
         borderRadius: 22,
-        border: "1px solid rgba(168,85,247,0.22)",
+        border: "1px solid rgba(168,85,247,0.24)",
         background:
-          "linear-gradient(180deg, rgba(243,232,255,0.88), rgba(250,245,255,1))",
-        boxShadow: "0 10px 24px rgba(168,85,247,0.10)",
+          "linear-gradient(180deg, rgba(243,232,255,1), rgba(250,245,255,1))",
+        boxShadow: "0 10px 24px rgba(168,85,247,0.12)",
       }}
     >
       <div
@@ -8114,7 +8118,7 @@ function MiniCalendarioControllo({
           fontSize: 13,
           fontWeight: 950,
           letterSpacing: 0.2,
-          color: "rgba(107,33,168,0.96)",
+          color: "rgba(107,33,168,0.98)",
         }}
       >
         Ore ferie effettuate
@@ -8135,7 +8139,7 @@ function MiniCalendarioControllo({
           marginTop: 6,
           fontSize: 12,
           fontWeight: 800,
-          color: "rgba(15,23,42,0.70)",
+          color: "rgba(15,23,42,0.74)",
         }}
       >
         Valore ore ferie
@@ -8146,10 +8150,10 @@ function MiniCalendarioControllo({
       style={{
         padding: 16,
         borderRadius: 22,
-        border: "1px solid rgba(244,114,182,0.22)",
+        border: "1px solid rgba(244,114,182,0.24)",
         background:
-          "linear-gradient(180deg, rgba(252,231,243,0.88), rgba(253,242,248,1))",
-        boxShadow: "0 10px 24px rgba(244,114,182,0.10)",
+          "linear-gradient(180deg, rgba(252,231,243,1), rgba(253,242,248,1))",
+        boxShadow: "0 10px 24px rgba(244,114,182,0.12)",
       }}
     >
       <div
@@ -8157,7 +8161,7 @@ function MiniCalendarioControllo({
           fontSize: 13,
           fontWeight: 950,
           letterSpacing: 0.2,
-          color: "rgba(190,24,93,0.96)",
+          color: "rgba(190,24,93,0.98)",
         }}
       >
         Ore ferie residue
@@ -8178,7 +8182,7 @@ function MiniCalendarioControllo({
           marginTop: 6,
           fontSize: 12,
           fontWeight: 800,
-          color: "rgba(15,23,42,0.70)",
+          color: "rgba(15,23,42,0.74)",
         }}
       >
         Residuo calcolato automaticamente
