@@ -2981,9 +2981,6 @@ function MiniCalendario({
                 const sigla = primoTurno
                   ? normalizeTurnoLabel(primoTurno.inizio, primoTurno.fine, primoTurno.note)
                   : "";
-                const desc = primoTurno
-                  ? descrizioneTurnoBreve(primoTurno.inizio, primoTurno.fine, primoTurno.note)
-                  : "";
 
                 const turnoStyle = sigla ? getTurnoChipStyle(sigla) : null;
 
@@ -3014,7 +3011,7 @@ function MiniCalendario({
                         : "0 8px 18px rgba(15,23,42,0.05)",
                       padding: isTouchDevice ? "5px 3px" : "10px 8px",
                       display: "grid",
-                      gridTemplateRows: isTouchDevice ? "auto 1fr auto" : "auto 1fr auto",
+                      gridTemplateRows: "auto 1fr auto",
                       alignItems: "center",
                       justifyItems: "center",
                       gap: isTouchDevice ? 2 : 6,
@@ -3082,49 +3079,17 @@ function MiniCalendario({
                         alignSelf: "end",
                       }}
                     >
-                      {!isTouchDevice ? (
-                        <>
-                          <div
-                            style={{
-                              fontSize: 11,
-                              fontWeight: 900,
-                              color: "rgba(15,23,42,0.72)",
-                              lineHeight: 1.15,
-                              maxWidth: "100%",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {primoTurno ? desc : "Aggiungi turno"}
-                          </div>
-
-                          {countTurni > 1 && (
-                            <div
-                              style={{
-                                fontSize: 10,
-                                fontWeight: 900,
-                                color: "rgba(79,70,229,0.92)",
-                                lineHeight: 1,
-                              }}
-                            >
-                              +{countTurni - 1} altri
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        countTurni > 1 && (
-                          <div
-                            style={{
-                              fontSize: 8,
-                              fontWeight: 900,
-                              color: "rgba(79,70,229,0.92)",
-                              lineHeight: 1,
-                            }}
-                          >
-                            +{countTurni - 1}
-                          </div>
-                        )
+                      {!isTouchDevice && countTurni > 1 && (
+                        <div
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 900,
+                            color: "rgba(79,70,229,0.92)",
+                            lineHeight: 1,
+                          }}
+                        >
+                          +{countTurni - 1} altri
+                        </div>
                       )}
                     </div>
                   </button>
@@ -7395,7 +7360,7 @@ function MiniCalendarioControllo({
 
 
 
-               {false && (
+               {turniMese.length > 0 && (
           <>
             <MiniCalendario
               mese={meseCorrente}
