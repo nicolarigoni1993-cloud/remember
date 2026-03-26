@@ -7379,8 +7379,6 @@ function MiniCalendarioControllo({
         gap: 14,
       }}
     >
-     
-
       <div
         style={{
           ...ui.card,
