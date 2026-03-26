@@ -7379,103 +7379,7 @@ function MiniCalendarioControllo({
         gap: 14,
       }}
     >
-      <div
-        style={{
-          ...ui.card,
-          padding: 18,
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
-          gap: 14,
-          border: "1px solid rgba(255,255,255,0.55)",
-          boxShadow: "0 18px 40px rgba(15,23,42,0.08)",
-          background:
-            "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92))",
-        }}
-      >
-        <div
-          style={{
-            padding: 16,
-            borderRadius: 22,
-            border: "1px solid rgba(14,165,233,0.14)",
-            background:
-              "linear-gradient(180deg, rgba(14,165,233,0.10), rgba(14,165,233,0.04))",
-            boxShadow: "0 10px 24px rgba(14,165,233,0.08)",
-          }}
-        >
-          <div style={{ fontSize: 12, fontWeight: 950, opacity: 0.7, letterSpacing: 0.2 }}>
-            Totale turni
-          </div>
-          <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000, lineHeight: 1 }}>
-            {totaleTurniMese}
-          </div>
-          <div style={{ marginTop: 6, fontSize: 12, fontWeight: 800, opacity: 0.58 }}>
-            Esclusi i riposi
-          </div>
-        </div>
-
-        <div
-          style={{
-            padding: 16,
-            borderRadius: 22,
-            border: "1px solid rgba(16,185,129,0.14)",
-            background:
-              "linear-gradient(180deg, rgba(16,185,129,0.10), rgba(16,185,129,0.04))",
-            boxShadow: "0 10px 24px rgba(16,185,129,0.08)",
-          }}
-        >
-          <div style={{ fontSize: 12, fontWeight: 950, opacity: 0.7, letterSpacing: 0.2 }}>
-            Ore ordinarie
-          </div>
-          <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000, lineHeight: 1 }}>
-            {formatNumeroOre(oreOrdMese)} h
-          </div>
-          <div style={{ marginTop: 6, fontSize: 12, fontWeight: 800, opacity: 0.58 }}>
-            Monte ore base
-          </div>
-        </div>
-
-        <div
-          style={{
-            padding: 16,
-            borderRadius: 22,
-            border: "1px solid rgba(249,115,22,0.14)",
-            background:
-              "linear-gradient(180deg, rgba(249,115,22,0.10), rgba(249,115,22,0.04))",
-            boxShadow: "0 10px 24px rgba(249,115,22,0.08)",
-          }}
-        >
-          <div style={{ fontSize: 12, fontWeight: 950, opacity: 0.7, letterSpacing: 0.2 }}>
-            Ore straordinarie
-          </div>
-          <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000, lineHeight: 1 }}>
-            {formatNumeroOre(oreStraMese)} h
-          </div>
-          <div style={{ marginTop: 6, fontSize: 12, fontWeight: 800, opacity: 0.58 }}>
-            Extra mensili
-          </div>
-        </div>
-
-        <div
-          style={{
-            padding: 16,
-            borderRadius: 22,
-            border: "1px solid rgba(124,58,237,0.14)",
-            background:
-              "linear-gradient(180deg, rgba(124,58,237,0.10), rgba(124,58,237,0.04))",
-            boxShadow: "0 10px 24px rgba(124,58,237,0.08)",
-          }}
-        >
-          <div style={{ fontSize: 12, fontWeight: 950, opacity: 0.7, letterSpacing: 0.2 }}>
-            Ore totali
-          </div>
-          <div style={{ marginTop: 8, fontSize: 24, fontWeight: 1000, lineHeight: 1 }}>
-            {formatNumeroOre(oreTotMese)} h
-          </div>
-          <div style={{ marginTop: 6, fontSize: 12, fontWeight: 800, opacity: 0.58 }}>
-            Totale mese
-          </div>
-        </div>
-      </div>
+     
 
       <div
         style={{
@@ -7808,6 +7712,26 @@ function MiniCalendarioControllo({
     </div>
   </>
 )}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 {false && renderAreaControllo()}
 
