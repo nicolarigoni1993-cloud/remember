@@ -7360,7 +7360,7 @@ function MiniCalendarioControllo({
 
 
 
-               {turniMese.length > 0 && (
+               {false && (
           <>
             <MiniCalendario
               mese={meseCorrente}
