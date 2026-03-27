@@ -6501,863 +6501,901 @@ function MiniCalendarioControllo({
 
 
 {pagina === "aggiungi" && (
-  <div style={{ maxWidth: 1060, margin: "0 auto", marginTop: 14, display: "grid", gap: 16 }}>
-    <div
-      style={{
-        display: "grid",
-        gap: 10,
-        justifyItems: "center",
-        textAlign: "center",
-        padding: "8px 6px 2px",
-      }}
-    >
+  <div style={{ minHeight: "70vh", display: "grid", placeItems: "start center", padding: 16 }}>
+    <div style={{ width: "min(1100px, 100%)", display: "grid", gap: 18 }}>
       <div
         style={{
-          fontSize: 34,
-          fontWeight: 1000,
-          letterSpacing: -0.8,
-          color: "rgba(241,245,249,0.98)",
-          textShadow: "0 12px 30px rgba(16,185,129,0.22)",
-          lineHeight: 1.05,
+          display: "grid",
+          gap: 10,
+          justifyItems: "center",
+          textAlign: "center",
+          padding: "8px 6px 2px",
         }}
       >
-        {aggiungiSezione === "menu"
-          ? "Aggiungi"
-          : aggiungiSezione === "movimenti"
-          ? "Entrata / Uscita"
-          : aggiungiSezione === "eventi"
-          ? "Evento"
-          : "Turno"}
+        <div
+          style={{
+            fontSize: 34,
+            fontWeight: 1000,
+            letterSpacing: -0.8,
+            color: "rgba(241,245,249,0.98)",
+            textShadow: "0 12px 30px rgba(16,185,129,0.22)",
+            lineHeight: 1.05,
+          }}
+        >
+          {aggiungiSezione === "menu"
+            ? "Aggiungi"
+            : aggiungiSezione === "movimenti"
+            ? "Entrata / Uscita"
+            : aggiungiSezione === "eventi"
+            ? "Evento"
+            : "Turno"}
+        </div>
+
+        <div
+          style={{
+            maxWidth: 760,
+            fontSize: 15,
+            fontWeight: 800,
+            color: "rgba(191,219,254,0.90)",
+            lineHeight: 1.5,
+            letterSpacing: 0.1,
+          }}
+        >
+          {aggiungiSezione === "menu"
+            ? "Scegli cosa vuoi inserire nell’app"
+            : aggiungiSezione === "movimenti"
+            ? "Inserisci entrate e uscite con categorie personalizzabili"
+            : aggiungiSezione === "eventi"
+            ? "Inserisci un evento semplice con descrizione, data e ora"
+            : "Inserisci un turno di lavoro, ferie o riposo"}
+        </div>
       </div>
 
       <div
         style={{
-          maxWidth: 760,
-          fontSize: 15,
-          fontWeight: 800,
-          color: "rgba(191,219,254,0.90)",
-          lineHeight: 1.5,
-          letterSpacing: 0.1,
+          ...ui.card,
+          padding: 22,
+          display: "grid",
+          gap: 12,
+          border: "1px solid rgba(16,185,129,0.18)",
+          background:
+            "linear-gradient(180deg, rgba(16,185,129,0.12), rgba(255,255,255,0.94))",
+          boxShadow: "0 18px 40px rgba(16,185,129,0.10)",
         }}
       >
-        {aggiungiSezione === "menu"
-          ? "Scegli cosa vuoi inserire nell’app"
-          : aggiungiSezione === "movimenti"
-          ? "Inserisci entrate e uscite con categorie personalizzabili"
-          : aggiungiSezione === "eventi"
-          ? "Inserisci un evento semplice con descrizione, data e ora"
-          : "Inserisci un turno di lavoro, ferie o riposo"}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 12,
+            flexWrap: "wrap",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+            <RememberLogo size={56} />
+
+            <div style={{ display: "grid", gap: 4 }}>
+              <div
+                style={{
+                  fontSize: 24,
+                  fontWeight: 1000,
+                  letterSpacing: -0.4,
+                  color: "rgba(15,23,42,0.96)",
+                }}
+              >
+                {aggiungiSezione === "menu"
+                  ? "Area aggiunta"
+                  : aggiungiSezione === "movimenti"
+                  ? "Inserimento movimenti"
+                  : aggiungiSezione === "eventi"
+                  ? "Inserimento evento"
+                  : "Inserimento turno"}
+              </div>
+
+              <div
+                style={{
+                  fontSize: 13,
+                  fontWeight: 800,
+                  color: "rgba(15,23,42,0.72)",
+                  lineHeight: 1.45,
+                }}
+              >
+                {aggiungiSezione === "menu"
+                  ? "Seleziona rapidamente cosa vuoi aggiungere nell’app."
+                  : aggiungiSezione === "movimenti"
+                  ? "Gestisci entrate e uscite in modo rapido e ordinato."
+                  : aggiungiSezione === "eventi"
+                  ? "Crea o modifica eventi, appuntamenti e scadenze."
+                  : "Apri il modulo dedicato per inserire o modificare i turni."}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {aggiungiSezione !== "menu" && (
+              <button
+                data-chip="1"
+                onClick={() => {
+                  resetForm();
+                  setAggiungiSezione("menu");
+                }}
+                style={chip(false)}
+              >
+                Torna ad Aggiungi
+              </button>
+            )}
+
+            <button
+              data-chip="1"
+              onClick={() => {
+                resetForm();
+                setAggiungiSezione("menu");
+                setPagina("home");
+              }}
+              style={chip(false)}
+            >
+              Torna Home
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <div
-      style={{
-        ...ui.card,
-        padding: 18,
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        gap: 12,
-        flexWrap: "wrap",
-      }}
-    >
-      <RememberLogo size={56} />
+      {aggiungiSezione === "menu" ? (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+            gap: 16,
+          }}
+        >
+          <button
+            data-chip="1"
+            onClick={() => setAggiungiSezione("movimenti")}
+            style={{
+              ...ui.card,
+              padding: 22,
+              textAlign: "left",
+              border: "1px solid rgba(16,185,129,0.18)",
+              background:
+                "linear-gradient(180deg, rgba(16,185,129,0.12), rgba(255,255,255,0.94))",
+              boxShadow: "0 18px 40px rgba(16,185,129,0.10)",
+              cursor: "pointer",
+              display: "grid",
+              gap: 12,
+            }}
+          >
+            <div
+              style={{
+                width: 54,
+                height: 54,
+                borderRadius: 18,
+                display: "grid",
+                placeItems: "center",
+                background: "linear-gradient(180deg, rgba(16,185,129,0.94), rgba(5,150,105,0.90))",
+                color: "white",
+                fontSize: 24,
+                boxShadow: "0 14px 28px rgba(16,185,129,0.20)",
+              }}
+            >
+              €
+            </div>
 
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-        {aggiungiSezione !== "menu" && (
+            <div>
+              <div
+                style={{
+                  fontSize: 20,
+                  fontWeight: 1000,
+                  letterSpacing: -0.3,
+                  color: "rgba(15,23,42,0.96)",
+                }}
+              >
+                Entrata / Uscita
+              </div>
+
+              <div
+                style={{
+                  marginTop: 6,
+                  fontSize: 13,
+                  fontWeight: 800,
+                  opacity: 0.72,
+                  lineHeight: 1.45,
+                  color: "rgba(15,23,42,0.88)",
+                }}
+              >
+                Nuova area dedicata ai movimenti economici
+              </div>
+            </div>
+          </button>
+
           <button
             data-chip="1"
             onClick={() => {
               resetForm();
-              setAggiungiSezione("menu");
+              setTipo("scadenza");
+              setAggiungiSezione("eventi");
             }}
-            style={chip(false)}
+            style={{
+              ...ui.card,
+              padding: 22,
+              textAlign: "left",
+              border: "1px solid rgba(79,70,229,0.18)",
+              background:
+                "linear-gradient(180deg, rgba(79,70,229,0.12), rgba(255,255,255,0.94))",
+              boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
+              cursor: "pointer",
+              display: "grid",
+              gap: 12,
+            }}
           >
-            Torna ad Aggiungi
-          </button>
-        )}
-
-        <button
-          data-chip="1"
-          onClick={() => {
-            resetForm();
-            setAggiungiSezione("menu");
-            setPagina("home");
-          }}
-          style={chip(false)}
-        >
-          Torna Home
-        </button>
-      </div>
-    </div>
-
-
-
-    
-{aggiungiSezione === "menu" ? (
-  <div
-    style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-      gap: 16,
-    }}
-    className="remember-grid-2"
-  >
-
-
-
-
-    
-    <button
-      data-chip="1"
-      onClick={() => setAggiungiSezione("movimenti")}
-      style={{
-        ...ui.card,
-        padding: 22,
-        textAlign: "left",
-        border: "1px solid rgba(16,185,129,0.18)",
-        background:
-          "linear-gradient(180deg, rgba(16,185,129,0.12), rgba(255,255,255,0.94))",
-        boxShadow: "0 18px 40px rgba(16,185,129,0.10)",
-        cursor: "pointer",
-        display: "grid",
-        gap: 12,
-      }}
-    >
-      <div
-        style={{
-          width: 54,
-          height: 54,
-          borderRadius: 18,
-          display: "grid",
-          placeItems: "center",
-          background: "linear-gradient(180deg, rgba(16,185,129,0.94), rgba(5,150,105,0.90))",
-          color: "white",
-          fontSize: 24,
-          boxShadow: "0 14px 28px rgba(16,185,129,0.20)",
-        }}
-      >
-        €
-      </div>
-
-      <div>
-        <div
-          style={{
-            fontSize: 20,
-            fontWeight: 1000,
-            letterSpacing: -0.3,
-            color: "rgba(15,23,42,0.96)",
-          }}
-        >
-          Entrata / Uscita
-        </div>
-
-        <div
-          style={{
-            marginTop: 6,
-            fontSize: 13,
-            fontWeight: 800,
-            opacity: 0.72,
-            lineHeight: 1.45,
-            color: "rgba(15,23,42,0.88)",
-          }}
-        >
-          Nuova area dedicata ai movimenti economici
-        </div>
-      </div>
-    </button>
-
-    <button
-      data-chip="1"
-      onClick={() => {
-        resetForm();
-        setTipo("scadenza");
-        setAggiungiSezione("eventi");
-      }}
-      style={{
-        ...ui.card,
-        padding: 22,
-        textAlign: "left",
-        border: "1px solid rgba(79,70,229,0.18)",
-        background:
-          "linear-gradient(180deg, rgba(79,70,229,0.12), rgba(255,255,255,0.94))",
-        boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
-        cursor: "pointer",
-        display: "grid",
-        gap: 12,
-      }}
-    >
-      <div
-        style={{
-          width: 54,
-          height: 54,
-          borderRadius: 18,
-          display: "grid",
-          placeItems: "center",
-          background: "linear-gradient(180deg, rgba(79,70,229,0.94), rgba(124,58,237,0.90))",
-          color: "white",
-          fontSize: 24,
-          boxShadow: "0 14px 28px rgba(79,70,229,0.20)",
-        }}
-      >
-        🗓
-      </div>
-
-      <div>
-        <div
-          style={{
-            fontSize: 20,
-            fontWeight: 1000,
-            letterSpacing: -0.3,
-            color: "rgba(15,23,42,0.96)",
-          }}
-        >
-          Appuntamento / Scadenza
-        </div>
-
-        <div
-          style={{
-            marginTop: 6,
-            fontSize: 13,
-            fontWeight: 800,
-            opacity: 0.72,
-            lineHeight: 1.45,
-            color: "rgba(15,23,42,0.88)",
-          }}
-        >
-          Nuova area dedicata a promemoria, appuntamenti e scadenze
-        </div>
-      </div>
-    </button>
-
-    <button
-      data-chip="1"
-      onClick={() => apriTurnoForm()}
-      style={{
-        ...ui.card,
-        padding: 22,
-        textAlign: "left",
-        border: "1px solid rgba(249,115,22,0.18)",
-        background:
-          "linear-gradient(180deg, rgba(249,115,22,0.12), rgba(255,255,255,0.94))",
-        boxShadow: "0 18px 40px rgba(249,115,22,0.10)",
-        cursor: "pointer",
-        display: "grid",
-        gap: 12,
-      }}
-    >
-      <div
-        style={{
-          width: 54,
-          height: 54,
-          borderRadius: 18,
-          display: "grid",
-          placeItems: "center",
-          background: "linear-gradient(180deg, rgba(249,115,22,0.94), rgba(234,88,12,0.90))",
-          color: "white",
-          fontSize: 24,
-          boxShadow: "0 14px 28px rgba(249,115,22,0.20)",
-        }}
-      >
-        ⏰
-      </div>
-
-      <div>
-        <div
-          style={{
-            fontSize: 20,
-            fontWeight: 1000,
-            letterSpacing: -0.3,
-            color: "rgba(15,23,42,0.96)",
-          }}
-        >
-          Turno
-        </div>
-
-        <div
-          style={{
-            marginTop: 6,
-            fontSize: 13,
-            fontWeight: 800,
-            opacity: 0.72,
-            lineHeight: 1.45,
-            color: "rgba(15,23,42,0.88)",
-          }}
-        >
-          Inserisci un nuovo turno di lavoro, ferie o riposo
-        </div>
-      </div>
-    </button>
-
-  </div>
-) : aggiungiSezione === "movimenti" ? (
-  <div
-    style={{
-      ...ui.card,
-      padding: 22,
-      border: "1px solid rgba(16,185,129,0.18)",
-      background:
-        "linear-gradient(180deg, rgba(16,185,129,0.12), rgba(255,255,255,0.94))",
-      boxShadow: "0 18px 40px rgba(16,185,129,0.10)",
-      display: "grid",
-      gap: 16,
-    }}
-  >
-    <div
-      style={{
-        display: "grid",
-        gap: 8,
-      }}
-    >
-      <div
-        style={{
-          fontSize: 20,
-          fontWeight: 1000,
-          letterSpacing: -0.3,
-          color: "rgba(15,23,42,0.96)",
-        }}
-      >
-        Area movimenti economici
-      </div>
-
-      <div
-        style={{
-          fontSize: 13,
-          fontWeight: 800,
-          color: "rgba(15,23,42,0.72)",
-          lineHeight: 1.45,
-        }}
-      >
-        Inserisci entrate e uscite con categorie, importi e note. Le categorie personalizzate restano salvate.
-      </div>
-    </div>
-
-    <div style={{ display: "grid", gap: 12 }}>
-      <button
-        type="button"
-        title="Apri o chiudi form entrata"
-        onClick={() => setMovimentoAperto((prev) => (prev === "entrata" ? null : "entrata"))}
-        style={{
-          border: "none",
-          borderRadius: 20,
-          padding: "16px 18px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-          cursor: "pointer",
-          color: "white",
-          fontWeight: 1000,
-          fontSize: 18,
-          background:
-            "linear-gradient(180deg, rgba(34,197,94,0.98), rgba(22,163,74,0.95))",
-          boxShadow: "0 18px 34px rgba(34,197,94,0.20)",
-        }}
-      >
-        <span>Entrata</span>
-        <span style={{ fontSize: 22 }}>{movimentoAperto === "entrata" ? "−" : "+"}</span>
-      </button>
-
-
-
-
-
-
-
-
-
-
-
-
-      {movimentoAperto === "entrata" && (
-        <div
-          style={{
-            background: "rgba(255,255,255,0.10)",
-            border: "1px solid rgba(16,185,129,0.16)",
-            borderRadius: 20,
-            padding: 16,
-            display: "grid",
-            gap: 12,
-            boxShadow: "0 10px 28px rgba(16,185,129,0.10)",
-          }}
-        >
-          <div style={{ display: "grid", gap: 8 }}>
-            <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>Data</label>
-            <input
-              type="date"
-              value={nuovaEntrataData}
-              onChange={(e) => setNuovaEntrataData(e.target.value)}
-              style={inputLight(false)}
-            />
-          </div>
-
-          <div style={{ display: "grid", gap: 8 }}>
-            <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>Categoria</label>
-            <select
-              value={categoriaEntrata}
-              onChange={(e) => setCategoriaEntrata(e.target.value)}
-              style={inputLight(false)}
+            <div
+              style={{
+                width: 54,
+                height: 54,
+                borderRadius: 18,
+                display: "grid",
+                placeItems: "center",
+                background: "linear-gradient(180deg, rgba(79,70,229,0.94), rgba(124,58,237,0.90))",
+                color: "white",
+                fontSize: 24,
+                boxShadow: "0 14px 28px rgba(79,70,229,0.20)",
+              }}
             >
-              <option value="">Seleziona categoria</option>
-              {categorieEntrataBase.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-              {categorieEntrataCustom.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-              <option value="__altro__">Altro...</option>
-            </select>
-          </div>
-
-          {categoriaEntrata === "__altro__" && (
-            <div style={{ display: "grid", gap: 8 }}>
-              <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>
-                Nuova categoria personalizzata
-              </label>
-              <input
-                type="text"
-                value={nuovaCategoriaEntrata}
-                onChange={(e) => setNuovaCategoriaEntrata(e.target.value)}
-                placeholder="Scrivi una nuova categoria"
-                style={inputLight(false)}
-              />
+              🗓
             </div>
-          )}
 
-          <div style={{ display: "grid", gap: 8 }}>
-            <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>
-              Nota facoltativa
-            </label>
-            <input
-              type="text"
-              value={nuovaEntrataDesc}
-              onChange={(e) => setNuovaEntrataDesc(e.target.value)}
-              placeholder="Es. bonus marzo, regalo, rimborso..."
-              style={inputLight(false)}
-            />
-          </div>
-
-          <div style={{ display: "grid", gap: 8 }}>
-            <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>Importo</label>
-            <input
-              type="number"
-              inputMode="decimal"
-              step="0.01"
-              value={nuovaEntrataImporto}
-              onChange={(e) => setNuovaEntrataImporto(e.target.value)}
-              placeholder="0,00"
-              style={inputLight(false)}
-            />
-          </div>
-
-          <button
-            type="button"
-            onClick={aggiungiEntrataExtra}
-            style={{
-              border: "none",
-              borderRadius: 16,
-              padding: "14px 16px",
-              fontSize: 15,
-              fontWeight: 1000,
-              cursor: "pointer",
-              color: "white",
-              background:
-                "linear-gradient(180deg, rgba(34,197,94,0.98), rgba(22,163,74,0.95))",
-              boxShadow: "0 18px 34px rgba(34,197,94,0.20)",
-            }}
-          >
-            + Aggiungi Entrata
-          </button>
-        </div>
-      )}
-
-      <button
-        type="button"
-        title="Apri o chiudi form uscita"
-        onClick={() => setMovimentoAperto((prev) => (prev === "uscita" ? null : "uscita"))}
-        style={{
-          border: "none",
-          borderRadius: 20,
-          padding: "16px 18px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-          cursor: "pointer",
-          color: "white",
-          fontWeight: 1000,
-          fontSize: 18,
-          background:
-            "linear-gradient(180deg, rgba(239,68,68,0.98), rgba(220,38,38,0.95))",
-          boxShadow: "0 18px 34px rgba(239,68,68,0.20)",
-        }}
-      >
-        <span>Uscita</span>
-        <span style={{ fontSize: 22 }}>{movimentoAperto === "uscita" ? "−" : "+"}</span>
-      </button>
-
-      {movimentoAperto === "uscita" && (
-        <div
-          style={{
-            background: "rgba(255,255,255,0.10)",
-            border: "1px solid rgba(239,68,68,0.16)",
-            borderRadius: 20,
-            padding: 16,
-            display: "grid",
-            gap: 12,
-            boxShadow: "0 10px 28px rgba(239,68,68,0.10)",
-          }}
-        >
-          <div style={{ display: "grid", gap: 8 }}>
-            <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>Data</label>
-            <input
-              type="date"
-              value={nuovaUscitaData}
-              onChange={(e) => setNuovaUscitaData(e.target.value)}
-              style={inputLight(false)}
-            />
-          </div>
-
-          <div style={{ display: "grid", gap: 8 }}>
-            <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>Categoria</label>
-            <select
-              value={categoriaUscita}
-              onChange={(e) => setCategoriaUscita(e.target.value)}
-              style={inputLight(false)}
-            >
-              <option value="">Seleziona categoria</option>
-              {categorieUscitaBase.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-              {categorieUscitaCustom.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-              <option value="__altro__">Altro...</option>
-            </select>
-          </div>
-
-          {categoriaUscita === "__altro__" && (
-            <div style={{ display: "grid", gap: 8 }}>
-              <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>
-                Nuova categoria personalizzata
-              </label>
-              <input
-                type="text"
-                value={nuovaCategoriaUscita}
-                onChange={(e) => setNuovaCategoriaUscita(e.target.value)}
-                placeholder="Scrivi una nuova categoria"
-                style={inputLight(false)}
-              />
-            </div>
-          )}
-
-          <div style={{ display: "grid", gap: 8 }}>
-            <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>
-              Descrizione breve
-            </label>
-            <input
-              type="text"
-              value={nuovaUscitaDesc}
-              onChange={(e) => setNuovaUscitaDesc(e.target.value)}
-              placeholder="Es. supermercato, pieno auto..."
-              style={inputLight(false)}
-            />
-          </div>
-
-          <div style={{ display: "grid", gap: 8 }}>
-            <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>Importo</label>
-            <input
-              type="number"
-              inputMode="decimal"
-              step="0.01"
-              value={nuovaUscitaImporto}
-              onChange={(e) => setNuovaUscitaImporto(e.target.value)}
-              placeholder="0,00"
-              style={inputLight(false)}
-            />
-          </div>
-
-          <div style={{ display: "grid", gap: 8 }}>
-            <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>
-              Nota aggiuntiva
-            </label>
-            <input
-              type="text"
-              value={nuovaUscitaNota}
-              onChange={(e) => setNuovaUscitaNota(e.target.value)}
-              placeholder="Dettaglio extra facoltativo"
-              style={inputLight(false)}
-            />
-          </div>
-
-          <button
-            type="button"
-            onClick={aggiungiUscitaExtra}
-            style={{
-              border: "none",
-              borderRadius: 16,
-              padding: "14px 16px",
-              fontSize: 15,
-              fontWeight: 1000,
-              cursor: "pointer",
-              color: "white",
-              background:
-                "linear-gradient(180deg, rgba(239,68,68,0.98), rgba(220,38,38,0.95))",
-              boxShadow: "0 18px 34px rgba(239,68,68,0.20)",
-            }}
-          >
-            + Aggiungi Uscita
-          </button>
-        </div>
-      )}
-    </div>
-  </div>
-) : (
-  <div
-    style={{
-      display: "grid",
-      gridTemplateColumns: "minmax(0, 1.05fr) minmax(280px, 0.95fr)",
-      gap: 16,
-    }}
-    className="remember-grid-2"
-  >
-    <div
-      style={{
-        ...ui.card,
-        padding: 22,
-        border: "1px solid rgba(79,70,229,0.18)",
-        background:
-          "linear-gradient(180deg, rgba(79,70,229,0.12), rgba(255,255,255,0.94))",
-        boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
-        display: "grid",
-        gap: 16,
-      }}
-    >
-      <div
-        style={{
-          display: "grid",
-          gap: 6,
-        }}
-      >
-        <div
-          style={{
-            fontSize: 20,
-            fontWeight: 1000,
-            letterSpacing: -0.3,
-            color: "rgba(15,23,42,0.96)",
-          }}
-        >
-          {idInModifica ? "Modifica evento" : "Nuovo evento"}
-        </div>
-
-        <div
-          style={{
-            fontSize: 13,
-            fontWeight: 800,
-            lineHeight: 1.45,
-            color: "rgba(15,23,42,0.70)",
-          }}
-        >
-          Inserisci un evento semplice con descrizione, data e ora
-        </div>
-      </div>
-
-      <div style={{ display: "grid", gap: 12 }}>
-        <div style={{ display: "grid", gap: 8 }}>
-          <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
-            Evento
-          </label>
-          <input
-            type="text"
-            value={titolo}
-            onChange={(e) => setTitolo(e.target.value)}
-            placeholder="Es. Dentista, bollo, riunione, compleanno..."
-            style={inputLight(false)}
-          />
-        </div>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-            gap: 12,
-          }}
-        >
-          <div style={{ display: "grid", gap: 8 }}>
-            <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
-              Data
-            </label>
-            <input
-              type="date"
-              value={data}
-              onChange={(e) => setData(e.target.value)}
-              style={inputLight(false)}
-            />
-          </div>
-
-          <div style={{ display: "grid", gap: 8 }}>
-            <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
-              Ora
-            </label>
-            <input
-              type="time"
-              value={ora}
-              onChange={(e) => setOra(e.target.value)}
-              style={inputLight(false)}
-            />
-          </div>
-        </div>
-
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <button
-            type="button"
-            onClick={chiudiForm}
-            style={{
-              border: "none",
-              borderRadius: 16,
-              padding: "14px 16px",
-              fontSize: 15,
-              fontWeight: 1000,
-              cursor: "pointer",
-              color: "rgba(15,23,42,0.88)",
-              background: "rgba(255,255,255,0.88)",
-              boxShadow: "0 14px 28px rgba(15,23,42,0.08)",
-            }}
-          >
-            Annulla
-          </button>
-
-          <button
-            type="button"
-            onClick={salva}
-            style={{
-              border: "none",
-              borderRadius: 16,
-              padding: "14px 16px",
-              fontSize: 15,
-              fontWeight: 1000,
-              cursor: "pointer",
-              color: "white",
-              background:
-                "linear-gradient(180deg, rgba(79,70,229,0.98), rgba(124,58,237,0.95))",
-              boxShadow: "0 18px 34px rgba(79,70,229,0.20)",
-            }}
-          >
-            {idInModifica ? "Salva modifiche" : "+ Aggiungi"}
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div
-      style={{
-        ...ui.card,
-        padding: 22,
-        border: "1px solid rgba(79,70,229,0.18)",
-        background:
-          "linear-gradient(180deg, rgba(79,70,229,0.10), rgba(255,255,255,0.94))",
-        boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
-        display: "grid",
-        gap: 14,
-        alignContent: "start",
-      }}
-    >
-      <div>
-        <div
-          style={{
-            fontSize: 18,
-            fontWeight: 1000,
-            letterSpacing: -0.2,
-            color: "rgba(15,23,42,0.96)",
-          }}
-        >
-          Eventi prossimi
-        </div>
-
-        <div
-          style={{
-            marginTop: 6,
-            fontSize: 12,
-            fontWeight: 800,
-            opacity: 0.7,
-            color: "rgba(15,23,42,0.88)",
-          }}
-        >
-          I prossimi eventi salvati nel calendario
-        </div>
-      </div>
-
-      <div style={{ display: "grid", gap: 10 }}>
-        {eventiProssimiAggiungi.length === 0 ? (
-          <div
-            style={{
-              padding: 12,
-              borderRadius: 16,
-              border: "1px solid rgba(15,23,42,0.08)",
-              background: "rgba(255,255,255,0.72)",
-              fontSize: 13,
-              fontWeight: 800,
-              opacity: 0.65,
-              color: "rgba(15,23,42,0.86)",
-            }}
-          >
-            Nessun evento imminente.
-          </div>
-        ) : (
-          eventiProssimiAggiungi.map((ev) => {
-            const giorni = giorniMancanti(ev.data);
-
-            return (
+            <div>
               <div
-                key={ev.id}
                 style={{
-                  padding: 14,
-                  borderRadius: 18,
-                  border: "1px solid rgba(79,70,229,0.14)",
-                  background:
-                    "linear-gradient(180deg, rgba(79,70,229,0.08), rgba(79,70,229,0.03))",
-                  display: "grid",
-                  gap: 6,
+                  fontSize: 20,
+                  fontWeight: 1000,
+                  letterSpacing: -0.3,
+                  color: "rgba(15,23,42,0.96)",
                 }}
               >
-                <div style={{ fontSize: 15, fontWeight: 950, color: "rgba(15,23,42,0.96)" }}>
-                  {ev.titolo}
+                Appuntamento / Scadenza
+              </div>
+
+              <div
+                style={{
+                  marginTop: 6,
+                  fontSize: 13,
+                  fontWeight: 800,
+                  opacity: 0.72,
+                  lineHeight: 1.45,
+                  color: "rgba(15,23,42,0.88)",
+                }}
+              >
+                Nuova area dedicata a promemoria, appuntamenti e scadenze
+              </div>
+            </div>
+          </button>
+
+          <button
+            data-chip="1"
+            onClick={() => apriTurnoForm()}
+            style={{
+              ...ui.card,
+              padding: 22,
+              textAlign: "left",
+              border: "1px solid rgba(249,115,22,0.18)",
+              background:
+                "linear-gradient(180deg, rgba(249,115,22,0.12), rgba(255,255,255,0.94))",
+              boxShadow: "0 18px 40px rgba(249,115,22,0.10)",
+              cursor: "pointer",
+              display: "grid",
+              gap: 12,
+            }}
+          >
+            <div
+              style={{
+                width: 54,
+                height: 54,
+                borderRadius: 18,
+                display: "grid",
+                placeItems: "center",
+                background: "linear-gradient(180deg, rgba(249,115,22,0.94), rgba(234,88,12,0.90))",
+                color: "white",
+                fontSize: 24,
+                boxShadow: "0 14px 28px rgba(249,115,22,0.20)",
+              }}
+            >
+              ⏰
+            </div>
+
+            <div>
+              <div
+                style={{
+                  fontSize: 20,
+                  fontWeight: 1000,
+                  letterSpacing: -0.3,
+                  color: "rgba(15,23,42,0.96)",
+                }}
+              >
+                Turno
+              </div>
+
+              <div
+                style={{
+                  marginTop: 6,
+                  fontSize: 13,
+                  fontWeight: 800,
+                  opacity: 0.72,
+                  lineHeight: 1.45,
+                  color: "rgba(15,23,42,0.88)",
+                }}
+              >
+                Inserisci un nuovo turno di lavoro, ferie o riposo
+              </div>
+            </div>
+          </button>
+        </div>
+      ) : aggiungiSezione === "movimenti" ? (
+        <div
+          style={{
+            ...ui.card,
+            padding: 22,
+            border: "1px solid rgba(16,185,129,0.18)",
+            background:
+              "linear-gradient(180deg, rgba(16,185,129,0.12), rgba(255,255,255,0.94))",
+            boxShadow: "0 18px 40px rgba(16,185,129,0.10)",
+            display: "grid",
+            gap: 16,
+          }}
+        >
+          <div
+            style={{
+              display: "grid",
+              gap: 8,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 20,
+                fontWeight: 1000,
+                letterSpacing: -0.3,
+                color: "rgba(15,23,42,0.96)",
+              }}
+            >
+              Area movimenti economici
+            </div>
+
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 800,
+                color: "rgba(15,23,42,0.72)",
+                lineHeight: 1.45,
+              }}
+            >
+              Inserisci entrate e uscite con categorie, importi e note. Le categorie personalizzate restano salvate.
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gap: 12 }}>
+            <button
+              type="button"
+              title="Apri o chiudi form entrata"
+              onClick={() => setMovimentoAperto((prev) => (prev === "entrata" ? null : "entrata"))}
+              style={{
+                border: "none",
+                borderRadius: 20,
+                padding: "16px 18px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+                cursor: "pointer",
+                color: "white",
+                fontWeight: 1000,
+                fontSize: 18,
+                background:
+                  "linear-gradient(180deg, rgba(34,197,94,0.98), rgba(22,163,74,0.95))",
+                boxShadow: "0 18px 34px rgba(34,197,94,0.20)",
+              }}
+            >
+              <span>Entrata</span>
+              <span style={{ fontSize: 22 }}>{movimentoAperto === "entrata" ? "−" : "+"}</span>
+            </button>
+
+            {movimentoAperto === "entrata" && (
+              <div
+                style={{
+                  background: "rgba(255,255,255,0.10)",
+                  border: "1px solid rgba(16,185,129,0.16)",
+                  borderRadius: 20,
+                  padding: 16,
+                  display: "grid",
+                  gap: 12,
+                  boxShadow: "0 10px 28px rgba(16,185,129,0.10)",
+                }}
+              >
+                <div style={{ display: "grid", gap: 8 }}>
+                  <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>Data</label>
+                  <input
+                    type="date"
+                    value={nuovaEntrataData}
+                    onChange={(e) => setNuovaEntrataData(e.target.value)}
+                    style={inputLight(false)}
+                  />
                 </div>
 
-                <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72, color: "rgba(15,23,42,0.86)" }}>
-                  {formattaDataBreve(ev.data)} • {ev.ora}
-                </div>
-
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                  <span style={styleBadgeScadenza(giorni, false)}>
-                    {labelGiorni(giorni)}
-                  </span>
-
-                  <button
-                    type="button"
-                    data-chip="1"
-                    onClick={() => apriModifica(ev)}
-                    style={chip(false)}
+                <div style={{ display: "grid", gap: 8 }}>
+                  <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>Categoria</label>
+                  <select
+                    value={categoriaEntrata}
+                    onChange={(e) => setCategoriaEntrata(e.target.value)}
+                    style={inputLight(false)}
                   >
-                    Modifica
-                  </button>
+                    <option value="">Seleziona categoria</option>
+                    {categorieEntrataBase.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                    {categorieEntrataCustom.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                    <option value="__altro__">Altro...</option>
+                  </select>
+                </div>
+
+                {categoriaEntrata === "__altro__" && (
+                  <div style={{ display: "grid", gap: 8 }}>
+                    <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>
+                      Nuova categoria personalizzata
+                    </label>
+                    <input
+                      type="text"
+                      value={nuovaCategoriaEntrata}
+                      onChange={(e) => setNuovaCategoriaEntrata(e.target.value)}
+                      placeholder="Scrivi una nuova categoria"
+                      style={inputLight(false)}
+                    />
+                  </div>
+                )}
+
+                <div style={{ display: "grid", gap: 8 }}>
+                  <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>
+                    Nota facoltativa
+                  </label>
+                  <input
+                    type="text"
+                    value={nuovaEntrataDesc}
+                    onChange={(e) => setNuovaEntrataDesc(e.target.value)}
+                    placeholder="Es. bonus marzo, regalo, rimborso..."
+                    style={inputLight(false)}
+                  />
+                </div>
+
+                <div style={{ display: "grid", gap: 8 }}>
+                  <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>Importo</label>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="0.01"
+                    value={nuovaEntrataImporto}
+                    onChange={(e) => setNuovaEntrataImporto(e.target.value)}
+                    placeholder="0,00"
+                    style={inputLight(false)}
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={aggiungiEntrataExtra}
+                  style={{
+                    border: "none",
+                    borderRadius: 16,
+                    padding: "14px 16px",
+                    fontSize: 15,
+                    fontWeight: 1000,
+                    cursor: "pointer",
+                    color: "white",
+                    background:
+                      "linear-gradient(180deg, rgba(34,197,94,0.98), rgba(22,163,74,0.95))",
+                    boxShadow: "0 18px 34px rgba(34,197,94,0.20)",
+                  }}
+                >
+                  + Aggiungi Entrata
+                </button>
+              </div>
+            )}
+
+            <button
+              type="button"
+              title="Apri o chiudi form uscita"
+              onClick={() => setMovimentoAperto((prev) => (prev === "uscita" ? null : "uscita"))}
+              style={{
+                border: "none",
+                borderRadius: 20,
+                padding: "16px 18px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+                cursor: "pointer",
+                color: "white",
+                fontWeight: 1000,
+                fontSize: 18,
+                background:
+                  "linear-gradient(180deg, rgba(239,68,68,0.98), rgba(220,38,38,0.95))",
+                boxShadow: "0 18px 34px rgba(239,68,68,0.20)",
+              }}
+            >
+              <span>Uscita</span>
+              <span style={{ fontSize: 22 }}>{movimentoAperto === "uscita" ? "−" : "+"}</span>
+            </button>
+
+            {movimentoAperto === "uscita" && (
+              <div
+                style={{
+                  background: "rgba(255,255,255,0.10)",
+                  border: "1px solid rgba(239,68,68,0.16)",
+                  borderRadius: 20,
+                  padding: 16,
+                  display: "grid",
+                  gap: 12,
+                  boxShadow: "0 10px 28px rgba(239,68,68,0.10)",
+                }}
+              >
+                <div style={{ display: "grid", gap: 8 }}>
+                  <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>Data</label>
+                  <input
+                    type="date"
+                    value={nuovaUscitaData}
+                    onChange={(e) => setNuovaUscitaData(e.target.value)}
+                    style={inputLight(false)}
+                  />
+                </div>
+
+                <div style={{ display: "grid", gap: 8 }}>
+                  <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>Categoria</label>
+                  <select
+                    value={categoriaUscita}
+                    onChange={(e) => setCategoriaUscita(e.target.value)}
+                    style={inputLight(false)}
+                  >
+                    <option value="">Seleziona categoria</option>
+                    {categorieUscitaBase.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                    {categorieUscitaCustom.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                    <option value="__altro__">Altro...</option>
+                  </select>
+                </div>
+
+                {categoriaUscita === "__altro__" && (
+                  <div style={{ display: "grid", gap: 8 }}>
+                    <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>
+                      Nuova categoria personalizzata
+                    </label>
+                    <input
+                      type="text"
+                      value={nuovaCategoriaUscita}
+                      onChange={(e) => setNuovaCategoriaUscita(e.target.value)}
+                      placeholder="Scrivi una nuova categoria"
+                      style={inputLight(false)}
+                    />
+                  </div>
+                )}
+
+                <div style={{ display: "grid", gap: 8 }}>
+                  <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>
+                    Descrizione breve
+                  </label>
+                  <input
+                    type="text"
+                    value={nuovaUscitaDesc}
+                    onChange={(e) => setNuovaUscitaDesc(e.target.value)}
+                    placeholder="Es. supermercato, pieno auto..."
+                    style={inputLight(false)}
+                  />
+                </div>
+
+                <div style={{ display: "grid", gap: 8 }}>
+                  <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>Importo</label>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="0.01"
+                    value={nuovaUscitaImporto}
+                    onChange={(e) => setNuovaUscitaImporto(e.target.value)}
+                    placeholder="0,00"
+                    style={inputLight(false)}
+                  />
+                </div>
+
+                <div style={{ display: "grid", gap: 8 }}>
+                  <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>
+                    Nota aggiuntiva
+                  </label>
+                  <input
+                    type="text"
+                    value={nuovaUscitaNota}
+                    onChange={(e) => setNuovaUscitaNota(e.target.value)}
+                    placeholder="Dettaglio extra facoltativo"
+                    style={inputLight(false)}
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={aggiungiUscitaExtra}
+                  style={{
+                    border: "none",
+                    borderRadius: 16,
+                    padding: "14px 16px",
+                    fontSize: 15,
+                    fontWeight: 1000,
+                    cursor: "pointer",
+                    color: "white",
+                    background:
+                      "linear-gradient(180deg, rgba(239,68,68,0.98), rgba(220,38,38,0.95))",
+                    boxShadow: "0 18px 34px rgba(239,68,68,0.20)",
+                  }}
+                >
+                  + Aggiungi Uscita
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "minmax(0, 1.05fr) minmax(280px, 0.95fr)",
+            gap: 16,
+          }}
+          className="remember-grid-2"
+        >
+          <div
+            style={{
+              ...ui.card,
+              padding: 22,
+              border: "1px solid rgba(79,70,229,0.18)",
+              background:
+                "linear-gradient(180deg, rgba(79,70,229,0.12), rgba(255,255,255,0.94))",
+              boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
+              display: "grid",
+              gap: 16,
+            }}
+          >
+            <div
+              style={{
+                display: "grid",
+                gap: 6,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 20,
+                  fontWeight: 1000,
+                  letterSpacing: -0.3,
+                  color: "rgba(15,23,42,0.96)",
+                }}
+              >
+                {idInModifica ? "Modifica evento" : "Nuovo evento"}
+              </div>
+
+              <div
+                style={{
+                  fontSize: 13,
+                  fontWeight: 800,
+                  lineHeight: 1.45,
+                  color: "rgba(15,23,42,0.70)",
+                }}
+              >
+                Inserisci un evento semplice con descrizione, data e ora
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gap: 12 }}>
+              <div style={{ display: "grid", gap: 8 }}>
+                <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+                  Evento
+                </label>
+                <input
+                  type="text"
+                  value={titolo}
+                  onChange={(e) => setTitolo(e.target.value)}
+                  placeholder="Es. Dentista, bollo, riunione, compleanno..."
+                  style={inputLight(false)}
+                />
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                  gap: 12,
+                }}
+              >
+                <div style={{ display: "grid", gap: 8 }}>
+                  <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+                    Data
+                  </label>
+                  <input
+                    type="date"
+                    value={data}
+                    onChange={(e) => setData(e.target.value)}
+                    style={inputLight(false)}
+                  />
+                </div>
+
+                <div style={{ display: "grid", gap: 8 }}>
+                  <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+                    Ora
+                  </label>
+                  <input
+                    type="time"
+                    value={ora}
+                    onChange={(e) => setOra(e.target.value)}
+                    style={inputLight(false)}
+                  />
                 </div>
               </div>
-            );
-          })
-        )}
-      </div>
+
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  onClick={chiudiForm}
+                  style={{
+                    border: "none",
+                    borderRadius: 16,
+                    padding: "14px 16px",
+                    fontSize: 15,
+                    fontWeight: 1000,
+                    cursor: "pointer",
+                    color: "rgba(15,23,42,0.88)",
+                    background: "rgba(255,255,255,0.88)",
+                    boxShadow: "0 14px 28px rgba(15,23,42,0.08)",
+                  }}
+                >
+                  Annulla
+                </button>
+
+                <button
+                  type="button"
+                  onClick={salva}
+                  style={{
+                    border: "none",
+                    borderRadius: 16,
+                    padding: "14px 16px",
+                    fontSize: 15,
+                    fontWeight: 1000,
+                    cursor: "pointer",
+                    color: "white",
+                    background:
+                      "linear-gradient(180deg, rgba(79,70,229,0.98), rgba(124,58,237,0.95))",
+                    boxShadow: "0 18px 34px rgba(79,70,229,0.20)",
+                  }}
+                >
+                  {idInModifica ? "Salva modifiche" : "+ Aggiungi"}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div
+            style={{
+              ...ui.card,
+              padding: 22,
+              border: "1px solid rgba(79,70,229,0.18)",
+              background:
+                "linear-gradient(180deg, rgba(79,70,229,0.10), rgba(255,255,255,0.94))",
+              boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
+              display: "grid",
+              gap: 14,
+              alignContent: "start",
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  fontSize: 18,
+                  fontWeight: 1000,
+                  letterSpacing: -0.2,
+                  color: "rgba(15,23,42,0.96)",
+                }}
+              >
+                Eventi prossimi
+              </div>
+
+              <div
+                style={{
+                  marginTop: 6,
+                  fontSize: 12,
+                  fontWeight: 800,
+                  opacity: 0.7,
+                  color: "rgba(15,23,42,0.88)",
+                }}
+              >
+                I prossimi eventi salvati nel calendario
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gap: 10 }}>
+              {eventiProssimiAggiungi.length === 0 ? (
+                <div
+                  style={{
+                    padding: 12,
+                    borderRadius: 16,
+                    border: "1px solid rgba(15,23,42,0.08)",
+                    background: "rgba(255,255,255,0.72)",
+                    fontSize: 13,
+                    fontWeight: 800,
+                    opacity: 0.65,
+                    color: "rgba(15,23,42,0.86)",
+                  }}
+                >
+                  Nessun evento imminente.
+                </div>
+              ) : (
+                eventiProssimiAggiungi.map((ev) => {
+                  const giorni = giorniMancanti(ev.data);
+
+                  return (
+                    <div
+                      key={ev.id}
+                      style={{
+                        padding: 14,
+                        borderRadius: 18,
+                        border: "1px solid rgba(79,70,229,0.14)",
+                        background:
+                          "linear-gradient(180deg, rgba(79,70,229,0.08), rgba(79,70,229,0.03))",
+                        display: "grid",
+                        gap: 6,
+                      }}
+                    >
+                      <div style={{ fontSize: 15, fontWeight: 950, color: "rgba(15,23,42,0.96)" }}>
+                        {ev.titolo}
+                      </div>
+
+                      <div style={{ fontSize: 12, fontWeight: 850, opacity: 0.72, color: "rgba(15,23,42,0.86)" }}>
+                        {formattaDataBreve(ev.data)} • {ev.ora}
+                      </div>
+
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          gap: 10,
+                          alignItems: "center",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <span style={styleBadgeScadenza(giorni, false)}>
+                          {labelGiorni(giorni)}
+                        </span>
+
+                        <button
+                          type="button"
+                          data-chip="1"
+                          onClick={() => apriModifica(ev)}
+                          style={chip(false)}
+                        >
+                          Modifica
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  </div>
-)}
   </div>
 )}
 
