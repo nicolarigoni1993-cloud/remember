@@ -5393,7 +5393,17 @@ function MiniCalendarioControllo({
   <div style={topBar}>
     <div style={{ ...ui.glass, padding: 22 }}>
       <div style={{ display: "grid", gap: 18 }}>
-        <RememberLogo size={54} centered />
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            textAlign: "center",
+          }}
+        >
+          <RememberLogo size={54} centered />
+        </div>
 
         <div
           style={{
@@ -5422,8 +5432,8 @@ function MiniCalendarioControllo({
           >
             <span style={{ opacity: 0.8 }}>🕒</span>
             <span style={{ color: "rgba(15,23,42,0.92)" }}>
-  {formattaDataLunga(adesso)}
-</span>
+              {formattaDataLunga(adesso)}
+            </span>
           </div>
         </div>
 
@@ -5440,40 +5450,49 @@ function MiniCalendarioControllo({
 
         <div
           style={{
-            display: "flex",
+            display: "grid",
             gap: 12,
-            flexWrap: "wrap",
-            justifyContent: "center",
+            justifyItems: "center",
           }}
         >
-          <button
-            data-chip="1"
-            onClick={() => setPagina("home")}
-            style={chip(false)}
+          <div
+            style={{
+              display: "flex",
+              gap: 12,
+              flexWrap: "wrap",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
           >
-            Home
-          </button>
-
-          {pagina === "consulta" && (
             <button
               data-chip="1"
-              onClick={() => {
+              onClick={() => setPagina("home")}
+              style={chip(false)}
+            >
+              Home
+            </button>
+
+            {pagina === "consulta" && (
+              <button
+                data-chip="1"
+                onClick={() => {
                   setConsultaSezione("menu");
                   setPagina("consulta");
                 }}
-              style={chip(true)}
-            >
-              Consulta
-            </button>
-          )}
+                style={chip(true)}
+              >
+                Consulta
+              </button>
+            )}
 
-          <button
-            data-chip="1"
-            onClick={() => setPagina("aggiungi")}
-            style={chip(false)}
-          >
-            Aggiungi
-          </button>
+            <button
+              data-chip="1"
+              onClick={() => setPagina("aggiungi")}
+              style={chip(false)}
+            >
+              Aggiungi
+            </button>
+          </div>
 
           <button
             data-chip="1"
@@ -6670,6 +6689,10 @@ function MiniCalendarioControllo({
     Esci
   </button>
 </div>
+
+
+
+
 
             {aggiungiSezione !== "menu" && (
               <div style={{ display: "flex", justifyContent: "center" }}>
