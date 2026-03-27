@@ -6557,7 +6557,17 @@ function MiniCalendarioControllo({
               gap: 14,
             }}
           >
-            <RememberLogo size={56} />
+            <div
+  style={{
+    width: "100%",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    textAlign: "center",
+  }}
+>
+  <RememberLogo size={56} />
+</div>
 
             <div
               style={{
@@ -6593,62 +6603,70 @@ function MiniCalendarioControllo({
               Utente attivo: Nicola
             </div>
 
-            <div
-              style={{
-                display: "flex",
-                gap: 12,
-                flexWrap: "wrap",
-                justifyContent: "center",
-              }}
-            >
-              <button
-                data-chip="1"
-                onClick={() => {
-                  resetForm();
-                  setAggiungiSezione("menu");
-                  setPagina("home");
-                }}
-                style={chip(false)}
-              >
-                Home
-              </button>
+           <div
+  style={{
+    display: "grid",
+    gap: 12,
+    justifyItems: "center",
+  }}
+>
+  <div
+    style={{
+      display: "flex",
+      gap: 12,
+      flexWrap: "wrap",
+      justifyContent: "center",
+    }}
+  >
+    <button
+      data-chip="1"
+      onClick={() => {
+        resetForm();
+        setAggiungiSezione("menu");
+        setPagina("home");
+      }}
+      style={chip(false)}
+    >
+      Home
+    </button>
 
-              <button
-                data-chip="1"
-                onClick={() => {
-                  resetForm();
-                  setAggiungiSezione("menu");
-                  setPagina("consulta");
-                }}
-                style={chip(false)}
-              >
-                Consulta
-              </button>
+    <button
+      data-chip="1"
+      onClick={() => {
+        resetForm();
+        setAggiungiSezione("menu");
+        setPagina("consulta");
+      }}
+      style={chip(false)}
+    >
+      Consulta
+    </button>
 
-              <button
-                data-chip="1"
-                onClick={() => {
-                  resetForm();
-                  setAggiungiSezione("menu");
-                  setPagina("aggiungi");
-                }}
-                style={chip(true)}
-              >
-                Aggiungi
-              </button>
+    <button
+      data-chip="1"
+      onClick={() => {
+        resetForm();
+        setAggiungiSezione("menu");
+        setPagina("aggiungi");
+      }}
+      style={chip(true)}
+    >
+      Aggiungi
+    </button>
+  </div>
 
-              <button
-                data-chip="1"
-                onClick={() => {
-                  if (typeof window !== "undefined") {
-                    window.close();
-                  }
-                }}
-                style={chip(false)}
-              >
-                Esci
-              </button>
-            </div>
+  <button
+    data-chip="1"
+    onClick={() => {
+      if (typeof window !== "undefined") {
+        window.close();
+      }
+    }}
+    style={chip(false)}
+  >
+    Esci
+  </button>
+</div>
 
             {aggiungiSezione !== "menu" && (
               <div style={{ display: "flex", justifyContent: "center" }}>
