@@ -6668,10 +6668,6 @@ function MiniCalendarioControllo({
         </div>
       </div>
 
-
-
-
-
       <div
         style={{
           display: "grid",
@@ -6734,6 +6730,7 @@ function MiniCalendarioControllo({
             style={{
               ...ui.card,
               padding: 22,
+              minHeight: 220,
               textAlign: "left",
               border: "1px solid rgba(16,185,129,0.18)",
               background:
@@ -6741,6 +6738,7 @@ function MiniCalendarioControllo({
               boxShadow: "0 18px 40px rgba(16,185,129,0.10)",
               cursor: "pointer",
               display: "grid",
+              alignContent: "start",
               gap: 12,
             }}
           >
@@ -6797,6 +6795,7 @@ function MiniCalendarioControllo({
             style={{
               ...ui.card,
               padding: 22,
+              minHeight: 220,
               textAlign: "left",
               border: "1px solid rgba(79,70,229,0.18)",
               background:
@@ -6804,6 +6803,7 @@ function MiniCalendarioControllo({
               boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
               cursor: "pointer",
               display: "grid",
+              alignContent: "start",
               gap: 12,
             }}
           >
@@ -6856,6 +6856,7 @@ function MiniCalendarioControllo({
             style={{
               ...ui.card,
               padding: 22,
+              minHeight: 220,
               textAlign: "left",
               border: "1px solid rgba(249,115,22,0.18)",
               background:
@@ -6863,6 +6864,7 @@ function MiniCalendarioControllo({
               boxShadow: "0 18px 40px rgba(249,115,22,0.10)",
               cursor: "pointer",
               display: "grid",
+              alignContent: "start",
               gap: 12,
             }}
           >
