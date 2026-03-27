@@ -6566,7 +6566,24 @@ function MiniCalendarioControllo({
     textAlign: "center",
   }}
 >
-  <RememberLogo size={56} />
+ <div
+  style={{
+    width: "100%",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  }}
+>
+  <div
+    style={{
+      display: "grid",
+      justifyItems: "center",
+      textAlign: "center",
+    }}
+  >
+    <RememberLogo size={56} />
+  </div>
+</div>
 </div>
 
             <div
