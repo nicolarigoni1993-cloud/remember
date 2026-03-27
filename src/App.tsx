@@ -6504,104 +6504,96 @@ function MiniCalendarioControllo({
   <div style={{ maxWidth: 1060, margin: "0 auto", marginTop: 14, display: "grid", gap: 16 }}>
     <div
       style={{
-        ...ui.card,
-        padding: 22,
-        position: "relative",
-        overflow: "hidden",
+        display: "grid",
+        gap: 10,
+        justifyItems: "center",
+        textAlign: "center",
+        padding: "8px 6px 2px",
       }}
     >
       <div
         style={{
-          position: "absolute",
-          inset: 0,
-          background:
-            "radial-gradient(700px 260px at 0% 0%, rgba(16,185,129,0.08), transparent 60%), radial-gradient(700px 260px at 100% 0%, rgba(79,70,229,0.08), transparent 60%)",
-          pointerEvents: "none",
+          fontSize: 34,
+          fontWeight: 1000,
+          letterSpacing: -0.8,
+          color: "rgba(241,245,249,0.98)",
+          textShadow: "0 12px 30px rgba(16,185,129,0.22)",
+          lineHeight: 1.05,
         }}
-      />
+      >
+        {aggiungiSezione === "menu"
+          ? "Aggiungi"
+          : aggiungiSezione === "movimenti"
+          ? "Entrata / Uscita"
+          : aggiungiSezione === "eventi"
+          ? "Evento"
+          : "Turno"}
+      </div>
 
-      <div style={{ position: "relative", zIndex: 1, display: "grid", gap: 18 }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            gap: 14,
-            flexWrap: "wrap",
-          }}
-        >
-          <div style={{ flex: 1, minWidth: 240 }}>
-            <RememberLogo size={56} />
-          </div>
-
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            {aggiungiSezione !== "menu" && (
-              <button
-                data-chip="1"
-                onClick={() => {
-                  resetForm();
-                  setAggiungiSezione("menu");
-                }}
-                style={chip(false)}
-              >
-                Torna ad Aggiungi
-              </button>
-            )}
-
-            <button
-              data-chip="1"
-              onClick={() => {
-                resetForm();
-                setAggiungiSezione("menu");
-                setPagina("home");
-              }}
-              style={chip(false)}
-            >
-              Torna Home
-            </button>
-          </div>
-        </div>
-
-        <div
-          style={{
-            display: "grid",
-            gap: 6,
-          }}
-        >
-  <div
-  style={{
-    fontSize: 26,
-    fontWeight: 1000,
-    letterSpacing: -0.6,
-    color: "rgba(241,245,249,0.98)",
-    textShadow: "0 12px 30px rgba(79,70,229,0.18)",
-  }}
->
-  {aggiungiSezione === "menu"
-    ? "Aggiungi"
-    : aggiungiSezione === "movimenti"
-    ? "Entrata / Uscita"
-    : "Evento"}
-</div>
-
-<div
-  style={{
-    fontSize: 14,
-    fontWeight: 800,
-    color: "rgba(191,219,254,0.86)",
-    lineHeight: 1.4,
-  }}
->
-  {aggiungiSezione === "menu"
-    ? "Scegli cosa vuoi inserire nell’app"
-    : aggiungiSezione === "movimenti"
-    ? "Inserisci entrate e uscite con categorie personalizzabili"
-    : "Inserisci un evento semplice con descrizione, data e ora"}
-</div>
-        </div>
+      <div
+        style={{
+          maxWidth: 760,
+          fontSize: 15,
+          fontWeight: 800,
+          color: "rgba(191,219,254,0.90)",
+          lineHeight: 1.5,
+          letterSpacing: 0.1,
+        }}
+      >
+        {aggiungiSezione === "menu"
+          ? "Scegli cosa vuoi inserire nell’app"
+          : aggiungiSezione === "movimenti"
+          ? "Inserisci entrate e uscite con categorie personalizzabili"
+          : aggiungiSezione === "eventi"
+          ? "Inserisci un evento semplice con descrizione, data e ora"
+          : "Inserisci un turno di lavoro, ferie o riposo"}
       </div>
     </div>
 
+    <div
+      style={{
+        ...ui.card,
+        padding: 18,
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        gap: 12,
+        flexWrap: "wrap",
+      }}
+    >
+      <RememberLogo size={56} />
+
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        {aggiungiSezione !== "menu" && (
+          <button
+            data-chip="1"
+            onClick={() => {
+              resetForm();
+              setAggiungiSezione("menu");
+            }}
+            style={chip(false)}
+          >
+            Torna ad Aggiungi
+          </button>
+        )}
+
+        <button
+          data-chip="1"
+          onClick={() => {
+            resetForm();
+            setAggiungiSezione("menu");
+            setPagina("home");
+          }}
+          style={chip(false)}
+        >
+          Torna Home
+        </button>
+      </div>
+    </div>
+
+
+
+    
 {aggiungiSezione === "menu" ? (
   <div
     style={{
@@ -6611,6 +6603,11 @@ function MiniCalendarioControllo({
     }}
     className="remember-grid-2"
   >
+
+
+
+
+    
     <button
       data-chip="1"
       onClick={() => setAggiungiSezione("movimenti")}
@@ -6860,6 +6857,17 @@ function MiniCalendarioControllo({
         <span>Entrata</span>
         <span style={{ fontSize: 22 }}>{movimentoAperto === "entrata" ? "−" : "+"}</span>
       </button>
+
+
+
+
+
+
+
+
+
+
+
 
       {movimentoAperto === "entrata" && (
         <div
