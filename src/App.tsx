@@ -6566,23 +6566,16 @@ function MiniCalendarioControllo({
     textAlign: "center",
   }}
 >
- <div
+<div
   style={{
     width: "100%",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
+    textAlign: "center",
   }}
 >
-  <div
-    style={{
-      display: "grid",
-      justifyItems: "center",
-      textAlign: "center",
-    }}
-  >
-    <RememberLogo size={56} />
-  </div>
+  <RememberLogo size={56} centered />
 </div>
 </div>
 
@@ -6620,57 +6613,50 @@ function MiniCalendarioControllo({
               Utente attivo: Nicola
             </div>
 
-           <div
+<div
   style={{
-    display: "grid",
+    display: "flex",
     gap: 12,
-    justifyItems: "center",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    alignItems: "center",
   }}
 >
-  <div
-    style={{
-      display: "flex",
-      gap: 12,
-      flexWrap: "wrap",
-      justifyContent: "center",
+  <button
+    data-chip="1"
+    onClick={() => {
+      resetForm();
+      setAggiungiSezione("menu");
+      setPagina("home");
     }}
+    style={chip(false)}
   >
-    <button
-      data-chip="1"
-      onClick={() => {
-        resetForm();
-        setAggiungiSezione("menu");
-        setPagina("home");
-      }}
-      style={chip(false)}
-    >
-      Home
-    </button>
+    Home
+  </button>
 
-    <button
-      data-chip="1"
-      onClick={() => {
-        resetForm();
-        setAggiungiSezione("menu");
-        setPagina("consulta");
-      }}
-      style={chip(false)}
-    >
-      Consulta
-    </button>
+  <button
+    data-chip="1"
+    onClick={() => {
+      resetForm();
+      setAggiungiSezione("menu");
+      setPagina("consulta");
+    }}
+    style={chip(false)}
+  >
+    Consulta
+  </button>
 
-    <button
-      data-chip="1"
-      onClick={() => {
-        resetForm();
-        setAggiungiSezione("menu");
-        setPagina("aggiungi");
-      }}
-      style={chip(true)}
-    >
-      Aggiungi
-    </button>
-  </div>
+  <button
+    data-chip="1"
+    onClick={() => {
+      resetForm();
+      setAggiungiSezione("menu");
+      setPagina("aggiungi");
+    }}
+    style={chip(true)}
+  >
+    Aggiungi
+  </button>
 
   <button
     data-chip="1"
