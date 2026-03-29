@@ -3038,25 +3038,25 @@ function MiniCalendario({
                     </div>
 
                     <div style={{ textAlign: "center", position: "relative", zIndex: 1 }}>
-                      {sigla ? (
-                        <div
-                          style={{
-                            display: "inline-block",
-                            minWidth: 30,
-                            padding: "5px 10px",
-                            borderRadius: 999,
-                            fontSize: 11,
-                            fontWeight: 1000,
-                            color: "white",
-                            background: getTurnoColor(sigla),
-                            boxShadow:
-                              "0 10px 18px rgba(15,23,42,0.16), inset 0 1px 0 rgba(255,255,255,0.22)",
-                            letterSpacing: 0.2,
-                          }}
-                        >
-                          {sigla}
-                        </div>
-                      ) : (
+                   {sigla ? (
+  <div
+    style={{
+      display: "inline-block",
+      minWidth: 30,
+      padding: "5px 10px",
+      borderRadius: 999,
+      fontSize: 11,
+      fontWeight: 1000,
+      color: "white",
+      background: getTurnoColor(sigla),
+      boxShadow:
+        "0 10px 18px rgba(15,23,42,0.16), inset 0 1px 0 rgba(255,255,255,0.22)",
+      letterSpacing: 0.2,
+    }}
+  >
+    {sigla}
+  </div>
+) : (
                         <div
                           style={{
                             display: "inline-grid",
