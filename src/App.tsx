@@ -2982,59 +2982,65 @@ function MiniCalendario({
                     }}
                     style={{
                       aspectRatio: "1",
-                      borderRadius: 16,
-                      padding: 7,
+                      borderRadius: 18,
+                      padding: 4,
                       cursor: "pointer",
-                      background: isToday
-                        ? "linear-gradient(180deg, rgba(79,70,229,0.18), rgba(99,102,241,0.12))"
-                        : isRedDay
-                        ? "linear-gradient(180deg, rgba(255,245,245,0.98), rgba(255,251,251,0.95))"
-                        : "linear-gradient(180deg, rgba(246,250,255,0.98), rgba(255,255,255,0.96))",
-                      border: isToday
-                        ? "2px solid rgba(79,70,229,0.42)"
-                        : isFestivo
-                        ? "1px solid rgba(248,113,113,0.24)"
-                        : "1px solid rgba(148,163,184,0.12)",
+                      background: "transparent",
+                      border: "none",
                       display: "flex",
                       flexDirection: "column",
                       justifyContent: "space-between",
-                      boxShadow: isToday
-                        ? "0 14px 28px rgba(79,70,229,0.18)"
-                        : "0 10px 22px rgba(15,23,42,0.06)",
-                      transition: "transform .16s ease, box-shadow .16s ease, border .16s ease",
+                      boxShadow: "none",
+                      transition: "transform .16s ease",
                       position: "relative",
-                      overflow: "hidden",
+                      overflow: "visible",
                       transform: isPressed ? "scale(0.96)" : "scale(1)",
                     }}
                     title={isFestivo ? `${key} • Festivo` : key}
                   >
                     <div
                       style={{
-                        position: "absolute",
-                        inset: 0,
-                        background: isToday
-                          ? "radial-gradient(120px 50px at 50% 0%, rgba(255,255,255,0.22), transparent 70%)"
-                          : "radial-gradient(120px 40px at 50% 0%, rgba(255,255,255,0.18), transparent 72%)",
-                        pointerEvents: "none",
-                      }}
-                    />
-
-                    <div
-                      style={{
                         position: "relative",
                         zIndex: 1,
-                        fontSize: 14,
-                        fontWeight: 1000,
-                        textAlign: "right",
-                        color: isRedDay
-                          ? "rgba(220,38,38,0.98)"
-                          : isToday
-                          ? "rgba(49,46,129,0.98)"
-                          : "rgba(15,23,42,0.90)",
-                        lineHeight: 1,
+                        width: 100,
+                        display: "flex",
+                        justifyContent: "center",
                       }}
                     >
-                      {d}
+                      <div
+                        style={{
+                          minWidth: 38,
+                          height: 38,
+                          padding: "0 10px",
+                          borderRadius: 999,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 14,
+                          fontWeight: 1000,
+                          color: isRedDay
+                            ? "rgba(220,38,38,0.98)"
+                            : isToday
+                            ? "rgba(49,46,129,0.98)"
+                            : "rgba(15,23,42,0.92)",
+                          background: isToday
+                            ? "rgba(129,140,248,0.10)"
+                            : isFestivo
+                            ? "rgba(254,242,242,0.72)"
+                            : "rgba(255,255,255,0.46)",
+                          border: isToday
+                            ? "2px solid rgba(129,140,248,0.60)"
+                            : isFestivo
+                            ? "1px solid rgba(248,113,113,0.22)"
+                            : "1px solid rgba(255,255,255,0.18)",
+                          lineHeight: 1,
+                          boxShadow: isToday
+                            ? "0 8px 16px rgba(99,102,241,0.12)"
+                            : "none",
+                        }}
+                      >
+                        {d}
+                      </div>
                     </div>
 
                     <div
@@ -3044,7 +3050,8 @@ function MiniCalendario({
                         display: "flex",
                         justifyContent: "center",
                         alignItems: "center",
-                        minHeight: 22,
+                        minHeight: 26,
+                        marginTop: 2,
                       }}
                     >
                       {sigla ? (
@@ -3053,16 +3060,16 @@ function MiniCalendario({
                             display: "inline-flex",
                             justifyContent: "center",
                             alignItems: "center",
-                            width: 18,
-                            height: 18,
+                            width: 24,
+                            height: 24,
                             margin: "0 auto",
-                            borderRadius: 999,
-                            fontSize: 9,
+                            borderRadius: "50%",
+                            fontSize: 11,
                             fontWeight: 1000,
                             color: "white",
                             background: getTurnoColor(sigla),
                             boxShadow:
-                              "0 6px 12px rgba(15,23,42,0.14), inset 0 1px 0 rgba(255,255,255,0.18)",
+                              "0 8px 14px rgba(15,23,42,0.16), inset 0 1px 0 rgba(255,255,255,0.20)",
                             letterSpacing: 0,
                             lineHeight: 1,
                             flexShrink: 0,
@@ -3076,20 +3083,20 @@ function MiniCalendario({
                             display: "inline-flex",
                             justifyContent: "center",
                             alignItems: "center",
-                            width: 18,
-                            height: 18,
+                            width: 24,
+                            height: 24,
                             margin: "0 auto",
-                            borderRadius: 999,
+                            borderRadius: "50%",
                             background: isToday
                               ? "rgba(99,102,241,0.12)"
-                              : "rgba(148,163,184,0.08)",
+                              : "rgba(148,163,184,0.10)",
                             border: isToday
-                              ? "1px solid rgba(99,102,241,0.14)"
-                              : "1px solid rgba(148,163,184,0.06)",
-                            fontSize: 14,
+                              ? "1px solid rgba(99,102,241,0.16)"
+                              : "1px solid rgba(148,163,184,0.08)",
+                            fontSize: 16,
                             color: isToday
-                              ? "rgba(79,70,229,0.90)"
-                              : "rgba(148,163,184,0.88)",
+                              ? "rgba(79,70,229,0.92)"
+                              : "rgba(148,163,184,0.90)",
                             fontWeight: 900,
                             lineHeight: 1,
                             flexShrink: 0,
@@ -3102,7 +3109,7 @@ function MiniCalendario({
 
                     <div
                       style={{
-                        minHeight: 10,
+                        minHeight: 8,
                         display: "flex",
                         justifyContent: "center",
                         alignItems: "flex-end",
@@ -3113,18 +3120,17 @@ function MiniCalendario({
                       {isFestivo ? (
                         <div
                           style={{
-                            width: 7,
-                            height: 7,
+                            width: 6,
+                            height: 6,
                             borderRadius: 999,
                             background: "rgba(220,38,38,0.96)",
-                            boxShadow: "0 0 0 5px rgba(220,38,38,0.10)",
                           }}
                         />
                       ) : isWeekend ? (
                         <div
                           style={{
-                            width: 5,
-                            height: 5,
+                            width: 4,
+                            height: 4,
                             borderRadius: 999,
                             background: "rgba(248,113,113,0.72)",
                           }}
