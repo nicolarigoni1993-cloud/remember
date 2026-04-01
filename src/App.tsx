@@ -719,6 +719,7 @@ const [aggiungiSezione, setAggiungiSezione] = useState<"menu" | "movimenti" | "e
   const [nuovaUscitaNota, setNuovaUscitaNota] = useState("");
 
   const [movimentoAperto, setMovimentoAperto] = useState<"entrata" | "uscita" | null>(null);
+  const [apriConfigFerie, setApriConfigFerie] = useState(false);
 
 const categorieEntrataBase = useMemo(
   () => ["Stipendio", "Bonus", "Regalo", "Rimborso", "Vendita", "Extra"],
@@ -2681,15 +2682,27 @@ function MiniCalendario({
   onEditTurno: (turno: Turno) => void;
 }) {
   const [pressedKey, setPressedKey] = useState<string | null>(null);
-  const [popupTurno, setPopupTurno] = useState<any>(null);
+  const [popupTurno, setPopupTurno] = useState<{
+    key: string;
+    turno: Turno;
+    count: number;
+    sigla: string;
+  } | null>(null);
+  const [monthAnim, setMonthAnim] = useState<"idle" | "enter">("enter");
 
-  const isMobile = typeof window !== "undefined" && window.innerWidth <= 640;
+  const isMobileCalendar =
+    typeof window !== "undefined" && window.innerWidth <= 640;
 
-  const sizeDay = isMobile ? 30 : 38;
-  const sizeBadge = isMobile ? 18 : 24;
-  const fontDay = isMobile ? 12 : 14;
-  const fontBadge = isMobile ? 9 : 11;
-  const gap = isMobile ? 4 : 6;
+  const cellGap = isMobileCalendar ? 5 : 6;
+  const dayNumberSize = isMobileCalendar ? 34 : 38;
+  const badgeSize = isMobileCalendar ? 22 : 24;
+  const badgeFontSize = isMobileCalendar ? 10 : 11;
+  const plusFontSize = isMobileCalendar ? 15 : 16;
+  const calendarPadding = isMobileCalendar ? 14 : 16;
+  const monthTitleSize = isMobileCalendar ? 20 : 22;
+  const weekLabelSize = isMobileCalendar ? 10 : 11;
+  const dayCellPadding = isMobileCalendar ? 4 : 4;
+  const navSize = isMobileCalendar ? 44 : 48;
 
   const y = mese.getFullYear();
   const m0 = mese.getMonth();
@@ -2701,6 +2714,8 @@ function MiniCalendario({
   const oggi = new Date();
   const oggiKey = ymd(oggi.getFullYear(), oggi.getMonth(), oggi.getDate());
 
+  const giorniSettimana = ["L", "M", "M", "G", "V", "S", "D"];
+
   const giorni: Array<string | null> = [];
   for (let i = 0; i < offset; i++) giorni.push(null);
   for (let d = 1; d <= dim; d++) giorni.push(ymd(y, m0, d));
@@ -2711,6 +2726,12 @@ function MiniCalendario({
     year: "numeric",
   });
 
+  useEffect(() => {
+    setMonthAnim("enter");
+    const t = window.setTimeout(() => setMonthAnim("idle"), 260);
+    return () => window.clearTimeout(t);
+  }, [mese]);
+
   const turniPerData = useMemo(() => {
     const map = new Map<string, Turno[]>();
     for (const t of turniDelMese) {
@@ -2718,193 +2739,611 @@ function MiniCalendario({
       prev.push(t);
       map.set(t.data, prev);
     }
+    for (const arr of map.values()) {
+      arr.sort((a, b) => a.inizio.localeCompare(b.inizio));
+    }
     return map;
   }, [turniDelMese]);
 
   function getTurnoColor(sigla: string) {
-    if (sigla === "R") return "#64748b";
-    if (sigla === "F") return "#8b5cf6";
-    if (sigla === "A") return "#ef4444";
-    if (sigla === "N") return "#2563eb";
-    if (sigla === "M") return "#f59e0b";
-    if (sigla === "P") return "#f97316";
-    if (sigla === "S") return "#a855f7";
-    return "#3b82f6";
+    if (sigla === "R") return "linear-gradient(180deg, #64748b, #475569)";
+    if (sigla === "F") return "linear-gradient(180deg, #8b5cf6, #7c3aed)";
+    if (sigla === "A") return "linear-gradient(180deg, #ef4444, #dc2626)";
+    if (sigla === "N") return "linear-gradient(180deg, #2563eb, #1d4ed8)";
+    if (sigla === "M") return "linear-gradient(180deg, #f59e0b, #d97706)";
+    if (sigla === "P") return "linear-gradient(180deg, #f97316, #ea580c)";
+    if (sigla === "S") return "linear-gradient(180deg, #a855f7, #7e22ce)";
+    return "linear-gradient(180deg, #3b82f6, #2563eb)";
   }
+
+  function getPasqua(year: number) {
+    const a = year % 19;
+    const b = Math.floor(year / 100);
+    const c = year % 100;
+    const d = Math.floor(b / 4);
+    const e = b % 4;
+    const f = Math.floor((b + 8) / 25);
+    const g = Math.floor((b - f + 1) / 3);
+    const h = (19 * a + b - d - g + 15) % 30;
+    const i = Math.floor(c / 4);
+    const k = c % 4;
+    const l = (32 + 2 * e + 2 * i - h - k) % 7;
+    const m = Math.floor((a + 11 * h + 22 * l) / 451);
+    const month = Math.floor((h + l - 7 * m + 114) / 31);
+    const day = ((h + l - 7 * m + 114) % 31) + 1;
+    return new Date(year, month - 1, day);
+  }
+
+  function addDays(date: Date, days: number) {
+    const d = new Date(date);
+    d.setDate(d.getDate() + days);
+    return d;
+  }
+
+  const festivitaSet = useMemo(() => {
+    const set = new Set<string>();
+
+    const fisse = [
+      [0, 1],
+      [0, 6],
+      [3, 25],
+      [4, 1],
+      [5, 2],
+      [7, 15],
+      [10, 1],
+      [11, 8],
+      [11, 25],
+      [11, 26],
+    ];
+
+    for (const [month, day] of fisse) {
+      set.add(ymd(y, month, day));
+    }
+
+    const pasqua = getPasqua(y);
+    const pasquetta = addDays(pasqua, 1);
+
+    set.add(ymd(pasqua.getFullYear(), pasqua.getMonth(), pasqua.getDate()));
+    set.add(ymd(pasquetta.getFullYear(), pasquetta.getMonth(), pasquetta.getDate()));
+
+    return set;
+  }, [y]);
+
+  function formattaDataPopup(key: string) {
+    const [yy, mm, dd] = key.split("-").map(Number);
+    const dt = new Date(yy, mm - 1, dd);
+    return dt.toLocaleDateString("it-IT", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  }
+
+  function descrizioneCompattaTurno(turno: Turno, sigla: string) {
+    if (sigla === "R") return "Giornata di riposo";
+    if (sigla === "F") return "Giornata di ferie";
+    if (sigla === "A") return "Assenza";
+    return `${turno.inizio} - ${turno.fine}`;
+  }
+
+  const navButton: React.CSSProperties = {
+    width: navSize,
+    height: navSize,
+    borderRadius: isMobileCalendar ? 14 : 16,
+    border: "1px solid rgba(255,255,255,0.84)",
+    background:
+      "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
+    boxShadow:
+      "0 14px 28px rgba(15,23,42,0.10), inset 0 1px 0 rgba(255,255,255,0.96)",
+    fontSize: isMobileCalendar ? 16 : 18,
+    fontWeight: 1000,
+    color: "rgba(15,23,42,0.90)",
+    cursor: "pointer",
+    display: "grid",
+    placeItems: "center",
+    flexShrink: 0,
+    WebkitTapHighlightColor: "transparent",
+  };
 
   return (
     <>
-      <div style={{ maxWidth: 900, margin: "0 auto", marginTop: 10 }}>
+      <div style={{ maxWidth: 960, margin: "0 auto", marginTop: 10 }}>
         <div
           style={{
             ...ui.card,
-            padding: isMobile ? 12 : 16,
+            padding: calendarPadding,
+            border: "1px solid rgba(255,255,255,0.58)",
             background:
               "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96))",
+            boxShadow: "0 24px 60px rgba(15,23,42,0.14)",
+            position: "relative",
+            overflow: "hidden",
           }}
         >
-          {/* HEADER */}
           <div
             style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 14,
+              position: "absolute",
+              inset: 0,
+              background:
+                "radial-gradient(500px 180px at 0% 0%, rgba(59,130,246,0.06), transparent 60%), radial-gradient(500px 180px at 100% 0%, rgba(124,58,237,0.06), transparent 60%)",
+              pointerEvents: "none",
             }}
-          >
-            <button onClick={onPrevMonth}>←</button>
+          />
+
+          <div style={{ position: "relative", zIndex: 1 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 14,
+                gap: 12,
+              }}
+            >
+              <button
+                onClick={onPrevMonth}
+                type="button"
+                style={navButton}
+                aria-label="Mese precedente"
+                title="Mese precedente"
+              >
+                ←
+              </button>
+
+              <div
+                style={{
+                  fontSize: monthTitleSize,
+                  fontWeight: 1000,
+                  textTransform: "capitalize",
+                  color: "rgba(15,23,42,0.98)",
+                  letterSpacing: -0.6,
+                  textAlign: "center",
+                  flex: 1,
+                  textShadow: "0 6px 16px rgba(99,102,241,0.10)",
+                  transform:
+                    monthAnim === "enter" ? "translateY(0) scale(1)" : "translateY(0) scale(1)",
+                  opacity: 1,
+                  transition: "transform .24s ease, opacity .24s ease",
+                }}
+              >
+                {titoloMese}
+              </div>
+
+              <button
+                onClick={onNextMonth}
+                type="button"
+                style={navButton}
+                aria-label="Mese successivo"
+                title="Mese successivo"
+              >
+                →
+              </button>
+            </div>
 
             <div
               style={{
-                fontSize: isMobile ? 18 : 22,
-                fontWeight: 1000,
-                textTransform: "capitalize",
+                display: "grid",
+                gridTemplateColumns: "repeat(7, 1fr)",
+                marginBottom: 10,
+                gap: cellGap,
               }}
             >
-              {titoloMese}
-            </div>
-
-            <button onClick={onNextMonth}>→</button>
-          </div>
-
-          {/* GRID */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(7, 1fr)",
-              gap: gap,
-            }}
-          >
-            {giorni.map((key, idx) => {
-              if (!key) return <div key={idx} />;
-
-              const d = Number(key.slice(-2));
-              const turni = turniPerData.get(key) ?? [];
-              const primo = turni[0];
-
-              const sigla = primo
-                ? normalizeTurnoLabel(primo.inizio, primo.fine, primo.note)
-                : null;
-
-              const isToday = key === oggiKey;
-
-              return (
+              {giorniSettimana.map((g, i) => (
                 <div
-                  key={key}
-                  onClick={() => {
-                    if (primo) {
-                      setPopupTurno({ turno: primo, sigla });
-                    } else {
-                      apriTurnoForm(key);
-                    }
-                  }}
+                  key={`${g}_${i}`}
                   style={{
-                    aspectRatio: "1",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 2,
-                    cursor: "pointer",
+                    textAlign: "center",
+                    fontSize: weekLabelSize,
+                    fontWeight: 950,
+                    color: i >= 5 ? "rgba(220,38,38,0.96)" : "rgba(100,116,139,0.98)",
+                    letterSpacing: 0.25,
+                    textTransform: "uppercase",
                   }}
                 >
-                  {/* CERCHIO GIORNO */}
-                  <div
-                    style={{
-                      width: sizeDay,
-                      height: sizeDay,
-                      borderRadius: "50%",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: fontDay,
-                      fontWeight: 1000,
-                      background: isToday
-                        ? "rgba(129,140,248,0.15)"
-                        : "rgba(255,255,255,0.6)",
-                      border: isToday
-                        ? "2px solid rgba(99,102,241,0.6)"
-                        : "1px solid rgba(255,255,255,0.2)",
-                    }}
-                  >
-                    {d}
-                  </div>
-
-                  {/* BADGE TURNO */}
-                  {sigla ? (
-                    <div
-                      style={{
-                        width: sizeBadge,
-                        height: sizeBadge,
-                        borderRadius: "50%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: fontBadge,
-                        fontWeight: 1000,
-                        color: "white",
-                        background: getTurnoColor(sigla),
-                      }}
-                    >
-                      {sigla}
-                    </div>
-                  ) : (
-                    <div
-                      style={{
-                        width: sizeBadge,
-                        height: sizeBadge,
-                        borderRadius: "50%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: isMobile ? 13 : 15,
-                        color: "#64748b",
-                      }}
-                    >
-                      +
-                    </div>
-                  )}
+                  {g}
                 </div>
-              );
-            })}
+              ))}
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(7, 1fr)",
+                gap: cellGap,
+              }}
+            >
+              {giorni.map((key, idx) => {
+                if (!key) {
+                  return <div key={idx} />;
+                }
+
+                const d = Number(key.slice(-2));
+                const turni = turniPerData.get(key) ?? [];
+                const primo = turni[0];
+
+                const sigla = primo
+                  ? normalizeTurnoLabel(primo.inizio, primo.fine, primo.note)
+                  : null;
+
+                const isToday = key === oggiKey;
+
+                const cellDate = new Date(y, m0, d);
+                const jsDay = cellDate.getDay();
+                const isWeekend = jsDay === 0 || jsDay === 6;
+                const isFestivo = festivitaSet.has(key);
+                const isRedDay = isWeekend || isFestivo;
+                const isPressed = pressedKey === key;
+
+                return (
+                  <div
+                    key={key}
+                    onMouseDown={() => setPressedKey(key)}
+                    onMouseUp={() => setPressedKey(null)}
+                    onMouseLeave={() => setPressedKey((prev) => (prev === key ? null : prev))}
+                    onTouchStart={() => setPressedKey(key)}
+                    onTouchEnd={() => setPressedKey(null)}
+                    onClick={() => {
+                      if (primo) {
+                        setPopupTurno({
+                          key,
+                          turno: primo,
+                          count: turni.length,
+                          sigla: sigla ?? "",
+                        });
+                      } else {
+                        apriTurnoForm(key);
+                      }
+                    }}
+                    style={{
+                      aspectRatio: "1",
+                      borderRadius: isMobileCalendar ? 16 : 18,
+                      padding: dayCellPadding,
+                      cursor: "pointer",
+                      background: "transparent",
+                      border: "none",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      boxShadow: "none",
+                      transition: "transform .16s ease",
+                      position: "relative",
+                      overflow: "visible",
+                      transform: isPressed ? "scale(0.96)" : "scale(1)",
+                    }}
+                    title={isFestivo ? `${key} • Festivo` : key}
+                  >
+                    <div
+                      style={{
+                        width: "100%",
+                        display: "flex",
+                        justifyContent: "center",
+                        position: "relative",
+                        zIndex: 1,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: dayNumberSize,
+                          height: dayNumberSize,
+                          borderRadius: "50%",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: isMobileCalendar ? 13 : 14,
+                          fontWeight: 1000,
+                          color: isRedDay
+                            ? "rgba(220,38,38,0.98)"
+                            : isToday
+                            ? "rgba(49,46,129,0.98)"
+                            : "rgba(15,23,42,0.92)",
+                          background: isToday
+                            ? "rgba(129,140,248,0.10)"
+                            : isFestivo
+                            ? "rgba(254,242,242,0.72)"
+                            : "rgba(255,255,255,0.46)",
+                          border: isToday
+                            ? "2px solid rgba(129,140,248,0.60)"
+                            : isFestivo
+                            ? "1px solid rgba(248,113,113,0.22)"
+                            : "1px solid rgba(255,255,255,0.18)",
+                          lineHeight: 1,
+                          boxShadow: isToday
+                            ? "0 8px 16px rgba(99,102,241,0.12)"
+                            : "none",
+                        }}
+                      >
+                        {d}
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        position: "relative",
+                        zIndex: 1,
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        minHeight: isMobileCalendar ? 24 : 26,
+                        marginTop: 2,
+                      }}
+                    >
+                      {sigla ? (
+                        <div
+                          style={{
+                            display: "inline-flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            width: badgeSize,
+                            height: badgeSize,
+                            margin: "0 auto",
+                            borderRadius: "50%",
+                            fontSize: badgeFontSize,
+                            fontWeight: 1000,
+                            color: "white",
+                            background: getTurnoColor(sigla),
+                            boxShadow:
+                              "0 8px 14px rgba(15,23,42,0.16), inset 0 1px 0 rgba(255,255,255,0.20)",
+                            letterSpacing: 0,
+                            lineHeight: 1,
+                            flexShrink: 0,
+                          }}
+                        >
+                          {sigla}
+                        </div>
+                      ) : (
+                        <div
+                          style={{
+                            display: "inline-flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            width: badgeSize,
+                            height: badgeSize,
+                            margin: "0 auto",
+                            borderRadius: "50%",
+                            background: isToday
+                              ? "rgba(99,102,241,0.12)"
+                              : "rgba(148,163,184,0.10)",
+                            border: isToday
+                              ? "1px solid rgba(99,102,241,0.16)"
+                              : "1px solid rgba(148,163,184,0.08)",
+                            fontSize: plusFontSize,
+                            color: isToday
+                              ? "rgba(79,70,229,0.92)"
+                              : "rgba(148,163,184,0.90)",
+                            fontWeight: 900,
+                            lineHeight: 1,
+                            flexShrink: 0,
+                          }}
+                        >
+                          +
+                        </div>
+                      )}
+                    </div>
+
+                    <div
+                      style={{
+                        minHeight: isMobileCalendar ? 6 : 8,
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "flex-end",
+                        position: "relative",
+                        zIndex: 1,
+                      }}
+                    >
+                      {isFestivo ? (
+                        <div
+                          style={{
+                            width: 6,
+                            height: 6,
+                            borderRadius: 999,
+                            background: "rgba(220,38,38,0.96)",
+                          }}
+                        />
+                      ) : isWeekend ? (
+                        <div
+                          style={{
+                            width: 4,
+                            height: 4,
+                            borderRadius: 999,
+                            background: "rgba(248,113,113,0.72)",
+                          }}
+                        />
+                      ) : (
+                        <div />
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* POPUP */}
       {popupTurno && (
         <div
           onClick={() => setPopupTurno(null)}
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.4)",
+            background: "rgba(2,6,23,0.42)",
+            backdropFilter: "blur(8px)",
+            zIndex: 90,
             display: "grid",
             placeItems: "center",
+            padding: 16,
           }}
         >
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              background: "white",
-              padding: 20,
-              borderRadius: 20,
+              width: "min(420px, 100%)",
+              borderRadius: 24,
+              border: "1px solid rgba(255,255,255,0.60)",
+              background:
+                "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96))",
+              boxShadow: "0 28px 70px rgba(15,23,42,0.24)",
+              padding: 18,
+              display: "grid",
+              gap: 14,
             }}
           >
-            <div style={{ fontWeight: 1000 }}>
-              {popupTurno.sigla}
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" }}>
+              <div style={{ display: "grid", gap: 6 }}>
+                <div
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <span
+                    style={{
+                      display: "inline-block",
+                      minWidth: 34,
+                      textAlign: "center",
+                      padding: "6px 10px",
+                      borderRadius: 999,
+                      fontSize: 12,
+                      fontWeight: 1000,
+                      color: "white",
+                      background: getTurnoColor(popupTurno.sigla),
+                      boxShadow: "0 8px 18px rgba(15,23,42,0.14)",
+                    }}
+                  >
+                    {popupTurno.sigla}
+                  </span>
+
+                  <span
+                    style={{
+                      fontSize: 18,
+                      fontWeight: 1000,
+                      color: "rgba(15,23,42,0.96)",
+                    }}
+                  >
+                    Dettaglio turno
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 800,
+                    color: "rgba(15,23,42,0.68)",
+                    textTransform: "capitalize",
+                  }}
+                >
+                  {formattaDataPopup(popupTurno.key)}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setPopupTurno(null)}
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: 12,
+                  border: "1px solid rgba(148,163,184,0.16)",
+                  background: "rgba(255,255,255,0.86)",
+                  cursor: "pointer",
+                  fontSize: 18,
+                  fontWeight: 900,
+                  color: "rgba(15,23,42,0.74)",
+                }}
+              >
+                ✕
+              </button>
             </div>
 
-            <button onClick={() => setPopupTurno(null)}>
-              Chiudi
-            </button>
+            <div
+              style={{
+                padding: 14,
+                borderRadius: 18,
+                background: "linear-gradient(180deg, rgba(241,245,249,0.96), rgba(248,250,252,0.94))",
+                border: "1px solid rgba(148,163,184,0.12)",
+                display: "grid",
+                gap: 8,
+              }}
+            >
+              <div style={{ fontSize: 14, fontWeight: 950, color: "rgba(15,23,42,0.92)" }}>
+                {descrizioneCompattaTurno(popupTurno.turno, popupTurno.sigla)}
+              </div>
+
+              {popupTurno.sigla !== "R" && popupTurno.sigla !== "F" && popupTurno.sigla !== "A" && (
+                <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(15,23,42,0.72)" }}>
+                  Ordinarie: {formatNumeroOre(popupTurno.turno.oreOrdinarie)} h • Straordinarie:{" "}
+                  {formatNumeroOre(popupTurno.turno.oreStraordinarie)} h
+                </div>
+              )}
+
+              {popupTurno.turno.note?.trim() && (
+                <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(15,23,42,0.72)" }}>
+                  Nota: {popupTurno.turno.note}
+                </div>
+              )}
+
+              {popupTurno.count > 1 && (
+                <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(79,70,229,0.92)" }}>
+                  In questo giorno ci sono altri {popupTurno.count - 1} turni.
+                </div>
+              )}
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                gap: 10,
+                justifyContent: "flex-end",
+                flexWrap: "wrap",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setPopupTurno(null)}
+                style={{
+                  border: "1px solid rgba(148,163,184,0.16)",
+                  background: "rgba(255,255,255,0.88)",
+                  color: "rgba(15,23,42,0.84)",
+                  padding: "12px 14px",
+                  borderRadius: 14,
+                  fontWeight: 900,
+                  cursor: "pointer",
+                }}
+              >
+                Chiudi
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const turno = popupTurno.turno;
+                  setPopupTurno(null);
+                  onEditTurno(turno);
+                }}
+                style={{
+                  border: "none",
+                  background:
+                    "linear-gradient(180deg, rgba(79,70,229,0.98), rgba(124,58,237,0.95))",
+                  color: "white",
+                  padding: "12px 14px",
+                  borderRadius: 14,
+                  fontWeight: 1000,
+                  cursor: "pointer",
+                  boxShadow: "0 14px 28px rgba(79,70,229,0.18)",
+                }}
+              >
+                Modifica turno
+              </button>
+            </div>
           </div>
         </div>
       )}
     </>
   );
 }
-
 
 
 
@@ -5661,40 +6100,60 @@ function MiniCalendarioControllo({
             </button>
           </div>
         </>
-     ) : consultaSezione === "turni" ? (
+) : consultaSezione === "turni" ? (
   <>
     <div
       style={{
+        ...ui.card,
+        padding: 20,
         display: "grid",
-        gap: 10,
-        justifyItems: "center",
-        textAlign: "center",
-        padding: "6px 6px 2px",
+        gap: 12,
+        border: "1px solid rgba(249,115,22,0.18)",
+        background:
+          "linear-gradient(180deg, rgba(249,115,22,0.12), rgba(255,255,255,0.94))",
+        boxShadow: "0 18px 40px rgba(249,115,22,0.10)",
       }}
     >
       <div
         style={{
-          fontSize: 30,
-          fontWeight: 1000,
-          letterSpacing: -0.6,
-          color: "rgba(241,245,249,0.96)",
-          textShadow: "0 10px 26px rgba(249,115,22,0.22)",
-          lineHeight: 1.05,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 12,
+          flexWrap: "wrap",
         }}
       >
-        Consulta turni
-      </div>
+        <div style={{ display: "grid", gap: 6 }}>
+          <div
+            style={{
+              fontSize: 24,
+              fontWeight: 1000,
+              letterSpacing: -0.4,
+              color: "rgba(15,23,42,0.96)",
+            }}
+          >
+            Consulta turni
+          </div>
 
-      <div
-        style={{
-          maxWidth: 720,
-          fontSize: 14,
-          fontWeight: 800,
-          color: "rgba(191,219,254,0.88)",
-          lineHeight: 1.5,
-        }}
-      >
-        Calendario mensile turni con navigazione mese, riepilogo compatto e modifica rapida.
+          <div
+            style={{
+              fontSize: 13,
+              fontWeight: 800,
+              color: "rgba(15,23,42,0.72)",
+              lineHeight: 1.45,
+            }}
+          >
+            Calendario mensile turni con navigazione mese, riepilogo compatto e modifica rapida.
+          </div>
+        </div>
+
+        <button
+          data-chip="1"
+          onClick={() => setConsultaSezione("menu")}
+          style={chip(false)}
+        >
+          Torna a Consulta
+        </button>
       </div>
     </div>
 
@@ -5719,10 +6178,10 @@ function MiniCalendarioControllo({
       <div
         style={{
           ...ui.card,
-          padding: 18,
+          padding: 16,
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
-          gap: 14,
+          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+          gap: 12,
           border: "1px solid rgba(255,255,255,0.55)",
           boxShadow: "0 18px 40px rgba(15,23,42,0.08)",
           background:
@@ -5731,173 +6190,101 @@ function MiniCalendarioControllo({
       >
         <div
           style={{
-            padding: 16,
-            borderRadius: 22,
+            padding: 14,
+            borderRadius: 18,
             border: "1px solid rgba(14,165,233,0.14)",
             background:
               "linear-gradient(180deg, rgba(14,165,233,0.10), rgba(14,165,233,0.04))",
-            boxShadow: "0 10px 24px rgba(14,165,233,0.08)",
+            boxShadow: "0 8px 20px rgba(14,165,233,0.06)",
           }}
         >
-          <div
-            style={{
-              fontSize: 12,
-              fontWeight: 950,
-              letterSpacing: 0.2,
-              color: "rgba(8,47,73,0.82)",
-            }}
-          >
+          <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(8,47,73,0.82)" }}>
             Totale turni
           </div>
           <div
             style={{
-              marginTop: 8,
-              fontSize: 24,
+              marginTop: 6,
+              fontSize: 22,
               fontWeight: 1000,
-              lineHeight: 1,
               color: "rgba(15,23,42,0.96)",
             }}
           >
             {totaleTurniMese}
           </div>
-          <div
-            style={{
-              marginTop: 6,
-              fontSize: 12,
-              fontWeight: 800,
-              color: "rgba(15,23,42,0.62)",
-            }}
-          >
-            Esclusi i riposi
-          </div>
         </div>
 
         <div
           style={{
-            padding: 16,
-            borderRadius: 22,
+            padding: 14,
+            borderRadius: 18,
             border: "1px solid rgba(16,185,129,0.14)",
             background:
               "linear-gradient(180deg, rgba(16,185,129,0.10), rgba(16,185,129,0.04))",
-            boxShadow: "0 10px 24px rgba(16,185,129,0.08)",
+            boxShadow: "0 8px 20px rgba(16,185,129,0.06)",
           }}
         >
-          <div
-            style={{
-              fontSize: 12,
-              fontWeight: 950,
-              letterSpacing: 0.2,
-              color: "rgba(6,78,59,0.82)",
-            }}
-          >
+          <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(6,78,59,0.82)" }}>
             Ore ordinarie
           </div>
           <div
             style={{
-              marginTop: 8,
-              fontSize: 24,
+              marginTop: 6,
+              fontSize: 22,
               fontWeight: 1000,
-              lineHeight: 1,
               color: "rgba(15,23,42,0.96)",
             }}
           >
             {formatNumeroOre(oreOrdMese)} h
           </div>
-          <div
-            style={{
-              marginTop: 6,
-              fontSize: 12,
-              fontWeight: 800,
-              color: "rgba(15,23,42,0.62)",
-            }}
-          >
-            Monte ore base
-          </div>
         </div>
 
         <div
           style={{
-            padding: 16,
-            borderRadius: 22,
+            padding: 14,
+            borderRadius: 18,
             border: "1px solid rgba(249,115,22,0.14)",
             background:
               "linear-gradient(180deg, rgba(249,115,22,0.10), rgba(249,115,22,0.04))",
-            boxShadow: "0 10px 24px rgba(249,115,22,0.08)",
+            boxShadow: "0 8px 20px rgba(249,115,22,0.06)",
           }}
         >
-          <div
-            style={{
-              fontSize: 12,
-              fontWeight: 950,
-              letterSpacing: 0.2,
-              color: "rgba(124,45,18,0.82)",
-            }}
-          >
+          <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(124,45,18,0.82)" }}>
             Ore straordinarie
           </div>
           <div
             style={{
-              marginTop: 8,
-              fontSize: 24,
+              marginTop: 6,
+              fontSize: 22,
               fontWeight: 1000,
-              lineHeight: 1,
               color: "rgba(15,23,42,0.96)",
             }}
           >
             {formatNumeroOre(oreStraMese)} h
           </div>
-          <div
-            style={{
-              marginTop: 6,
-              fontSize: 12,
-              fontWeight: 800,
-              color: "rgba(15,23,42,0.62)",
-            }}
-          >
-            Extra mensili
-          </div>
         </div>
 
         <div
           style={{
-            padding: 16,
-            borderRadius: 22,
+            padding: 14,
+            borderRadius: 18,
             border: "1px solid rgba(124,58,237,0.14)",
             background:
               "linear-gradient(180deg, rgba(124,58,237,0.10), rgba(124,58,237,0.04))",
-            boxShadow: "0 10px 24px rgba(124,58,237,0.08)",
+            boxShadow: "0 8px 20px rgba(124,58,237,0.06)",
           }}
         >
-          <div
-            style={{
-              fontSize: 12,
-              fontWeight: 950,
-              letterSpacing: 0.2,
-              color: "rgba(76,29,149,0.82)",
-            }}
-          >
+          <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(76,29,149,0.82)" }}>
             Ore totali
           </div>
           <div
             style={{
-              marginTop: 8,
-              fontSize: 24,
+              marginTop: 6,
+              fontSize: 22,
               fontWeight: 1000,
-              lineHeight: 1,
               color: "rgba(15,23,42,0.96)",
             }}
           >
             {formatNumeroOre(oreTotMese)} h
-          </div>
-          <div
-            style={{
-              marginTop: 6,
-              fontSize: 12,
-              fontWeight: 800,
-              color: "rgba(15,23,42,0.62)",
-            }}
-          >
-            Totale mese
           </div>
         </div>
       </div>
@@ -5905,7 +6292,7 @@ function MiniCalendarioControllo({
       <div
         style={{
           ...ui.card,
-          padding: 18,
+          padding: 16,
           display: "grid",
           gap: 14,
           border: "1px solid rgba(255,255,255,0.58)",
@@ -5934,144 +6321,157 @@ function MiniCalendarioControllo({
             >
               Monitoraggio ferie
             </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+            <button
+              type="button"
+              onClick={() => setApriConfigFerie((prev) => !prev)}
+              style={{
+                width: 42,
+                height: 42,
+                borderRadius: 14,
+                border: "1px solid rgba(148,163,184,0.18)",
+                background:
+                  "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
+                boxShadow: "0 8px 18px rgba(15,23,42,0.08)",
+                cursor: "pointer",
+                display: "grid",
+                placeItems: "center",
+                fontSize: 18,
+              }}
+              title="Configura basi ferie"
+            >
+              ⚙️
+            </button>
+
             <div
               style={{
+                padding: "8px 12px",
+                borderRadius: 999,
+                border: "1px solid rgba(16,185,129,0.22)",
+                background:
+                  "linear-gradient(180deg, rgba(220,252,231,1), rgba(240,253,244,0.98))",
                 fontSize: 12,
-                fontWeight: 800,
-                color: "rgba(15,23,42,0.72)",
-                lineHeight: 1.45,
+                fontWeight: 950,
+                color: "rgba(21,128,61,0.98)",
+                boxShadow: "0 8px 18px rgba(34,197,94,0.10)",
               }}
             >
-              Base ferie personalizzabile: giorni e ore modificabili direttamente da qui
+              Sigla calendario: F
             </div>
-          </div>
-
-          <div
-            style={{
-              padding: "8px 12px",
-              borderRadius: 999,
-              border: "1px solid rgba(16,185,129,0.22)",
-              background: "linear-gradient(180deg, rgba(220,252,231,1), rgba(240,253,244,0.98))",
-              fontSize: 12,
-              fontWeight: 950,
-              color: "rgba(21,128,61,0.98)",
-              boxShadow: "0 8px 18px rgba(34,197,94,0.10)",
-            }}
-          >
-            Sigla calendario: F
           </div>
         </div>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-            gap: 14,
-          }}
-        >
+        {apriConfigFerie && (
           <div
             style={{
-              padding: 16,
-              borderRadius: 22,
-              border: "1px solid rgba(59,130,246,0.24)",
-              background:
-                "linear-gradient(180deg, rgba(219,234,254,1), rgba(239,246,255,1))",
-              boxShadow: "0 10px 24px rgba(59,130,246,0.12)",
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+              gap: 12,
             }}
           >
             <div
               style={{
-                fontSize: 13,
-                fontWeight: 950,
-                letterSpacing: 0.2,
-                color: "rgba(30,64,175,0.98)",
+                padding: 14,
+                borderRadius: 18,
+                border: "1px solid rgba(59,130,246,0.24)",
+                background:
+                  "linear-gradient(180deg, rgba(219,234,254,1), rgba(239,246,255,1))",
+                boxShadow: "0 8px 18px rgba(59,130,246,0.10)",
               }}
             >
-              Base ferie giorni
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 950,
+                  color: "rgba(30,64,175,0.98)",
+                }}
+              >
+                Base ferie giorni
+              </div>
+              <input
+                value={String(ferieTotaliGiorniBase)}
+                onChange={(e) => {
+                  const n = Number(e.target.value);
+                  setFerieTotaliGiorniBase(Number.isFinite(n) && n >= 0 ? n : 0);
+                }}
+                inputMode="numeric"
+                style={{
+                  ...inputLight(false),
+                  marginTop: 10,
+                  background: "rgba(255,255,255,1)",
+                  fontWeight: 900,
+                  color: "rgba(15,23,42,0.98)",
+                  WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                  caretColor: "rgba(15,23,42,0.98)",
+                  border: "1px solid rgba(59,130,246,0.22)",
+                }}
+              />
             </div>
-            <input
-              value={String(ferieTotaliGiorniBase)}
-              onChange={(e) => {
-                const n = Number(e.target.value);
-                setFerieTotaliGiorniBase(Number.isFinite(n) && n >= 0 ? n : 0);
-              }}
-              inputMode="numeric"
-              style={{
-                ...inputLight(false),
-                marginTop: 10,
-                background: "rgba(255,255,255,1)",
-                fontWeight: 900,
-                color: "rgba(15,23,42,0.98)",
-                WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                caretColor: "rgba(15,23,42,0.98)",
-                border: "1px solid rgba(59,130,246,0.22)",
-              }}
-            />
-          </div>
 
-          <div
-            style={{
-              padding: 16,
-              borderRadius: 22,
-              border: "1px solid rgba(168,85,247,0.24)",
-              background:
-                "linear-gradient(180deg, rgba(243,232,255,1), rgba(250,245,255,1))",
-              boxShadow: "0 10px 24px rgba(168,85,247,0.12)",
-            }}
-          >
             <div
               style={{
-                fontSize: 13,
-                fontWeight: 950,
-                letterSpacing: 0.2,
-                color: "rgba(107,33,168,0.98)",
+                padding: 14,
+                borderRadius: 18,
+                border: "1px solid rgba(168,85,247,0.24)",
+                background:
+                  "linear-gradient(180deg, rgba(243,232,255,1), rgba(250,245,255,1))",
+                boxShadow: "0 8px 18px rgba(168,85,247,0.10)",
               }}
             >
-              Base ferie ore
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 950,
+                  color: "rgba(107,33,168,0.98)",
+                }}
+              >
+                Base ferie ore
+              </div>
+              <input
+                value={String(ferieTotaliOreBase)}
+                onChange={(e) => {
+                  const n = Number(e.target.value.replace(",", "."));
+                  setFerieTotaliOreBase(Number.isFinite(n) && n >= 0 ? n : 0);
+                }}
+                inputMode="decimal"
+                style={{
+                  ...inputLight(false),
+                  marginTop: 10,
+                  background: "rgba(255,255,255,1)",
+                  fontWeight: 900,
+                  color: "rgba(15,23,42,0.98)",
+                  WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                  caretColor: "rgba(15,23,42,0.98)",
+                  border: "1px solid rgba(168,85,247,0.22)",
+                }}
+              />
             </div>
-            <input
-              value={String(ferieTotaliOreBase)}
-              onChange={(e) => {
-                const n = Number(e.target.value.replace(",", "."));
-                setFerieTotaliOreBase(Number.isFinite(n) && n >= 0 ? n : 0);
-              }}
-              inputMode="decimal"
-              style={{
-                ...inputLight(false),
-                marginTop: 10,
-                background: "rgba(255,255,255,1)",
-                fontWeight: 900,
-                color: "rgba(15,23,42,0.98)",
-                WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                caretColor: "rgba(15,23,42,0.98)",
-                border: "1px solid rgba(168,85,247,0.22)",
-              }}
-            />
           </div>
-        </div>
+        )}
 
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
-            gap: 14,
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: 12,
           }}
         >
           <div
             style={{
-              padding: 16,
-              borderRadius: 22,
+              padding: 14,
+              borderRadius: 18,
               border: "1px solid rgba(34,197,94,0.24)",
               background:
                 "linear-gradient(180deg, rgba(220,252,231,1), rgba(240,253,244,1))",
-              boxShadow: "0 10px 24px rgba(34,197,94,0.12)",
+              boxShadow: "0 8px 18px rgba(34,197,94,0.10)",
             }}
           >
             <div
               style={{
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: 950,
-                letterSpacing: 0.2,
                 color: "rgba(21,128,61,0.98)",
               }}
             >
@@ -6080,41 +6480,29 @@ function MiniCalendarioControllo({
             <div
               style={{
                 marginTop: 8,
-                fontSize: 24,
+                fontSize: 22,
                 fontWeight: 1000,
-                lineHeight: 1,
                 color: "rgba(15,23,42,0.98)",
               }}
             >
               {ferieGiorniEffettuati}
             </div>
-            <div
-              style={{
-                marginTop: 6,
-                fontSize: 12,
-                fontWeight: 800,
-                color: "rgba(15,23,42,0.74)",
-              }}
-            >
-              Conteggio automatico dai turni F
-            </div>
           </div>
 
           <div
             style={{
-              padding: 16,
-              borderRadius: 22,
+              padding: 14,
+              borderRadius: 18,
               border: "1px solid rgba(59,130,246,0.24)",
               background:
                 "linear-gradient(180deg, rgba(219,234,254,1), rgba(239,246,255,1))",
-              boxShadow: "0 10px 24px rgba(59,130,246,0.12)",
+              boxShadow: "0 8px 18px rgba(59,130,246,0.10)",
             }}
           >
             <div
               style={{
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: 950,
-                letterSpacing: 0.2,
                 color: "rgba(30,64,175,0.98)",
               }}
             >
@@ -6123,41 +6511,29 @@ function MiniCalendarioControllo({
             <div
               style={{
                 marginTop: 8,
-                fontSize: 24,
+                fontSize: 22,
                 fontWeight: 1000,
-                lineHeight: 1,
                 color: "rgba(15,23,42,0.98)",
               }}
             >
               {ferieGiorniResidui}
             </div>
-            <div
-              style={{
-                marginTop: 6,
-                fontSize: 12,
-                fontWeight: 800,
-                color: "rgba(15,23,42,0.74)",
-              }}
-            >
-              Somma ore ferie inserite
-            </div>
           </div>
 
           <div
             style={{
-              padding: 16,
-              borderRadius: 22,
+              padding: 14,
+              borderRadius: 18,
               border: "1px solid rgba(168,85,247,0.24)",
               background:
                 "linear-gradient(180deg, rgba(243,232,255,1), rgba(250,245,255,1))",
-              boxShadow: "0 10px 24px rgba(168,85,247,0.12)",
+              boxShadow: "0 8px 18px rgba(168,85,247,0.10)",
             }}
           >
             <div
               style={{
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: 950,
-                letterSpacing: 0.2,
                 color: "rgba(107,33,168,0.98)",
               }}
             >
@@ -6166,41 +6542,29 @@ function MiniCalendarioControllo({
             <div
               style={{
                 marginTop: 8,
-                fontSize: 24,
+                fontSize: 22,
                 fontWeight: 1000,
-                lineHeight: 1,
                 color: "rgba(15,23,42,0.98)",
               }}
             >
               {formatNumeroOre(ferieOreEffettuate)} h
             </div>
-            <div
-              style={{
-                marginTop: 6,
-                fontSize: 12,
-                fontWeight: 800,
-                color: "rgba(15,23,42,0.74)",
-              }}
-            >
-              Valore ore ferie
-            </div>
           </div>
 
           <div
             style={{
-              padding: 16,
-              borderRadius: 22,
+              padding: 14,
+              borderRadius: 18,
               border: "1px solid rgba(244,114,182,0.24)",
               background:
                 "linear-gradient(180deg, rgba(252,231,243,1), rgba(253,242,248,1))",
-              boxShadow: "0 10px 24px rgba(244,114,182,0.12)",
+              boxShadow: "0 8px 18px rgba(244,114,182,0.10)",
             }}
           >
             <div
               style={{
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: 950,
-                letterSpacing: 0.2,
                 color: "rgba(190,24,93,0.98)",
               }}
             >
@@ -6209,23 +6573,12 @@ function MiniCalendarioControllo({
             <div
               style={{
                 marginTop: 8,
-                fontSize: 24,
+                fontSize: 22,
                 fontWeight: 1000,
-                lineHeight: 1,
                 color: "rgba(15,23,42,0.98)",
               }}
             >
               {formatNumeroOre(ferieOreResidue)} h
-            </div>
-            <div
-              style={{
-                marginTop: 6,
-                fontSize: 12,
-                fontWeight: 800,
-                color: "rgba(15,23,42,0.74)",
-              }}
-            >
-              Residuo calcolato automaticamente
             </div>
           </div>
         </div>
