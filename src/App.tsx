@@ -2693,16 +2693,16 @@ function MiniCalendario({
   const isMobileCalendar =
     typeof window !== "undefined" && window.innerWidth <= 640;
 
-  const cellGap = isMobileCalendar ? 5 : 6;
-  const dayNumberSize = isMobileCalendar ? 34 : 38;
-  const badgeSize = isMobileCalendar ? 22 : 24;
-  const badgeFontSize = isMobileCalendar ? 10 : 11;
-  const plusFontSize = isMobileCalendar ? 15 : 16;
-  const calendarPadding = isMobileCalendar ? 14 : 16;
-  const monthTitleSize = isMobileCalendar ? 20 : 22;
-  const weekLabelSize = isMobileCalendar ? 10 : 11;
-  const dayCellPadding = isMobileCalendar ? 4 : 4;
-  const navSize = isMobileCalendar ? 44 : 48;
+  const cellGap = isMobileCalendar ? 3 : 6;
+  const dayNumberSize = isMobileCalendar ? 28 : 38;
+  const badgeSize = isMobileCalendar ? 16 : 24;
+  const badgeFontSize = isMobileCalendar ? 8 : 11;
+  const plusFontSize = isMobileCalendar ? 12 : 16;
+  const calendarPadding = isMobileCalendar ? 10 : 16;
+  const monthTitleSize = isMobileCalendar ? 17 : 22;
+  const weekLabelSize = isMobileCalendar ? 9 : 11;
+  const dayCellPadding = isMobileCalendar ? 2 : 4;
+  const navSize = isMobileCalendar ? 38 : 48;
 
   const y = mese.getFullYear();
   const m0 = mese.getMonth();
@@ -2848,7 +2848,13 @@ function MiniCalendario({
 
   return (
     <>
-      <div style={{ maxWidth: 960, margin: "0 auto", marginTop: 10 }}>
+      <div
+        style={{
+          maxWidth: isMobileCalendar ? 760 : 960,
+          margin: "0 auto",
+          marginTop: 10,
+        }}
+      >
         <div
           style={{
             ...ui.card,
@@ -2877,7 +2883,7 @@ function MiniCalendario({
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                marginBottom: 14,
+                marginBottom: isMobileCalendar ? 10 : 14,
                 gap: 12,
               }}
             >
@@ -2902,7 +2908,9 @@ function MiniCalendario({
                   flex: 1,
                   textShadow: "0 6px 16px rgba(99,102,241,0.10)",
                   transform:
-                    monthAnim === "enter" ? "translateY(0) scale(1)" : "translateY(0) scale(1)",
+                    monthAnim === "enter"
+                      ? "translateY(0) scale(1)"
+                      : "translateY(0) scale(1)",
                   opacity: 1,
                   transition: "transform .24s ease, opacity .24s ease",
                 }}
@@ -2925,7 +2933,7 @@ function MiniCalendario({
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(7, 1fr)",
-                marginBottom: 10,
+                marginBottom: isMobileCalendar ? 8 : 10,
                 gap: cellGap,
               }}
             >
@@ -2980,7 +2988,9 @@ function MiniCalendario({
                     key={key}
                     onMouseDown={() => setPressedKey(key)}
                     onMouseUp={() => setPressedKey(null)}
-                    onMouseLeave={() => setPressedKey((prev) => (prev === key ? null : prev))}
+                    onMouseLeave={() =>
+                      setPressedKey((prev) => (prev === key ? null : prev))
+                    }
                     onTouchStart={() => setPressedKey(key)}
                     onTouchEnd={() => setPressedKey(null)}
                     onClick={() => {
@@ -3031,7 +3041,7 @@ function MiniCalendario({
                           display: "inline-flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          fontSize: isMobileCalendar ? 13 : 14,
+                          fontSize: isMobileCalendar ? 11 : 14,
                           fontWeight: 1000,
                           color: isRedDay
                             ? "rgba(220,38,38,0.98)"
@@ -3065,7 +3075,7 @@ function MiniCalendario({
                         display: "flex",
                         justifyContent: "center",
                         alignItems: "center",
-                        minHeight: isMobileCalendar ? 24 : 26,
+                        minHeight: isMobileCalendar ? 18 : 26,
                         marginTop: 2,
                       }}
                     >
@@ -3124,7 +3134,7 @@ function MiniCalendario({
 
                     <div
                       style={{
-                        minHeight: isMobileCalendar ? 6 : 8,
+                        minHeight: isMobileCalendar ? 4 : 8,
                         display: "flex",
                         justifyContent: "center",
                         alignItems: "flex-end",
@@ -3190,7 +3200,14 @@ function MiniCalendario({
               gap: 14,
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 12,
+                alignItems: "start",
+              }}
+            >
               <div style={{ display: "grid", gap: 6 }}>
                 <div
                   style={{
@@ -3262,31 +3279,59 @@ function MiniCalendario({
               style={{
                 padding: 14,
                 borderRadius: 18,
-                background: "linear-gradient(180deg, rgba(241,245,249,0.96), rgba(248,250,252,0.94))",
+                background:
+                  "linear-gradient(180deg, rgba(241,245,249,0.96), rgba(248,250,252,0.94))",
                 border: "1px solid rgba(148,163,184,0.12)",
                 display: "grid",
                 gap: 8,
               }}
             >
-              <div style={{ fontSize: 14, fontWeight: 950, color: "rgba(15,23,42,0.92)" }}>
+              <div
+                style={{
+                  fontSize: 14,
+                  fontWeight: 950,
+                  color: "rgba(15,23,42,0.92)",
+                }}
+              >
                 {descrizioneCompattaTurno(popupTurno.turno, popupTurno.sigla)}
               </div>
 
-              {popupTurno.sigla !== "R" && popupTurno.sigla !== "F" && popupTurno.sigla !== "A" && (
-                <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(15,23,42,0.72)" }}>
-                  Ordinarie: {formatNumeroOre(popupTurno.turno.oreOrdinarie)} h • Straordinarie:{" "}
-                  {formatNumeroOre(popupTurno.turno.oreStraordinarie)} h
-                </div>
-              )}
+              {popupTurno.sigla !== "R" &&
+                popupTurno.sigla !== "F" &&
+                popupTurno.sigla !== "A" && (
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 800,
+                      color: "rgba(15,23,42,0.72)",
+                    }}
+                  >
+                    Ordinarie: {formatNumeroOre(popupTurno.turno.oreOrdinarie)} h •
+                    Straordinarie:{" "}
+                    {formatNumeroOre(popupTurno.turno.oreStraordinarie)} h
+                  </div>
+                )}
 
               {popupTurno.turno.note?.trim() && (
-                <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(15,23,42,0.72)" }}>
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 800,
+                    color: "rgba(15,23,42,0.72)",
+                  }}
+                >
                   Nota: {popupTurno.turno.note}
                 </div>
               )}
 
               {popupTurno.count > 1 && (
-                <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(79,70,229,0.92)" }}>
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 900,
+                    color: "rgba(79,70,229,0.92)",
+                  }}
+                >
                   In questo giorno ci sono altri {popupTurno.count - 1} turni.
                 </div>
               )}
