@@ -3037,12 +3037,22 @@ function MiniCalendario({
                       {d}
                     </div>
 
-                    <div style={{ textAlign: "center", position: "relative", zIndex: 1 }}>
+                    <div
+                      style={{
+                        position: "relative",
+                        zIndex: 1,
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        minHeight: 22,
+                      }}
+                    >
                       {sigla ? (
                         <div
                           style={{
-                            display: "inline-grid",
-                            placeItems: "center",
+                            display: "inline-flex",
+                            justifyContent: "center",
+                            alignItems: "center",
                             width: 18,
                             height: 18,
                             margin: "0 auto",
@@ -3055,6 +3065,7 @@ function MiniCalendario({
                               "0 6px 12px rgba(15,23,42,0.14), inset 0 1px 0 rgba(255,255,255,0.18)",
                             letterSpacing: 0,
                             lineHeight: 1,
+                            flexShrink: 0,
                           }}
                         >
                           {sigla}
@@ -3062,24 +3073,26 @@ function MiniCalendario({
                       ) : (
                         <div
                           style={{
-                            display: "inline-grid",
-                            placeItems: "center",
-                            width: 26,
-                            height: 26,
+                            display: "inline-flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            width: 18,
+                            height: 18,
                             margin: "0 auto",
                             borderRadius: 999,
                             background: isToday
-                              ? "rgba(99,102,241,0.16)"
-                              : "rgba(148,163,184,0.10)",
+                              ? "rgba(99,102,241,0.12)"
+                              : "rgba(148,163,184,0.08)",
                             border: isToday
-                              ? "1px solid rgba(99,102,241,0.16)"
-                              : "1px solid rgba(148,163,184,0.08)",
-                            fontSize: 16,
+                              ? "1px solid rgba(99,102,241,0.14)"
+                              : "1px solid rgba(148,163,184,0.06)",
+                            fontSize: 14,
                             color: isToday
-                              ? "rgba(79,70,229,0.94)"
-                              : "rgba(148,163,184,0.90)",
+                              ? "rgba(79,70,229,0.90)"
+                              : "rgba(148,163,184,0.88)",
                             fontWeight: 900,
                             lineHeight: 1,
+                            flexShrink: 0,
                           }}
                         >
                           +
@@ -3123,48 +3136,6 @@ function MiniCalendario({
                   </div>
                 );
               })}
-            </div>
-
-            <div
-              style={{
-                marginTop: 12,
-                display: "flex",
-                gap: 8,
-                flexWrap: "wrap",
-                justifyContent: "center",
-              }}
-            >
-              {[
-                { label: "Festivo", color: "rgba(220,38,38,0.96)" },
-                { label: "Oggi", color: "rgba(79,70,229,0.96)" },
-                { label: "Turno", color: "rgba(37,99,235,0.96)" },
-              ].map((item) => (
-                <div
-                  key={item.label}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 8,
-                    padding: "6px 10px",
-                    borderRadius: 999,
-                    background: "rgba(255,255,255,0.72)",
-                    border: "1px solid rgba(148,163,184,0.12)",
-                    fontSize: 11,
-                    fontWeight: 900,
-                    color: "rgba(15,23,42,0.76)",
-                  }}
-                >
-                  <span
-                    style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: 999,
-                      background: item.color,
-                    }}
-                  />
-                  {item.label}
-                </div>
-              ))}
             </div>
           </div>
         </div>
