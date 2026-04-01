@@ -2693,16 +2693,16 @@ function MiniCalendario({
   const isMobileCalendar =
     typeof window !== "undefined" && window.innerWidth <= 640;
 
-  const cellGap = isMobileCalendar ? 3 : 6;
-  const dayNumberSize = isMobileCalendar ? 28 : 38;
-  const badgeSize = isMobileCalendar ? 16 : 24;
-  const badgeFontSize = isMobileCalendar ? 8 : 11;
-  const plusFontSize = isMobileCalendar ? 12 : 16;
-  const calendarPadding = isMobileCalendar ? 10 : 16;
-  const monthTitleSize = isMobileCalendar ? 17 : 22;
+  const cellGap = isMobileCalendar ? 4 : 6;
+  const dayNumberSize = isMobileCalendar ? 32 : 38;
+  const badgeSize = isMobileCalendar ? 20 : 24;
+  const badgeFontSize = isMobileCalendar ? 9 : 11;
+  const plusFontSize = isMobileCalendar ? 13 : 16;
+  const calendarPadding = isMobileCalendar ? 12 : 16;
+  const monthTitleSize = isMobileCalendar ? 18 : 22;
   const weekLabelSize = isMobileCalendar ? 9 : 11;
-  const dayCellPadding = isMobileCalendar ? 2 : 4;
-  const navSize = isMobileCalendar ? 38 : 48;
+  const dayCellPadding = isMobileCalendar ? 3 : 4;
+  const navSize = isMobileCalendar ? 40 : 48;
 
   const y = mese.getFullYear();
   const m0 = mese.getMonth();
@@ -2850,14 +2850,20 @@ function MiniCalendario({
     <>
       <div
         style={{
-          maxWidth: isMobileCalendar ? 760 : 960,
+          width: "100%",
+          maxWidth: "100%",
           margin: "0 auto",
           marginTop: 10,
+          boxSizing: "border-box",
+          overflow: "hidden",
         }}
       >
         <div
           style={{
             ...ui.card,
+            width: "100%",
+            maxWidth: "100%",
+            boxSizing: "border-box",
             padding: calendarPadding,
             border: "1px solid rgba(255,255,255,0.58)",
             background:
@@ -2884,7 +2890,7 @@ function MiniCalendario({
                 justifyContent: "space-between",
                 alignItems: "center",
                 marginBottom: isMobileCalendar ? 10 : 14,
-                gap: 12,
+                gap: isMobileCalendar ? 8 : 12,
               }}
             >
               <button
@@ -2906,6 +2912,7 @@ function MiniCalendario({
                   letterSpacing: -0.6,
                   textAlign: "center",
                   flex: 1,
+                  minWidth: 0,
                   textShadow: "0 6px 16px rgba(99,102,241,0.10)",
                   transform:
                     monthAnim === "enter"
@@ -2932,9 +2939,10 @@ function MiniCalendario({
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(7, 1fr)",
+                gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
                 marginBottom: isMobileCalendar ? 8 : 10,
                 gap: cellGap,
+                width: "100%",
               }}
             >
               {giorniSettimana.map((g, i) => (
@@ -2957,13 +2965,14 @@ function MiniCalendario({
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(7, 1fr)",
+                gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
                 gap: cellGap,
+                width: "100%",
               }}
             >
               {giorni.map((key, idx) => {
                 if (!key) {
-                  return <div key={idx} />;
+                  return <div key={idx} style={{ minWidth: 0 }} />;
                 }
 
                 const d = Number(key.slice(-2));
@@ -3006,7 +3015,8 @@ function MiniCalendario({
                       }
                     }}
                     style={{
-                      aspectRatio: "1",
+                      aspectRatio: "1 / 1",
+                      minWidth: 0,
                       borderRadius: isMobileCalendar ? 16 : 18,
                       padding: dayCellPadding,
                       cursor: "pointer",
@@ -3019,8 +3029,9 @@ function MiniCalendario({
                       boxShadow: "none",
                       transition: "transform .16s ease",
                       position: "relative",
-                      overflow: "visible",
+                      overflow: "hidden",
                       transform: isPressed ? "scale(0.96)" : "scale(1)",
+                      boxSizing: "border-box",
                     }}
                     title={isFestivo ? `${key} • Festivo` : key}
                   >
@@ -3037,6 +3048,8 @@ function MiniCalendario({
                         style={{
                           width: dayNumberSize,
                           height: dayNumberSize,
+                          maxWidth: "100%",
+                          maxHeight: "100%",
                           borderRadius: "50%",
                           display: "inline-flex",
                           alignItems: "center",
@@ -3062,6 +3075,7 @@ function MiniCalendario({
                           boxShadow: isToday
                             ? "0 8px 16px rgba(99,102,241,0.12)"
                             : "none",
+                          boxSizing: "border-box",
                         }}
                       >
                         {d}
@@ -3075,7 +3089,7 @@ function MiniCalendario({
                         display: "flex",
                         justifyContent: "center",
                         alignItems: "center",
-                        minHeight: isMobileCalendar ? 18 : 26,
+                        minHeight: isMobileCalendar ? 20 : 26,
                         marginTop: 2,
                       }}
                     >
@@ -3098,6 +3112,7 @@ function MiniCalendario({
                             letterSpacing: 0,
                             lineHeight: 1,
                             flexShrink: 0,
+                            boxSizing: "border-box",
                           }}
                         >
                           {sigla}
@@ -3125,6 +3140,7 @@ function MiniCalendario({
                             fontWeight: 900,
                             lineHeight: 1,
                             flexShrink: 0,
+                            boxSizing: "border-box",
                           }}
                         >
                           +
@@ -6149,56 +6165,37 @@ function MiniCalendarioControllo({
   <>
     <div
       style={{
-        ...ui.card,
-        padding: 20,
         display: "grid",
-        gap: 12,
-        border: "1px solid rgba(249,115,22,0.18)",
-        background:
-          "linear-gradient(180deg, rgba(249,115,22,0.12), rgba(255,255,255,0.94))",
-        boxShadow: "0 18px 40px rgba(249,115,22,0.10)",
+        gap: 10,
+        justifyItems: "center",
+        textAlign: "center",
+        padding: "8px 6px 2px",
       }}
     >
       <div
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: 12,
-          flexWrap: "wrap",
+          fontSize: 34,
+          fontWeight: 1000,
+          letterSpacing: -0.8,
+          color: "rgba(241,245,249,0.98)",
+          textShadow: "0 12px 30px rgba(79,70,229,0.22)",
+          lineHeight: 1.05,
         }}
       >
-        <div style={{ display: "grid", gap: 6 }}>
-          <div
-            style={{
-              fontSize: 24,
-              fontWeight: 1000,
-              letterSpacing: -0.4,
-              color: "rgba(15,23,42,0.96)",
-            }}
-          >
-            Consulta turni
-          </div>
+        Consulta turni
+      </div>
 
-          <div
-            style={{
-              fontSize: 13,
-              fontWeight: 800,
-              color: "rgba(15,23,42,0.72)",
-              lineHeight: 1.45,
-            }}
-          >
-            Calendario mensile turni con navigazione mese, riepilogo compatto e modifica rapida.
-          </div>
-        </div>
-
-        <button
-          data-chip="1"
-          onClick={() => setConsultaSezione("menu")}
-          style={chip(false)}
-        >
-          Torna a Consulta
-        </button>
+      <div
+        style={{
+          maxWidth: 760,
+          fontSize: 15,
+          fontWeight: 800,
+          color: "rgba(191,219,254,0.90)",
+          lineHeight: 1.5,
+          letterSpacing: 0.1,
+        }}
+      >
+        Calendario mensile turni con navigazione mese, riepilogo compatto e modifica rapida.
       </div>
     </div>
 
@@ -6223,10 +6220,10 @@ function MiniCalendarioControllo({
       <div
         style={{
           ...ui.card,
-          padding: 16,
+          padding: 14,
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-          gap: 12,
+          gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+          gap: 10,
           border: "1px solid rgba(255,255,255,0.55)",
           boxShadow: "0 18px 40px rgba(15,23,42,0.08)",
           background:
@@ -6235,8 +6232,8 @@ function MiniCalendarioControllo({
       >
         <div
           style={{
-            padding: 14,
-            borderRadius: 18,
+            padding: 12,
+            borderRadius: 16,
             border: "1px solid rgba(14,165,233,0.14)",
             background:
               "linear-gradient(180deg, rgba(14,165,233,0.10), rgba(14,165,233,0.04))",
@@ -6249,7 +6246,7 @@ function MiniCalendarioControllo({
           <div
             style={{
               marginTop: 6,
-              fontSize: 22,
+              fontSize: 18,
               fontWeight: 1000,
               color: "rgba(15,23,42,0.96)",
             }}
@@ -6260,8 +6257,8 @@ function MiniCalendarioControllo({
 
         <div
           style={{
-            padding: 14,
-            borderRadius: 18,
+            padding: 12,
+            borderRadius: 16,
             border: "1px solid rgba(16,185,129,0.14)",
             background:
               "linear-gradient(180deg, rgba(16,185,129,0.10), rgba(16,185,129,0.04))",
@@ -6274,7 +6271,7 @@ function MiniCalendarioControllo({
           <div
             style={{
               marginTop: 6,
-              fontSize: 22,
+              fontSize: 18,
               fontWeight: 1000,
               color: "rgba(15,23,42,0.96)",
             }}
@@ -6285,8 +6282,8 @@ function MiniCalendarioControllo({
 
         <div
           style={{
-            padding: 14,
-            borderRadius: 18,
+            padding: 12,
+            borderRadius: 16,
             border: "1px solid rgba(249,115,22,0.14)",
             background:
               "linear-gradient(180deg, rgba(249,115,22,0.10), rgba(249,115,22,0.04))",
@@ -6299,7 +6296,7 @@ function MiniCalendarioControllo({
           <div
             style={{
               marginTop: 6,
-              fontSize: 22,
+              fontSize: 18,
               fontWeight: 1000,
               color: "rgba(15,23,42,0.96)",
             }}
@@ -6310,8 +6307,8 @@ function MiniCalendarioControllo({
 
         <div
           style={{
-            padding: 14,
-            borderRadius: 18,
+            padding: 12,
+            borderRadius: 16,
             border: "1px solid rgba(124,58,237,0.14)",
             background:
               "linear-gradient(180deg, rgba(124,58,237,0.10), rgba(124,58,237,0.04))",
@@ -6324,7 +6321,7 @@ function MiniCalendarioControllo({
           <div
             style={{
               marginTop: 6,
-              fontSize: 22,
+              fontSize: 18,
               fontWeight: 1000,
               color: "rgba(15,23,42,0.96)",
             }}
@@ -6337,9 +6334,9 @@ function MiniCalendarioControllo({
       <div
         style={{
           ...ui.card,
-          padding: 16,
+          padding: 14,
           display: "grid",
-          gap: 14,
+          gap: 12,
           border: "1px solid rgba(255,255,255,0.58)",
           boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
           background:
@@ -6355,17 +6352,15 @@ function MiniCalendarioControllo({
             flexWrap: "wrap",
           }}
         >
-          <div style={{ display: "grid", gap: 4 }}>
-            <div
-              style={{
-                fontSize: 19,
-                fontWeight: 1000,
-                letterSpacing: -0.3,
-                color: "rgba(15,23,42,0.98)",
-              }}
-            >
-              Monitoraggio ferie
-            </div>
+          <div
+            style={{
+              fontSize: 19,
+              fontWeight: 1000,
+              letterSpacing: -0.3,
+              color: "rgba(15,23,42,0.98)",
+            }}
+          >
+            Monitoraggio ferie
           </div>
 
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
@@ -6499,14 +6494,14 @@ function MiniCalendarioControllo({
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-            gap: 12,
+            gridTemplateColumns: "repeat(auto-fit, minmax(145px, 1fr))",
+            gap: 10,
           }}
         >
           <div
             style={{
-              padding: 14,
-              borderRadius: 18,
+              padding: 12,
+              borderRadius: 16,
               border: "1px solid rgba(34,197,94,0.24)",
               background:
                 "linear-gradient(180deg, rgba(220,252,231,1), rgba(240,253,244,1))",
@@ -6525,7 +6520,7 @@ function MiniCalendarioControllo({
             <div
               style={{
                 marginTop: 8,
-                fontSize: 22,
+                fontSize: 18,
                 fontWeight: 1000,
                 color: "rgba(15,23,42,0.98)",
               }}
@@ -6536,8 +6531,8 @@ function MiniCalendarioControllo({
 
           <div
             style={{
-              padding: 14,
-              borderRadius: 18,
+              padding: 12,
+              borderRadius: 16,
               border: "1px solid rgba(59,130,246,0.24)",
               background:
                 "linear-gradient(180deg, rgba(219,234,254,1), rgba(239,246,255,1))",
@@ -6556,7 +6551,7 @@ function MiniCalendarioControllo({
             <div
               style={{
                 marginTop: 8,
-                fontSize: 22,
+                fontSize: 18,
                 fontWeight: 1000,
                 color: "rgba(15,23,42,0.98)",
               }}
@@ -6567,8 +6562,8 @@ function MiniCalendarioControllo({
 
           <div
             style={{
-              padding: 14,
-              borderRadius: 18,
+              padding: 12,
+              borderRadius: 16,
               border: "1px solid rgba(168,85,247,0.24)",
               background:
                 "linear-gradient(180deg, rgba(243,232,255,1), rgba(250,245,255,1))",
@@ -6587,7 +6582,7 @@ function MiniCalendarioControllo({
             <div
               style={{
                 marginTop: 8,
-                fontSize: 22,
+                fontSize: 18,
                 fontWeight: 1000,
                 color: "rgba(15,23,42,0.98)",
               }}
@@ -6598,8 +6593,8 @@ function MiniCalendarioControllo({
 
           <div
             style={{
-              padding: 14,
-              borderRadius: 18,
+              padding: 12,
+              borderRadius: 16,
               border: "1px solid rgba(244,114,182,0.24)",
               background:
                 "linear-gradient(180deg, rgba(252,231,243,1), rgba(253,242,248,1))",
@@ -6618,7 +6613,7 @@ function MiniCalendarioControllo({
             <div
               style={{
                 marginTop: 8,
-                fontSize: 22,
+                fontSize: 18,
                 fontWeight: 1000,
                 color: "rgba(15,23,42,0.98)",
               }}
