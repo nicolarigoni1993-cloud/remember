@@ -2681,13 +2681,15 @@ function MiniCalendario({
   onEditTurno: (turno: Turno) => void;
 }) {
   const [pressedKey, setPressedKey] = useState<string | null>(null);
-  const [popupTurno, setPopupTurno] = useState<{
-    key: string;
-    turno: Turno;
-    count: number;
-    sigla: string;
-  } | null>(null);
-  const [monthAnim, setMonthAnim] = useState<"idle" | "enter">("enter");
+  const [popupTurno, setPopupTurno] = useState<any>(null);
+
+  const isMobile = typeof window !== "undefined" && window.innerWidth <= 640;
+
+  const sizeDay = isMobile ? 30 : 38;
+  const sizeBadge = isMobile ? 18 : 24;
+  const fontDay = isMobile ? 12 : 14;
+  const fontBadge = isMobile ? 9 : 11;
+  const gap = isMobile ? 4 : 6;
 
   const y = mese.getFullYear();
   const m0 = mese.getMonth();
@@ -2699,8 +2701,6 @@ function MiniCalendario({
   const oggi = new Date();
   const oggiKey = ymd(oggi.getFullYear(), oggi.getMonth(), oggi.getDate());
 
-  const giorniSettimana = ["L", "M", "M", "G", "V", "S", "D"];
-
   const giorni: Array<string | null> = [];
   for (let i = 0; i < offset; i++) giorni.push(null);
   for (let d = 1; d <= dim; d++) giorni.push(ymd(y, m0, d));
@@ -2711,12 +2711,6 @@ function MiniCalendario({
     year: "numeric",
   });
 
-  useEffect(() => {
-    setMonthAnim("enter");
-    const t = window.setTimeout(() => setMonthAnim("idle"), 260);
-    return () => window.clearTimeout(t);
-  }, [mese]);
-
   const turniPerData = useMemo(() => {
     const map = new Map<string, Turno[]>();
     for (const t of turniDelMese) {
@@ -2724,112 +2718,19 @@ function MiniCalendario({
       prev.push(t);
       map.set(t.data, prev);
     }
-    for (const arr of map.values()) {
-      arr.sort((a, b) => a.inizio.localeCompare(b.inizio));
-    }
     return map;
   }, [turniDelMese]);
 
   function getTurnoColor(sigla: string) {
-    if (sigla === "R") return "linear-gradient(180deg, #64748b, #475569)";
-    if (sigla === "F") return "linear-gradient(180deg, #8b5cf6, #7c3aed)";
-    if (sigla === "A") return "linear-gradient(180deg, #ef4444, #dc2626)";
-    if (sigla === "N") return "linear-gradient(180deg, #2563eb, #1d4ed8)";
-    if (sigla === "M") return "linear-gradient(180deg, #f59e0b, #d97706)";
-    if (sigla === "P") return "linear-gradient(180deg, #f97316, #ea580c)";
-    if (sigla === "S") return "linear-gradient(180deg, #a855f7, #7e22ce)";
-    return "linear-gradient(180deg, #3b82f6, #2563eb)";
+    if (sigla === "R") return "#64748b";
+    if (sigla === "F") return "#8b5cf6";
+    if (sigla === "A") return "#ef4444";
+    if (sigla === "N") return "#2563eb";
+    if (sigla === "M") return "#f59e0b";
+    if (sigla === "P") return "#f97316";
+    if (sigla === "S") return "#a855f7";
+    return "#3b82f6";
   }
-
-  function getPasqua(year: number) {
-    const a = year % 19;
-    const b = Math.floor(year / 100);
-    const c = year % 100;
-    const d = Math.floor(b / 4);
-    const e = b % 4;
-    const f = Math.floor((b + 8) / 25);
-    const g = Math.floor((b - f + 1) / 3);
-    const h = (19 * a + b - d - g + 15) % 30;
-    const i = Math.floor(c / 4);
-    const k = c % 4;
-    const l = (32 + 2 * e + 2 * i - h - k) % 7;
-    const m = Math.floor((a + 11 * h + 22 * l) / 451);
-    const month = Math.floor((h + l - 7 * m + 114) / 31);
-    const day = ((h + l - 7 * m + 114) % 31) + 1;
-    return new Date(year, month - 1, day);
-  }
-
-  function addDays(date: Date, days: number) {
-    const d = new Date(date);
-    d.setDate(d.getDate() + days);
-    return d;
-  }
-
-  const festivitaSet = useMemo(() => {
-    const set = new Set<string>();
-
-    const fisse = [
-      [0, 1],
-      [0, 6],
-      [3, 25],
-      [4, 1],
-      [5, 2],
-      [7, 15],
-      [10, 1],
-      [11, 8],
-      [11, 25],
-      [11, 26],
-    ];
-
-    for (const [month, day] of fisse) {
-      set.add(ymd(y, month, day));
-    }
-
-    const pasqua = getPasqua(y);
-    const pasquetta = addDays(pasqua, 1);
-
-    set.add(ymd(pasqua.getFullYear(), pasqua.getMonth(), pasqua.getDate()));
-    set.add(ymd(pasquetta.getFullYear(), pasquetta.getMonth(), pasquetta.getDate()));
-
-    return set;
-  }, [y]);
-
-  function formattaDataPopup(key: string) {
-    const [yy, mm, dd] = key.split("-").map(Number);
-    const dt = new Date(yy, mm - 1, dd);
-    return dt.toLocaleDateString("it-IT", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-  }
-
-  function descrizioneCompattaTurno(turno: Turno, sigla: string) {
-    if (sigla === "R") return "Giornata di riposo";
-    if (sigla === "F") return "Giornata di ferie";
-    if (sigla === "A") return "Assenza";
-    return `${turno.inizio} - ${turno.fine}`;
-  }
-
-  const navButton: React.CSSProperties = {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    border: "1px solid rgba(255,255,255,0.84)",
-    background:
-      "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
-    boxShadow:
-      "0 14px 28px rgba(15,23,42,0.10), inset 0 1px 0 rgba(255,255,255,0.96)",
-    fontSize: 18,
-    fontWeight: 1000,
-    color: "rgba(15,23,42,0.90)",
-    cursor: "pointer",
-    display: "grid",
-    placeItems: "center",
-    flexShrink: 0,
-    WebkitTapHighlightColor: "transparent",
-  };
 
   return (
     <>
@@ -2837,492 +2738,166 @@ function MiniCalendario({
         <div
           style={{
             ...ui.card,
-            padding: 16,
-            border: "1px solid rgba(255,255,255,0.58)",
+            padding: isMobile ? 12 : 16,
             background:
               "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96))",
-            boxShadow: "0 24px 60px rgba(15,23,42,0.14)",
-            position: "relative",
-            overflow: "hidden",
           }}
         >
+          {/* HEADER */}
           <div
             style={{
-              position: "absolute",
-              inset: 0,
-              background:
-                "radial-gradient(500px 180px at 0% 0%, rgba(59,130,246,0.06), transparent 60%), radial-gradient(500px 180px at 100% 0%, rgba(124,58,237,0.06), transparent 60%)",
-              pointerEvents: "none",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 14,
             }}
-          />
+          >
+            <button onClick={onPrevMonth}>←</button>
 
-          <div style={{ position: "relative", zIndex: 1 }}>
             <div
               style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: 14,
-                gap: 12,
+                fontSize: isMobile ? 18 : 22,
+                fontWeight: 1000,
+                textTransform: "capitalize",
               }}
             >
-              <button
-                onClick={onPrevMonth}
-                type="button"
-                style={navButton}
-                aria-label="Mese precedente"
-                title="Mese precedente"
-              >
-                ←
-              </button>
-
-              <div
-                style={{
-                  fontSize: 22,
-                  fontWeight: 1000,
-                  textTransform: "capitalize",
-                  color: "rgba(15,23,42,0.98)",
-                  letterSpacing: -0.6,
-                  textAlign: "center",
-                  flex: 1,
-                  textShadow: "0 6px 16px rgba(99,102,241,0.10)",
-                  transform:
-                    monthAnim === "enter" ? "translateY(0) scale(1)" : "translateY(0) scale(1)",
-                  opacity: monthAnim === "enter" ? 1 : 1,
-                  transition: "transform .24s ease, opacity .24s ease",
-                }}
-              >
-                {titoloMese}
-              </div>
-
-              <button
-                onClick={onNextMonth}
-                type="button"
-                style={navButton}
-                aria-label="Mese successivo"
-                title="Mese successivo"
-              >
-                →
-              </button>
+              {titoloMese}
             </div>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(7, 1fr)",
-                marginBottom: 10,
-                gap: 6,
-              }}
-            >
-              {giorniSettimana.map((g, i) => (
+            <button onClick={onNextMonth}>→</button>
+          </div>
+
+          {/* GRID */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(7, 1fr)",
+              gap: gap,
+            }}
+          >
+            {giorni.map((key, idx) => {
+              if (!key) return <div key={idx} />;
+
+              const d = Number(key.slice(-2));
+              const turni = turniPerData.get(key) ?? [];
+              const primo = turni[0];
+
+              const sigla = primo
+                ? normalizeTurnoLabel(primo.inizio, primo.fine, primo.note)
+                : null;
+
+              const isToday = key === oggiKey;
+
+              return (
                 <div
-                  key={`${g}_${i}`}
+                  key={key}
+                  onClick={() => {
+                    if (primo) {
+                      setPopupTurno({ turno: primo, sigla });
+                    } else {
+                      apriTurnoForm(key);
+                    }
+                  }}
                   style={{
-                    textAlign: "center",
-                    fontSize: 11,
-                    fontWeight: 950,
-                    color: i >= 5 ? "rgba(220,38,38,0.96)" : "rgba(100,116,139,0.98)",
-                    letterSpacing: 0.25,
-                    textTransform: "uppercase",
+                    aspectRatio: "1",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 2,
+                    cursor: "pointer",
                   }}
                 >
-                  {g}
-                </div>
-              ))}
-            </div>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(7, 1fr)",
-                gap: 6,
-              }}
-            >
-              {giorni.map((key, idx) => {
-                if (!key) {
-                  return <div key={idx} />;
-                }
-
-                const d = Number(key.slice(-2));
-                const turni = turniPerData.get(key) ?? [];
-                const primo = turni[0];
-
-                const sigla = primo
-                  ? normalizeTurnoLabel(primo.inizio, primo.fine, primo.note)
-                  : null;
-
-                const isToday = key === oggiKey;
-
-                const cellDate = new Date(y, m0, d);
-                const jsDay = cellDate.getDay();
-                const isWeekend = jsDay === 0 || jsDay === 6;
-                const isFestivo = festivitaSet.has(key);
-                const isRedDay = isWeekend || isFestivo;
-                const isPressed = pressedKey === key;
-
-                return (
+                  {/* CERCHIO GIORNO */}
                   <div
-                    key={key}
-                    onMouseDown={() => setPressedKey(key)}
-                    onMouseUp={() => setPressedKey(null)}
-                    onMouseLeave={() => setPressedKey((prev) => (prev === key ? null : prev))}
-                    onTouchStart={() => setPressedKey(key)}
-                    onTouchEnd={() => setPressedKey(null)}
-                    onClick={() => {
-                      if (primo) {
-                        setPopupTurno({
-                          key,
-                          turno: primo,
-                          count: turni.length,
-                          sigla: sigla ?? "",
-                        });
-                      } else {
-                        apriTurnoForm(key);
-                      }
-                    }}
                     style={{
-                      aspectRatio: "1",
-                      borderRadius: 18,
-                      padding: 4,
-                      cursor: "pointer",
-                      background: "transparent",
-                      border: "none",
+                      width: sizeDay,
+                      height: sizeDay,
+                      borderRadius: "50%",
                       display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "space-between",
-                      boxShadow: "none",
-                      transition: "transform .16s ease",
-                      position: "relative",
-                      overflow: "visible",
-                      transform: isPressed ? "scale(0.96)" : "scale(1)",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: fontDay,
+                      fontWeight: 1000,
+                      background: isToday
+                        ? "rgba(129,140,248,0.15)"
+                        : "rgba(255,255,255,0.6)",
+                      border: isToday
+                        ? "2px solid rgba(99,102,241,0.6)"
+                        : "1px solid rgba(255,255,255,0.2)",
                     }}
-                    title={isFestivo ? `${key} • Festivo` : key}
                   >
-                    <div
-                      style={{
-                        position: "relative",
-                        zIndex: 1,
-                        width: 100,
-                        display: "flex",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <div
-                        style={{
-                          minWidth: 38,
-                          height: 38,
-                          padding: "0 10px",
-                          borderRadius: 999,
-                          display: "inline-flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: 14,
-                          fontWeight: 1000,
-                          color: isRedDay
-                            ? "rgba(220,38,38,0.98)"
-                            : isToday
-                            ? "rgba(49,46,129,0.98)"
-                            : "rgba(15,23,42,0.92)",
-                          background: isToday
-                            ? "rgba(129,140,248,0.10)"
-                            : isFestivo
-                            ? "rgba(254,242,242,0.72)"
-                            : "rgba(255,255,255,0.46)",
-                          border: isToday
-                            ? "2px solid rgba(129,140,248,0.60)"
-                            : isFestivo
-                            ? "1px solid rgba(248,113,113,0.22)"
-                            : "1px solid rgba(255,255,255,0.18)",
-                          lineHeight: 1,
-                          boxShadow: isToday
-                            ? "0 8px 16px rgba(99,102,241,0.12)"
-                            : "none",
-                        }}
-                      >
-                        {d}
-                      </div>
-                    </div>
-
-                    <div
-                      style={{
-                        position: "relative",
-                        zIndex: 1,
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        minHeight: 26,
-                        marginTop: 2,
-                      }}
-                    >
-                      {sigla ? (
-                        <div
-                          style={{
-                            display: "inline-flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            width: 24,
-                            height: 24,
-                            margin: "0 auto",
-                            borderRadius: "50%",
-                            fontSize: 11,
-                            fontWeight: 1000,
-                            color: "white",
-                            background: getTurnoColor(sigla),
-                            boxShadow:
-                              "0 8px 14px rgba(15,23,42,0.16), inset 0 1px 0 rgba(255,255,255,0.20)",
-                            letterSpacing: 0,
-                            lineHeight: 1,
-                            flexShrink: 0,
-                          }}
-                        >
-                          {sigla}
-                        </div>
-                      ) : (
-                        <div
-                          style={{
-                            display: "inline-flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            width: 24,
-                            height: 24,
-                            margin: "0 auto",
-                            borderRadius: "50%",
-                            background: isToday
-                              ? "rgba(99,102,241,0.12)"
-                              : "rgba(148,163,184,0.10)",
-                            border: isToday
-                              ? "1px solid rgba(99,102,241,0.16)"
-                              : "1px solid rgba(148,163,184,0.08)",
-                            fontSize: 16,
-                            color: isToday
-                              ? "rgba(79,70,229,0.92)"
-                              : "rgba(148,163,184,0.90)",
-                            fontWeight: 900,
-                            lineHeight: 1,
-                            flexShrink: 0,
-                          }}
-                        >
-                          +
-                        </div>
-                      )}
-                    </div>
-
-                    <div
-                      style={{
-                        minHeight: 8,
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "flex-end",
-                        position: "relative",
-                        zIndex: 1,
-                      }}
-                    >
-                      {isFestivo ? (
-                        <div
-                          style={{
-                            width: 6,
-                            height: 6,
-                            borderRadius: 999,
-                            background: "rgba(220,38,38,0.96)",
-                          }}
-                        />
-                      ) : isWeekend ? (
-                        <div
-                          style={{
-                            width: 4,
-                            height: 4,
-                            borderRadius: 999,
-                            background: "rgba(248,113,113,0.72)",
-                          }}
-                        />
-                      ) : (
-                        <div />
-                      )}
-                    </div>
+                    {d}
                   </div>
-                );
-              })}
-            </div>
+
+                  {/* BADGE TURNO */}
+                  {sigla ? (
+                    <div
+                      style={{
+                        width: sizeBadge,
+                        height: sizeBadge,
+                        borderRadius: "50%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: fontBadge,
+                        fontWeight: 1000,
+                        color: "white",
+                        background: getTurnoColor(sigla),
+                      }}
+                    >
+                      {sigla}
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        width: sizeBadge,
+                        height: sizeBadge,
+                        borderRadius: "50%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: isMobile ? 13 : 15,
+                        color: "#64748b",
+                      }}
+                    >
+                      +
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
 
+      {/* POPUP */}
       {popupTurno && (
         <div
           onClick={() => setPopupTurno(null)}
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(2,6,23,0.42)",
-            backdropFilter: "blur(8px)",
-            zIndex: 90,
+            background: "rgba(0,0,0,0.4)",
             display: "grid",
             placeItems: "center",
-            padding: 16,
           }}
         >
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              width: "min(420px, 100%)",
-              borderRadius: 24,
-              border: "1px solid rgba(255,255,255,0.60)",
-              background:
-                "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96))",
-              boxShadow: "0 28px 70px rgba(15,23,42,0.24)",
-              padding: 18,
-              display: "grid",
-              gap: 14,
+              background: "white",
+              padding: 20,
+              borderRadius: 20,
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" }}>
-              <div style={{ display: "grid", gap: 6 }}>
-                <div
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 8,
-                  }}
-                >
-                  <span
-                    style={{
-                      display: "inline-block",
-                      minWidth: 34,
-                      textAlign: "center",
-                      padding: "6px 10px",
-                      borderRadius: 999,
-                      fontSize: 12,
-                      fontWeight: 1000,
-                      color: "white",
-                      background: getTurnoColor(popupTurno.sigla),
-                      boxShadow: "0 8px 18px rgba(15,23,42,0.14)",
-                    }}
-                  >
-                    {popupTurno.sigla}
-                  </span>
-
-                  <span
-                    style={{
-                      fontSize: 18,
-                      fontWeight: 1000,
-                      color: "rgba(15,23,42,0.96)",
-                    }}
-                  >
-                    Dettaglio turno
-                  </span>
-                </div>
-
-                <div
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 800,
-                    color: "rgba(15,23,42,0.68)",
-                    textTransform: "capitalize",
-                  }}
-                >
-                  {formattaDataPopup(popupTurno.key)}
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setPopupTurno(null)}
-                style={{
-                  width: 38,
-                  height: 38,
-                  borderRadius: 12,
-                  border: "1px solid rgba(148,163,184,0.16)",
-                  background: "rgba(255,255,255,0.86)",
-                  cursor: "pointer",
-                  fontSize: 18,
-                  fontWeight: 900,
-                  color: "rgba(15,23,42,0.74)",
-                }}
-              >
-                ✕
-              </button>
+            <div style={{ fontWeight: 1000 }}>
+              {popupTurno.sigla}
             </div>
 
-            <div
-              style={{
-                padding: 14,
-                borderRadius: 18,
-                background: "linear-gradient(180deg, rgba(241,245,249,0.96), rgba(248,250,252,0.94))",
-                border: "1px solid rgba(148,163,184,0.12)",
-                display: "grid",
-                gap: 8,
-              }}
-            >
-              <div style={{ fontSize: 14, fontWeight: 950, color: "rgba(15,23,42,0.92)" }}>
-                {descrizioneCompattaTurno(popupTurno.turno, popupTurno.sigla)}
-              </div>
-
-              {popupTurno.sigla !== "R" && popupTurno.sigla !== "F" && popupTurno.sigla !== "A" && (
-                <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(15,23,42,0.72)" }}>
-                  Ordinarie: {formatNumeroOre(popupTurno.turno.oreOrdinarie)} h • Straordinarie:{" "}
-                  {formatNumeroOre(popupTurno.turno.oreStraordinarie)} h
-                </div>
-              )}
-
-              {popupTurno.turno.note?.trim() && (
-                <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(15,23,42,0.72)" }}>
-                  Nota: {popupTurno.turno.note}
-                </div>
-              )}
-
-              {popupTurno.count > 1 && (
-                <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(79,70,229,0.92)" }}>
-                  In questo giorno ci sono altri {popupTurno.count - 1} turni.
-                </div>
-              )}
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                gap: 10,
-                justifyContent: "flex-end",
-                flexWrap: "wrap",
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => setPopupTurno(null)}
-                style={{
-                  border: "1px solid rgba(148,163,184,0.16)",
-                  background: "rgba(255,255,255,0.88)",
-                  color: "rgba(15,23,42,0.84)",
-                  padding: "12px 14px",
-                  borderRadius: 14,
-                  fontWeight: 900,
-                  cursor: "pointer",
-                }}
-              >
-                Chiudi
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  const turno = popupTurno.turno;
-                  setPopupTurno(null);
-                  onEditTurno(turno);
-                }}
-                style={{
-                  border: "none",
-                  background:
-                    "linear-gradient(180deg, rgba(79,70,229,0.98), rgba(124,58,237,0.95))",
-                  color: "white",
-                  padding: "12px 14px",
-                  borderRadius: 14,
-                  fontWeight: 1000,
-                  cursor: "pointer",
-                  boxShadow: "0 14px 28px rgba(79,70,229,0.18)",
-                }}
-              >
-                Modifica turno
-              </button>
-            </div>
+            <button onClick={() => setPopupTurno(null)}>
+              Chiudi
+            </button>
           </div>
         </div>
       )}
