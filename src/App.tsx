@@ -3014,25 +3014,27 @@ function MiniCalendario({
                         apriTurnoForm(key);
                       }
                     }}
-                    style={{
-                      aspectRatio: "1 / 1",
-                      minWidth: 0,
-                      borderRadius: isMobileCalendar ? 16 : 18,
-                      padding: dayCellPadding,
-                      cursor: "pointer",
-                      background: "transparent",
-                      border: "none",
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      boxShadow: "none",
-                      transition: "transform .16s ease",
-                      position: "relative",
-                      overflow: "hidden",
-                      transform: isPressed ? "scale(0.96)" : "scale(1)",
-                      boxSizing: "border-box",
-                    }}
+                  style={{
+                    aspectRatio: "1 / 1",
+                    minWidth: 0,
+                    width: "100%",
+                    minHeight: isMobileCalendar ? 64 : 74,
+                    borderRadius: isMobileCalendar ? 14 : 18,
+                    padding: isMobileCalendar ? 4 : dayCellPadding,
+                    cursor: "pointer",
+                    background: "transparent",
+                    border: "none",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    boxShadow: "none",
+                    transition: "transform .16s ease",
+                    position: "relative",
+                    overflow: "visible",
+                    transform: isPressed ? "scale(0.96)" : "scale(1)",
+                    boxSizing: "border-box",
+                  }}
                     title={isFestivo ? `${key} • Festivo` : key}
                   >
                     <div
@@ -3083,14 +3085,17 @@ function MiniCalendario({
                     </div>
 
                     <div
-                      style={{
+                  style={{
                         position: "relative",
                         zIndex: 1,
                         display: "flex",
                         justifyContent: "center",
                         alignItems: "center",
-                        minHeight: isMobileCalendar ? 20 : 26,
-                        marginTop: 2,
+                        minHeight: isMobileCalendar ? 24 : 28,
+                        marginTop: isMobileCalendar ? 4 : 2,
+                        marginBottom: isMobileCalendar ? 2 : 0,
+                        minWidth: 0,
+                        width: "100%",
                       }}
                     >
                       {sigla ? (
