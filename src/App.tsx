@@ -720,7 +720,9 @@ const [aggiungiSezione, setAggiungiSezione] = useState<"menu" | "movimenti" | "e
 
   const [movimentoAperto, setMovimentoAperto] = useState<"entrata" | "uscita" | null>(null);
   const [apriConfigFerie, setApriConfigFerie] = useState(false);
-
+const [finanzaFiltroDal, setFinanzaFiltroDal] = useState("");
+const [finanzaFiltroAl, setFinanzaFiltroAl] = useState("");
+const [finanzaFiltroCategoria, setFinanzaFiltroCategoria] = useState("tutte");
 const categorieEntrataBase = useMemo(
   () => ["Stipendio", "Bonus", "Regalo", "Rimborso", "Vendita", "Extra"],
   []
@@ -2105,7 +2107,254 @@ const ferieOreResidue = useMemo(() => {
 
 
 
+const annoFinanzaCorrente = useMemo(() => meseCorrente.getFullYear(), [meseCorrente]);
 
+const tutteCategorieFinanza = useMemo(() => {
+  const setCategorie = new Set<string>();
+
+  voci.forEach((v) => {
+    if (v.importo !== null && (v.movimento === "entrata" || v.movimento === "uscita")) {
+      const cat = estraiCategoriaMovimento(v.titolo);
+      if (cat) setCategorie.add(cat);
+    }
+  });
+
+  Object.values(incassi).forEach((mese) => {
+    (mese.entrateExtra ?? []).forEach((x) => {
+      const cat = estraiCategoriaMovimento(x.descrizione);
+      if (cat) setCategorie.add(cat);
+    });
+
+    (mese.usciteExtra ?? []).forEach((x) => {
+      const cat = estraiCategoriaMovimento(x.descrizione);
+      if (cat) setCategorie.add(cat);
+    });
+  });
+
+  return Array.from(setCategorie).sort((a, b) => a.localeCompare(b, "it"));
+}, [voci, incassi]);
+
+function finanzaDataValidaNelFiltro(dataMovimento: string) {
+  if (!dataMovimento) return false;
+  if (finanzaFiltroDal && dataMovimento < finanzaFiltroDal) return false;
+  if (finanzaFiltroAl && dataMovimento > finanzaFiltroAl) return false;
+  return true;
+}
+
+function finanzaCategoriaValidaNelFiltro(categoriaMovimento: string) {
+  if (finanzaFiltroCategoria === "tutte") return true;
+  return categoriaMovimento === finanzaFiltroCategoria;
+}
+
+const usciteFinanzaMese = useMemo(() => {
+  const usciteDaVoci = vociMese
+    .filter((v) => v.importo !== null && v.movimento === "uscita")
+    .map((v) => {
+      const categoria = estraiCategoriaMovimento(v.titolo) || "Altro";
+      const dettaglio = estraiDettaglioMovimento(v.titolo);
+
+      return {
+        id: v.id,
+        data: v.data,
+        descrizione: dettaglio || v.titolo,
+        importo: v.importo ?? 0,
+        categoria,
+        nota: v.nota || "",
+        origine: "voce" as const,
+      };
+    });
+
+  const usciteDaExtra = usciteExtraVal.map((x) => ({
+    id: x.id,
+    data: x.data,
+    descrizione: estraiDettaglioMovimento(x.descrizione) || x.descrizione,
+    importo: x.importo,
+    categoria: estraiCategoriaMovimento(x.descrizione) || "Altro",
+    nota: x.nota || "",
+    origine: "uscita-extra" as const,
+  }));
+
+  return [...usciteDaVoci, ...usciteDaExtra]
+    .filter((x) => finanzaDataValidaNelFiltro(x.data))
+    .filter((x) => finanzaCategoriaValidaNelFiltro(x.categoria))
+    .sort((a, b) => {
+      const d = b.data.localeCompare(a.data);
+      if (d !== 0) return d;
+      return b.importo - a.importo;
+    });
+}, [vociMese, usciteExtraVal, finanzaFiltroDal, finanzaFiltroAl, finanzaFiltroCategoria]);
+
+const entrateFinanzaMese = useMemo(() => {
+  return entrateExtraVal
+    .map((x) => ({
+      id: x.id,
+      data: x.data,
+      descrizione: estraiDettaglioMovimento(x.descrizione) || x.descrizione,
+      importo: x.importo,
+      categoria: estraiCategoriaMovimento(x.descrizione) || "Altro",
+    }))
+    .filter((x) => finanzaDataValidaNelFiltro(x.data))
+    .filter((x) => finanzaCategoriaValidaNelFiltro(x.categoria))
+    .sort((a, b) => {
+      const d = b.data.localeCompare(a.data);
+      if (d !== 0) return d;
+      return b.importo - a.importo;
+    });
+}, [entrateExtraVal, finanzaFiltroDal, finanzaFiltroAl, finanzaFiltroCategoria]);
+
+const finanzaEntrateTotMese = useMemo(() => {
+  return entrateFinanzaMese.reduce((acc, x) => acc + x.importo, 0);
+}, [entrateFinanzaMese]);
+
+const finanzaUsciteTotMese = useMemo(() => {
+  return usciteFinanzaMese.reduce((acc, x) => acc + x.importo, 0);
+}, [usciteFinanzaMese]);
+
+const finanzaSaldoMese = useMemo(() => {
+  return finanzaEntrateTotMese - finanzaUsciteTotMese;
+}, [finanzaEntrateTotMese, finanzaUsciteTotMese]);
+
+const finanzaBarreCategorieMese = useMemo(() => {
+  const mappa = new Map<string, number>();
+
+  usciteFinanzaMese.forEach((x) => {
+    mappa.set(x.categoria, (mappa.get(x.categoria) ?? 0) + x.importo);
+  });
+
+  return Array.from(mappa.entries())
+    .map(([categoria, totale]) => ({ categoria, totale }))
+    .sort((a, b) => b.totale - a.totale);
+}, [usciteFinanzaMese]);
+
+const finanzaMaxBarraMese = useMemo(() => {
+  if (finanzaBarreCategorieMese.length === 0) return 1;
+  return Math.max(...finanzaBarreCategorieMese.map((x) => x.totale), 1);
+}, [finanzaBarreCategorieMese]);
+
+const entrateFinanzaAnno = useMemo(() => {
+  return Object.values(incassi)
+    .flatMap((mese) =>
+      (mese.entrateExtra ?? []).map((x) => ({
+        id: x.id,
+        data: x.data,
+        descrizione: estraiDettaglioMovimento(x.descrizione) || x.descrizione,
+        importo: x.importo,
+        categoria: estraiCategoriaMovimento(x.descrizione) || "Altro",
+      }))
+    )
+    .filter((x) => {
+      const [anno] = x.data.split("-").map(Number);
+      return anno === annoFinanzaCorrente;
+    })
+    .filter((x) => finanzaDataValidaNelFiltro(x.data))
+    .filter((x) => finanzaCategoriaValidaNelFiltro(x.categoria))
+    .sort((a, b) => {
+      const d = b.data.localeCompare(a.data);
+      if (d !== 0) return d;
+      return b.importo - a.importo;
+    });
+}, [incassi, annoFinanzaCorrente, finanzaFiltroDal, finanzaFiltroAl, finanzaFiltroCategoria]);
+
+const usciteFinanzaAnno = useMemo(() => {
+  const usciteDaVoci = voci
+    .filter((v) => v.importo !== null && v.movimento === "uscita")
+    .map((v) => ({
+      id: v.id,
+      data: v.data,
+      descrizione: estraiDettaglioMovimento(v.titolo) || v.titolo,
+      importo: v.importo ?? 0,
+      categoria: estraiCategoriaMovimento(v.titolo) || "Altro",
+      nota: v.nota || "",
+      origine: "voce" as const,
+    }));
+
+  const usciteDaExtra = Object.values(incassi).flatMap((mese) =>
+    (mese.usciteExtra ?? []).map((x) => ({
+      id: x.id,
+      data: x.data,
+      descrizione: estraiDettaglioMovimento(x.descrizione) || x.descrizione,
+      importo: x.importo,
+      categoria: estraiCategoriaMovimento(x.descrizione) || "Altro",
+      nota: x.nota || "",
+      origine: "uscita-extra" as const,
+    }))
+  );
+
+  return [...usciteDaVoci, ...usciteDaExtra]
+    .filter((x) => {
+      const [anno] = x.data.split("-").map(Number);
+      return anno === annoFinanzaCorrente;
+    })
+    .filter((x) => finanzaDataValidaNelFiltro(x.data))
+    .filter((x) => finanzaCategoriaValidaNelFiltro(x.categoria))
+    .sort((a, b) => {
+      const d = b.data.localeCompare(a.data);
+      if (d !== 0) return d;
+      return b.importo - a.importo;
+    });
+}, [voci, incassi, annoFinanzaCorrente, finanzaFiltroDal, finanzaFiltroAl, finanzaFiltroCategoria]);
+
+const finanzaEntrateAnno = useMemo(() => {
+  return entrateFinanzaAnno.reduce((acc, x) => acc + x.importo, 0);
+}, [entrateFinanzaAnno]);
+
+const finanzaUsciteAnno = useMemo(() => {
+  return usciteFinanzaAnno.reduce((acc, x) => acc + x.importo, 0);
+}, [usciteFinanzaAnno]);
+
+const finanzaSaldoAnno = useMemo(() => {
+  return finanzaEntrateAnno - finanzaUsciteAnno;
+}, [finanzaEntrateAnno, finanzaUsciteAnno]);
+
+const finanzaCategorieTortaAnno = useMemo(() => {
+  const mappa = new Map<string, number>();
+
+  usciteFinanzaAnno.forEach((x) => {
+    mappa.set(x.categoria, (mappa.get(x.categoria) ?? 0) + x.importo);
+  });
+
+  const ordinato = Array.from(mappa.entries())
+    .map(([categoria, totale]) => ({ categoria, totale }))
+    .sort((a, b) => b.totale - a.totale);
+
+  if (ordinato.length <= 6) return ordinato;
+
+  const top = ordinato.slice(0, 5);
+  const altro = ordinato.slice(5).reduce((acc, x) => acc + x.totale, 0);
+
+  return [...top, { categoria: "Altro", totale: altro }];
+}, [usciteFinanzaAnno]);
+
+const finanzaColoriTorta = [
+  "rgba(16,185,129,0.95)",
+  "rgba(59,130,246,0.95)",
+  "rgba(249,115,22,0.95)",
+  "rgba(124,58,237,0.95)",
+  "rgba(244,63,94,0.95)",
+  "rgba(100,116,139,0.95)",
+];
+
+const finanzaGradientTortaAnno = useMemo(() => {
+  if (finanzaCategorieTortaAnno.length === 0) {
+    return "conic-gradient(rgba(226,232,240,0.95) 0% 100%)";
+  }
+
+  const totale = finanzaCategorieTortaAnno.reduce((acc, x) => acc + x.totale, 0) || 1;
+  let start = 0;
+
+  const segments = finanzaCategorieTortaAnno.map((item, index) => {
+    const perc = (item.totale / totale) * 100;
+    const end = start + perc;
+    const color = finanzaColoriTorta[index % finanzaColoriTorta.length];
+    const segment = `${color} ${start}% ${end}%`;
+    start = end;
+    return segment;
+  });
+
+  return `conic-gradient(${segments.join(", ")})`;
+}, [finanzaCategorieTortaAnno]);
+
+const finanzaTotaleMovimentiFiltrati = useMemo(() => usciteFinanzaMese.length, [usciteFinanzaMese]);
 
 
 
