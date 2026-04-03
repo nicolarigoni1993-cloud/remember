@@ -723,6 +723,11 @@ const [aggiungiSezione, setAggiungiSezione] = useState<"menu" | "movimenti" | "e
 const [finanzaFiltroDal, setFinanzaFiltroDal] = useState("");
 const [finanzaFiltroAl, setFinanzaFiltroAl] = useState("");
 const [finanzaFiltroCategoria, setFinanzaFiltroCategoria] = useState("tutte");
+
+const [finanzaGraficoMese, setFinanzaGraficoMese] = useState<"barre" | "torta">("barre");
+
+
+
 const categorieEntrataBase = useMemo(
   () => ["Stipendio", "Bonus", "Regalo", "Rimborso", "Vendita", "Extra"],
   []
@@ -7297,27 +7302,52 @@ function MiniCalendarioControllo({
                   overflow: "hidden",
                 }}
               >
-                <div>
-                  <div
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 10,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <div style={{ minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontSize: 19,
+                        fontWeight: 1000,
+                        letterSpacing: -0.2,
+                        color: "rgba(15,23,42,0.98)",
+                      }}
+                    >
+                      Grafico mese
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 4,
+                        fontSize: 12,
+                        fontWeight: 850,
+                        color: "rgba(51,65,85,0.72)",
+                      }}
+                    >
+                      Uscite raggruppate per categoria
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFinanzaGraficoMese((prev) => (prev === "barre" ? "torta" : "barre"))
+                    }
                     style={{
-                      fontSize: 19,
-                      fontWeight: 1000,
-                      letterSpacing: -0.2,
-                      color: "rgba(15,23,42,0.98)",
+                      ...chip(false),
+                      background: "rgba(255,255,255,0.96)",
+                      color: "rgba(15,23,42,0.92)",
+                      border: "1px solid rgba(148,163,184,0.18)",
                     }}
                   >
-                    Grafico mese
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 4,
-                      fontSize: 12,
-                      fontWeight: 850,
-                      color: "rgba(51,65,85,0.72)",
-                    }}
-                  >
-                    Uscite raggruppate per categoria
-                  </div>
+                    {finanzaGraficoMese === "barre" ? "→ Torta" : "→ Barre"}
+                  </button>
                 </div>
 
                 {finanzaBarreCategorieMese.length === 0 ? (
@@ -7334,7 +7364,7 @@ function MiniCalendarioControllo({
                   >
                     Nessuna uscita disponibile con i filtri attuali.
                   </div>
-                ) : (
+                ) : finanzaGraficoMese === "barre" ? (
                   <div style={{ display: "grid", gap: 12, minWidth: 0 }}>
                     {finanzaBarreCategorieMese.map((item) => {
                       const percentuale = Math.max(8, (item.totale / finanzaMaxBarraMese) * 100);
@@ -7396,6 +7426,141 @@ function MiniCalendarioControllo({
                         </div>
                       );
                     })}
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns:
+                        typeof window !== "undefined" && window.innerWidth <= 820
+                          ? "1fr"
+                          : "minmax(0, 220px) minmax(0, 1fr)",
+                      gap: 16,
+                      alignItems: "start",
+                      minWidth: 0,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width:
+                          typeof window !== "undefined" && window.innerWidth <= 820
+                            ? "min(220px, 70vw)"
+                            : 220,
+                        height:
+                          typeof window !== "undefined" && window.innerWidth <= 820
+                            ? "min(220px, 70vw)"
+                            : 220,
+                        maxWidth: "100%",
+                        margin: "0 auto",
+                        borderRadius: "50%",
+                        background:
+                          finanzaBarreCategorieMese.length === 0
+                            ? "conic-gradient(rgba(226,232,240,0.95) 0% 100%)"
+                            : (() => {
+                                const totale = finanzaBarreCategorieMese.reduce((acc, x) => acc + x.totale, 0) || 1;
+                                let start = 0;
+                                const colori = finanzaColoriTorta;
+
+                                const segments = finanzaBarreCategorieMese.map((item, index) => {
+                                  const perc = (item.totale / totale) * 100;
+                                  const end = start + perc;
+                                  const color = colori[index % colori.length];
+                                  const seg = `${color} ${start}% ${end}%`;
+                                  start = end;
+                                  return seg;
+                                });
+
+                                return `conic-gradient(${segments.join(", ")})`;
+                              })(),
+                        boxShadow: "0 18px 40px rgba(15,23,42,0.12)",
+                        border: "10px solid rgba(255,255,255,0.96)",
+                        flexShrink: 0,
+                      }}
+                    />
+
+                    <div style={{ display: "grid", gap: 10, minWidth: 0 }}>
+                      {finanzaBarreCategorieMese.map((item, index) => {
+                        const totale = finanzaBarreCategorieMese.reduce((acc, x) => acc + x.totale, 0) || 1;
+                        const percentuale = (item.totale / totale) * 100;
+
+                        return (
+                          <div
+                            key={item.categoria}
+                            style={{
+                              display: "grid",
+                              gridTemplateColumns:
+                                typeof window !== "undefined" && window.innerWidth <= 540
+                                  ? "16px minmax(0, 1fr)"
+                                  : "16px minmax(0, 1fr) auto",
+                              gap: 10,
+                              alignItems: "center",
+                              padding: "10px 12px",
+                              borderRadius: 14,
+                              border: "1px solid rgba(148,163,184,0.14)",
+                              background: "rgba(255,255,255,0.78)",
+                              minWidth: 0,
+                              boxSizing: "border-box",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: 16,
+                                height: 16,
+                                borderRadius: 999,
+                                background: finanzaColoriTorta[index % finanzaColoriTorta.length],
+                                boxShadow: "0 6px 14px rgba(15,23,42,0.12)",
+                              }}
+                            />
+
+                            <div
+                              style={{
+                                minWidth: 0,
+                                display: "grid",
+                                gap: 2,
+                              }}
+                            >
+                              <div
+                                style={{
+                                  fontSize: 13,
+                                  fontWeight: 900,
+                                  color: "rgba(15,23,42,0.92)",
+                                  lineHeight: 1.3,
+                                  wordBreak: "break-word",
+                                }}
+                              >
+                                {item.categoria}
+                              </div>
+
+                              {typeof window !== "undefined" && window.innerWidth <= 540 && (
+                                <div
+                                  style={{
+                                    fontSize: 12,
+                                    fontWeight: 950,
+                                    color: "rgba(51,65,85,0.78)",
+                                    lineHeight: 1.3,
+                                  }}
+                                >
+                                  {item.totale.toLocaleString("it-IT")} € • {percentuale.toFixed(1)}%
+                                </div>
+                              )}
+                            </div>
+
+                            {!(typeof window !== "undefined" && window.innerWidth <= 540) && (
+                              <div
+                                style={{
+                                  fontSize: 12,
+                                  fontWeight: 950,
+                                  color: "rgba(51,65,85,0.78)",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                {item.totale.toLocaleString("it-IT")} € • {percentuale.toFixed(1)}%
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
@@ -7855,15 +8020,24 @@ function MiniCalendarioControllo({
                             onClick={() => {
                               if (mov.origine === "uscita-extra") {
                                 setNuovaUscitaData(mov.data);
-                                setCategoriaUscita(mov.categoria);
-                                setNuovaCategoriaUscita("");
+                                setCategoriaUscita(
+                                  categorieUscitaBase.includes(mov.categoria) ||
+                                    categorieUscitaCustom.includes(mov.categoria)
+                                    ? mov.categoria
+                                    : "__altro__"
+                                );
+                                setNuovaCategoriaUscita(
+                                  categorieUscitaBase.includes(mov.categoria) ||
+                                    categorieUscitaCustom.includes(mov.categoria)
+                                    ? ""
+                                    : mov.categoria
+                                );
                                 setNuovaUscitaDesc(mov.descrizione === mov.categoria ? "" : mov.descrizione);
                                 setNuovaUscitaImporto(String(mov.importo).replace(".", ","));
                                 setNuovaUscitaNota(mov.nota || "");
                                 setPagina("aggiungi");
                                 setAggiungiSezione("movimenti");
                                 setMovimentoAperto("uscita");
-                                eliminaUscitaExtra(mov.id);
                               } else {
                                 const voceOriginale = voci.find((x) => x.id === mov.id);
                                 if (!voceOriginale) return;
@@ -7883,8 +8057,11 @@ function MiniCalendarioControllo({
                           <button
                             type="button"
                             onClick={() => {
-                              if (mov.origine === "uscita-extra") eliminaUscitaExtra(mov.id);
-                              else elimina(mov.id);
+                              if (mov.origine === "uscita-extra") {
+                                eliminaUscitaExtra(mov.id);
+                              } else {
+                                elimina(mov.id);
+                              }
                             }}
                             style={{
                               ...chip(false),
