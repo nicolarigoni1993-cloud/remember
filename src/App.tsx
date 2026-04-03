@@ -6131,8 +6131,27 @@ function MiniCalendarioControllo({
 
 
 {pagina === "consulta" && (
-  <div style={{ minHeight: "70vh", display: "grid", placeItems: "start center", padding: 16 }}>
-    <div style={{ width: "min(1100px, 100%)", display: "grid", gap: 18 }}>
+  <div
+    style={{
+      minHeight: "70vh",
+      display: "grid",
+      placeItems: "start center",
+      padding: 16,
+      boxSizing: "border-box",
+      width: "100%",
+      overflowX: "hidden",
+    }}
+  >
+    <div
+      style={{
+        width: "min(1100px, 100%)",
+        maxWidth: "100%",
+        display: "grid",
+        gap: 18,
+        boxSizing: "border-box",
+        minWidth: 0,
+      }}
+    >
       {consultaSezione === "menu" ? (
         <>
           <div
@@ -6176,6 +6195,7 @@ function MiniCalendarioControllo({
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
               gap: 16,
+              minWidth: 0,
             }}
           >
             <button
@@ -6192,6 +6212,8 @@ function MiniCalendarioControllo({
                 cursor: "pointer",
                 display: "grid",
                 gap: 12,
+                minWidth: 0,
+                boxSizing: "border-box",
               }}
             >
               <div
@@ -6210,7 +6232,7 @@ function MiniCalendarioControllo({
                 ⏰
               </div>
 
-              <div>
+              <div style={{ minWidth: 0 }}>
                 <div
                   style={{
                     fontSize: 20,
@@ -6251,6 +6273,8 @@ function MiniCalendarioControllo({
                 cursor: "pointer",
                 display: "grid",
                 gap: 12,
+                minWidth: 0,
+                boxSizing: "border-box",
               }}
             >
               <div
@@ -6269,7 +6293,7 @@ function MiniCalendarioControllo({
                 €
               </div>
 
-              <div>
+              <div style={{ minWidth: 0 }}>
                 <div
                   style={{
                     fontSize: 20,
@@ -6310,6 +6334,8 @@ function MiniCalendarioControllo({
                 cursor: "pointer",
                 display: "grid",
                 gap: 12,
+                minWidth: 0,
+                boxSizing: "border-box",
               }}
             >
               <div
@@ -6328,7 +6354,7 @@ function MiniCalendarioControllo({
                 🗓
               </div>
 
-              <div>
+              <div style={{ minWidth: 0 }}>
                 <div
                   style={{
                     fontSize: 20,
@@ -6369,6 +6395,8 @@ function MiniCalendarioControllo({
                 cursor: "pointer",
                 display: "grid",
                 gap: 12,
+                minWidth: 0,
+                boxSizing: "border-box",
               }}
             >
               <div
@@ -6387,7 +6415,7 @@ function MiniCalendarioControllo({
                 🗂
               </div>
 
-              <div>
+              <div style={{ minWidth: 0 }}>
                 <div
                   style={{
                     fontSize: 20,
@@ -6460,6 +6488,7 @@ function MiniCalendarioControllo({
               marginTop: 14,
               display: "grid",
               gap: 14,
+              minWidth: 0,
             }}
           >
             <MiniCalendario
@@ -6482,6 +6511,8 @@ function MiniCalendarioControllo({
                 boxShadow: "0 18px 40px rgba(15,23,42,0.08)",
                 background:
                   "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92))",
+                minWidth: 0,
+                boxSizing: "border-box",
               }}
             >
               <div
@@ -6595,6 +6626,8 @@ function MiniCalendarioControllo({
                 boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
                 background:
                   "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
+                minWidth: 0,
+                boxSizing: "border-box",
               }}
             >
               <div
@@ -6663,6 +6696,7 @@ function MiniCalendarioControllo({
                     display: "grid",
                     gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
                     gap: 12,
+                    minWidth: 0,
                   }}
                 >
                   <div
@@ -6673,6 +6707,7 @@ function MiniCalendarioControllo({
                       background:
                         "linear-gradient(180deg, rgba(219,234,254,1), rgba(239,246,255,1))",
                       boxShadow: "0 8px 18px rgba(59,130,246,0.10)",
+                      minWidth: 0,
                     }}
                   >
                     <div
@@ -6712,6 +6747,7 @@ function MiniCalendarioControllo({
                       background:
                         "linear-gradient(180deg, rgba(243,232,255,1), rgba(250,245,255,1))",
                       boxShadow: "0 8px 18px rgba(168,85,247,0.10)",
+                      minWidth: 0,
                     }}
                   >
                     <div
@@ -6750,6 +6786,7 @@ function MiniCalendarioControllo({
                   display: "grid",
                   gridTemplateColumns: "repeat(auto-fit, minmax(145px, 1fr))",
                   gap: 10,
+                  minWidth: 0,
                 }}
               >
                 <div
@@ -6924,6 +6961,7 @@ function MiniCalendarioControllo({
               marginTop: 14,
               display: "grid",
               gap: 14,
+              minWidth: 0,
             }}
           >
             <div
@@ -6936,6 +6974,9 @@ function MiniCalendarioControllo({
                   "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
                 display: "grid",
                 gap: 16,
+                minWidth: 0,
+                boxSizing: "border-box",
+                overflow: "hidden",
               }}
             >
               <div
@@ -6947,7 +6988,7 @@ function MiniCalendarioControllo({
                   flexWrap: "wrap",
                 }}
               >
-                <div>
+                <div style={{ minWidth: 0 }}>
                   <div
                     style={{
                       fontSize: 21,
@@ -7006,6 +7047,7 @@ function MiniCalendarioControllo({
                   display: "grid",
                   gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
                   gap: 10,
+                  minWidth: 0,
                 }}
               >
                 <div
@@ -7016,6 +7058,7 @@ function MiniCalendarioControllo({
                     background:
                       "linear-gradient(180deg, rgba(16,185,129,0.10), rgba(16,185,129,0.04))",
                     boxShadow: "0 8px 20px rgba(16,185,129,0.06)",
+                    minWidth: 0,
                   }}
                 >
                   <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(6,78,59,0.82)" }}>
@@ -7041,6 +7084,7 @@ function MiniCalendarioControllo({
                     background:
                       "linear-gradient(180deg, rgba(239,68,68,0.10), rgba(239,68,68,0.04))",
                     boxShadow: "0 8px 20px rgba(239,68,68,0.06)",
+                    minWidth: 0,
                   }}
                 >
                   <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(127,29,29,0.82)" }}>
@@ -7074,6 +7118,7 @@ function MiniCalendarioControllo({
                       finanzaSaldoMese >= 0
                         ? "0 8px 20px rgba(59,130,246,0.06)"
                         : "0 8px 20px rgba(124,58,237,0.06)",
+                    minWidth: 0,
                   }}
                 >
                   <div
@@ -7108,6 +7153,7 @@ function MiniCalendarioControllo({
                     background:
                       "linear-gradient(180deg, rgba(249,115,22,0.10), rgba(249,115,22,0.04))",
                     boxShadow: "0 8px 20px rgba(249,115,22,0.06)",
+                    minWidth: 0,
                   }}
                 >
                   <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(124,45,18,0.82)" }}>
@@ -7137,6 +7183,9 @@ function MiniCalendarioControllo({
                   "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
                 display: "grid",
                 gap: 14,
+                minWidth: 0,
+                boxSizing: "border-box",
+                overflow: "hidden",
               }}
             >
               <div
@@ -7155,9 +7204,10 @@ function MiniCalendarioControllo({
                   display: "grid",
                   gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
                   gap: 12,
+                  minWidth: 0,
                 }}
               >
-                <div>
+                <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(51,65,85,0.76)", marginBottom: 8 }}>
                     Dal
                   </div>
@@ -7169,7 +7219,7 @@ function MiniCalendarioControllo({
                   />
                 </div>
 
-                <div>
+                <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(51,65,85,0.76)", marginBottom: 8 }}>
                     Al
                   </div>
@@ -7181,7 +7231,7 @@ function MiniCalendarioControllo({
                   />
                 </div>
 
-                <div>
+                <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(51,65,85,0.76)", marginBottom: 8 }}>
                     Categoria
                   </div>
@@ -7199,12 +7249,7 @@ function MiniCalendarioControllo({
                   </select>
                 </div>
 
-                <div
-                  style={{
-                    display: "grid",
-                    alignItems: "end",
-                  }}
-                >
+                <div style={{ display: "grid", alignItems: "end", minWidth: 0 }}>
                   <button
                     type="button"
                     onClick={() => {
@@ -7229,8 +7274,12 @@ function MiniCalendarioControllo({
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+                gridTemplateColumns:
+                  typeof window !== "undefined" && window.innerWidth <= 820
+                    ? "1fr"
+                    : "repeat(auto-fit, minmax(320px, 1fr))",
                 gap: 14,
+                minWidth: 0,
               }}
             >
               <div
@@ -7243,6 +7292,9 @@ function MiniCalendarioControllo({
                     "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
                   display: "grid",
                   gap: 14,
+                  minWidth: 0,
+                  boxSizing: "border-box",
+                  overflow: "hidden",
                 }}
               >
                 <div>
@@ -7283,12 +7335,12 @@ function MiniCalendarioControllo({
                     Nessuna uscita disponibile con i filtri attuali.
                   </div>
                 ) : (
-                  <div style={{ display: "grid", gap: 12 }}>
+                  <div style={{ display: "grid", gap: 12, minWidth: 0 }}>
                     {finanzaBarreCategorieMese.map((item) => {
                       const percentuale = Math.max(8, (item.totale / finanzaMaxBarraMese) * 100);
 
                       return (
-                        <div key={item.categoria} style={{ display: "grid", gap: 6 }}>
+                        <div key={item.categoria} style={{ display: "grid", gap: 6, minWidth: 0 }}>
                           <div
                             style={{
                               display: "flex",
@@ -7303,6 +7355,7 @@ function MiniCalendarioControllo({
                                 fontSize: 13,
                                 fontWeight: 950,
                                 color: "rgba(15,23,42,0.92)",
+                                minWidth: 0,
                               }}
                             >
                               {item.categoria}
@@ -7313,6 +7366,7 @@ function MiniCalendarioControllo({
                                 fontSize: 12,
                                 fontWeight: 950,
                                 color: "rgba(127,29,29,0.88)",
+                                whiteSpace: "nowrap",
                               }}
                             >
                               {item.totale.toLocaleString("it-IT")} €
@@ -7356,6 +7410,9 @@ function MiniCalendarioControllo({
                     "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
                   display: "grid",
                   gap: 14,
+                  minWidth: 0,
+                  boxSizing: "border-box",
+                  overflow: "hidden",
                 }}
               >
                 <div>
@@ -7386,6 +7443,7 @@ function MiniCalendarioControllo({
                     display: "grid",
                     gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
                     gap: 10,
+                    minWidth: 0,
                   }}
                 >
                   <div
@@ -7457,25 +7515,36 @@ function MiniCalendarioControllo({
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "minmax(0, 220px) minmax(0, 1fr)",
+                    gridTemplateColumns:
+                      typeof window !== "undefined" && window.innerWidth <= 820
+                        ? "1fr"
+                        : "minmax(0, 220px) minmax(0, 1fr)",
                     gap: 16,
-                    alignItems: "center",
+                    alignItems: "start",
+                    minWidth: 0,
                   }}
                 >
                   <div
                     style={{
-                      width: 220,
-                      height: 220,
+                      width:
+                        typeof window !== "undefined" && window.innerWidth <= 820
+                          ? "min(220px, 70vw)"
+                          : 220,
+                      height:
+                        typeof window !== "undefined" && window.innerWidth <= 820
+                          ? "min(220px, 70vw)"
+                          : 220,
                       maxWidth: "100%",
                       margin: "0 auto",
                       borderRadius: "50%",
                       background: finanzaGradientTortaAnno,
                       boxShadow: "0 18px 40px rgba(15,23,42,0.12)",
                       border: "10px solid rgba(255,255,255,0.96)",
+                      flexShrink: 0,
                     }}
                   />
 
-                  <div style={{ display: "grid", gap: 10 }}>
+                  <div style={{ display: "grid", gap: 10, minWidth: 0 }}>
                     {finanzaCategorieTortaAnno.length === 0 ? (
                       <div
                         style={{
@@ -7500,13 +7569,18 @@ function MiniCalendarioControllo({
                             key={item.categoria}
                             style={{
                               display: "grid",
-                              gridTemplateColumns: "16px minmax(0, 1fr) auto",
+                              gridTemplateColumns:
+                                typeof window !== "undefined" && window.innerWidth <= 540
+                                  ? "16px minmax(0, 1fr)"
+                                  : "16px minmax(0, 1fr) auto",
                               gap: 10,
                               alignItems: "center",
                               padding: "10px 12px",
                               borderRadius: 14,
                               border: "1px solid rgba(148,163,184,0.14)",
                               background: "rgba(255,255,255,0.78)",
+                              minWidth: 0,
+                              boxSizing: "border-box",
                             }}
                           >
                             <div
@@ -7521,25 +7595,49 @@ function MiniCalendarioControllo({
 
                             <div
                               style={{
-                                fontSize: 13,
-                                fontWeight: 900,
-                                color: "rgba(15,23,42,0.92)",
                                 minWidth: 0,
+                                display: "grid",
+                                gap: 2,
                               }}
                             >
-                              {item.categoria}
+                              <div
+                                style={{
+                                  fontSize: 13,
+                                  fontWeight: 900,
+                                  color: "rgba(15,23,42,0.92)",
+                                  lineHeight: 1.3,
+                                  wordBreak: "break-word",
+                                }}
+                              >
+                                {item.categoria}
+                              </div>
+
+                              {typeof window !== "undefined" && window.innerWidth <= 540 && (
+                                <div
+                                  style={{
+                                    fontSize: 12,
+                                    fontWeight: 950,
+                                    color: "rgba(51,65,85,0.78)",
+                                    lineHeight: 1.3,
+                                  }}
+                                >
+                                  {item.totale.toLocaleString("it-IT")} € • {percentuale.toFixed(1)}%
+                                </div>
+                              )}
                             </div>
 
-                            <div
-                              style={{
-                                fontSize: 12,
-                                fontWeight: 950,
-                                color: "rgba(51,65,85,0.78)",
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              {item.totale.toLocaleString("it-IT")} € • {percentuale.toFixed(1)}%
-                            </div>
+                            {!(typeof window !== "undefined" && window.innerWidth <= 540) && (
+                              <div
+                                style={{
+                                  fontSize: 12,
+                                  fontWeight: 950,
+                                  color: "rgba(51,65,85,0.78)",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                {item.totale.toLocaleString("it-IT")} € • {percentuale.toFixed(1)}%
+                              </div>
+                            )}
                           </div>
                         );
                       })
@@ -7559,6 +7657,9 @@ function MiniCalendarioControllo({
                   "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
                 display: "grid",
                 gap: 14,
+                minWidth: 0,
+                boxSizing: "border-box",
+                overflow: "hidden",
               }}
             >
               <div
@@ -7570,7 +7671,7 @@ function MiniCalendarioControllo({
                   flexWrap: "wrap",
                 }}
               >
-                <div>
+                <div style={{ minWidth: 0 }}>
                   <div
                     style={{
                       fontSize: 19,
@@ -7602,6 +7703,7 @@ function MiniCalendarioControllo({
                     fontSize: 12,
                     fontWeight: 950,
                     color: "rgba(127,29,29,0.90)",
+                    whiteSpace: "nowrap",
                   }}
                 >
                   Totale filtrato: {finanzaUsciteTotMese.toLocaleString("it-IT")} €
@@ -7623,7 +7725,7 @@ function MiniCalendarioControllo({
                   Nessuna uscita trovata con i filtri attuali.
                 </div>
               ) : (
-                <div style={{ display: "grid", gap: 10 }}>
+                <div style={{ display: "grid", gap: 10, minWidth: 0 }}>
                   {usciteFinanzaMese.map((mov) => (
                     <div
                       key={`${mov.origine}_${mov.id}`}
@@ -7634,13 +7736,25 @@ function MiniCalendarioControllo({
                         background:
                           "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(254,242,242,0.88))",
                         display: "grid",
-                        gridTemplateColumns: "minmax(0, 1fr) auto",
+                        gridTemplateColumns:
+                          typeof window !== "undefined" && window.innerWidth <= 680
+                            ? "1fr"
+                            : "minmax(0, 1fr) auto",
                         gap: 12,
                         alignItems: "start",
+                        minWidth: 0,
+                        boxSizing: "border-box",
                       }}
                     >
                       <div style={{ minWidth: 0, display: "grid", gap: 6 }}>
-                        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: 8,
+                            alignItems: "center",
+                            flexWrap: "wrap",
+                          }}
+                        >
                           <span
                             style={{
                               padding: "6px 10px",
@@ -7650,6 +7764,8 @@ function MiniCalendarioControllo({
                               background: "rgba(254,226,226,0.98)",
                               border: "1px solid rgba(239,68,68,0.18)",
                               color: "rgba(127,29,29,0.92)",
+                              maxWidth: "100%",
+                              wordBreak: "break-word",
                             }}
                           >
                             {mov.categoria}
@@ -7672,6 +7788,7 @@ function MiniCalendarioControllo({
                             fontWeight: 950,
                             color: "rgba(15,23,42,0.96)",
                             lineHeight: 1.3,
+                            wordBreak: "break-word",
                           }}
                         >
                           {mov.descrizione || mov.categoria}
@@ -7684,6 +7801,7 @@ function MiniCalendarioControllo({
                               fontWeight: 800,
                               color: "rgba(51,65,85,0.72)",
                               lineHeight: 1.4,
+                              wordBreak: "break-word",
                             }}
                           >
                             Nota: {mov.nota}
@@ -7693,17 +7811,91 @@ function MiniCalendarioControllo({
 
                       <div
                         style={{
-                          padding: "8px 12px",
-                          borderRadius: 999,
-                          border: "2px solid rgba(239,68,68,0.18)",
-                          background: "rgba(254,242,242,0.98)",
-                          fontSize: 12,
-                          fontWeight: 1000,
-                          color: "rgba(127,29,29,0.96)",
-                          whiteSpace: "nowrap",
+                          display: "grid",
+                          gap: 10,
+                          justifyItems:
+                            typeof window !== "undefined" && window.innerWidth <= 680
+                              ? "stretch"
+                              : "end",
+                          minWidth: 0,
                         }}
                       >
-                        {mov.importo.toLocaleString("it-IT")} €
+                        <div
+                          style={{
+                            padding: "8px 12px",
+                            borderRadius: 999,
+                            border: "2px solid rgba(239,68,68,0.18)",
+                            background: "rgba(254,242,242,0.98)",
+                            fontSize: 12,
+                            fontWeight: 1000,
+                            color: "rgba(127,29,29,0.96)",
+                            whiteSpace: "nowrap",
+                            justifySelf:
+                              typeof window !== "undefined" && window.innerWidth <= 680
+                                ? "start"
+                                : "end",
+                          }}
+                        >
+                          {mov.importo.toLocaleString("it-IT")} €
+                        </div>
+
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: 8,
+                            flexWrap: "wrap",
+                            justifyContent:
+                              typeof window !== "undefined" && window.innerWidth <= 680
+                                ? "flex-start"
+                                : "flex-end",
+                          }}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (mov.origine === "uscita-extra") {
+                                setNuovaUscitaData(mov.data);
+                                setCategoriaUscita(mov.categoria);
+                                setNuovaCategoriaUscita("");
+                                setNuovaUscitaDesc(mov.descrizione === mov.categoria ? "" : mov.descrizione);
+                                setNuovaUscitaImporto(String(mov.importo).replace(".", ","));
+                                setNuovaUscitaNota(mov.nota || "");
+                                setPagina("aggiungi");
+                                setAggiungiSezione("movimenti");
+                                setMovimentoAperto("uscita");
+                                eliminaUscitaExtra(mov.id);
+                              } else {
+                                const voceOriginale = voci.find((x) => x.id === mov.id);
+                                if (!voceOriginale) return;
+                                apriModifica(voceOriginale);
+                              }
+                            }}
+                            style={{
+                              ...chip(false),
+                              background: "rgba(255,255,255,0.96)",
+                              color: "rgba(15,23,42,0.92)",
+                              border: "1px solid rgba(148,163,184,0.18)",
+                            }}
+                          >
+                            Modifica
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (mov.origine === "uscita-extra") eliminaUscitaExtra(mov.id);
+                              else elimina(mov.id);
+                            }}
+                            style={{
+                              ...chip(false),
+                              border: "1px solid rgba(239,68,68,0.22)",
+                              color: "rgba(185,28,28,0.96)",
+                              background: "rgba(254,242,242,0.92)",
+                            }}
+                          >
+                            Elimina
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
