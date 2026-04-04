@@ -721,26 +721,27 @@ export default function App() {
   const [movimentoAperto, setMovimentoAperto] = useState<"entrata" | "uscita" | null>(null);
   const [apriConfigFerie, setApriConfigFerie] = useState(false);
 
-  const [finanzaVistaGraficoPeriodo, setFinanzaVistaGraficoPeriodo] = useState<"mese" | "anno">("mese");
-  const [finanzaGraficoMeseTipo, setFinanzaGraficoMeseTipo] = useState<"barre" | "torta">("barre");
+    const [finanzaVistaGraficoPeriodo, setFinanzaVistaGraficoPeriodo] = useState<"mese" | "anno">("mese");
+const [finanzaGraficoMeseTipo] = useState<"barre" | "torta">("barre");
 
-  const [finanzaMeseFiltroDal, setFinanzaMeseFiltroDal] = useState("");
-  const [finanzaMeseFiltroAl, setFinanzaMeseFiltroAl] = useState("");
-  const [finanzaMeseFiltroCategoria, setFinanzaMeseFiltroCategoria] = useState("tutte");
+const [finanzaMeseFiltroDal] = useState("");
+const [finanzaMeseFiltroAl] = useState("");
+const [finanzaMeseFiltroCategoria] = useState("tutte");
 
-  const [finanzaAnnoFiltroDal, setFinanzaAnnoFiltroDal] = useState("");
-  const [finanzaAnnoFiltroAl, setFinanzaAnnoFiltroAl] = useState("");
-  const [finanzaAnnoFiltroCategoria, setFinanzaAnnoFiltroCategoria] = useState("tutte");
+const [finanzaAnnoFiltroDal] = useState("");
+const [finanzaAnnoFiltroAl] = useState("");
+const [finanzaAnnoFiltroCategoria] = useState("tutte");
 
-  const [finanzaListaFiltroDal, setFinanzaListaFiltroDal] = useState("");
-  const [finanzaListaFiltroAl, setFinanzaListaFiltroAl] = useState("");
-  const [finanzaListaFiltroCategoria, setFinanzaListaFiltroCategoria] = useState("tutte");
+const [finanzaListaFiltroDal] = useState("");
+const [finanzaListaFiltroAl] = useState("");
+const [finanzaListaFiltroCategoria] = useState("tutte");
 
-  const [uscitaExtraInModificaId, setUscitaExtraInModificaId] = useState<string | null>(null);
-  const [ritornaAConsultaFinanzaDopoSalvataggio, setRitornaAConsultaFinanzaDopoSalvataggio] = useState(false);
+const [uscitaExtraInModificaId, setUscitaExtraInModificaId] = useState<string | null>(null);
+const [ritornaAConsultaFinanzaDopoSalvataggio, setRitornaAConsultaFinanzaDopoSalvataggio] = useState(false);
 
-  void finanzaGraficoMeseTipo;
-void setFinanzaGraficoMeseTipo;
+void finanzaVistaGraficoPeriodo;
+void setFinanzaVistaGraficoPeriodo;
+void finanzaGraficoMeseTipo;
 
 void finanzaMeseFiltroDal;
 void finanzaMeseFiltroAl;
@@ -764,7 +765,8 @@ void finanzaListaFiltroCategoria;
     []
   );
 
-  const categorieUscitaBase = useMemo(
+  const categorieUscitaBase = uconst [finanzaVistaGraficoPeriodo, setFinanzaVistaGraficoPeriodo] = useState<"mese" | "anno">("mese");
+seMemo(
     () => ["Spesa", "Carburante", "Affitto", "Bollette", "Ristorante", "Svago", "Salute", "Casa"],
     []
   );
@@ -1960,6 +1962,8 @@ function aggiungiUscitaExtra() {
   const oreStraMese = useMemo(() => turniMese.reduce((s, t) => s + t.oreStraordinarie, 0), [turniMese]);
   const oreTotMese = useMemo(() => oreOrdMese + oreStraMese, [oreOrdMese, oreStraMese]);
 
+  void oreTotMese;
+
   const vociMese = useMemo(() => voci.filter((v) => stessoMeseSelezionato(v.data)), [voci, meseCorrente]);
 
 
@@ -2061,6 +2065,8 @@ const totaleTurniMese = useMemo(() => {
     return sigla !== "R";
   }).length;
 }, [turniMese]);
+
+void totaleTurniMese;
 
 const turniFerie = useMemo(() => {
   return turni.filter((t) => normalizeTurnoLabel(t.inizio, t.fine, t.note) === "F");
@@ -2189,6 +2195,8 @@ const tutteCategorieFinanza = useMemo(() => {
   return Array.from(setCategorie).sort((a, b) => a.localeCompare(b, "it"));
 }, [voci, incassi]);
 
+void tutteCategorieFinanza;
+
 const usciteFinanzaMeseBase = useMemo(() => {
   const usciteDaVoci = vociMese
     .filter((v) => v.importo !== null && v.movimento === "uscita")
@@ -2296,6 +2304,9 @@ const finanzaGradientTortaMese = useMemo(() => {
   return `conic-gradient(${segments.join(", ")})`;
 }, [finanzaBarreCategorieMese]);
 
+
+void finanzaGradientTortaMese
+
 const entrateFinanzaAnnoBase = useMemo(() => {
   return Object.values(incassi)
     .flatMap((mese) =>
@@ -2379,6 +2390,8 @@ const finanzaSaldoAnno = useMemo(() => {
   return finanzaEntrateAnno - finanzaUsciteAnno;
 }, [finanzaEntrateAnno, finanzaUsciteAnno]);
 
+void finanzaSaldoAnno
+
 const finanzaCategorieTortaAnno = useMemo(() => {
   const mappa = new Map<string, number>();
 
@@ -2441,6 +2454,9 @@ const usciteFinanzaListaFiltrate = useMemo(() => {
 const finanzaTotaleMovimentiFiltrati = useMemo(() => {
   return usciteFinanzaListaFiltrate.length;
 }, [usciteFinanzaListaFiltrate]);
+
+void finanzaTotaleMovimentiFiltrati
+
 
 const finanzaTotaleListaFiltrata = useMemo(() => {
   return usciteFinanzaListaFiltrate.reduce((acc, x) => acc + x.importo, 0);
