@@ -721,52 +721,46 @@ export default function App() {
   const [movimentoAperto, setMovimentoAperto] = useState<"entrata" | "uscita" | null>(null);
   const [apriConfigFerie, setApriConfigFerie] = useState(false);
 
-    const [finanzaVistaGraficoPeriodo, setFinanzaVistaGraficoPeriodo] = useState<"mese" | "anno">("mese");
-const [finanzaGraficoMeseTipo] = useState<"barre" | "torta">("barre");
+  const [finanzaVistaGraficoPeriodo, setFinanzaVistaGraficoPeriodo] = useState<"mese" | "anno">("mese");
+  const [finanzaGraficoMeseTipo] = useState<"barre" | "torta">("barre");
 
-const [finanzaMeseFiltroDal] = useState("");
-const [finanzaMeseFiltroAl] = useState("");
-const [finanzaMeseFiltroCategoria] = useState("tutte");
+  const [finanzaMeseFiltroDal] = useState("");
+  const [finanzaMeseFiltroAl] = useState("");
+  const [finanzaMeseFiltroCategoria] = useState("tutte");
 
-const [finanzaAnnoFiltroDal] = useState("");
-const [finanzaAnnoFiltroAl] = useState("");
-const [finanzaAnnoFiltroCategoria] = useState("tutte");
+  const [finanzaAnnoFiltroDal] = useState("");
+  const [finanzaAnnoFiltroAl] = useState("");
+  const [finanzaAnnoFiltroCategoria] = useState("tutte");
 
-const [finanzaListaFiltroDal] = useState("");
-const [finanzaListaFiltroAl] = useState("");
-const [finanzaListaFiltroCategoria] = useState("tutte");
+  const [finanzaListaFiltroDal] = useState("");
+  const [finanzaListaFiltroAl] = useState("");
+  const [finanzaListaFiltroCategoria] = useState("tutte");
 
-const [uscitaExtraInModificaId, setUscitaExtraInModificaId] = useState<string | null>(null);
-const [ritornaAConsultaFinanzaDopoSalvataggio, setRitornaAConsultaFinanzaDopoSalvataggio] = useState(false);
+  const [uscitaExtraInModificaId, setUscitaExtraInModificaId] = useState<string | null>(null);
+  const [ritornaAConsultaFinanzaDopoSalvataggio, setRitornaAConsultaFinanzaDopoSalvataggio] = useState(false);
 
-void finanzaVistaGraficoPeriodo;
-void setFinanzaVistaGraficoPeriodo;
-void finanzaGraficoMeseTipo;
+  void finanzaVistaGraficoPeriodo;
+  void setFinanzaVistaGraficoPeriodo;
+  void finanzaGraficoMeseTipo;
 
-void finanzaMeseFiltroDal;
-void finanzaMeseFiltroAl;
-void finanzaMeseFiltroCategoria;
+  void finanzaMeseFiltroDal;
+  void finanzaMeseFiltroAl;
+  void finanzaMeseFiltroCategoria;
 
-void finanzaAnnoFiltroDal;
-void finanzaAnnoFiltroAl;
-void finanzaAnnoFiltroCategoria;
+  void finanzaAnnoFiltroDal;
+  void finanzaAnnoFiltroAl;
+  void finanzaAnnoFiltroCategoria;
 
-void finanzaListaFiltroDal;
-void finanzaListaFiltroAl;
-void finanzaListaFiltroCategoria;
-
-
-
-
-
+  void finanzaListaFiltroDal;
+  void finanzaListaFiltroAl;
+  void finanzaListaFiltroCategoria;
 
   const categorieEntrataBase = useMemo(
     () => ["Stipendio", "Bonus", "Regalo", "Rimborso", "Vendita", "Extra"],
     []
   );
 
-  const categorieUscitaBase = uconst [finanzaVistaGraficoPeriodo, setFinanzaVistaGraficoPeriodo] = useState<"mese" | "anno">("mese");
-seMemo(
+  const categorieUscitaBase = useMemo(
     () => ["Spesa", "Carburante", "Affitto", "Bollette", "Ristorante", "Svago", "Salute", "Casa"],
     []
   );
@@ -858,11 +852,9 @@ seMemo(
       .slice(0, 7);
   }, [voci]);
 
-
-
-
-
   const [hoverCloseTurno, setHoverCloseTurno] = useState(false);
+  void hoverCloseTurno;
+  void setHoverCloseTurno;
 
   const scheduledRef = useRef<Record<string, number[]>>({});
 
@@ -1085,451 +1077,513 @@ seMemo(
     return () => window.removeEventListener("keydown", onKey);
   }, [mostraForm, mostraTurnoForm]);
 
-const ui = useMemo(() => {
-  const glass = {
-    border: "1px solid rgba(255,255,255,0.10)",
-    background: "rgba(2,6,23,0.78)",
-    boxShadow:
-      "0 34px 90px rgba(0,0,0,0.58), inset 0 1px 0 rgba(255,255,255,0.05)",
-    borderRadius: 26,
-    backdropFilter: "blur(20px)",
-    color: "rgba(241,245,249,0.97)",
-  } as const;
+  const ui = useMemo(() => {
+    const glass = {
+      border: "1px solid rgba(255,255,255,0.10)",
+      background: "rgba(2,6,23,0.78)",
+      boxShadow:
+        "0 34px 90px rgba(0,0,0,0.58), inset 0 1px 0 rgba(255,255,255,0.05)",
+      borderRadius: 26,
+      backdropFilter: "blur(20px)",
+      color: "rgba(241,245,249,0.97)",
+    } as const;
 
-  const card = {
-    border: "1px solid rgba(255,255,255,0.08)",
-    background:
-      "linear-gradient(180deg, rgba(2,6,23,0.95), rgba(15,23,42,0.90))",
-    boxShadow:
-      "0 28px 80px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,255,255,0.04)",
-    borderRadius: 24,
-    backdropFilter: "blur(20px)",
-    color: "rgba(241,245,249,0.97)",
-  } as const;
+    const card = {
+      border: "1px solid rgba(255,255,255,0.08)",
+      background:
+        "linear-gradient(180deg, rgba(2,6,23,0.95), rgba(15,23,42,0.90))",
+      boxShadow:
+        "0 28px 80px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,255,255,0.04)",
+      borderRadius: 24,
+      backdropFilter: "blur(20px)",
+      color: "rgba(241,245,249,0.97)",
+    } as const;
 
-  return { glass, card };
-}, []);
+    return { glass, card };
+  }, []);
 
-
-
-
-
-function chiudiForm() {
-  resetForm();
-  setMostraForm(false);
-  setAggiungiSezione("menu");
-}
-
-function resetForm() {
-  setIdInModifica(null);
-  setTitolo("");
-  setData("");
-  setOra("09:00");
-  setTipo("scadenza");
-  setUrgente(false);
-  setNota("");
-  setImporto("");
-  setNotificheMinutiPrima([]);
-  setCustomNotificaOre("");
-}
-
-function apriNuova() {
-  resetForm();
-  setTipo("appuntamento");
-  setOra("09:00");
-  setMostraForm(false);
-  setAggiungiSezione("eventi");
-}
-
-function apriNuovaConData(dataSelezionata: string) {
-  resetForm();
-  setData(dataSelezionata);
-  setOra("09:00");
-  setTipo("appuntamento");
-  setMostraForm(false);
-  setAggiungiSezione("eventi");
-}
-
-function apriModifica(v: Voce) {
-  setIdInModifica(v.id);
-  setTitolo(v.titolo);
-  setData(v.data);
-  setOra(v.ora);
-  setTipo(v.tipo === "nota" ? "scadenza" : v.tipo);
-  setUrgente(v.urgente);
-  setNota("");
-  setImporto(v.importo !== null ? String(v.importo) : "");
-  setNotificheMinutiPrima([]);
-  setCustomNotificaOre("");
-  setMostraForm(false);
-  setAggiungiSezione("eventi");
-}
-
-
-
-
-
-function salva() {
-  if (classNameIsEmpty(titolo)) {
-    alert("Compila almeno la descrizione");
-    return;
+  function chiudiForm() {
+    resetForm();
+    setMostraForm(false);
+    setAggiungiSezione("menu");
   }
 
-  const dataFinale = data.trim();
-  const oraFinale = ora.trim();
-
-  if (classNameIsEmpty(dataFinale) || classNameIsEmpty(oraFinale)) {
-    alert("Compila data e ora");
-    return;
+  function resetForm() {
+    setIdInModifica(null);
+    setTitolo("");
+    setData("");
+    setOra("09:00");
+    setTipo("scadenza");
+    setUrgente(false);
+    setNota("");
+    setImporto("");
+    setNotificheMinutiPrima([]);
+    setCustomNotificaOre("");
   }
 
-  if (idInModifica) {
-    setVoci((prev) =>
-      prev.map((x) =>
-        x.id === idInModifica
-          ? {
-              ...x,
-              titolo: titolo.trim(),
-              data: dataFinale,
-              ora: oraFinale,
-              tipo: "appuntamento",
-              urgente: false,
-              nota: "",
-              importo: null,
-              movimento: "nessuno" as Movimento,
-              fatto: vocePassata(dataFinale, oraFinale),
-              notificheMinutiPrima: [],
-            }
-          : x
-      )
-    );
-  } else {
-    const nuova: Voce = {
-      id: safeUUID(),
-      titolo: titolo.trim(),
-      data: dataFinale,
-      ora: oraFinale,
-      tipo: "appuntamento",
-      urgente: false,
-      nota: "",
-      importo: null,
-      movimento: "nessuno",
-      fatto: vocePassata(dataFinale, oraFinale),
-      notificheMinutiPrima: [],
-    };
-
-    setVoci((prev) => [nuova, ...prev]);
+  function apriNuova() {
+    resetForm();
+    setTipo("appuntamento");
+    setOra("09:00");
+    setMostraForm(false);
+    setAggiungiSezione("eventi");
   }
 
-  chiudiForm();
-}
-
-function applicaPresetTurno(val: string) {
-  setTurnoPreset(val);
-  setTurnoManuale(false);
-
-  const parti = val.split("-");
-  if (parti.length !== 2) return;
-
-  let start = parti[0].trim();
-  let end = parti[1].trim();
-
-  if (/^\d$/.test(start)) start = `0${start}`;
-  if (/^\d$/.test(end)) end = `0${end}`;
-  if (end === "24") end = "00";
-
-  setTurnoInizio(`${start}:00`);
-  setTurnoFine(`${end}:00`);
-
-  if (turnoOreOrd.trim() === "") {
-    const oreCalcolate =
-      ((Number(end === "00" ? "24" : end) - Number(start) + 24) % 24) || 0;
-    if (oreCalcolate > 0) setTurnoOreOrd(String(oreCalcolate));
-  }
-}
-
-function giorniTraDateInclusive(dataInizio: string, dataFine: string) {
-  const start = new Date(`${dataInizio}T00:00:00`);
-  const end = new Date(`${dataFine}T00:00:00`);
-
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start) {
-    return [] as string[];
+  function apriNuovaConData(dataSelezionata: string) {
+    resetForm();
+    setData(dataSelezionata);
+    setOra("09:00");
+    setTipo("appuntamento");
+    setMostraForm(false);
+    setAggiungiSezione("eventi");
   }
 
-  const out: string[] = [];
-  const cur = new Date(start);
-
-  while (cur <= end) {
-    out.push(cur.toISOString().slice(0, 10));
-    cur.setDate(cur.getDate() + 1);
+  function apriModifica(v: Voce) {
+    setIdInModifica(v.id);
+    setTitolo(v.titolo);
+    setData(v.data);
+    setOra(v.ora);
+    setTipo(v.tipo === "nota" ? "scadenza" : v.tipo);
+    setUrgente(v.urgente);
+    setNota("");
+    setImporto(v.importo !== null ? String(v.importo) : "");
+    setNotificheMinutiPrima([]);
+    setCustomNotificaOre("");
+    setMostraForm(false);
+    setAggiungiSezione("eventi");
   }
 
-  return out;
-}
-
-function resetCampiTurnoBase(dataSelezionata?: string) {
-  const dataBase = dataSelezionata || new Date().toISOString().slice(0, 10);
-
-  setTurnoIdInModifica(null);
-  setTurnoData(dataBase);
-  setTurnoDataFine(dataBase);
-  setTurnoTipo("lavoro");
-  setTurnoModoOreFerie("giorni");
-  setTurnoQuantitaFerie("");
-  setTurnoInizio("08:00");
-  setTurnoFine("16:00");
-  setTurnoOreOrd("");
-  setTurnoOreStraord("");
-  setTurnoNote("");
-  setTurnoPreset("");
-  setTurnoManuale(false);
-  setTurnoModalitaPeriodo("singolo");
-  setTurnoTipoAssenza("malattia");
-}
-
-function apriTurnoForm(dataSelezionata?: string) {
-  setAggiungiSezione("menu");
-  resetCampiTurnoBase(dataSelezionata);
-  setMostraTurnoForm(true);
-}
-
-function apriModificaTurno(t: Turno) {
-  const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
-
-  setTurnoIdInModifica(t.id);
-  setTurnoData(t.data);
-  setTurnoDataFine(t.data);
-  setTurnoOreStraord(t.oreStraordinarie ? String(t.oreStraordinarie) : "");
-  setTurnoModalitaPeriodo("singolo");
-
-  if (sigla === "R") {
-    setTurnoTipo("riposo");
-    setTurnoModoOreFerie("giorni");
-    setTurnoQuantitaFerie("");
-    setTurnoInizio("08:00");
-    setTurnoFine("16:00");
-    setTurnoOreOrd("");
-    setTurnoPreset("");
-    setTurnoManuale(false);
-    setTurnoTipoAssenza("malattia");
-
-    const notaPulita = (t.note || "").replace(/^RIPOSO\s*•?\s*/i, "").trim();
-    setTurnoNote(notaPulita);
-  } else if (sigla === "F") {
-    setTurnoTipo("ferie");
-    setTurnoInizio("08:00");
-    setTurnoFine("16:00");
-    setTurnoPreset("");
-    setTurnoManuale(false);
-    setTurnoTipoAssenza("malattia");
-
-    const oreOrd = Number(t.oreOrdinarie || 0);
-
-    if (oreOrd === 8) {
-      setTurnoModoOreFerie("giorni");
-      setTurnoQuantitaFerie("1");
-    } else {
-      setTurnoModoOreFerie("ore");
-      setTurnoQuantitaFerie(String(oreOrd || ""));
+  function salva() {
+    if (classNameIsEmpty(titolo)) {
+      alert("Compila almeno la descrizione");
+      return;
     }
 
-    setTurnoOreOrd(String(oreOrd || ""));
-    setTurnoOreStraord("");
+    const dataFinale = data.trim();
+    const oraFinale = ora.trim();
 
-    const notaPulita = (t.note || "").replace(/^FERIE\s*•?\s*/i, "").trim();
-    setTurnoNote(notaPulita);
-  } else if (sigla === "A") {
-    setTurnoTipo("assenza");
-    setTurnoInizio("08:00");
-    setTurnoFine("16:00");
-    setTurnoPreset("");
-    setTurnoManuale(false);
-    setTurnoModoOreFerie("giorni");
-    setTurnoQuantitaFerie("");
-    setTurnoOreOrd("");
-    setTurnoOreStraord("");
-
-    const notaUpper = (t.note || "").toUpperCase();
-    if (notaUpper.includes("104")) {
-      setTurnoTipoAssenza("104");
-    } else if (notaUpper.includes("MATERNITA FACOLTATIVA") || notaUpper.includes("MATERNITÀ FACOLTATIVA")) {
-      setTurnoTipoAssenza("maternita-facoltativa");
-    } else if (notaUpper.includes("PERMESSO SINDACALE")) {
-      setTurnoTipoAssenza("permesso-sindacale");
-    } else {
-      setTurnoTipoAssenza("malattia");
+    if (classNameIsEmpty(dataFinale) || classNameIsEmpty(oraFinale)) {
+      alert("Compila data e ora");
+      return;
     }
 
-    const notaPulita = (t.note || "").replace(/^ASSENZA\s*•?\s*/i, "").trim();
-    setTurnoNote(notaPulita);
-  } else {
+    if (idInModifica) {
+      setVoci((prev) =>
+        prev.map((x) =>
+          x.id === idInModifica
+            ? {
+                ...x,
+                titolo: titolo.trim(),
+                data: dataFinale,
+                ora: oraFinale,
+                tipo: "appuntamento",
+                urgente: false,
+                nota: "",
+                importo: null,
+                movimento: "nessuno" as Movimento,
+                fatto: vocePassata(dataFinale, oraFinale),
+                notificheMinutiPrima: [],
+              }
+            : x
+        )
+      );
+    } else {
+      const nuova: Voce = {
+        id: safeUUID(),
+        titolo: titolo.trim(),
+        data: dataFinale,
+        ora: oraFinale,
+        tipo: "appuntamento",
+        urgente: false,
+        nota: "",
+        importo: null,
+        movimento: "nessuno",
+        fatto: vocePassata(dataFinale, oraFinale),
+        notificheMinutiPrima: [],
+      };
+
+      setVoci((prev) => [nuova, ...prev]);
+    }
+
+    chiudiForm();
+  }
+
+  function applicaPresetTurno(val: string) {
+    setTurnoPreset(val);
+    setTurnoManuale(false);
+
+    const parti = val.split("-");
+    if (parti.length !== 2) return;
+
+    let start = parti[0].trim();
+    let end = parti[1].trim();
+
+    if (/^\d$/.test(start)) start = `0${start}`;
+    if (/^\d$/.test(end)) end = `0${end}`;
+    if (end === "24") end = "00";
+
+    setTurnoInizio(`${start}:00`);
+    setTurnoFine(`${end}:00`);
+
+    if (turnoOreOrd.trim() === "") {
+      const oreCalcolate =
+        ((Number(end === "00" ? "24" : end) - Number(start) + 24) % 24) || 0;
+      if (oreCalcolate > 0) setTurnoOreOrd(String(oreCalcolate));
+    }
+  }
+
+  function giorniTraDateInclusive(dataInizio: string, dataFine: string) {
+    const start = new Date(`${dataInizio}T00:00:00`);
+    const end = new Date(`${dataFine}T00:00:00`);
+
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start) {
+      return [] as string[];
+    }
+
+    const out: string[] = [];
+    const cur = new Date(start);
+
+    while (cur <= end) {
+      out.push(cur.toISOString().slice(0, 10));
+      cur.setDate(cur.getDate() + 1);
+    }
+
+    return out;
+  }
+
+  function resetCampiTurnoBase(dataSelezionata?: string) {
+    const dataBase = dataSelezionata || new Date().toISOString().slice(0, 10);
+
+    setTurnoIdInModifica(null);
+    setTurnoData(dataBase);
+    setTurnoDataFine(dataBase);
     setTurnoTipo("lavoro");
-    setTurnoInizio(t.inizio);
-    setTurnoFine(t.fine);
-    setTurnoOreOrd(String(t.oreOrdinarie ?? ""));
-    setTurnoNote(t.note ?? "");
-    setTurnoTipoAssenza("malattia");
-
-    const key = `${t.inizio}-${t.fine}`
-      .replace("06:00-14:00", "6-14")
-      .replace("14:00-22:00", "14-22")
-      .replace("22:00-06:00", "22-06")
-      .replace("00:00-06:00", "00-06")
-      .replace("06:00-12:00", "06-12")
-      .replace("12:00-18:00", "12-18")
-      .replace("18:00-00:00", "18-24")
-      .replace("08:00-18:00", "8-18")
-      .replace("08:00-17:00", "8-17");
-
-    if (presetTurni.includes(key)) {
-      setTurnoPreset(key);
-      setTurnoManuale(false);
-    } else {
-      setTurnoPreset("");
-      setTurnoManuale(true);
-    }
-
     setTurnoModoOreFerie("giorni");
     setTurnoQuantitaFerie("");
+    setTurnoInizio("08:00");
+    setTurnoFine("16:00");
+    setTurnoOreOrd("");
+    setTurnoOreStraord("");
+    setTurnoNote("");
+    setTurnoPreset("");
+    setTurnoManuale(false);
+    setTurnoModalitaPeriodo("singolo");
+    setTurnoTipoAssenza("malattia");
   }
 
-  setMostraTurnoForm(true);
-}
-
-void apriModificaTurno;
-
-function chiudiTurnoForm() {
-  setMostraTurnoForm(false);
-  setTurnoIdInModifica(null);
-  setTurnoTipo("lavoro");
-  setTurnoModoOreFerie("giorni");
-  setTurnoQuantitaFerie("");
-  setTurnoOreOrd("");
-  setTurnoOreStraord("");
-  setTurnoNote("");
-  setTurnoPreset("");
-  setTurnoInizio("08:00");
-  setTurnoFine("16:00");
-  setTurnoManuale(false);
-  setTurnoModalitaPeriodo("singolo");
-  setTurnoDataFine(turnoData);
-  setTurnoTipoAssenza("malattia");
-}
-
-function salvaTurno() {
-  if (!turnoData) {
-    alert("Inserisci la data del turno.");
-    return;
+  function apriTurnoForm(dataSelezionata?: string) {
+    setAggiungiSezione("menu");
+    resetCampiTurnoBase(dataSelezionata);
+    setMostraTurnoForm(true);
   }
 
-  if ((turnoTipo === "ferie" || turnoTipo === "assenza") && turnoModalitaPeriodo === "intervallo") {
-    if (!turnoDataFine) {
-      alert("Inserisci la data finale.");
+  function apriModificaTurno(t: Turno) {
+    const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
+
+    setTurnoIdInModifica(t.id);
+    setTurnoData(t.data);
+    setTurnoDataFine(t.data);
+    setTurnoOreStraord(t.oreStraordinarie ? String(t.oreStraordinarie) : "");
+    setTurnoModalitaPeriodo("singolo");
+
+    if (sigla === "R") {
+      setTurnoTipo("riposo");
+      setTurnoModoOreFerie("giorni");
+      setTurnoQuantitaFerie("");
+      setTurnoInizio("08:00");
+      setTurnoFine("16:00");
+      setTurnoOreOrd("");
+      setTurnoPreset("");
+      setTurnoManuale(false);
+      setTurnoTipoAssenza("malattia");
+
+      const notaPulita = (t.note || "").replace(/^RIPOSO\s*•?\s*/i, "").trim();
+      setTurnoNote(notaPulita);
+    } else if (sigla === "F") {
+      setTurnoTipo("ferie");
+      setTurnoInizio("08:00");
+      setTurnoFine("16:00");
+      setTurnoPreset("");
+      setTurnoManuale(false);
+      setTurnoTipoAssenza("malattia");
+
+      const oreOrd = Number(t.oreOrdinarie || 0);
+
+      if (oreOrd === 8) {
+        setTurnoModoOreFerie("giorni");
+        setTurnoQuantitaFerie("1");
+      } else {
+        setTurnoModoOreFerie("ore");
+        setTurnoQuantitaFerie(String(oreOrd || ""));
+      }
+
+      setTurnoOreOrd(String(oreOrd || ""));
+      setTurnoOreStraord("");
+
+      const notaPulita = (t.note || "").replace(/^FERIE\s*•?\s*/i, "").trim();
+      setTurnoNote(notaPulita);
+    } else if (sigla === "A") {
+      setTurnoTipo("assenza");
+      setTurnoInizio("08:00");
+      setTurnoFine("16:00");
+      setTurnoPreset("");
+      setTurnoManuale(false);
+      setTurnoModoOreFerie("giorni");
+      setTurnoQuantitaFerie("");
+      setTurnoOreOrd("");
+      setTurnoOreStraord("");
+
+      const notaUpper = (t.note || "").toUpperCase();
+      if (notaUpper.includes("104")) {
+        setTurnoTipoAssenza("104");
+      } else if (notaUpper.includes("MATERNITA FACOLTATIVA") || notaUpper.includes("MATERNITÀ FACOLTATIVA")) {
+        setTurnoTipoAssenza("maternita-facoltativa");
+      } else if (notaUpper.includes("PERMESSO SINDACALE")) {
+        setTurnoTipoAssenza("permesso-sindacale");
+      } else {
+        setTurnoTipoAssenza("malattia");
+      }
+
+      const notaPulita = (t.note || "").replace(/^ASSENZA\s*•?\s*/i, "").trim();
+      setTurnoNote(notaPulita);
+    } else {
+      setTurnoTipo("lavoro");
+      setTurnoInizio(t.inizio);
+      setTurnoFine(t.fine);
+      setTurnoOreOrd(String(t.oreOrdinarie ?? ""));
+      setTurnoNote(t.note ?? "");
+      setTurnoTipoAssenza("malattia");
+
+      const key = `${t.inizio}-${t.fine}`
+        .replace("06:00-14:00", "6-14")
+        .replace("14:00-22:00", "14-22")
+        .replace("22:00-06:00", "22-06")
+        .replace("00:00-06:00", "00-06")
+        .replace("06:00-12:00", "06-12")
+        .replace("12:00-18:00", "12-18")
+        .replace("18:00-00:00", "18-24")
+        .replace("08:00-18:00", "8-18")
+        .replace("08:00-17:00", "8-17");
+
+      if (presetTurni.includes(key)) {
+        setTurnoPreset(key);
+        setTurnoManuale(false);
+      } else {
+        setTurnoPreset("");
+        setTurnoManuale(true);
+      }
+
+      setTurnoModoOreFerie("giorni");
+      setTurnoQuantitaFerie("");
+    }
+
+    setMostraTurnoForm(true);
+  }
+
+  void apriModificaTurno;
+
+  function chiudiTurnoForm() {
+    setMostraTurnoForm(false);
+    setTurnoIdInModifica(null);
+    setTurnoTipo("lavoro");
+    setTurnoModoOreFerie("giorni");
+    setTurnoQuantitaFerie("");
+    setTurnoOreOrd("");
+    setTurnoOreStraord("");
+    setTurnoNote("");
+    setTurnoPreset("");
+    setTurnoInizio("08:00");
+    setTurnoFine("16:00");
+    setTurnoManuale(false);
+    setTurnoModalitaPeriodo("singolo");
+    setTurnoDataFine(turnoData);
+    setTurnoTipoAssenza("malattia");
+  }
+
+  function salvaTurno() {
+    if (!turnoData) {
+      alert("Inserisci la data del turno.");
       return;
     }
 
-    const giorni = giorniTraDateInclusive(turnoData, turnoDataFine);
+    if ((turnoTipo === "ferie" || turnoTipo === "assenza") && turnoModalitaPeriodo === "intervallo") {
+      if (!turnoDataFine) {
+        alert("Inserisci la data finale.");
+        return;
+      }
 
-    if (giorni.length === 0) {
-      alert("Intervallo date non valido.");
-      return;
-    }
+      const giorni = giorniTraDateInclusive(turnoData, turnoDataFine);
 
-    if (turnoIdInModifica) {
-      alert("Per modificare un intervallo già creato, modifica o elimina i singoli giorni.");
-      return;
-    }
+      if (giorni.length === 0) {
+        alert("Intervallo date non valido.");
+        return;
+      }
 
-    if (turnoTipo === "ferie") {
-      const recordFerie: Turno[] = giorni.map((dataGiorno) => ({
+      if (turnoIdInModifica) {
+        alert("Per modificare un intervallo già creato, modifica o elimina i singoli giorni.");
+        return;
+      }
+
+      if (turnoTipo === "ferie") {
+        const recordFerie: Turno[] = giorni.map((dataGiorno) => ({
+          id: safeUUID(),
+          data: dataGiorno,
+          inizio: "FERIE",
+          fine: "FERIE",
+          oreOrdinarie: 8,
+          oreStraordinarie: 0,
+          note:
+            `FERIE • 1 g • intervallo ${turnoData} / ${turnoDataFine}` +
+            (turnoNote.trim() ? ` • ${turnoNote.trim()}` : ""),
+        }));
+
+        setTurni((prev) => [...recordFerie, ...prev]);
+        chiudiTurnoForm();
+        return;
+      }
+
+      const etichettaAssenza =
+        turnoTipoAssenza === "104"
+          ? "104"
+          : turnoTipoAssenza === "maternita-facoltativa"
+          ? "Maternità facoltativa"
+          : turnoTipoAssenza === "permesso-sindacale"
+          ? "Permesso sindacale"
+          : "Malattia";
+
+      const recordAssenza: Turno[] = giorni.map((dataGiorno) => ({
         id: safeUUID(),
         data: dataGiorno,
-        inizio: "FERIE",
-        fine: "FERIE",
-        oreOrdinarie: 8,
+        inizio: "ASSENZA",
+        fine: "ASSENZA",
+        oreOrdinarie: 0,
         oreStraordinarie: 0,
         note:
-          `FERIE • 1 g • intervallo ${turnoData} / ${turnoDataFine}` +
+          `ASSENZA • ${etichettaAssenza} • intervallo ${turnoData} / ${turnoDataFine}` +
           (turnoNote.trim() ? ` • ${turnoNote.trim()}` : ""),
       }));
 
-      setTurni((prev) => [...recordFerie, ...prev]);
+      setTurni((prev) => [...recordAssenza, ...prev]);
       chiudiTurnoForm();
       return;
     }
 
-    const etichettaAssenza =
-      turnoTipoAssenza === "104"
-        ? "104"
-        : turnoTipoAssenza === "maternita-facoltativa"
-        ? "Maternità facoltativa"
-        : turnoTipoAssenza === "permesso-sindacale"
-        ? "Permesso sindacale"
-        : "Malattia";
+    if (turnoTipo === "riposo") {
+      const aggiornato: Turno = {
+        id: turnoIdInModifica ?? safeUUID(),
+        data: turnoData,
+        inizio: "RIPOSO",
+        fine: "RIPOSO",
+        oreOrdinarie: 0,
+        oreStraordinarie: 0,
+        note: turnoNote.trim() ? `RIPOSO • ${turnoNote.trim()}` : "RIPOSO",
+      };
 
-    const recordAssenza: Turno[] = giorni.map((dataGiorno) => ({
-      id: safeUUID(),
-      data: dataGiorno,
-      inizio: "ASSENZA",
-      fine: "ASSENZA",
-      oreOrdinarie: 0,
-      oreStraordinarie: 0,
-      note:
-        `ASSENZA • ${etichettaAssenza} • intervallo ${turnoData} / ${turnoDataFine}` +
-        (turnoNote.trim() ? ` • ${turnoNote.trim()}` : ""),
-    }));
+      if (turnoIdInModifica) {
+        setTurni((prev) => prev.map((t) => (t.id === turnoIdInModifica ? aggiornato : t)));
+      } else {
+        setTurni((prev) => [aggiornato, ...prev]);
+      }
 
-    setTurni((prev) => [...recordAssenza, ...prev]);
-    chiudiTurnoForm();
-    return;
-  }
-
-  if (turnoTipo === "riposo") {
-    const aggiornato: Turno = {
-      id: turnoIdInModifica ?? safeUUID(),
-      data: turnoData,
-      inizio: "RIPOSO",
-      fine: "RIPOSO",
-      oreOrdinarie: 0,
-      oreStraordinarie: 0,
-      note: turnoNote.trim() ? `RIPOSO • ${turnoNote.trim()}` : "RIPOSO",
-    };
-
-    if (turnoIdInModifica) {
-      setTurni((prev) => prev.map((t) => (t.id === turnoIdInModifica ? aggiornato : t)));
-    } else {
-      setTurni((prev) => [aggiornato, ...prev]);
-    }
-
-    chiudiTurnoForm();
-    return;
-  }
-
-  if (turnoTipo === "ferie") {
-    const quantita = parseOreItaliane(turnoQuantitaFerie);
-
-    if (quantita === null || quantita <= 0) {
-      alert(turnoModoOreFerie === "giorni" ? "Inserisci giorni ferie validi." : "Inserisci ore ferie valide.");
+      chiudiTurnoForm();
       return;
     }
 
-    if (turnoModoOreFerie === "giorni" && quantita > 1) {
-      alert("Per più di 1 giorno di ferie usa la modalità Da / A.");
+    if (turnoTipo === "ferie") {
+      const quantita = parseOreItaliane(turnoQuantitaFerie);
+
+      if (quantita === null || quantita <= 0) {
+        alert(turnoModoOreFerie === "giorni" ? "Inserisci giorni ferie validi." : "Inserisci ore ferie valide.");
+        return;
+      }
+
+      if (turnoModoOreFerie === "giorni" && quantita > 1) {
+        alert("Per più di 1 giorno di ferie usa la modalità Da / A.");
+        return;
+      }
+
+      const oreOrd = turnoModoOreFerie === "giorni" ? quantita * 8 : quantita;
+
+      const aggiornato: Turno = {
+        id: turnoIdInModifica ?? safeUUID(),
+        data: turnoData,
+        inizio: "FERIE",
+        fine: "FERIE",
+        oreOrdinarie: oreOrd,
+        oreStraordinarie: 0,
+        note:
+          `FERIE • ${turnoModoOreFerie === "giorni" ? `${quantita} g` : `${quantita} h`}` +
+          (turnoNote.trim() ? ` • ${turnoNote.trim()}` : ""),
+      };
+
+      if (turnoIdInModifica) {
+        setTurni((prev) => prev.map((t) => (t.id === turnoIdInModifica ? aggiornato : t)));
+      } else {
+        setTurni((prev) => [aggiornato, ...prev]);
+      }
+
+      chiudiTurnoForm();
       return;
     }
 
-    const oreOrd = turnoModoOreFerie === "giorni" ? quantita * 8 : quantita;
+    if (turnoTipo === "assenza") {
+      const etichettaAssenza =
+        turnoTipoAssenza === "104"
+          ? "104"
+          : turnoTipoAssenza === "maternita-facoltativa"
+          ? "Maternità facoltativa"
+          : turnoTipoAssenza === "permesso-sindacale"
+          ? "Permesso sindacale"
+          : "Malattia";
+
+      const aggiornato: Turno = {
+        id: turnoIdInModifica ?? safeUUID(),
+        data: turnoData,
+        inizio: "ASSENZA",
+        fine: "ASSENZA",
+        oreOrdinarie: 0,
+        oreStraordinarie: 0,
+        note:
+          `ASSENZA • ${etichettaAssenza}` +
+          (turnoNote.trim() ? ` • ${turnoNote.trim()}` : ""),
+      };
+
+      if (turnoIdInModifica) {
+        setTurni((prev) => prev.map((t) => (t.id === turnoIdInModifica ? aggiornato : t)));
+      } else {
+        setTurni((prev) => [aggiornato, ...prev]);
+      }
+
+      chiudiTurnoForm();
+      return;
+    }
+
+    if (!turnoInizio || !turnoFine) {
+      alert("Inserisci inizio e fine turno.");
+      return;
+    }
+
+    const oreOrd = parseOreItaliane(turnoOreOrd);
+    const oreStra = turnoOreStraord.trim() === "" ? 0 : parseOreItaliane(turnoOreStraord);
+
+    if (oreOrd === null || oreOrd < 0) {
+      alert("Inserisci ore ordinarie valide.");
+      return;
+    }
+
+    if (oreStra === null || oreStra < 0) {
+      alert("Inserisci ore straordinarie valide.");
+      return;
+    }
 
     const aggiornato: Turno = {
       id: turnoIdInModifica ?? safeUUID(),
       data: turnoData,
-      inizio: "FERIE",
-      fine: "FERIE",
+      inizio: turnoInizio,
+      fine: turnoFine,
       oreOrdinarie: oreOrd,
-      oreStraordinarie: 0,
-      note:
-        `FERIE • ${turnoModoOreFerie === "giorni" ? `${quantita} g` : `${quantita} h`}` +
-        (turnoNote.trim() ? ` • ${turnoNote.trim()}` : ""),
+      oreStraordinarie: oreStra,
+      note: turnoNote.trim(),
     };
 
     if (turnoIdInModifica) {
@@ -1539,85 +1593,15 @@ function salvaTurno() {
     }
 
     chiudiTurnoForm();
-    return;
   }
 
-  if (turnoTipo === "assenza") {
-    const etichettaAssenza =
-      turnoTipoAssenza === "104"
-        ? "104"
-        : turnoTipoAssenza === "maternita-facoltativa"
-        ? "Maternità facoltativa"
-        : turnoTipoAssenza === "permesso-sindacale"
-        ? "Permesso sindacale"
-        : "Malattia";
-
-    const aggiornato: Turno = {
-      id: turnoIdInModifica ?? safeUUID(),
-      data: turnoData,
-      inizio: "ASSENZA",
-      fine: "ASSENZA",
-      oreOrdinarie: 0,
-      oreStraordinarie: 0,
-      note:
-        `ASSENZA • ${etichettaAssenza}` +
-        (turnoNote.trim() ? ` • ${turnoNote.trim()}` : ""),
-    };
-
-    if (turnoIdInModifica) {
-      setTurni((prev) => prev.map((t) => (t.id === turnoIdInModifica ? aggiornato : t)));
-    } else {
-      setTurni((prev) => [aggiornato, ...prev]);
-    }
-
-    chiudiTurnoForm();
-    return;
+  function eliminaTurno(id: string) {
+    const ok = confirm("Vuoi eliminare questo turno?");
+    if (!ok) return;
+    setTurni((prev) => prev.filter((t) => t.id !== id));
   }
 
-  if (!turnoInizio || !turnoFine) {
-    alert("Inserisci inizio e fine turno.");
-    return;
-  }
-
-  const oreOrd = parseOreItaliane(turnoOreOrd);
-  const oreStra = turnoOreStraord.trim() === "" ? 0 : parseOreItaliane(turnoOreStraord);
-
-  if (oreOrd === null || oreOrd < 0) {
-    alert("Inserisci ore ordinarie valide.");
-    return;
-  }
-
-  if (oreStra === null || oreStra < 0) {
-    alert("Inserisci ore straordinarie valide.");
-    return;
-  }
-
-  const aggiornato: Turno = {
-    id: turnoIdInModifica ?? safeUUID(),
-    data: turnoData,
-    inizio: turnoInizio,
-    fine: turnoFine,
-    oreOrdinarie: oreOrd,
-    oreStraordinarie: oreStra,
-    note: turnoNote.trim(),
-  };
-
-  if (turnoIdInModifica) {
-    setTurni((prev) => prev.map((t) => (t.id === turnoIdInModifica ? aggiornato : t)));
-  } else {
-    setTurni((prev) => [aggiornato, ...prev]);
-  }
-
-  chiudiTurnoForm();
-}
-
-function eliminaTurno(id: string) {
-  const ok = confirm("Vuoi eliminare questo turno?");
-  if (!ok) return;
-  setTurni((prev) => prev.filter((t) => t.id !== id));
-}
-
-void eliminaTurno;
+  void eliminaTurno;
 
 
 
