@@ -739,6 +739,26 @@ export default function App() {
   const [uscitaExtraInModificaId, setUscitaExtraInModificaId] = useState<string | null>(null);
   const [ritornaAConsultaFinanzaDopoSalvataggio, setRitornaAConsultaFinanzaDopoSalvataggio] = useState(false);
 
+  void finanzaGraficoMeseTipo;
+void setFinanzaGraficoMeseTipo;
+
+void finanzaMeseFiltroDal;
+void finanzaMeseFiltroAl;
+void finanzaMeseFiltroCategoria;
+
+void finanzaAnnoFiltroDal;
+void finanzaAnnoFiltroAl;
+void finanzaAnnoFiltroCategoria;
+
+void finanzaListaFiltroDal;
+void finanzaListaFiltroAl;
+void finanzaListaFiltroCategoria;
+
+
+
+
+
+
   const categorieEntrataBase = useMemo(
     () => ["Stipendio", "Bonus", "Regalo", "Rimborso", "Vendita", "Extra"],
     []
