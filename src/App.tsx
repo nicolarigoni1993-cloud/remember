@@ -2097,6 +2097,13 @@ const ferieOreResidue = useMemo(() => {
 }, [ferieTotaliOreBase, ferieOreEffettuate]);
 
 
+void apriConfigFerie;
+void setApriConfigFerie;
+void ferieGiorniResidui;
+void ferieOreResidue;
+
+
+
 
     const tutteEntrateExtra = useMemo(() => {
     return Object.entries(incassi).flatMap(([mese, dati]) =>
