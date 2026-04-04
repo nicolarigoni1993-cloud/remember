@@ -741,7 +741,28 @@ export default function App() {
   const [uscitaExtraInModificaId, setUscitaExtraInModificaId] = useState<string | null>(null);
   const [ritornaAConsultaFinanzaDopoSalvataggio, setRitornaAConsultaFinanzaDopoSalvataggio] = useState(false);
 
+const [viewportWidth, setViewportWidth] = useState<number>(() => {
+  if (typeof window === "undefined") return 1200;
+  return window.innerWidth || 1200;
+});
 
+useEffect(() => {
+  function aggiornaViewportWidth() {
+    setViewportWidth(window.innerWidth || 1200);
+  }
+
+  aggiornaViewportWidth();
+  window.addEventListener("resize", aggiornaViewportWidth);
+
+  return () => {
+    window.removeEventListener("resize", aggiornaViewportWidth);
+  };
+}, []);
+
+const isPhoneViewport = viewportWidth <= 540;
+const isTabletViewport = viewportWidth <= 820;
+const isCompactActionsViewport = viewportWidth <= 680;
+const isHeaderCompactViewport = viewportWidth <= 520;
 
   const categorieEntrataBase = useMemo(
     () => ["Stipendio", "Bonus", "Regalo", "Rimborso", "Vendita", "Extra"],
@@ -7050,10 +7071,7 @@ function MiniCalendarioControllo({
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns:
-                    typeof window !== "undefined" && window.innerWidth <= 520
-                      ? "44px minmax(0, 1fr) 44px"
-                      : "52px minmax(0, 1fr) 52px",
+                  gridTemplateColumns: isHeaderCompactViewport ? "44px minmax(0, 1fr) 44px" : "52px minmax(0, 1fr) 52px",
                   alignItems: "center",
                   gap: 10,
                   minWidth: 0,
@@ -7063,8 +7081,8 @@ function MiniCalendarioControllo({
                   type="button"
                   onClick={mesePrecedente}
                   style={{
-                    width: typeof window !== "undefined" && window.innerWidth <= 520 ? 44 : 52,
-                    height: typeof window !== "undefined" && window.innerWidth <= 520 ? 44 : 52,
+                    width: isHeaderCompactViewport ? 44 : 52,
+                    height: isHeaderCompactViewport ? 44 : 52,
                     borderRadius: 16,
                     border: "1px solid rgba(148,163,184,0.18)",
                     background: "rgba(255,255,255,0.96)",
@@ -7108,8 +7126,8 @@ function MiniCalendarioControllo({
                   type="button"
                   onClick={meseSuccessivo}
                   style={{
-                    width: typeof window !== "undefined" && window.innerWidth <= 520 ? 44 : 52,
-                    height: typeof window !== "undefined" && window.innerWidth <= 520 ? 44 : 52,
+                    width: isHeaderCompactViewport ? 44 : 52,
+                    height: isHeaderCompactViewport ? 44 : 52,
                     borderRadius: 16,
                     border: "1px solid rgba(148,163,184,0.18)",
                     background: "rgba(255,255,255,0.96)",
@@ -7492,10 +7510,7 @@ function MiniCalendarioControllo({
                     <div
                       style={{
                         display: "grid",
-                        gridTemplateColumns:
-                          typeof window !== "undefined" && window.innerWidth <= 820
-                            ? "1fr"
-                            : "minmax(0, 220px) minmax(0, 1fr)",
+                        gridTemplateColumns: isTabletViewport ? "1fr" : "minmax(0, 220px) minmax(0, 1fr)",
                         gap: 16,
                         alignItems: "start",
                         minWidth: 0,
@@ -7503,14 +7518,8 @@ function MiniCalendarioControllo({
                     >
                       <div
                         style={{
-                          width:
-                            typeof window !== "undefined" && window.innerWidth <= 820
-                              ? "min(220px, 70vw)"
-                              : 220,
-                          height:
-                            typeof window !== "undefined" && window.innerWidth <= 820
-                              ? "min(220px, 70vw)"
-                              : 220,
+                          width: isTabletViewport ? "min(220px, 70vw)" : 220,
+                          height: isTabletViewport ? "min(220px, 70vw)" : 220,
                           maxWidth: "100%",
                           margin: "0 auto",
                           borderRadius: "50%",
@@ -7530,10 +7539,7 @@ function MiniCalendarioControllo({
                               key={item.categoria}
                               style={{
                                 display: "grid",
-                                gridTemplateColumns:
-                                  typeof window !== "undefined" && window.innerWidth <= 540
-                                    ? "16px minmax(0, 1fr)"
-                                    : "16px minmax(0, 1fr) auto",
+                                gridTemplateColumns: isPhoneViewport ? "16px minmax(0, 1fr)" : "16px minmax(0, 1fr) auto",
                                 gap: 10,
                                 alignItems: "center",
                                 padding: "10px 12px",
@@ -7566,7 +7572,7 @@ function MiniCalendarioControllo({
                                   {item.categoria}
                                 </div>
 
-                                {typeof window !== "undefined" && window.innerWidth <= 540 && (
+                                {isPhoneViewport && (
                                   <div
                                     style={{
                                       marginTop: 2,
@@ -7581,7 +7587,7 @@ function MiniCalendarioControllo({
                                 )}
                               </div>
 
-                              {!(typeof window !== "undefined" && window.innerWidth <= 540) && (
+                              {!isPhoneViewport && (
                                 <div
                                   style={{
                                     fontSize: 12,
@@ -7750,10 +7756,7 @@ function MiniCalendarioControllo({
                   <div
                     style={{
                       display: "grid",
-                      gridTemplateColumns:
-                        typeof window !== "undefined" && window.innerWidth <= 820
-                          ? "1fr"
-                          : "minmax(0, 220px) minmax(0, 1fr)",
+                      gridTemplateColumns: isTabletViewport ? "1fr" : "minmax(0, 220px) minmax(0, 1fr)",
                       gap: 16,
                       alignItems: "start",
                       minWidth: 0,
@@ -7761,14 +7764,8 @@ function MiniCalendarioControllo({
                   >
                     <div
                       style={{
-                        width:
-                          typeof window !== "undefined" && window.innerWidth <= 820
-                            ? "min(220px, 70vw)"
-                            : 220,
-                        height:
-                          typeof window !== "undefined" && window.innerWidth <= 820
-                            ? "min(220px, 70vw)"
-                            : 220,
+                        width: isTabletViewport ? "min(220px, 70vw)" : 220,
+                        height: isTabletViewport ? "min(220px, 70vw)" : 220,
                         maxWidth: "100%",
                         margin: "0 auto",
                         borderRadius: "50%",
@@ -7803,10 +7800,7 @@ function MiniCalendarioControllo({
                               key={item.categoria}
                               style={{
                                 display: "grid",
-                                gridTemplateColumns:
-                                  typeof window !== "undefined" && window.innerWidth <= 540
-                                    ? "16px minmax(0, 1fr)"
-                                    : "16px minmax(0, 1fr) auto",
+                                gridTemplateColumns: isPhoneViewport ? "16px minmax(0, 1fr)" : "16px minmax(0, 1fr) auto",
                                 gap: 10,
                                 alignItems: "center",
                                 padding: "10px 12px",
@@ -7839,7 +7833,7 @@ function MiniCalendarioControllo({
                                   {item.categoria}
                                 </div>
 
-                                {typeof window !== "undefined" && window.innerWidth <= 540 && (
+                                {isPhoneViewport && (
                                   <div
                                     style={{
                                       marginTop: 2,
@@ -7854,7 +7848,7 @@ function MiniCalendarioControllo({
                                 )}
                               </div>
 
-                              {!(typeof window !== "undefined" && window.innerWidth <= 540) && (
+                              {!isPhoneViewport && (
                                 <div
                                   style={{
                                     fontSize: 12,
