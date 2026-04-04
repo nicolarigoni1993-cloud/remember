@@ -682,9 +682,9 @@ export default function App() {
   const [loginNome, setLoginNome] = useState("");
   const [loginPick, setLoginPick] = useState<string | null>(null);
 
- const [pagina, setPagina] = useState<"home" | "aggiungi" | "consulta" | "agenda" | "controllo" | "archivio">("home");
- const [consultaSezione, setConsultaSezione] = useState<"menu" | "turni" | "finanza" | "eventi" | "archivio">("menu");
-const [aggiungiSezione, setAggiungiSezione] = useState<"menu" | "movimenti" | "eventi">("menu");
+  const [pagina, setPagina] = useState<"home" | "aggiungi" | "consulta" | "agenda" | "controllo" | "archivio">("home");
+  const [consultaSezione, setConsultaSezione] = useState<"menu" | "turni" | "finanza" | "eventi" | "archivio">("menu");
+  const [aggiungiSezione, setAggiungiSezione] = useState<"menu" | "movimenti" | "eventi">("menu");
   const [mostraForm, setMostraForm] = useState(false);
   const [idInModifica, setIdInModifica] = useState<string | null>(null);
 
@@ -720,48 +720,45 @@ const [aggiungiSezione, setAggiungiSezione] = useState<"menu" | "movimenti" | "e
 
   const [movimentoAperto, setMovimentoAperto] = useState<"entrata" | "uscita" | null>(null);
   const [apriConfigFerie, setApriConfigFerie] = useState(false);
-const [finanzaFiltroDal, setFinanzaFiltroDal] = useState("");
-const [finanzaFiltroAl, setFinanzaFiltroAl] = useState("");
-const [finanzaFiltroCategoria, setFinanzaFiltroCategoria] = useState("tutte");
+  
+ 
 
-const [finanzaGraficoMese, setFinanzaGraficoMese] = useState<"barre" | "torta">("barre");
+  const [finanzaVistaGraficoPeriodo, setFinanzaVistaGraficoPeriodo] = useState<"mese" | "anno">("mese");
+  const [finanzaGraficoMeseTipo, setFinanzaGraficoMeseTipo] = useState<"barre" | "torta">("barre");
 
-const [finanzaVistaGraficoPeriodo, setFinanzaVistaGraficoPeriodo] = useState<"mese" | "anno">("mese");
-const [finanzaGraficoMeseTipo, setFinanzaGraficoMeseTipo] = useState<"barre" | "torta">("barre");
+  const [finanzaMeseFiltroDal, setFinanzaMeseFiltroDal] = useState("");
+  const [finanzaMeseFiltroAl, setFinanzaMeseFiltroAl] = useState("");
+  const [finanzaMeseFiltroCategoria, setFinanzaMeseFiltroCategoria] = useState("tutte");
 
-const [finanzaMeseFiltroDal, setFinanzaMeseFiltroDal] = useState("");
-const [finanzaMeseFiltroAl, setFinanzaMeseFiltroAl] = useState("");
-const [finanzaMeseFiltroCategoria, setFinanzaMeseFiltroCategoria] = useState("tutte");
+  const [finanzaAnnoFiltroDal, setFinanzaAnnoFiltroDal] = useState("");
+  const [finanzaAnnoFiltroAl, setFinanzaAnnoFiltroAl] = useState("");
+  const [finanzaAnnoFiltroCategoria, setFinanzaAnnoFiltroCategoria] = useState("tutte");
 
-const [finanzaAnnoFiltroDal, setFinanzaAnnoFiltroDal] = useState("");
-const [finanzaAnnoFiltroAl, setFinanzaAnnoFiltroAl] = useState("");
-const [finanzaAnnoFiltroCategoria, setFinanzaAnnoFiltroCategoria] = useState("tutte");
+  const [finanzaListaFiltroDal, setFinanzaListaFiltroDal] = useState("");
+  const [finanzaListaFiltroAl, setFinanzaListaFiltroAl] = useState("");
+  const [finanzaListaFiltroCategoria, setFinanzaListaFiltroCategoria] = useState("tutte");
 
-const [finanzaListaFiltroDal, setFinanzaListaFiltroDal] = useState("");
-const [finanzaListaFiltroAl, setFinanzaListaFiltroAl] = useState("");
-const [finanzaListaFiltroCategoria, setFinanzaListaFiltroCategoria] = useState("tutte");
-
-const [uscitaExtraInModificaId, setUscitaExtraInModificaId] = useState<string | null>(null);
-const [ritornaAConsultaFinanzaDopoSalvataggio, setRitornaAConsultaFinanzaDopoSalvataggio] = useState(false);
+  const [uscitaExtraInModificaId, setUscitaExtraInModificaId] = useState<string | null>(null);
+  const [ritornaAConsultaFinanzaDopoSalvataggio, setRitornaAConsultaFinanzaDopoSalvataggio] = useState(false);
 
 
 
-const categorieEntrataBase = useMemo(
-  () => ["Stipendio", "Bonus", "Regalo", "Rimborso", "Vendita", "Extra"],
-  []
-);
+  const categorieEntrataBase = useMemo(
+    () => ["Stipendio", "Bonus", "Regalo", "Rimborso", "Vendita", "Extra"],
+    []
+  );
 
-const categorieUscitaBase = useMemo(
-  () => ["Spesa", "Carburante", "Affitto", "Bollette", "Ristorante", "Svago", "Salute", "Casa"],
-  []
-);
+  const categorieUscitaBase = useMemo(
+    () => ["Spesa", "Carburante", "Affitto", "Bollette", "Ristorante", "Svago", "Salute", "Casa"],
+    []
+  );
 
 
-const [dataOraCorrenteLabel, setDataOraCorrenteLabel] = useState("");
+  const [dataOraCorrenteLabel, setDataOraCorrenteLabel] = useState("");
 
-useEffect(() => {
-  const aggiornaDataOra = () => {
-    const adesso = new Date();
+  useEffect(() => {
+    const aggiornaDataOra = () => {
+      const adesso = new Date();
     const testo = adesso.toLocaleString("it-IT", {
       weekday: "long",
       day: "2-digit",
