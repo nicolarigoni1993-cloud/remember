@@ -74,30 +74,6 @@ function classNameIsEmpty(s: string) {
 
 
 
-function formatLocalYMD(d: Date) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
-function parseLocalYMD(data: string) {
-  const [anno, mese, giorno] = data.split("-").map(Number);
-  if (!anno || !mese || !giorno) return null;
-
-  const d = new Date(anno, mese - 1, giorno, 12, 0, 0, 0);
-
-  if (
-    d.getFullYear() !== anno ||
-    d.getMonth() !== mese - 1 ||
-    d.getDate() !== giorno
-  ) {
-    return null;
-  }
-
-  return d;
-}
-
 function yyyymmFromDate(d: Date) {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -105,9 +81,8 @@ function yyyymmFromDate(d: Date) {
 }
 
 function formattaDataBreve(data: string) {
-  const d = parseLocalYMD(data);
-  if (!d) return data;
-
+  const [anno, mese, giorno] = data.split("-").map(Number);
+  const d = new Date(anno, (mese ?? 1) - 1, giorno ?? 1);
   return d.toLocaleDateString("it-IT", {
     weekday: "short",
     day: "2-digit",
@@ -115,37 +90,371 @@ function formattaDataBreve(data: string) {
   });
 }
 
-function buildDateTime(data: string, ora: string) {
-  const base = parseLocalYMD(data);
-  if (!base) return new Date("invalid");
+function formattaDataLunga(d: Date) {
+  const data = d.toLocaleDateString("it-IT", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
 
+  const ora = d.toLocaleTimeString("it-IT", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  return `${data} • ore ${ora}`;
+}
+
+function parseOreItaliane(input: string): number | null {
+  const s = input.trim();
+  if (!s) return null;
+  const normalized = s.replace(",", ".");
+  const n = Number(normalized);
+  if (!Number.isFinite(n) || n < 0) return null;
+  return n;
+}
+
+function formatOreItalianeFromMin(min: number): string {
+  const ore = min / 60;
+  return ore.toLocaleString("it-IT", { maximumFractionDigits: 2 });
+}
+
+function formatNumeroOre(n: number) {
+  return n.toLocaleString("it-IT", { maximumFractionDigits: 2 });
+}
+
+function normalizeTurnoLabel(inizio: string, fine: string, note?: string) {
+  const i = (inizio || "").trim().toUpperCase();
+  const f = (fine || "").trim().toUpperCase();
+  const n = (note || "").trim().toUpperCase();
+
+  if (
+    n === "RIPOSO" ||
+    n.startsWith("RIPOSO •") ||
+    i === "RIPOSO" ||
+    f === "RIPOSO" ||
+    n === "R" ||
+    i === "R" ||
+    f === "R"
+  ) {
+    return "R" as const;
+  }
+
+  if (
+    n === "FERIE" ||
+    n.startsWith("FERIE •") ||
+    i === "FERIE" ||
+    f === "FERIE" ||
+    n === "F" ||
+    i === "F" ||
+    f === "F"
+  ) {
+    return "F" as const;
+  }
+
+  if (
+    n === "ASSENZA" ||
+    n.startsWith("ASSENZA •") ||
+    i === "ASSENZA" ||
+    f === "ASSENZA" ||
+    n === "A" ||
+    i === "A" ||
+    f === "A"
+  ) {
+    return "A" as const;
+  }
+
+  const key = `${i}-${f}`;
+
+  if (key === "22:00-06:00" || key === "00:00-06:00") return "N" as const;
+  if (key === "06:00-12:00" || key === "06:00-14:00") return "M" as const;
+  if (key === "12:00-18:00" || key === "14:00-22:00") return "P" as const;
+  if (key === "18:00-00:00") return "S" as const;
+
+  return "T" as const;
+}
+
+function descrizioneTurnoBreve(inizio: string, fine: string, note?: string) {
+  const sigla = normalizeTurnoLabel(inizio, fine, note);
+
+  if (sigla === "R") return "Riposo";
+  if (sigla === "F") return "Ferie";
+  if (sigla === "A") return "Assenza";
+  if (sigla === "N") return "Notte";
+  if (sigla === "M") return "Mattina";
+  if (sigla === "P") return "Pomeriggio";
+  if (sigla === "S") return "Sera";
+
+  return "Turno";
+}
+
+function componiDescrizioneMovimento(categoria: string, dettaglio?: string) {
+  const cat = categoria.trim();
+  const det = (dettaglio ?? "").trim();
+  return det ? `${cat} • ${det}` : cat;
+}
+
+function estraiCategoriaMovimento(descrizione: string) {
+  const raw = (descrizione || "").trim();
+  if (!raw) return "";
+  const parts = raw.split("•");
+  return (parts[0] ?? "").trim();
+}
+
+function estraiDettaglioMovimento(descrizione: string) {
+  const raw = (descrizione || "").trim();
+  if (!raw) return "";
+  const parts = raw.split("•");
+  if (parts.length <= 1) return "";
+  return parts.slice(1).join("•").trim();
+}
+
+
+
+const K_USERS = "scadenze_users";
+const K_CURR = "scadenze_current_user";
+const kVoci = (userId: string) => `voci_scadenze__${userId}`;
+const kIncassi = (userId: string) => `incassi_mese__${userId}`;
+const kTurni = (userId: string) => `turni_mese__${userId}`;
+
+
+function caricaUtenti(): User[] {
+  const raw = localStorage.getItem(K_USERS);
+  if (!raw) return [];
+
+  try {
+    const arr = JSON.parse(raw) as any[];
+    return arr
+      .map((x) => ({
+        id: String(x.id ?? safeUUID()),
+        nome: String(x.nome ?? "").trim(),
+      }))
+      .filter((u) => u.nome.length > 0);
+  } catch {
+    return [];
+  }
+}
+
+function salvaUtenti(users: User[]) {
+  localStorage.setItem(K_USERS, JSON.stringify(users));
+}
+
+function caricaUtenteCorrente(): string | null {
+  const raw = localStorage.getItem(K_CURR);
+  if (!raw) return null;
+  return raw;
+}
+
+function salvaUtenteCorrente(userId: string | null) {
+  if (!userId) localStorage.removeItem(K_CURR);
+  else localStorage.setItem(K_CURR, userId);
+}
+
+function normalizeVoce(x: any): Voce {
+  const importoNum =
+    typeof x?.importo === "number"
+      ? x.importo
+      : x?.importo === null || x?.importo === undefined || x?.importo === ""
+      ? null
+      : Number(x.importo);
+
+  const movimento: Movimento =
+  x?.movimento === "entrata"
+    ? "entrata"
+    : x?.movimento === "uscita"
+    ? "uscita"
+    : "nessuno";
+
+  const noti: number[] = Array.isArray(x?.notificheMinutiPrima)
+    ? x.notificheMinutiPrima
+        .map((n: any) => Number(n))
+        .filter((n: number) => Number.isFinite(n) && n > 0)
+    : [];
+
+  const uniq = Array.from(new Set(noti)).sort((a, b) => b - a);
+  const urgente = Boolean(x?.urgente === true || x?.priorita === "urgente");
+
+  return {
+    id: String(x?.id ?? safeUUID()),
+    titolo: String(x?.titolo ?? ""),
+    data: String(x?.data ?? ""),
+    ora: typeof x?.ora === "string" && x.ora ? x.ora : "09:00",
+    tipo:
+  x?.tipo === "appuntamento"
+    ? "appuntamento"
+    : x?.tipo === "nota"
+    ? "nota"
+    : "scadenza",
+    urgente,
+    nota: typeof x?.nota === "string" ? x.nota : "",
+    importo: Number.isFinite(importoNum) ? importoNum : null,
+    movimento,
+    fatto: Boolean(x?.fatto),
+    notificheMinutiPrima: uniq,
+  };
+}
+
+function caricaVociDaMemoria(userId: string): Voce[] {
+  const testo = localStorage.getItem(kVoci(userId));
+  if (!testo) return [];
+
+  try {
+    const arr = JSON.parse(testo) as any[];
+    return arr.map(normalizeVoce);
+  } catch {
+    return [];
+  }
+}
+
+function salvaVociInMemoria(userId: string, voci: Voce[]) {
+  localStorage.setItem(kVoci(userId), JSON.stringify(voci));
+}
+
+function caricaIncassi(userId: string): Record<string, IncassiMese> {
+  const raw = localStorage.getItem(kIncassi(userId));
+  if (!raw) return {};
+
+  try {
+    const obj = JSON.parse(raw) as Record<string, any>;
+    const out: Record<string, IncassiMese> = {};
+
+    for (const [k, v] of Object.entries(obj ?? {})) {
+      const vv = v as any;
+
+      const extrasRaw = Array.isArray(vv?.entrateExtra) ? vv.entrateExtra : [];
+      const usciteRaw = Array.isArray(vv?.usciteExtra) ? vv.usciteExtra : [];
+
+      out[k] = {
+        entrateExtra: extrasRaw
+          .map((x: any) => ({
+            id: String(x?.id ?? safeUUID()),
+            data: String(x?.data ?? ""),
+            descrizione: String(x?.descrizione ?? "").trim(),
+            importo: Number(x?.importo ?? 0) || 0,
+          }))
+          .filter((x: EntrataExtra) => x.descrizione.length > 0 && x.importo > 0),
+
+        usciteExtra: usciteRaw
+          .map((x: any) => ({
+            id: String(x?.id ?? safeUUID()),
+            data: String(x?.data ?? ""),
+            descrizione: String(x?.descrizione ?? "").trim(),
+            importo: Number(x?.importo ?? 0) || 0,
+            nota: String(x?.nota ?? "").trim(),
+          }))
+          .filter((x: UscitaExtra) => x.descrizione.length > 0 && x.importo > 0),
+      };
+    }
+
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+function salvaIncassi(userId: string, m: Record<string, IncassiMese>) {
+  localStorage.setItem(kIncassi(userId), JSON.stringify(m));
+}
+
+function caricaTurni(userId: string): Turno[] {
+  const raw = localStorage.getItem(kTurni(userId));
+  if (!raw) return [];
+
+  try {
+    const arr = JSON.parse(raw) as any[];
+    return arr.map((x) => ({
+      id: String(x?.id ?? safeUUID()),
+      data: String(x?.data ?? ""),
+      inizio: typeof x?.inizio === "string" && x.inizio ? x.inizio : "",
+      fine: typeof x?.fine === "string" && x.fine ? x.fine : "",
+      oreOrdinarie: Number(x?.oreOrdinarie ?? 0) || 0,
+      oreStraordinarie: Number(x?.oreStraordinarie ?? 0) || 0,
+      note: String(x?.note ?? ""),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+
+
+function kFerieBase(userId: string) {
+  return `remember_ferie_base_${userId}`;
+}
+
+
+
+
+function salvaTurni(userId: string, turni: Turno[]) {
+  localStorage.setItem(kTurni(userId), JSON.stringify(turni));
+}
+
+
+function caricaFerieBase(userId: string): { giorni: number; ore: number } {
+  const raw = localStorage.getItem(kFerieBase(userId));
+  if (!raw) {
+    return { giorni: 26, ore: 208 };
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as { giorni?: unknown; ore?: unknown };
+
+    const giorniNum =
+      typeof parsed?.giorni === "number" && Number.isFinite(parsed.giorni) && parsed.giorni >= 0
+        ? parsed.giorni
+        : 26;
+
+    const oreNum =
+      typeof parsed?.ore === "number" && Number.isFinite(parsed.ore) && parsed.ore >= 0
+        ? parsed.ore
+        : 208;
+
+    return {
+      giorni: giorniNum,
+      ore: oreNum,
+    };
+  } catch {
+    return { giorni: 26, ore: 208 };
+  }
+}
+
+function salvaFerieBase(userId: string, ferieBase: { giorni: number; ore: number }) {
+  localStorage.setItem(kFerieBase(userId), JSON.stringify(ferieBase));
+}
+
+function buildDateTime(data: string, ora: string) {
+  const [a, m, g] = data.split("-").map(Number);
   const [hh, mm] = ora.split(":").map(Number);
-  return new Date(
-    base.getFullYear(),
-    base.getMonth(),
-    base.getDate(),
-    hh ?? 0,
-    mm ?? 0,
-    0,
-    0
-  );
+  return new Date(a, (m ?? 1) - 1, g ?? 1, hh ?? 0, mm ?? 0, 0, 0);
+}
+
+function ymd(y: number, m0: number, d: number) {
+  const mm = String(m0 + 1).padStart(2, "0");
+  const dd = String(d).padStart(2, "0");
+  return `${y}-${mm}-${dd}`;
+}
+
+function weekdayMon0(date: Date) {
+  const js = date.getDay();
+  return (js + 6) % 7;
+}
+
+function daysInMonth(y: number, m0: number) {
+  return new Date(y, m0 + 1, 0).getDate();
 }
 
 function giorniMancanti(dataStr: string) {
   const oggi = new Date();
   const inizioOggi = new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDate());
-
-  const d = parseLocalYMD(dataStr);
-  if (!d) return 0;
-
-  const dataPulita = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const ms = dataPulita.getTime() - inizioOggi.getTime();
+  const [a, m, g] = dataStr.split("-").map(Number);
+  const d = new Date(a, (m ?? 1) - 1, g ?? 1);
+  const ms = d.getTime() - inizioOggi.getTime();
   return Math.round(ms / (1000 * 60 * 60 * 24));
 }
 
 function vocePassata(data: string, ora: string) {
   const dt = buildDateTime(data, ora);
-  if (Number.isNaN(dt.getTime())) return false;
   return dt.getTime() < Date.now();
 }
 
@@ -425,16 +734,11 @@ export default function App() {
   const [ferieTotaliGiorniBase, setFerieTotaliGiorniBase] = useState(26);
   const [ferieTotaliOreBase, setFerieTotaliOreBase] = useState(208);
 
- 
+  const [nuovaEntrataData, setNuovaEntrataData] = useState(new Date().toISOString().slice(0, 10));
   const [nuovaEntrataDesc, setNuovaEntrataDesc] = useState("");
   const [nuovaEntrataImporto, setNuovaEntrataImporto] = useState("");
 
- const [nuovaEntrataData, setNuovaEntrataData] = useState(formatLocalYMD(new Date()));
-const [nuovaUscitaData, setNuovaUscitaData] = useState(formatLocalYMD(new Date()));
-const [turnoData, setTurnoData] = useState(formatLocalYMD(new Date()));
-const [turnoDataFine, setTurnoDataFine] = useState(formatLocalYMD(new Date()));
-
-
+  const [nuovaUscitaData, setNuovaUscitaData] = useState(new Date().toISOString().slice(0, 10));
   const [nuovaUscitaDesc, setNuovaUscitaDesc] = useState("");
   const [nuovaUscitaImporto, setNuovaUscitaImporto] = useState("");
   const [nuovaUscitaNota, setNuovaUscitaNota] = useState("");
@@ -537,7 +841,7 @@ const [turnoDataFine, setTurnoDataFine] = useState(formatLocalYMD(new Date()));
   });
 
   const [mostraTurnoForm, setMostraTurnoForm] = useState(false);
-  
+  const [turnoData, setTurnoData] = useState(new Date().toISOString().slice(0, 10));
   const [turnoInizio, setTurnoInizio] = useState("08:00");
   const [turnoFine, setTurnoFine] = useState("16:00");
   const [turnoOreOrd, setTurnoOreOrd] = useState("");
@@ -551,7 +855,7 @@ const [turnoDataFine, setTurnoDataFine] = useState(formatLocalYMD(new Date()));
   const [turnoQuantitaFerie, setTurnoQuantitaFerie] = useState("");
   const [turnoManuale, setTurnoManuale] = useState(false);
   const [turnoModalitaPeriodo, setTurnoModalitaPeriodo] = useState<"singolo" | "intervallo">("singolo");
-  
+  const [turnoDataFine, setTurnoDataFine] = useState(new Date().toISOString().slice(0, 10));
   const [turnoTipoAssenza, setTurnoTipoAssenza] = useState<"malattia" | "104" | "maternita-facoltativa" | "permesso-sindacale">("malattia");
 
   const presetTurni = ["00-06", "06-12", "12-18", "18-24", "6-14", "14-22", "22-06", "8-18", "8-17"];
@@ -972,25 +1276,25 @@ const [turnoDataFine, setTurnoDataFine] = useState(formatLocalYMD(new Date()));
     return out;
   }
 
- function resetCampiTurnoBase(dataSelezionata?: string) {
-  const dataBase = dataSelezionata || formatLocalYMD(new Date());
+  function resetCampiTurnoBase(dataSelezionata?: string) {
+    const dataBase = dataSelezionata || new Date().toISOString().slice(0, 10);
 
-  setTurnoIdInModifica(null);
-  setTurnoData(dataBase);
-  setTurnoDataFine(dataBase);
-  setTurnoTipo("lavoro");
-  setTurnoModoOreFerie("giorni");
-  setTurnoQuantitaFerie("");
-  setTurnoInizio("08:00");
-  setTurnoFine("16:00");
-  setTurnoOreOrd("");
-  setTurnoOreStraord("");
-  setTurnoNote("");
-  setTurnoPreset("");
-  setTurnoManuale(false);
-  setTurnoModalitaPeriodo("singolo");
-  setTurnoTipoAssenza("malattia");
-}
+    setTurnoIdInModifica(null);
+    setTurnoData(dataBase);
+    setTurnoDataFine(dataBase);
+    setTurnoTipo("lavoro");
+    setTurnoModoOreFerie("giorni");
+    setTurnoQuantitaFerie("");
+    setTurnoInizio("08:00");
+    setTurnoFine("16:00");
+    setTurnoOreOrd("");
+    setTurnoOreStraord("");
+    setTurnoNote("");
+    setTurnoPreset("");
+    setTurnoManuale(false);
+    setTurnoModalitaPeriodo("singolo");
+    setTurnoTipoAssenza("malattia");
+  }
 
   function apriTurnoForm(dataSelezionata?: string) {
     setAggiungiSezione("menu");
@@ -1353,13 +1657,13 @@ function MiniCalendarioSettimanaTurni({
 }) {
   const oggi = new Date();
 
-  const inizioSettimana = new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDate());
-  const giorno = (inizioSettimana.getDay() + 6) % 7;
-  inizioSettimana.setDate(inizioSettimana.getDate() - giorno);
+  const inizioSettimana = new Date(oggi);
+  const giorno = (oggi.getDay() + 6) % 7; // lunedì = 0
+  inizioSettimana.setDate(oggi.getDate() - giorno);
 
   const giorniSettimana: Date[] = [];
   for (let i = 0; i < 7; i++) {
-    const d = new Date(inizioSettimana.getFullYear(), inizioSettimana.getMonth(), inizioSettimana.getDate());
+    const d = new Date(inizioSettimana);
     d.setDate(inizioSettimana.getDate() + i);
     giorniSettimana.push(d);
   }
@@ -1380,7 +1684,7 @@ function MiniCalendarioSettimanaTurni({
       }}
     >
       {giorniSettimana.map((d, idx) => {
-        const key = formatLocalYMD(d);
+        const key = d.toISOString().slice(0, 10);
         const turno = getTurnoGiorno(key);
 
         const sigla = turno
@@ -1405,14 +1709,17 @@ function MiniCalendarioSettimanaTurni({
               boxShadow: "0 6px 14px rgba(15,23,42,0.06)",
             }}
           >
+            {/* giorno */}
             <div style={{ fontSize: 10, fontWeight: 900, opacity: 0.7 }}>
               {giorniLabel[idx]}
             </div>
 
+            {/* numero */}
             <div style={{ fontSize: 16, fontWeight: 1000 }}>
               {d.getDate()}
             </div>
 
+            {/* turno */}
             <div
               style={{
                 fontSize: 13,
@@ -1449,28 +1756,23 @@ function elimina(id: string) {
 
 void elimina;
 
-function mesePrecedente() {
-  setMeseCorrente((d) => new Date(d.getFullYear(), d.getMonth() - 1, 1, 12, 0, 0, 0));
-}
+  function mesePrecedente() {
+    setMeseCorrente((d) => new Date(d.getFullYear(), d.getMonth() - 1, 1));
+  }
 
-function meseSuccessivo() {
-  setMeseCorrente((d) => new Date(d.getFullYear(), d.getMonth() + 1, 1, 12, 0, 0, 0));
-}
+  function meseSuccessivo() {
+    setMeseCorrente((d) => new Date(d.getFullYear(), d.getMonth() + 1, 1));
+  }
 
-function nomeMese(d: Date) {
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString("it-IT", { month: "long", year: "numeric" });
-}
+  function nomeMese(d: Date) {
+    return d.toLocaleDateString("it-IT", { month: "long", year: "numeric" });
+  }
 
-function stessoMeseSelezionato(dataStr: string) {
-  const d = parseLocalYMD(dataStr);
-  if (!d || Number.isNaN(meseCorrente.getTime())) return false;
-
-  return (
-    d.getFullYear() === meseCorrente.getFullYear() &&
-    d.getMonth() === meseCorrente.getMonth()
-  );
-}
+  function stessoMeseSelezionato(dataStr: string) {
+    const [a, m, g] = dataStr.split("-").map(Number);
+    const d = new Date(a, (m ?? 1) - 1, g ?? 1);
+    return d.getFullYear() === meseCorrente.getFullYear() && d.getMonth() === meseCorrente.getMonth();
+  }
 
   const entrateExtraVal = incassi[meseKey]?.entrateExtra ?? [];
   const usciteExtraVal = incassi[meseKey]?.usciteExtra ?? [];
