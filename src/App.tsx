@@ -7468,7 +7468,10 @@ function MiniCalendarioControllo({
             </button>
             <button
               type="button"
-              onClick={() => setFinanzaVistaGrafico("anno")}
+              onClick={() => {
+                setFinanzaVistaGrafico("anno");
+                setFinanzaAnnoSelezionato(meseCorrente.getFullYear());
+              }}
               style={chip(finanzaVistaGrafico === "anno")}
             >
               Anno
@@ -7479,154 +7482,144 @@ function MiniCalendarioControllo({
         <div
           style={{
             display: "grid",
-            gridTemplateColumns:
-              finanzaVistaGrafico === "mese"
-                ? "repeat(auto-fit, minmax(0, 1fr))"
-                : "minmax(170px, 240px)",
             gap: 10,
-            alignItems: "end",
             width: "100%",
             minWidth: 0,
           }}
         >
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
-              Anno
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(0, 1fr))",
+              gap: 10,
+              width: "100%",
+              minWidth: 0,
+            }}
+          >
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
+                Dal
+              </div>
+              <input
+                type="date"
+                value={filtroFinanzaGrafico.dal}
+                onChange={(e) => setFiltroFinanzaGrafico((prev) => ({ ...prev, dal: e.target.value }))}
+                style={{
+                  ...inputLight(false),
+                  width: "100%",
+                  minWidth: 0,
+                  maxWidth: "100%",
+                  height: typeof window !== "undefined" && window.innerWidth <= 640 ? 56 : 52,
+                  padding: "10px 14px",
+                  boxSizing: "border-box",
+                  appearance: "none",
+                  WebkitAppearance: "none",
+                  background: "rgba(255,255,255,1)",
+                  color: "rgba(15,23,42,0.98)",
+                  WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                  caretColor: "rgba(15,23,42,0.98)",
+                  border: "1px solid rgba(148,163,184,0.22)",
+                  fontSize: 15,
+                  fontWeight: 900,
+                  borderRadius: 18,
+                }}
+              />
             </div>
-            <select
-              value={finanzaAnnoSelezionato}
-              onChange={(e) => setFinanzaAnnoSelezionato(Number(e.target.value))}
-              style={{
-                ...inputLight(false),
-                width: "100%",
-                minWidth: 0,
-                maxWidth: "100%",
-                boxSizing: "border-box",
-                background: "rgba(255,255,255,1)",
-                color: "rgba(15,23,42,0.98)",
-                WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                caretColor: "rgba(15,23,42,0.98)",
-                border: "1px solid rgba(148,163,184,0.22)",
-              }}
-            >
-              {anniFinanzaDisponibili.map((anno) => (
-                <option key={anno} value={anno}>
-                  {anno}
-                </option>
-              ))}
-            </select>
+
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
+                Al
+              </div>
+              <input
+                type="date"
+                value={filtroFinanzaGrafico.al}
+                onChange={(e) => setFiltroFinanzaGrafico((prev) => ({ ...prev, al: e.target.value }))}
+                style={{
+                  ...inputLight(false),
+                  width: "100%",
+                  minWidth: 0,
+                  maxWidth: "100%",
+                  height: typeof window !== "undefined" && window.innerWidth <= 640 ? 56 : 52,
+                  padding: "10px 14px",
+                  boxSizing: "border-box",
+                  appearance: "none",
+                  WebkitAppearance: "none",
+                  background: "rgba(255,255,255,1)",
+                  color: "rgba(15,23,42,0.98)",
+                  WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                  caretColor: "rgba(15,23,42,0.98)",
+                  border: "1px solid rgba(148,163,184,0.22)",
+                  fontSize: 15,
+                  fontWeight: 900,
+                  borderRadius: 18,
+                }}
+              />
+            </div>
+
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
+                Categoria
+              </div>
+              <select
+                value={filtroFinanzaGrafico.categoria}
+                onChange={(e) => setFiltroFinanzaGrafico((prev) => ({ ...prev, categoria: e.target.value }))}
+                style={{
+                  ...inputLight(false),
+                  width: "100%",
+                  minWidth: 0,
+                  maxWidth: "100%",
+                  height: typeof window !== "undefined" && window.innerWidth <= 640 ? 56 : 52,
+                  padding: "10px 14px",
+                  boxSizing: "border-box",
+                  background: "rgba(255,255,255,1)",
+                  color: "rgba(15,23,42,0.98)",
+                  WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                  caretColor: "rgba(15,23,42,0.98)",
+                  border: "1px solid rgba(148,163,184,0.22)",
+                  fontSize: 15,
+                  fontWeight: 900,
+                  borderRadius: 18,
+                }}
+              >
+                <option value="">Tutte</option>
+                {categorieUscitaFinanza.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          {finanzaVistaGrafico === "mese" && (
-            <>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
-                  Mese
-                </div>
-                <select
-                  value={finanzaMeseSelezionato}
-                  onChange={(e) => setFinanzaMeseSelezionato(Number(e.target.value))}
-                  style={{
-                    ...inputLight(false),
-                    width: "100%",
-                    minWidth: 0,
-                    maxWidth: "100%",
-                    boxSizing: "border-box",
-                    background: "rgba(255,255,255,1)",
-                    color: "rgba(15,23,42,0.98)",
-                    WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                    caretColor: "rgba(15,23,42,0.98)",
-                    border: "1px solid rgba(148,163,184,0.22)",
-                  }}
-                >
-                  {nomeMesiCompleti.map((meseNome, idx) => (
-                    <option key={meseNome} value={idx}>
-                      {meseNome}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
-                  Dal
-                </div>
-                <input
-                  type="date"
-                  value={filtroFinanzaGrafico.dal}
-                  onChange={(e) => setFiltroFinanzaGrafico((prev) => ({ ...prev, dal: e.target.value }))}
-                  style={{
-                    ...inputLight(false),
-                    width: "100%",
-                    minWidth: 0,
-                    maxWidth: "100%",
-                    boxSizing: "border-box",
-                    appearance: "none",
-                    WebkitAppearance: "none",
-                    background: "rgba(255,255,255,1)",
-                    color: "rgba(15,23,42,0.98)",
-                    WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                    caretColor: "rgba(15,23,42,0.98)",
-                    border: "1px solid rgba(148,163,184,0.22)",
-                  }}
-                />
-              </div>
-
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
-                  Al
-                </div>
-                <input
-                  type="date"
-                  value={filtroFinanzaGrafico.al}
-                  onChange={(e) => setFiltroFinanzaGrafico((prev) => ({ ...prev, al: e.target.value }))}
-                  style={{
-                    ...inputLight(false),
-                    width: "100%",
-                    minWidth: 0,
-                    maxWidth: "100%",
-                    boxSizing: "border-box",
-                    appearance: "none",
-                    WebkitAppearance: "none",
-                    background: "rgba(255,255,255,1)",
-                    color: "rgba(15,23,42,0.98)",
-                    WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                    caretColor: "rgba(15,23,42,0.98)",
-                    border: "1px solid rgba(148,163,184,0.22)",
-                  }}
-                />
-              </div>
-
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
-                  Categoria
-                </div>
-                <select
-                  value={filtroFinanzaGrafico.categoria}
-                  onChange={(e) => setFiltroFinanzaGrafico((prev) => ({ ...prev, categoria: e.target.value }))}
-                  style={{
-                    ...inputLight(false),
-                    width: "100%",
-                    minWidth: 0,
-                    maxWidth: "100%",
-                    boxSizing: "border-box",
-                    background: "rgba(255,255,255,1)",
-                    color: "rgba(15,23,42,0.98)",
-                    WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                    caretColor: "rgba(15,23,42,0.98)",
-                    border: "1px solid rgba(148,163,184,0.22)",
-                  }}
-                >
-                  <option value="">Tutte</option>
-                  {categorieUscitaFinanza.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </>
-          )}
+          <button
+            type="button"
+            onClick={() => setFiltroFinanzaGrafico({ dal: "", al: "", categoria: "" })}
+            style={{
+              border: "1px solid rgba(148,163,184,0.18)",
+              background:
+                "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
+              borderRadius: 16,
+              fontWeight: 900,
+              cursor: "pointer",
+              color: "rgba(15,23,42,0.86)",
+              minHeight: 46,
+              width: "100%",
+              minWidth: 0,
+              boxSizing: "border-box",
+              transition: "transform .16s ease, box-shadow .16s ease",
+              boxShadow: "0 8px 18px rgba(15,23,42,0.05)",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-1px)";
+              e.currentTarget.style.boxShadow = "0 12px 22px rgba(15,23,42,0.08)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 8px 18px rgba(15,23,42,0.05)";
+            }}
+          >
+            Reset filtri
+          </button>
         </div>
 
         <div
@@ -7666,8 +7659,8 @@ function MiniCalendarioControllo({
               }}
             >
               {finanzaVistaGrafico === "mese"
-                ? `Torta uscite • ${nomeMesiCompleti[finanzaMeseSelezionato]} ${finanzaAnnoSelezionato}`
-                : `Torta uscite • anno ${finanzaAnnoSelezionato}`}
+                ? `Torta uscite • ${nomeMesiCompleti[meseCorrente.getMonth()]} ${meseCorrente.getFullYear()}`
+                : `Torta uscite • anno ${meseCorrente.getFullYear()}`}
             </div>
 
             <div
@@ -7850,7 +7843,7 @@ function MiniCalendarioControllo({
                   color: "rgba(15,23,42,0.96)",
                 }}
               >
-                Barre uscite • {nomeMesiCompleti[finanzaMeseSelezionato]} {finanzaAnnoSelezionato}
+                Barre uscite • {nomeMesiCompleti[meseCorrente.getMonth()]} {meseCorrente.getFullYear()}
               </div>
 
               {uscitePerCategoriaGrafico.length === 0 ? (
@@ -7974,114 +7967,137 @@ function MiniCalendarioControllo({
           </div>
         </div>
 
-        {/* FILTRI LISTA */}
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(0, 1fr))",
             gap: 10,
             width: "100%",
             minWidth: 0,
           }}
         >
-          <div style={{ minWidth: 0 }}>
-            <div
-              style={{
-                fontSize: 12,
-                fontWeight: 900,
-                color: "rgba(71,85,105,0.86)",
-                marginBottom: 6,
-              }}
-            >
-              Dal
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(0, 1fr))",
+              gap: 10,
+              width: "100%",
+              minWidth: 0,
+            }}
+          >
+            <div style={{ minWidth: 0 }}>
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 900,
+                  color: "rgba(71,85,105,0.86)",
+                  marginBottom: 6,
+                }}
+              >
+                Dal
+              </div>
+              <input
+                type="date"
+                value={filtroFinanzaLista.dal}
+                onChange={(e) => setFiltroFinanzaLista((prev) => ({ ...prev, dal: e.target.value }))}
+                style={{
+                  ...inputLight(false),
+                  width: "100%",
+                  minWidth: 0,
+                  maxWidth: "100%",
+                  height: typeof window !== "undefined" && window.innerWidth <= 640 ? 56 : 52,
+                  padding: "10px 14px",
+                  boxSizing: "border-box",
+                  appearance: "none",
+                  WebkitAppearance: "none",
+                  background: "rgba(255,255,255,1)",
+                  color: "rgba(15,23,42,0.98)",
+                  WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                  caretColor: "rgba(15,23,42,0.98)",
+                  border: "1px solid rgba(148,163,184,0.22)",
+                  fontSize: 15,
+                  fontWeight: 900,
+                  borderRadius: 18,
+                }}
+              />
             </div>
-            <input
-              type="date"
-              value={filtroFinanzaLista.dal}
-              onChange={(e) => setFiltroFinanzaLista((prev) => ({ ...prev, dal: e.target.value }))}
-              style={{
-                ...inputLight(false),
-                width: "100%",
-                minWidth: 0,
-                maxWidth: "100%",
-                boxSizing: "border-box",
-                appearance: "none",
-                WebkitAppearance: "none",
-                background: "rgba(255,255,255,1)",
-                color: "rgba(15,23,42,0.98)",
-                WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                caretColor: "rgba(15,23,42,0.98)",
-                border: "1px solid rgba(148,163,184,0.22)",
-              }}
-            />
-          </div>
 
-          <div style={{ minWidth: 0 }}>
-            <div
-              style={{
-                fontSize: 12,
-                fontWeight: 900,
-                color: "rgba(71,85,105,0.86)",
-                marginBottom: 6,
-              }}
-            >
-              Al
+            <div style={{ minWidth: 0 }}>
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 900,
+                  color: "rgba(71,85,105,0.86)",
+                  marginBottom: 6,
+                }}
+              >
+                Al
+              </div>
+              <input
+                type="date"
+                value={filtroFinanzaLista.al}
+                onChange={(e) => setFiltroFinanzaLista((prev) => ({ ...prev, al: e.target.value }))}
+                style={{
+                  ...inputLight(false),
+                  width: "100%",
+                  minWidth: 0,
+                  maxWidth: "100%",
+                  height: typeof window !== "undefined" && window.innerWidth <= 640 ? 56 : 52,
+                  padding: "10px 14px",
+                  boxSizing: "border-box",
+                  appearance: "none",
+                  WebkitAppearance: "none",
+                  background: "rgba(255,255,255,1)",
+                  color: "rgba(15,23,42,0.98)",
+                  WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                  caretColor: "rgba(15,23,42,0.98)",
+                  border: "1px solid rgba(148,163,184,0.22)",
+                  fontSize: 15,
+                  fontWeight: 900,
+                  borderRadius: 18,
+                }}
+              />
             </div>
-            <input
-              type="date"
-              value={filtroFinanzaLista.al}
-              onChange={(e) => setFiltroFinanzaLista((prev) => ({ ...prev, al: e.target.value }))}
-              style={{
-                ...inputLight(false),
-                width: "100%",
-                minWidth: 0,
-                maxWidth: "100%",
-                boxSizing: "border-box",
-                appearance: "none",
-                WebkitAppearance: "none",
-                background: "rgba(255,255,255,1)",
-                color: "rgba(15,23,42,0.98)",
-                WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                caretColor: "rgba(15,23,42,0.98)",
-                border: "1px solid rgba(148,163,184,0.22)",
-              }}
-            />
-          </div>
 
-          <div style={{ minWidth: 0 }}>
-            <div
-              style={{
-                fontSize: 12,
-                fontWeight: 900,
-                color: "rgba(71,85,105,0.86)",
-                marginBottom: 6,
-              }}
-            >
-              Categoria
+            <div style={{ minWidth: 0 }}>
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 900,
+                  color: "rgba(71,85,105,0.86)",
+                  marginBottom: 6,
+                }}
+              >
+                Categoria
+              </div>
+              <select
+                value={filtroFinanzaLista.categoria}
+                onChange={(e) => setFiltroFinanzaLista((prev) => ({ ...prev, categoria: e.target.value }))}
+                style={{
+                  ...inputLight(false),
+                  width: "100%",
+                  minWidth: 0,
+                  maxWidth: "100%",
+                  height: typeof window !== "undefined" && window.innerWidth <= 640 ? 56 : 52,
+                  padding: "10px 14px",
+                  boxSizing: "border-box",
+                  background: "rgba(255,255,255,1)",
+                  color: "rgba(15,23,42,0.98)",
+                  WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                  caretColor: "rgba(15,23,42,0.98)",
+                  border: "1px solid rgba(148,163,184,0.22)",
+                  fontSize: 15,
+                  fontWeight: 900,
+                  borderRadius: 18,
+                }}
+              >
+                <option value="">Tutte</option>
+                {categorieUscitaFinanza.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
             </div>
-            <select
-              value={filtroFinanzaLista.categoria}
-              onChange={(e) => setFiltroFinanzaLista((prev) => ({ ...prev, categoria: e.target.value }))}
-              style={{
-                ...inputLight(false),
-                width: "100%",
-                minWidth: 0,
-                maxWidth: "100%",
-                boxSizing: "border-box",
-                background: "rgba(255,255,255,1)",
-                color: "rgba(15,23,42,0.98)",
-                WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                caretColor: "rgba(15,23,42,0.98)",
-                border: "1px solid rgba(148,163,184,0.22)",
-              }}
-            >
-              <option value="">Tutte</option>
-              {categorieUscitaFinanza.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
           </div>
 
           <button
@@ -8095,8 +8111,7 @@ function MiniCalendarioControllo({
               fontWeight: 900,
               cursor: "pointer",
               color: "rgba(15,23,42,0.86)",
-              minHeight: 48,
-              alignSelf: "end",
+              minHeight: 46,
               width: "100%",
               minWidth: 0,
               boxSizing: "border-box",
