@@ -673,6 +673,36 @@ function RememberLogo({ size = 44, centered = false }: { size?: number; centered
 
 
 
+type FiltroFinanza = {
+  dal: string;
+  al: string;
+  categoria: string;
+};
+
+type MovimentoFinanzaItem = {
+  id: string;
+  origine: "uscita-extra" | "voce-uscita";
+  meseKeyOrigine?: string;
+  data: string;
+  descrizione: string;
+  importo: number;
+  nota: string;
+  categoria: string;
+  dettaglio: string;
+  voceTipo?: Voce["tipo"];
+  voceOra?: string;
+  voceUrgente?: boolean;
+  voceFatto?: boolean;
+};
+
+
+
+
+
+
+
+
+
 
 export default function App() {
   const [users, setUsers] = useState<User[]>([]);
@@ -730,6 +760,358 @@ const categorieUscitaBase = useMemo(
   () => ["Spesa", "Carburante", "Affitto", "Bollette", "Ristorante", "Svago", "Salute", "Casa"],
   []
 );
+
+
+
+const [finanzaVistaGrafico, setFinanzaVistaGrafico] = useState<"mese" | "anno">("mese");
+const [finanzaAnnoSelezionato, setFinanzaAnnoSelezionato] = useState(new Date().getFullYear());
+const [finanzaMeseSelezionato, setFinanzaMeseSelezionato] = useState(new Date().getMonth());
+
+const [filtroFinanzaMese, setFiltroFinanzaMese] = useState<FiltroFinanza>({
+  dal: "",
+  al: "",
+  categoria: "",
+});
+
+const [filtroFinanzaGrafico, setFiltroFinanzaGrafico] = useState<FiltroFinanza>({
+  dal: "",
+  al: "",
+  categoria: "",
+});
+
+const [filtroFinanzaLista, setFiltroFinanzaLista] = useState<FiltroFinanza>({
+  dal: "",
+  al: "",
+  categoria: "",
+});
+
+const [movimentoFinanzaInModifica, setMovimentoFinanzaInModifica] = useState<MovimentoFinanzaItem | null>(null);
+const [finanzaModData, setFinanzaModData] = useState("");
+const [finanzaModCategoria, setFinanzaModCategoria] = useState("");
+const [finanzaModDettaglio, setFinanzaModDettaglio] = useState("");
+const [finanzaModImporto, setFinanzaModImporto] = useState("");
+const [finanzaModNota, setFinanzaModNota] = useState("");
+
+const euro = (n: number) =>
+  n.toLocaleString("it-IT", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }) + " €";
+
+const nomeMesiBrevi = ["Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic"];
+const nomeMesiCompleti = [
+  "Gennaio",
+  "Febbraio",
+  "Marzo",
+  "Aprile",
+  "Maggio",
+  "Giugno",
+  "Luglio",
+  "Agosto",
+  "Settembre",
+  "Ottobre",
+  "Novembre",
+  "Dicembre",
+];
+
+const tutteUsciteExtraStorico = useMemo(() => {
+  return Object.entries(incassi).flatMap(([meseKey, dati]) =>
+    (dati.usciteExtra ?? []).map((x) => ({
+      id: x.id,
+      origine: "uscita-extra" as const,
+      meseKeyOrigine: meseKey,
+      data: x.data,
+      descrizione: x.descrizione,
+      importo: x.importo,
+      nota: x.nota,
+      categoria: estraiCategoriaMovimento(x.descrizione) || "Altro",
+      dettaglio: estraiDettaglioMovimento(x.descrizione),
+    }))
+  );
+}, [incassi]);
+
+const tutteVociUscitaStorico = useMemo(() => {
+  return voci
+    .filter((v) => v.movimento === "uscita" && v.importo !== null)
+    .map((v) => ({
+      id: v.id,
+      origine: "voce-uscita" as const,
+      data: v.data,
+      descrizione: v.titolo,
+      importo: v.importo ?? 0,
+      nota: v.nota ?? "",
+      categoria: estraiCategoriaMovimento(v.titolo) || "Altro",
+      dettaglio: estraiDettaglioMovimento(v.titolo),
+      voceTipo: v.tipo,
+      voceOra: v.ora,
+      voceUrgente: v.urgente,
+      voceFatto: v.fatto,
+    }));
+}, [voci]);
+
+const tuttiMovimentiFinanza = useMemo<MovimentoFinanzaItem[]>(() => {
+  return [...tutteUsciteExtraStorico, ...tutteVociUscitaStorico].sort((a, b) => {
+    const d = a.data.localeCompare(b.data);
+    if (d !== 0) return d;
+    return a.descrizione.localeCompare(b.descrizione);
+  });
+}, [tutteUsciteExtraStorico, tutteVociUscitaStorico]);
+
+const categorieUscitaFinanza = useMemo(() => {
+  const base = [...categorieUscitaBase, ...categorieUscitaCustom];
+  const dinamiche = tuttiMovimentiFinanza.map((x) => x.categoria).filter(Boolean);
+  return Array.from(new Set([...base, ...dinamiche])).sort((a, b) => a.localeCompare(b, "it"));
+}, [categorieUscitaBase, categorieUscitaCustom, tuttiMovimentiFinanza]);
+
+function applicaFiltroFinanza<T extends { data: string; categoria?: string }>(
+  lista: T[],
+  filtro: FiltroFinanza
+) {
+  return lista.filter((item) => {
+    if (filtro.dal && item.data < filtro.dal) return false;
+    if (filtro.al && item.data > filtro.al) return false;
+    if (filtro.categoria && (item.categoria ?? "") !== filtro.categoria) return false;
+    return true;
+  });
+}
+
+function apriModificaMovimentoFinanza(item: MovimentoFinanzaItem) {
+  setMovimentoFinanzaInModifica(item);
+  setFinanzaModData(item.data);
+  setFinanzaModCategoria(item.categoria || "");
+  setFinanzaModDettaglio(item.dettaglio || "");
+  setFinanzaModImporto(String(item.importo ?? ""));
+  setFinanzaModNota(item.nota ?? "");
+}
+
+function chiudiModificaMovimentoFinanza() {
+  setMovimentoFinanzaInModifica(null);
+  setFinanzaModData("");
+  setFinanzaModCategoria("");
+  setFinanzaModDettaglio("");
+  setFinanzaModImporto("");
+  setFinanzaModNota("");
+}
+
+function salvaModificaMovimentoFinanza() {
+  if (!movimentoFinanzaInModifica) return;
+
+  const importoNum = Number(finanzaModImporto.replace(",", "."));
+
+  if (!finanzaModData) {
+    alert("Inserisci la data.");
+    return;
+  }
+
+  if (!finanzaModCategoria.trim()) {
+    alert("Seleziona una categoria.");
+    return;
+  }
+
+  if (!Number.isFinite(importoNum) || importoNum <= 0) {
+    alert("Inserisci un importo valido.");
+    return;
+  }
+
+  const descrizioneFinale = componiDescrizioneMovimento(finanzaModCategoria.trim(), finanzaModDettaglio.trim());
+
+  if (movimentoFinanzaInModifica.origine === "voce-uscita") {
+    setVoci((prev) =>
+      prev.map((x) =>
+        x.id === movimentoFinanzaInModifica.id
+          ? {
+              ...x,
+              data: finanzaModData,
+              titolo: descrizioneFinale,
+              importo: importoNum,
+              nota: finanzaModNota.trim(),
+              movimento: "uscita" as Movimento,
+              fatto: vocePassata(finanzaModData, x.ora),
+            }
+          : x
+      )
+    );
+  } else {
+    const nuovoMeseKey = finanzaModData.slice(0, 7);
+    const vecchioMeseKey = movimentoFinanzaInModifica.meseKeyOrigine ?? nuovoMeseKey;
+
+    setIncassi((prev) => {
+      const next = { ...prev };
+
+      next[vecchioMeseKey] = {
+        entrateExtra: next[vecchioMeseKey]?.entrateExtra ?? [],
+        usciteExtra: (next[vecchioMeseKey]?.usciteExtra ?? []).filter((x) => x.id !== movimentoFinanzaInModifica.id),
+      };
+
+      const recordAggiornato: UscitaExtra = {
+        id: movimentoFinanzaInModifica.id,
+        data: finanzaModData,
+        descrizione: descrizioneFinale,
+        importo: importoNum,
+        nota: finanzaModNota.trim(),
+      };
+
+      if (nuovoMeseKey === vecchioMeseKey) {
+        next[nuovoMeseKey] = {
+          entrateExtra: next[nuovoMeseKey]?.entrateExtra ?? [],
+          usciteExtra: [...(next[nuovoMeseKey]?.usciteExtra ?? []), recordAggiornato].sort((a, b) =>
+            a.data.localeCompare(b.data)
+          ),
+        };
+      } else {
+        next[nuovoMeseKey] = {
+          entrateExtra: next[nuovoMeseKey]?.entrateExtra ?? [],
+          usciteExtra: [...(next[nuovoMeseKey]?.usciteExtra ?? []), recordAggiornato].sort((a, b) =>
+            a.data.localeCompare(b.data)
+          ),
+        };
+      }
+
+      return next;
+    });
+  }
+
+  chiudiModificaMovimentoFinanza();
+  setPagina("consulta");
+  setConsultaSezione("finanza");
+}
+
+function eliminaMovimentoFinanza(item: MovimentoFinanzaItem) {
+  const ok = confirm("Vuoi eliminare questo movimento?");
+  if (!ok) return;
+
+  if (item.origine === "voce-uscita") {
+    setVoci((prev) => prev.filter((x) => x.id !== item.id));
+    return;
+  }
+
+  const meseKey = item.meseKeyOrigine ?? item.data.slice(0, 7);
+
+  setIncassi((prev) => ({
+    ...prev,
+    [meseKey]: {
+      entrateExtra: prev[meseKey]?.entrateExtra ?? [],
+      usciteExtra: (prev[meseKey]?.usciteExtra ?? []).filter((x) => x.id !== item.id),
+    },
+  }));
+}
+
+const entrateMeseSezioneFinanza = useMemo(() => {
+  const base = entrateExtraVal.map((x) => ({
+    ...x,
+    categoria: estraiCategoriaMovimento(x.descrizione) || "",
+  }));
+
+  const filtrate = applicaFiltroFinanza(base, {
+    ...filtroFinanzaMese,
+    categoria: "",
+  });
+
+  return filtrate.reduce((s, x) => s + x.importo, 0);
+}, [entrateExtraVal, filtroFinanzaMese]);
+
+const usciteMeseSezioneFinanza = useMemo(() => {
+  const base = tuttiMovimentiFinanza.filter((x) => {
+    const [a, m] = x.data.split("-").map(Number);
+    return a === meseCorrente.getFullYear() && (m - 1) === meseCorrente.getMonth();
+  });
+
+  return applicaFiltroFinanza(base, filtroFinanzaMese).reduce((s, x) => s + x.importo, 0);
+}, [tuttiMovimentiFinanza, meseCorrente, filtroFinanzaMese]);
+
+const saldoMeseSezioneFinanza = entrateMeseSezioneFinanza - usciteMeseSezioneFinanza;
+
+const usciteGraficoBase = useMemo(() => {
+  return tuttiMovimentiFinanza.filter((x) => {
+    const [a, m] = x.data.split("-").map(Number);
+
+    if (finanzaVistaGrafico === "mese") {
+      return a === finanzaAnnoSelezionato && (m - 1) === finanzaMeseSelezionato;
+    }
+
+    return a === finanzaAnnoSelezionato;
+  });
+}, [tuttiMovimentiFinanza, finanzaVistaGrafico, finanzaAnnoSelezionato, finanzaMeseSelezionato]);
+
+const usciteGraficoFiltrate = useMemo(() => {
+  return applicaFiltroFinanza(usciteGraficoBase, filtroFinanzaGrafico);
+}, [usciteGraficoBase, filtroFinanzaGrafico]);
+
+const uscitePerCategoriaGrafico = useMemo(() => {
+  const grouped = new Map<string, number>();
+
+  for (const mov of usciteGraficoFiltrate) {
+    grouped.set(mov.categoria, (grouped.get(mov.categoria) ?? 0) + mov.importo);
+  }
+
+  return Array.from(grouped.entries())
+    .map(([categoria, totale]) => ({ categoria, totale }))
+    .sort((a, b) => b.totale - a.totale);
+}, [usciteGraficoFiltrate]);
+
+const totaleGraficoUscite = useMemo(() => {
+  return uscitePerCategoriaGrafico.reduce((s, x) => s + x.totale, 0);
+}, [uscitePerCategoriaGrafico]);
+
+const pieColors = [
+  "#ef4444",
+  "#f97316",
+  "#f59e0b",
+  "#10b981",
+  "#06b6d4",
+  "#3b82f6",
+  "#8b5cf6",
+  "#ec4899",
+  "#64748b",
+];
+
+const pieGradientFinanza = useMemo(() => {
+  if (uscitePerCategoriaGrafico.length === 0 || totaleGraficoUscite <= 0) {
+    return "conic-gradient(#e5e7eb 0deg 360deg)";
+  }
+
+  let corrente = 0;
+  const parti: string[] = [];
+
+  uscitePerCategoriaGrafico.forEach((item, index) => {
+    const angolo = (item.totale / totaleGraficoUscite) * 360;
+    const start = corrente;
+    const end = corrente + angolo;
+    parti.push(`${pieColors[index % pieColors.length]} ${start}deg ${end}deg`);
+    corrente = end;
+  });
+
+  return `conic-gradient(${parti.join(", ")})`;
+}, [uscitePerCategoriaGrafico, totaleGraficoUscite]);
+
+const maxBarFinanza = useMemo(() => {
+  return Math.max(...uscitePerCategoriaGrafico.map((x) => x.totale), 1);
+}, [uscitePerCategoriaGrafico]);
+
+const listaMovimentiFinanza = useMemo(() => {
+  return applicaFiltroFinanza(tuttiMovimentiFinanza, filtroFinanzaLista)
+    .slice()
+    .sort((a, b) => {
+      const d = b.data.localeCompare(a.data);
+      if (d !== 0) return d;
+      return b.importo - a.importo;
+    });
+}, [tuttiMovimentiFinanza, filtroFinanzaLista]);
+
+const anniFinanzaDisponibili = useMemo(() => {
+  const anni = Array.from(
+    new Set(tuttiMovimentiFinanza.map((x) => Number(x.data.slice(0, 4))).filter((n) => Number.isFinite(n)))
+  ).sort((a, b) => b - a);
+
+  return anni.length ? anni : [new Date().getFullYear()];
+}, [tuttiMovimentiFinanza]);
+
+useEffect(() => {
+  if (!anniFinanzaDisponibili.includes(finanzaAnnoSelezionato)) {
+    setFinanzaAnnoSelezionato(anniFinanzaDisponibili[0]);
+  }
+}, [anniFinanzaDisponibili, finanzaAnnoSelezionato]);
+
 
 
 const [dataOraCorrenteLabel, setDataOraCorrenteLabel] = useState("");
@@ -6630,19 +7012,1241 @@ function MiniCalendarioControllo({
       </div>
     </div>
   </>
-) : (
+) : consultaSezione === "finanza" ? (
+  <>
+    <div
+      style={{
+        display: "grid",
+        gap: 10,
+        justifyItems: "center",
+        textAlign: "center",
+        padding: "8px 6px 2px",
+      }}
+    >
+      <div
+        style={{
+          fontSize: 34,
+          fontWeight: 1000,
+          letterSpacing: -0.8,
+          color: "rgba(241,245,249,0.98)",
+          textShadow: "0 12px 30px rgba(16,185,129,0.22)",
+          lineHeight: 1.05,
+        }}
+      >
+        Consulta finanza
+      </div>
+
+      <div
+        style={{
+          maxWidth: 760,
+          fontSize: 15,
+          fontWeight: 800,
+          color: "rgba(191,219,254,0.90)",
+          lineHeight: 1.5,
+          letterSpacing: 0.1,
+        }}
+      >
+        Panoramica economica premium con mese scorrevole, grafici uscite, filtri intelligenti e lista movimenti compatta.
+      </div>
+    </div>
+
+    <div
+      style={{
+        maxWidth: 1060,
+        margin: "0 auto",
+        marginTop: 14,
+        display: "grid",
+        gap: 14,
+      }}
+    >
+      {/* HEADER MESE */}
+      <div
+        style={{
+          ...ui.card,
+          padding: 16,
+          border: "1px solid rgba(255,255,255,0.58)",
+          background:
+            "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
+          boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
+          display: "grid",
+          gap: 14,
+        }}
+      >
         <div
           style={{
-            ...ui.card,
-            padding: 22,
-            fontSize: 16,
-            fontWeight: 900,
-            color: "rgba(15,23,42,0.82)",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 10,
+            flexWrap: "wrap",
           }}
         >
-          Sezione in preparazione
+          <button
+            type="button"
+            onClick={mesePrecedente}
+            style={{
+              width: 42,
+              height: 42,
+              borderRadius: 14,
+              border: "1px solid rgba(148,163,184,0.18)",
+              background:
+                "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
+              boxShadow: "0 8px 18px rgba(15,23,42,0.08)",
+              cursor: "pointer",
+              fontSize: 18,
+              fontWeight: 1000,
+              color: "rgba(15,23,42,0.88)",
+            }}
+          >
+            ←
+          </button>
+
+          <div
+            style={{
+              textAlign: "center",
+              flex: 1,
+              minWidth: 180,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 900,
+                color: "rgba(100,116,139,0.90)",
+                letterSpacing: 0.5,
+                textTransform: "uppercase",
+              }}
+            >
+              Mese corrente
+            </div>
+            <div
+              style={{
+                marginTop: 4,
+                fontSize: 28,
+                fontWeight: 1000,
+                letterSpacing: -0.6,
+                textTransform: "capitalize",
+                color: "rgba(15,23,42,0.98)",
+              }}
+            >
+              {nomeMese(meseCorrente)}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={meseSuccessivo}
+            style={{
+              width: 42,
+              height: 42,
+              borderRadius: 14,
+              border: "1px solid rgba(148,163,184,0.18)",
+              background:
+                "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
+              boxShadow: "0 8px 18px rgba(15,23,42,0.08)",
+              cursor: "pointer",
+              fontSize: 18,
+              fontWeight: 1000,
+              color: "rgba(15,23,42,0.88)",
+            }}
+          >
+            →
+          </button>
         </div>
-      )}
+
+        {/* FILTRI SEZIONE MESE */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
+            gap: 10,
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
+              Dal
+            </div>
+            <input
+              type="date"
+              value={filtroFinanzaMese.dal}
+              onChange={(e) => setFiltroFinanzaMese((prev) => ({ ...prev, dal: e.target.value }))}
+              style={{
+                ...inputLight(false),
+                background: "rgba(255,255,255,1)",
+                color: "rgba(15,23,42,0.98)",
+                WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                caretColor: "rgba(15,23,42,0.98)",
+                border: "1px solid rgba(148,163,184,0.22)",
+              }}
+            />
+          </div>
+
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
+              Al
+            </div>
+            <input
+              type="date"
+              value={filtroFinanzaMese.al}
+              onChange={(e) => setFiltroFinanzaMese((prev) => ({ ...prev, al: e.target.value }))}
+              style={{
+                ...inputLight(false),
+                background: "rgba(255,255,255,1)",
+                color: "rgba(15,23,42,0.98)",
+                WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                caretColor: "rgba(15,23,42,0.98)",
+                border: "1px solid rgba(148,163,184,0.22)",
+              }}
+            />
+          </div>
+
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
+              Categoria
+            </div>
+            <select
+              value={filtroFinanzaMese.categoria}
+              onChange={(e) => setFiltroFinanzaMese((prev) => ({ ...prev, categoria: e.target.value }))}
+              style={{
+                ...inputLight(false),
+                background: "rgba(255,255,255,1)",
+                color: "rgba(15,23,42,0.98)",
+                WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                caretColor: "rgba(15,23,42,0.98)",
+                border: "1px solid rgba(148,163,184,0.22)",
+              }}
+            >
+              <option value="">Tutte</option>
+              {categorieUscitaFinanza.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setFiltroFinanzaMese({ dal: "", al: "", categoria: "" })}
+            style={{
+              border: "1px solid rgba(148,163,184,0.18)",
+              background:
+                "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
+              borderRadius: 16,
+              fontWeight: 900,
+              cursor: "pointer",
+              color: "rgba(15,23,42,0.86)",
+              minHeight: 48,
+              alignSelf: "end",
+            }}
+          >
+            Reset filtri
+          </button>
+        </div>
+
+        {/* CARD MESE */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: 10,
+          }}
+        >
+          <div
+            style={{
+              padding: 14,
+              borderRadius: 18,
+              border: "1px solid rgba(16,185,129,0.18)",
+              background:
+                "linear-gradient(180deg, rgba(16,185,129,0.12), rgba(16,185,129,0.04))",
+              boxShadow: "0 10px 24px rgba(16,185,129,0.08)",
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(6,78,59,0.82)" }}>
+              Entrate mese
+            </div>
+            <div
+              style={{
+                marginTop: 6,
+                fontSize: 22,
+                fontWeight: 1000,
+                color: "rgba(15,23,42,0.96)",
+              }}
+            >
+              {euro(entrateMeseSezioneFinanza)}
+            </div>
+          </div>
+
+          <div
+            style={{
+              padding: 14,
+              borderRadius: 18,
+              border: "1px solid rgba(239,68,68,0.18)",
+              background:
+                "linear-gradient(180deg, rgba(239,68,68,0.12), rgba(239,68,68,0.04))",
+              boxShadow: "0 10px 24px rgba(239,68,68,0.08)",
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(127,29,29,0.82)" }}>
+              Uscite mese
+            </div>
+            <div
+              style={{
+                marginTop: 6,
+                fontSize: 22,
+                fontWeight: 1000,
+                color: "rgba(15,23,42,0.96)",
+              }}
+            >
+              {euro(usciteMeseSezioneFinanza)}
+            </div>
+          </div>
+
+          <div
+            style={{
+              padding: 14,
+              borderRadius: 18,
+              border: saldoMeseSezioneFinanza >= 0
+                ? "1px solid rgba(59,130,246,0.18)"
+                : "1px solid rgba(124,58,237,0.18)",
+              background: saldoMeseSezioneFinanza >= 0
+                ? "linear-gradient(180deg, rgba(59,130,246,0.12), rgba(59,130,246,0.04))"
+                : "linear-gradient(180deg, rgba(124,58,237,0.12), rgba(124,58,237,0.04))",
+              boxShadow: saldoMeseSezioneFinanza >= 0
+                ? "0 10px 24px rgba(59,130,246,0.08)"
+                : "0 10px 24px rgba(124,58,237,0.08)",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 950,
+                color: saldoMeseSezioneFinanza >= 0
+                  ? "rgba(30,64,175,0.82)"
+                  : "rgba(88,28,135,0.82)",
+              }}
+            >
+              Saldo mese
+            </div>
+            <div
+              style={{
+                marginTop: 6,
+                fontSize: 22,
+                fontWeight: 1000,
+                color: "rgba(15,23,42,0.96)",
+              }}
+            >
+              {euro(saldoMeseSezioneFinanza)}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* GRAFICI */}
+      <div
+        style={{
+          ...ui.card,
+          padding: 16,
+          border: "1px solid rgba(255,255,255,0.58)",
+          background:
+            "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
+          boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
+          display: "grid",
+          gap: 16,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 12,
+            flexWrap: "wrap",
+          }}
+        >
+          <div>
+            <div
+              style={{
+                fontSize: 20,
+                fontWeight: 1000,
+                letterSpacing: -0.3,
+                color: "rgba(15,23,42,0.98)",
+              }}
+            >
+              Grafico uscite
+            </div>
+            <div
+              style={{
+                marginTop: 4,
+                fontSize: 12,
+                fontWeight: 850,
+                color: "rgba(71,85,105,0.82)",
+              }}
+            >
+              Solo uscite raggruppate per categoria
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              onClick={() => setFinanzaVistaGrafico("mese")}
+              style={chip(finanzaVistaGrafico === "mese")}
+            >
+              Mese
+            </button>
+            <button
+              type="button"
+              onClick={() => setFinanzaVistaGrafico("anno")}
+              style={chip(finanzaVistaGrafico === "anno")}
+            >
+              Anno
+            </button>
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
+            gap: 10,
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
+              Anno
+            </div>
+            <select
+              value={finanzaAnnoSelezionato}
+              onChange={(e) => setFinanzaAnnoSelezionato(Number(e.target.value))}
+              style={{
+                ...inputLight(false),
+                background: "rgba(255,255,255,1)",
+                color: "rgba(15,23,42,0.98)",
+                WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                caretColor: "rgba(15,23,42,0.98)",
+                border: "1px solid rgba(148,163,184,0.22)",
+              }}
+            >
+              {anniFinanzaDisponibili.map((anno) => (
+                <option key={anno} value={anno}>
+                  {anno}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {finanzaVistaGrafico === "mese" && (
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
+                Mese
+              </div>
+              <select
+                value={finanzaMeseSelezionato}
+                onChange={(e) => setFinanzaMeseSelezionato(Number(e.target.value))}
+                style={{
+                  ...inputLight(false),
+                  background: "rgba(255,255,255,1)",
+                  color: "rgba(15,23,42,0.98)",
+                  WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                  caretColor: "rgba(15,23,42,0.98)",
+                  border: "1px solid rgba(148,163,184,0.22)",
+                }}
+              >
+                {nomeMesiCompleti.map((meseNome, idx) => (
+                  <option key={meseNome} value={idx}>
+                    {meseNome}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
+              Dal
+            </div>
+            <input
+              type="date"
+              value={filtroFinanzaGrafico.dal}
+              onChange={(e) => setFiltroFinanzaGrafico((prev) => ({ ...prev, dal: e.target.value }))}
+              style={{
+                ...inputLight(false),
+                background: "rgba(255,255,255,1)",
+                color: "rgba(15,23,42,0.98)",
+                WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                caretColor: "rgba(15,23,42,0.98)",
+                border: "1px solid rgba(148,163,184,0.22)",
+              }}
+            />
+          </div>
+
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
+              Al
+            </div>
+            <input
+              type="date"
+              value={filtroFinanzaGrafico.al}
+              onChange={(e) => setFiltroFinanzaGrafico((prev) => ({ ...prev, al: e.target.value }))}
+              style={{
+                ...inputLight(false),
+                background: "rgba(255,255,255,1)",
+                color: "rgba(15,23,42,0.98)",
+                WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                caretColor: "rgba(15,23,42,0.98)",
+                border: "1px solid rgba(148,163,184,0.22)",
+              }}
+            />
+          </div>
+
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
+              Categoria
+            </div>
+            <select
+              value={filtroFinanzaGrafico.categoria}
+              onChange={(e) => setFiltroFinanzaGrafico((prev) => ({ ...prev, categoria: e.target.value }))}
+              style={{
+                ...inputLight(false),
+                background: "rgba(255,255,255,1)",
+                color: "rgba(15,23,42,0.98)",
+                WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                caretColor: "rgba(15,23,42,0.98)",
+                border: "1px solid rgba(148,163,184,0.22)",
+              }}
+            >
+              <option value="">Tutte</option>
+              {categorieUscitaFinanza.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns:
+              finanzaVistaGrafico === "mese"
+                ? "minmax(0, 0.95fr) minmax(0, 1.05fr)"
+                : "minmax(0, 1fr)",
+            gap: 16,
+            alignItems: "start",
+          }}
+          className="remember-grid-2"
+        >
+          {/* TORTA */}
+          <div
+            style={{
+              padding: 16,
+              borderRadius: 22,
+              border: "1px solid rgba(148,163,184,0.16)",
+              background:
+                "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.94))",
+              boxShadow: "0 10px 26px rgba(15,23,42,0.06)",
+              display: "grid",
+              gap: 16,
+              justifyItems: "center",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 15,
+                fontWeight: 1000,
+                color: "rgba(15,23,42,0.96)",
+              }}
+            >
+              {finanzaVistaGrafico === "mese"
+                ? `Torta uscite • ${nomeMesiCompleti[finanzaMeseSelezionato]} ${finanzaAnnoSelezionato}`
+                : `Torta uscite • anno ${finanzaAnnoSelezionato}`}
+            </div>
+
+            <div
+              style={{
+                width: 220,
+                height: 220,
+                maxWidth: "100%",
+                borderRadius: "50%",
+                background: pieGradientFinanza,
+                boxShadow: "0 24px 50px rgba(15,23,42,0.12)",
+                border: "8px solid rgba(255,255,255,0.96)",
+                position: "relative",
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  inset: "50% auto auto 50%",
+                  transform: "translate(-50%, -50%)",
+                  width: 90,
+                  height: 90,
+                  borderRadius: "50%",
+                  background: "rgba(255,255,255,0.98)",
+                  display: "grid",
+                  placeItems: "center",
+                  boxShadow: "inset 0 0 0 1px rgba(148,163,184,0.12)",
+                }}
+              >
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 10, fontWeight: 900, color: "rgba(100,116,139,0.84)" }}>
+                    Totale
+                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 1000, color: "rgba(15,23,42,0.96)" }}>
+                    {euro(totaleGraficoUscite)}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              style={{
+                width: "100%",
+                display: "grid",
+                gap: 8,
+              }}
+            >
+              {uscitePerCategoriaGrafico.length === 0 ? (
+                <div
+                  style={{
+                    padding: 12,
+                    borderRadius: 16,
+                    border: "1px solid rgba(148,163,184,0.16)",
+                    background: "rgba(255,255,255,0.82)",
+                    fontSize: 13,
+                    fontWeight: 800,
+                    color: "rgba(100,116,139,0.86)",
+                    textAlign: "center",
+                  }}
+                >
+                  Nessuna uscita da mostrare.
+                </div>
+              ) : (
+                uscitePerCategoriaGrafico.map((item, index) => {
+                  const perc = totaleGraficoUscite > 0 ? (item.totale / totaleGraficoUscite) * 100 : 0;
+
+                  return (
+                    <div
+                      key={item.categoria}
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "16px minmax(0, 1fr) auto",
+                        gap: 10,
+                        alignItems: "center",
+                        padding: "8px 10px",
+                        borderRadius: 14,
+                        background: "rgba(255,255,255,0.88)",
+                        border: "1px solid rgba(148,163,184,0.14)",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 12,
+                          height: 12,
+                          borderRadius: 999,
+                          background: pieColors[index % pieColors.length],
+                        }}
+                      />
+                      <div style={{ minWidth: 0 }}>
+                        <div
+                          style={{
+                            fontSize: 13,
+                            fontWeight: 900,
+                            color: "rgba(15,23,42,0.92)",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {item.categoria}
+                        </div>
+                        <div
+                          style={{
+                            marginTop: 2,
+                            fontSize: 11,
+                            fontWeight: 800,
+                            color: "rgba(100,116,139,0.84)",
+                          }}
+                        >
+                          {perc.toLocaleString("it-IT", { maximumFractionDigits: 1 })}%
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 1000,
+                          color: "rgba(15,23,42,0.92)",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {euro(item.totale)}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {/* BARRE SOLO MESE */}
+          {finanzaVistaGrafico === "mese" && (
+            <div
+              style={{
+                padding: 16,
+                borderRadius: 22,
+                border: "1px solid rgba(148,163,184,0.16)",
+                background:
+                  "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.94))",
+                boxShadow: "0 10px 26px rgba(15,23,42,0.06)",
+                display: "grid",
+                gap: 14,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 15,
+                  fontWeight: 1000,
+                  color: "rgba(15,23,42,0.96)",
+                }}
+              >
+                Barre uscite • {nomeMesiCompleti[finanzaMeseSelezionato]} {finanzaAnnoSelezionato}
+              </div>
+
+              {uscitePerCategoriaGrafico.length === 0 ? (
+                <div
+                  style={{
+                    padding: 12,
+                    borderRadius: 16,
+                    border: "1px solid rgba(148,163,184,0.16)",
+                    background: "rgba(255,255,255,0.82)",
+                    fontSize: 13,
+                    fontWeight: 800,
+                    color: "rgba(100,116,139,0.86)",
+                    textAlign: "center",
+                  }}
+                >
+                  Nessuna uscita da mostrare.
+                </div>
+              ) : (
+                uscitePerCategoriaGrafico.map((item, index) => {
+                  const perc = maxBarFinanza > 0 ? (item.totale / maxBarFinanza) * 100 : 0;
+
+                  return (
+                    <div key={item.categoria} style={{ display: "grid", gap: 6 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          gap: 10,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: 13,
+                            fontWeight: 950,
+                            color: "rgba(15,23,42,0.92)",
+                          }}
+                        >
+                          {item.categoria}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 1000,
+                            color: "rgba(15,23,42,0.84)",
+                          }}
+                        >
+                          {euro(item.totale)}
+                        </div>
+                      </div>
+
+                      <div
+                        style={{
+                          height: 16,
+                          borderRadius: 999,
+                          background: "rgba(226,232,240,0.92)",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: `${Math.max(8, perc)}%`,
+                            height: "100%",
+                            borderRadius: 999,
+                            background: `linear-gradient(90deg, ${pieColors[index % pieColors.length]}, rgba(15,23,42,0.88))`,
+                            boxShadow: "0 10px 18px rgba(15,23,42,0.10)",
+                            transition: "width .25s ease",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* LISTA MOVIMENTI */}
+      <div
+        style={{
+          ...ui.card,
+          padding: 16,
+          border: "1px solid rgba(255,255,255,0.58)",
+          background:
+            "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
+          boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
+          display: "grid",
+          gap: 16,
+        }}
+      >
+        <div>
+          <div
+            style={{
+              fontSize: 20,
+              fontWeight: 1000,
+              letterSpacing: -0.3,
+              color: "rgba(15,23,42,0.98)",
+            }}
+          >
+            Lista movimenti
+          </div>
+          <div
+            style={{
+              marginTop: 4,
+              fontSize: 12,
+              fontWeight: 850,
+              color: "rgba(71,85,105,0.82)",
+            }}
+          >
+            Uscite filtrate ordinate per data con card compatte
+          </div>
+        </div>
+
+        {/* FILTRI LISTA */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
+            gap: 10,
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
+              Dal
+            </div>
+            <input
+              type="date"
+              value={filtroFinanzaLista.dal}
+              onChange={(e) => setFiltroFinanzaLista((prev) => ({ ...prev, dal: e.target.value }))}
+              style={{
+                ...inputLight(false),
+                background: "rgba(255,255,255,1)",
+                color: "rgba(15,23,42,0.98)",
+                WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                caretColor: "rgba(15,23,42,0.98)",
+                border: "1px solid rgba(148,163,184,0.22)",
+              }}
+            />
+          </div>
+
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
+              Al
+            </div>
+            <input
+              type="date"
+              value={filtroFinanzaLista.al}
+              onChange={(e) => setFiltroFinanzaLista((prev) => ({ ...prev, al: e.target.value }))}
+              style={{
+                ...inputLight(false),
+                background: "rgba(255,255,255,1)",
+                color: "rgba(15,23,42,0.98)",
+                WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                caretColor: "rgba(15,23,42,0.98)",
+                border: "1px solid rgba(148,163,184,0.22)",
+              }}
+            />
+          </div>
+
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
+              Categoria
+            </div>
+            <select
+              value={filtroFinanzaLista.categoria}
+              onChange={(e) => setFiltroFinanzaLista((prev) => ({ ...prev, categoria: e.target.value }))}
+              style={{
+                ...inputLight(false),
+                background: "rgba(255,255,255,1)",
+                color: "rgba(15,23,42,0.98)",
+                WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                caretColor: "rgba(15,23,42,0.98)",
+                border: "1px solid rgba(148,163,184,0.22)",
+              }}
+            >
+              <option value="">Tutte</option>
+              {categorieUscitaFinanza.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setFiltroFinanzaLista({ dal: "", al: "", categoria: "" })}
+            style={{
+              border: "1px solid rgba(148,163,184,0.18)",
+              background:
+                "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
+              borderRadius: 16,
+              fontWeight: 900,
+              cursor: "pointer",
+              color: "rgba(15,23,42,0.86)",
+              minHeight: 48,
+              alignSelf: "end",
+            }}
+          >
+            Reset filtri
+          </button>
+        </div>
+
+        <div style={{ display: "grid", gap: 8 }}>
+          {listaMovimentiFinanza.length === 0 ? (
+            <div
+              style={{
+                padding: 14,
+                borderRadius: 18,
+                border: "1px solid rgba(148,163,184,0.16)",
+                background: "rgba(255,255,255,0.84)",
+                fontSize: 13,
+                fontWeight: 850,
+                color: "rgba(100,116,139,0.86)",
+                textAlign: "center",
+              }}
+            >
+              Nessun movimento trovato con i filtri selezionati.
+            </div>
+          ) : (
+            listaMovimentiFinanza.map((mov) => (
+              <div
+                key={`${mov.origine}_${mov.id}`}
+                style={{
+                  padding: 12,
+                  borderRadius: 18,
+                  border: "1px solid rgba(239,68,68,0.14)",
+                  background:
+                    "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.94))",
+                  boxShadow: "0 8px 18px rgba(15,23,42,0.05)",
+                  display: "grid",
+                  gridTemplateColumns: "minmax(0, 1fr) auto",
+                  gap: 10,
+                  alignItems: "start",
+                }}
+              >
+                <div style={{ minWidth: 0, display: "grid", gap: 4 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <span
+                      style={{
+                        padding: "5px 9px",
+                        borderRadius: 999,
+                        fontSize: 11,
+                        fontWeight: 950,
+                        background: "rgba(254,226,226,0.96)",
+                        border: "1px solid rgba(239,68,68,0.18)",
+                        color: "rgba(153,27,27,0.96)",
+                      }}
+                    >
+                      {mov.categoria}
+                    </span>
+
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 900,
+                        color: "rgba(100,116,139,0.84)",
+                      }}
+                    >
+                      {formattaDataBreve(mov.data)}
+                    </span>
+                  </div>
+
+                  <div
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 950,
+                      color: "rgba(15,23,42,0.96)",
+                      lineHeight: 1.25,
+                    }}
+                  >
+                    {mov.dettaglio || mov.descrizione}
+                  </div>
+
+                  {mov.nota && (
+                    <div
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 800,
+                        color: "rgba(71,85,105,0.82)",
+                        lineHeight: 1.35,
+                      }}
+                    >
+                      Nota: {mov.nota}
+                    </div>
+                  )}
+                </div>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gap: 8,
+                    justifyItems: "end",
+                    minWidth: 100,
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: "6px 10px",
+                      borderRadius: 999,
+                      border: "1px solid rgba(239,68,68,0.18)",
+                      background: "rgba(254,242,242,0.98)",
+                      fontSize: 12,
+                      fontWeight: 1000,
+                      color: "rgba(153,27,27,0.96)",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {euro(mov.importo)}
+                  </div>
+
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                    <button
+                      type="button"
+                      onClick={() => apriModificaMovimentoFinanza(mov)}
+                      style={chip(false)}
+                    >
+                      Modifica
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => eliminaMovimentoFinanza(mov)}
+                      style={{
+                        ...chip(false),
+                        border: "1px solid rgba(239,68,68,0.22)",
+                        color: "rgba(185,28,28,0.96)",
+                        background: "rgba(254,242,242,0.92)",
+                      }}
+                    >
+                      Elimina
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+
+    {/* MODALE MODIFICA FINANZA */}
+    {movimentoFinanzaInModifica && (
+      <div style={sx.overlay} onClick={chiudiModificaMovimentoFinanza}>
+        <div
+          style={{
+            ...sx.modal,
+            width: "min(640px, 100%)",
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div style={sx.header}>
+            <div>
+              <div
+                style={{
+                  fontSize: 22,
+                  fontWeight: 1000,
+                  letterSpacing: -0.4,
+                  color: "rgba(15,23,42,0.96)",
+                }}
+              >
+                Modifica movimento
+              </div>
+              <div
+                style={{
+                  marginTop: 4,
+                  fontSize: 12,
+                  fontWeight: 850,
+                  color: "rgba(71,85,105,0.80)",
+                }}
+              >
+                Salvataggio con ritorno diretto a Consulta → Finanza
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={chiudiModificaMovimentoFinanza}
+              style={sx.closeBtn}
+            >
+              ✕
+            </button>
+          </div>
+
+          <div style={sx.body}>
+            <div style={sx.content}>
+              <div style={sx.row2}>
+                <div>
+                  <div style={sx.sectionLabel}>Data</div>
+                  <input
+                    type="date"
+                    value={finanzaModData}
+                    onChange={(e) => setFinanzaModData(e.target.value)}
+                    style={{
+                      ...inputLight(false),
+                      background: "rgba(255,255,255,1)",
+                      color: "rgba(15,23,42,0.98)",
+                      WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                      caretColor: "rgba(15,23,42,0.98)",
+                      border: "1px solid rgba(148,163,184,0.22)",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <div style={sx.sectionLabel}>Importo</div>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="0.01"
+                    value={finanzaModImporto}
+                    onChange={(e) => setFinanzaModImporto(e.target.value)}
+                    style={{
+                      ...inputLight(false),
+                      background: "rgba(255,255,255,1)",
+                      color: "rgba(15,23,42,0.98)",
+                      WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                      caretColor: "rgba(15,23,42,0.98)",
+                      border: "1px solid rgba(148,163,184,0.22)",
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div style={sx.sectionLabel}>Categoria</div>
+                <select
+                  value={finanzaModCategoria}
+                  onChange={(e) => setFinanzaModCategoria(e.target.value)}
+                  style={{
+                    ...inputLight(false),
+                    background: "rgba(255,255,255,1)",
+                    color: "rgba(15,23,42,0.98)",
+                    WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                    caretColor: "rgba(15,23,42,0.98)",
+                    border: "1px solid rgba(148,163,184,0.22)",
+                  }}
+                >
+                  <option value="">Seleziona categoria</option>
+                  {categorieUscitaFinanza.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <div style={sx.sectionLabel}>Descrizione</div>
+                <input
+                  type="text"
+                  value={finanzaModDettaglio}
+                  onChange={(e) => setFinanzaModDettaglio(e.target.value)}
+                  placeholder="Dettaglio movimento"
+                  style={{
+                    ...inputLight(false),
+                    background: "rgba(255,255,255,1)",
+                    color: "rgba(15,23,42,0.98)",
+                    WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                    caretColor: "rgba(15,23,42,0.98)",
+                    border: "1px solid rgba(148,163,184,0.22)",
+                  }}
+                />
+              </div>
+
+              <div>
+                <div style={sx.sectionLabel}>Nota</div>
+                <input
+                  type="text"
+                  value={finanzaModNota}
+                  onChange={(e) => setFinanzaModNota(e.target.value)}
+                  placeholder="Nota facoltativa"
+                  style={{
+                    ...inputLight(false),
+                    background: "rgba(255,255,255,1)",
+                    color: "rgba(15,23,42,0.98)",
+                    WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                    caretColor: "rgba(15,23,42,0.98)",
+                    border: "1px solid rgba(148,163,184,0.22)",
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div style={sx.footer}>
+            <button
+              type="button"
+              onClick={chiudiModificaMovimentoFinanza}
+              style={sx.actionBtn(false)}
+            >
+              Annulla
+            </button>
+
+            <button
+              type="button"
+              onClick={salvaModificaMovimentoFinanza}
+              style={{
+                ...sx.actionBtn(true),
+                background:
+                  "linear-gradient(180deg, rgba(79,70,229,0.20), rgba(124,58,237,0.14))",
+                border: "1px solid rgba(79,70,229,0.26)",
+                fontWeight: 1000,
+              }}
+            >
+              Salva modifiche
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+  </>
+) : (
+  <div
+    style={{
+      ...ui.card,
+      padding: 22,
+      fontSize: 16,
+      fontWeight: 900,
+      color: "rgba(15,23,42,0.82)",
+    }}
+  >
+    Sezione in preparazione
+  </div>
+)}
     </div>
   </div>
 )}
