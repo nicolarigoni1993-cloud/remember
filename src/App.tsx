@@ -4996,7 +4996,7 @@ function MiniCalendarioEventi({
     data: string;
     ora: string;
     titolo: string;
-    tipo: "scadenza" | "appuntamento";
+    tipo: "scadenza" | "appuntamento" | "nota";
     urgente: boolean;
     nota: string;
   }>;
