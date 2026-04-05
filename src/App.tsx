@@ -8348,6 +8348,7 @@ function MiniCalendarioControllo({
           )}
         </div>
       </div>
+    </div>
 
     {/* MODALE MODIFICA FINANZA */}
     {movimentoFinanzaInModifica && (
