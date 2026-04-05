@@ -57,23 +57,6 @@ function classNameIsEmpty(s: string) {
   return !s || s.trim().length === 0;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 function yyyymmFromDate(d: Date) {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -458,14 +441,6 @@ function vocePassata(data: string, ora: string) {
   return dt.getTime() < Date.now();
 }
 
-
-
-
-
-
-
-
-
 function clamp(n: number, a: number, b: number) {
   return Math.max(a, Math.min(b, n));
 }
@@ -707,9 +682,9 @@ export default function App() {
   const [loginNome, setLoginNome] = useState("");
   const [loginPick, setLoginPick] = useState<string | null>(null);
 
-  const [pagina, setPagina] = useState<"home" | "aggiungi" | "consulta" | "agenda" | "controllo" | "archivio">("home");
-  const [consultaSezione, setConsultaSezione] = useState<"menu" | "turni" | "finanza" | "eventi" | "archivio">("menu");
-  const [aggiungiSezione, setAggiungiSezione] = useState<"menu" | "movimenti" | "eventi">("menu");
+ const [pagina, setPagina] = useState<"home" | "aggiungi" | "consulta" | "agenda" | "controllo" | "archivio">("home");
+ const [consultaSezione, setConsultaSezione] = useState<"menu" | "turni" | "finanza" | "eventi" | "archivio">("menu");
+const [aggiungiSezione, setAggiungiSezione] = useState<"menu" | "movimenti" | "eventi">("menu");
   const [mostraForm, setMostraForm] = useState(false);
   const [idInModifica, setIdInModifica] = useState<string | null>(null);
 
@@ -746,101 +721,70 @@ export default function App() {
   const [movimentoAperto, setMovimentoAperto] = useState<"entrata" | "uscita" | null>(null);
   const [apriConfigFerie, setApriConfigFerie] = useState(false);
 
-  const [finanzaVistaGraficoPeriodo, setFinanzaVistaGraficoPeriodo] = useState<"mese" | "anno">("mese");
-  const [finanzaGraficoMeseTipo] = useState<"barre" | "torta">("barre");
+const categorieEntrataBase = useMemo(
+  () => ["Stipendio", "Bonus", "Regalo", "Rimborso", "Vendita", "Extra"],
+  []
+);
 
-  const [finanzaMeseFiltroDal] = useState("");
-  const [finanzaMeseFiltroAl] = useState("");
-  const [finanzaMeseFiltroCategoria] = useState("tutte");
+const categorieUscitaBase = useMemo(
+  () => ["Spesa", "Carburante", "Affitto", "Bollette", "Ristorante", "Svago", "Salute", "Casa"],
+  []
+);
 
-  const [finanzaAnnoFiltroDal] = useState("");
-  const [finanzaAnnoFiltroAl] = useState("");
-  const [finanzaAnnoFiltroCategoria] = useState("tutte");
 
-  const [finanzaListaFiltroDal] = useState("");
-  const [finanzaListaFiltroAl] = useState("");
-  const [finanzaListaFiltroCategoria] = useState("tutte");
+const [dataOraCorrenteLabel, setDataOraCorrenteLabel] = useState("");
 
-  const [uscitaExtraInModificaId, setUscitaExtraInModificaId] = useState<string | null>(null);
-  const [ritornaAConsultaFinanzaDopoSalvataggio, setRitornaAConsultaFinanzaDopoSalvataggio] = useState(false);
+useEffect(() => {
+  const aggiornaDataOra = () => {
+    const adesso = new Date();
+    const testo = adesso.toLocaleString("it-IT", {
+      weekday: "long",
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
 
-  void finanzaVistaGraficoPeriodo;
-  void setFinanzaVistaGraficoPeriodo;
-  void finanzaGraficoMeseTipo;
+    setDataOraCorrenteLabel(testo);
+  };
 
-  void finanzaMeseFiltroDal;
-  void finanzaMeseFiltroAl;
-  void finanzaMeseFiltroCategoria;
+  aggiornaDataOra();
+  const timer = window.setInterval(aggiornaDataOra, 30000);
 
-  void finanzaAnnoFiltroDal;
-  void finanzaAnnoFiltroAl;
-  void finanzaAnnoFiltroCategoria;
+  return () => window.clearInterval(timer);
+}, []);
 
-  void finanzaListaFiltroDal;
-  void finanzaListaFiltroAl;
-  void finanzaListaFiltroCategoria;
 
-  const categorieEntrataBase = useMemo(
-    () => ["Stipendio", "Bonus", "Regalo", "Rimborso", "Vendita", "Extra"],
-    []
-  );
 
-  const categorieUscitaBase = useMemo(
-    () => ["Spesa", "Carburante", "Affitto", "Bollette", "Ristorante", "Svago", "Salute", "Casa"],
-    []
-  );
+const K_CATEGORIE_ENTRATA_CUSTOM = "remember_categorie_entrata_custom";
+const K_CATEGORIE_USCITA_CUSTOM = "remember_categorie_uscita_custom";
 
-  const [dataOraCorrenteLabel, setDataOraCorrenteLabel] = useState("");
+const [categoriaEntrata, setCategoriaEntrata] = useState("");
+const [nuovaCategoriaEntrata, setNuovaCategoriaEntrata] = useState("");
+const [categorieEntrataCustom] = useState<string[]>(() => {
+  try {
+    const raw = localStorage.getItem(K_CATEGORIE_ENTRATA_CUSTOM);
+    const parsed = raw ? (JSON.parse(raw) as string[]) : [];
+    return Array.isArray(parsed) ? parsed.filter((x) => typeof x === "string" && x.trim()) : [];
+  } catch {
+    return [];
+  }
+});
 
-  useEffect(() => {
-    const aggiornaDataOra = () => {
-      const adesso = new Date();
-      const testo = adesso.toLocaleString("it-IT", {
-        weekday: "long",
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
+const [categoriaUscita, setCategoriaUscita] = useState("");
+const [nuovaCategoriaUscita, setNuovaCategoriaUscita] = useState("");
+const [categorieUscitaCustom] = useState<string[]>(() => {
+  try {
+    const raw = localStorage.getItem(K_CATEGORIE_USCITA_CUSTOM);
+    const parsed = raw ? (JSON.parse(raw) as string[]) : [];
+    return Array.isArray(parsed) ? parsed.filter((x) => typeof x === "string" && x.trim()) : [];
+  } catch {
+    return [];
+  }
+});
 
-      setDataOraCorrenteLabel(testo);
-    };
-
-    aggiornaDataOra();
-    const timer = window.setInterval(aggiornaDataOra, 30000);
-
-    return () => window.clearInterval(timer);
-  }, []);
-
-  const K_CATEGORIE_ENTRATA_CUSTOM = "remember_categorie_entrata_custom";
-  const K_CATEGORIE_USCITA_CUSTOM = "remember_categorie_uscita_custom";
-
-  const [categoriaEntrata, setCategoriaEntrata] = useState("");
-  const [nuovaCategoriaEntrata, setNuovaCategoriaEntrata] = useState("");
-  const [categorieEntrataCustom] = useState<string[]>(() => {
-    try {
-      const raw = localStorage.getItem(K_CATEGORIE_ENTRATA_CUSTOM);
-      const parsed = raw ? (JSON.parse(raw) as string[]) : [];
-      return Array.isArray(parsed) ? parsed.filter((x) => typeof x === "string" && x.trim()) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  const [categoriaUscita, setCategoriaUscita] = useState("");
-  const [nuovaCategoriaUscita, setNuovaCategoriaUscita] = useState("");
-  const [categorieUscitaCustom] = useState<string[]>(() => {
-    try {
-      const raw = localStorage.getItem(K_CATEGORIE_USCITA_CUSTOM);
-      const parsed = raw ? (JSON.parse(raw) as string[]) : [];
-      return Array.isArray(parsed) ? parsed.filter((x) => typeof x === "string" && x.trim()) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  const [mostraTurnoForm, setMostraTurnoForm] = useState(false);
+   const [mostraTurnoForm, setMostraTurnoForm] = useState(false);
   const [turnoData, setTurnoData] = useState(new Date().toISOString().slice(0, 10));
   const [turnoInizio, setTurnoInizio] = useState("08:00");
   const [turnoFine, setTurnoFine] = useState("16:00");
@@ -864,22 +808,22 @@ export default function App() {
 
   const meseKey = useMemo(() => yyyymmFromDate(meseCorrente), [meseCorrente]);
 
-  const eventiProssimiAggiungi = useMemo(() => {
-    return voci
-      .filter((v) => v.tipo === "scadenza" || v.tipo === "appuntamento")
-      .filter((v) => !v.fatto)
-      .slice()
-      .sort((a, b) => {
-        const d = a.data.localeCompare(b.data);
-        if (d !== 0) return d;
-        return a.ora.localeCompare(b.ora);
-      })
-      .slice(0, 7);
-  }, [voci]);
+
+const eventiProssimiAggiungi = useMemo(() => {
+  return voci
+    .filter((v) => v.tipo === "scadenza" || v.tipo === "appuntamento")
+    .filter((v) => !v.fatto)
+    .slice()
+    .sort((a, b) => {
+      const d = a.data.localeCompare(b.data);
+      if (d !== 0) return d;
+      return a.ora.localeCompare(b.ora);
+    })
+    .slice(0, 7);
+}, [voci]);
+
 
   const [hoverCloseTurno, setHoverCloseTurno] = useState(false);
-  void hoverCloseTurno;
-  void setHoverCloseTurno;
 
   const scheduledRef = useRef<Record<string, number[]>>({});
 
@@ -1102,513 +1046,414 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, [mostraForm, mostraTurnoForm]);
 
-  const ui = useMemo(() => {
-    const glass = {
-      border: "1px solid rgba(255,255,255,0.10)",
-      background: "rgba(2,6,23,0.78)",
-      boxShadow:
-        "0 34px 90px rgba(0,0,0,0.58), inset 0 1px 0 rgba(255,255,255,0.05)",
-      borderRadius: 26,
-      backdropFilter: "blur(20px)",
-      color: "rgba(241,245,249,0.97)",
-    } as const;
+const ui = useMemo(() => {
+  const glass = {
+    border: "1px solid rgba(255,255,255,0.10)",
+    background: "rgba(2,6,23,0.78)",
+    boxShadow:
+      "0 34px 90px rgba(0,0,0,0.58), inset 0 1px 0 rgba(255,255,255,0.05)",
+    borderRadius: 26,
+    backdropFilter: "blur(20px)",
+    color: "rgba(241,245,249,0.97)",
+  } as const;
 
-    const card = {
-      border: "1px solid rgba(255,255,255,0.08)",
-      background:
-        "linear-gradient(180deg, rgba(2,6,23,0.95), rgba(15,23,42,0.90))",
-      boxShadow:
-        "0 28px 80px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,255,255,0.04)",
-      borderRadius: 24,
-      backdropFilter: "blur(20px)",
-      color: "rgba(241,245,249,0.97)",
-    } as const;
+  const card = {
+    border: "1px solid rgba(255,255,255,0.08)",
+    background:
+      "linear-gradient(180deg, rgba(2,6,23,0.95), rgba(15,23,42,0.90))",
+    boxShadow:
+      "0 28px 80px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,255,255,0.04)",
+    borderRadius: 24,
+    backdropFilter: "blur(20px)",
+    color: "rgba(241,245,249,0.97)",
+  } as const;
 
-    return { glass, card };
-  }, []);
+  return { glass, card };
+}, []);
 
-  function chiudiForm() {
-    resetForm();
-    setMostraForm(false);
-    setAggiungiSezione("menu");
+
+
+
+
+function chiudiForm() {
+  resetForm();
+  setMostraForm(false);
+  setAggiungiSezione("menu");
+}
+
+function resetForm() {
+  setIdInModifica(null);
+  setTitolo("");
+  setData("");
+  setOra("09:00");
+  setTipo("scadenza");
+  setUrgente(false);
+  setNota("");
+  setImporto("");
+  setNotificheMinutiPrima([]);
+  setCustomNotificaOre("");
+}
+
+function apriNuova() {
+  resetForm();
+  setTipo("appuntamento");
+  setOra("09:00");
+  setMostraForm(false);
+  setAggiungiSezione("eventi");
+}
+
+function apriNuovaConData(dataSelezionata: string) {
+  resetForm();
+  setData(dataSelezionata);
+  setOra("09:00");
+  setTipo("appuntamento");
+  setMostraForm(false);
+  setAggiungiSezione("eventi");
+}
+
+function apriModifica(v: Voce) {
+  setIdInModifica(v.id);
+  setTitolo(v.titolo);
+  setData(v.data);
+  setOra(v.ora);
+  setTipo(v.tipo === "nota" ? "scadenza" : v.tipo);
+  setUrgente(v.urgente);
+  setNota("");
+  setImporto(v.importo !== null ? String(v.importo) : "");
+  setNotificheMinutiPrima([]);
+  setCustomNotificaOre("");
+  setMostraForm(false);
+  setAggiungiSezione("eventi");
+}
+
+
+
+
+
+function salva() {
+  if (classNameIsEmpty(titolo)) {
+    alert("Compila almeno la descrizione");
+    return;
   }
 
-  function resetForm() {
-    setIdInModifica(null);
-    setTitolo("");
-    setData("");
-    setOra("09:00");
-    setTipo("scadenza");
-    setUrgente(false);
-    setNota("");
-    setImporto("");
-    setNotificheMinutiPrima([]);
-    setCustomNotificaOre("");
+  const dataFinale = data.trim();
+  const oraFinale = ora.trim();
+
+  if (classNameIsEmpty(dataFinale) || classNameIsEmpty(oraFinale)) {
+    alert("Compila data e ora");
+    return;
   }
 
-  function apriNuova() {
-    resetForm();
-    setTipo("appuntamento");
-    setOra("09:00");
-    setMostraForm(false);
-    setAggiungiSezione("eventi");
+  if (idInModifica) {
+    setVoci((prev) =>
+      prev.map((x) =>
+        x.id === idInModifica
+          ? {
+              ...x,
+              titolo: titolo.trim(),
+              data: dataFinale,
+              ora: oraFinale,
+              tipo: "appuntamento",
+              urgente: false,
+              nota: "",
+              importo: null,
+              movimento: "nessuno" as Movimento,
+              fatto: vocePassata(dataFinale, oraFinale),
+              notificheMinutiPrima: [],
+            }
+          : x
+      )
+    );
+  } else {
+    const nuova: Voce = {
+      id: safeUUID(),
+      titolo: titolo.trim(),
+      data: dataFinale,
+      ora: oraFinale,
+      tipo: "appuntamento",
+      urgente: false,
+      nota: "",
+      importo: null,
+      movimento: "nessuno",
+      fatto: vocePassata(dataFinale, oraFinale),
+      notificheMinutiPrima: [],
+    };
+
+    setVoci((prev) => [nuova, ...prev]);
   }
 
-  function apriNuovaConData(dataSelezionata: string) {
-    resetForm();
-    setData(dataSelezionata);
-    setOra("09:00");
-    setTipo("appuntamento");
-    setMostraForm(false);
-    setAggiungiSezione("eventi");
+  chiudiForm();
+}
+
+function applicaPresetTurno(val: string) {
+  setTurnoPreset(val);
+  setTurnoManuale(false);
+
+  const parti = val.split("-");
+  if (parti.length !== 2) return;
+
+  let start = parti[0].trim();
+  let end = parti[1].trim();
+
+  if (/^\d$/.test(start)) start = `0${start}`;
+  if (/^\d$/.test(end)) end = `0${end}`;
+  if (end === "24") end = "00";
+
+  setTurnoInizio(`${start}:00`);
+  setTurnoFine(`${end}:00`);
+
+  if (turnoOreOrd.trim() === "") {
+    const oreCalcolate =
+      ((Number(end === "00" ? "24" : end) - Number(start) + 24) % 24) || 0;
+    if (oreCalcolate > 0) setTurnoOreOrd(String(oreCalcolate));
+  }
+}
+
+function giorniTraDateInclusive(dataInizio: string, dataFine: string) {
+  const start = new Date(`${dataInizio}T00:00:00`);
+  const end = new Date(`${dataFine}T00:00:00`);
+
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start) {
+    return [] as string[];
   }
 
-  function apriModifica(v: Voce) {
-    setIdInModifica(v.id);
-    setTitolo(v.titolo);
-    setData(v.data);
-    setOra(v.ora);
-    setTipo(v.tipo === "nota" ? "scadenza" : v.tipo);
-    setUrgente(v.urgente);
-    setNota("");
-    setImporto(v.importo !== null ? String(v.importo) : "");
-    setNotificheMinutiPrima([]);
-    setCustomNotificaOre("");
-    setMostraForm(false);
-    setAggiungiSezione("eventi");
+  const out: string[] = [];
+  const cur = new Date(start);
+
+  while (cur <= end) {
+    out.push(cur.toISOString().slice(0, 10));
+    cur.setDate(cur.getDate() + 1);
   }
 
-  function salva() {
-    if (classNameIsEmpty(titolo)) {
-      alert("Compila almeno la descrizione");
-      return;
-    }
+  return out;
+}
 
-    const dataFinale = data.trim();
-    const oraFinale = ora.trim();
+function resetCampiTurnoBase(dataSelezionata?: string) {
+  const dataBase = dataSelezionata || new Date().toISOString().slice(0, 10);
 
-    if (classNameIsEmpty(dataFinale) || classNameIsEmpty(oraFinale)) {
-      alert("Compila data e ora");
-      return;
-    }
+  setTurnoIdInModifica(null);
+  setTurnoData(dataBase);
+  setTurnoDataFine(dataBase);
+  setTurnoTipo("lavoro");
+  setTurnoModoOreFerie("giorni");
+  setTurnoQuantitaFerie("");
+  setTurnoInizio("08:00");
+  setTurnoFine("16:00");
+  setTurnoOreOrd("");
+  setTurnoOreStraord("");
+  setTurnoNote("");
+  setTurnoPreset("");
+  setTurnoManuale(false);
+  setTurnoModalitaPeriodo("singolo");
+  setTurnoTipoAssenza("malattia");
+}
 
-    if (idInModifica) {
-      setVoci((prev) =>
-        prev.map((x) =>
-          x.id === idInModifica
-            ? {
-                ...x,
-                titolo: titolo.trim(),
-                data: dataFinale,
-                ora: oraFinale,
-                tipo: "appuntamento",
-                urgente: false,
-                nota: "",
-                importo: null,
-                movimento: "nessuno" as Movimento,
-                fatto: vocePassata(dataFinale, oraFinale),
-                notificheMinutiPrima: [],
-              }
-            : x
-        )
-      );
-    } else {
-      const nuova: Voce = {
-        id: safeUUID(),
-        titolo: titolo.trim(),
-        data: dataFinale,
-        ora: oraFinale,
-        tipo: "appuntamento",
-        urgente: false,
-        nota: "",
-        importo: null,
-        movimento: "nessuno",
-        fatto: vocePassata(dataFinale, oraFinale),
-        notificheMinutiPrima: [],
-      };
+function apriTurnoForm(dataSelezionata?: string) {
+  setAggiungiSezione("menu");
+  resetCampiTurnoBase(dataSelezionata);
+  setMostraTurnoForm(true);
+}
 
-      setVoci((prev) => [nuova, ...prev]);
-    }
+function apriModificaTurno(t: Turno) {
+  const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
 
-    chiudiForm();
-  }
+  setTurnoIdInModifica(t.id);
+  setTurnoData(t.data);
+  setTurnoDataFine(t.data);
+  setTurnoOreStraord(t.oreStraordinarie ? String(t.oreStraordinarie) : "");
+  setTurnoModalitaPeriodo("singolo");
 
-  function applicaPresetTurno(val: string) {
-    setTurnoPreset(val);
-    setTurnoManuale(false);
-
-    const parti = val.split("-");
-    if (parti.length !== 2) return;
-
-    let start = parti[0].trim();
-    let end = parti[1].trim();
-
-    if (/^\d$/.test(start)) start = `0${start}`;
-    if (/^\d$/.test(end)) end = `0${end}`;
-    if (end === "24") end = "00";
-
-    setTurnoInizio(`${start}:00`);
-    setTurnoFine(`${end}:00`);
-
-    if (turnoOreOrd.trim() === "") {
-      const oreCalcolate =
-        ((Number(end === "00" ? "24" : end) - Number(start) + 24) % 24) || 0;
-      if (oreCalcolate > 0) setTurnoOreOrd(String(oreCalcolate));
-    }
-  }
-
-  function giorniTraDateInclusive(dataInizio: string, dataFine: string) {
-    const start = new Date(`${dataInizio}T00:00:00`);
-    const end = new Date(`${dataFine}T00:00:00`);
-
-    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start) {
-      return [] as string[];
-    }
-
-    const out: string[] = [];
-    const cur = new Date(start);
-
-    while (cur <= end) {
-      out.push(cur.toISOString().slice(0, 10));
-      cur.setDate(cur.getDate() + 1);
-    }
-
-    return out;
-  }
-
-  function resetCampiTurnoBase(dataSelezionata?: string) {
-    const dataBase = dataSelezionata || new Date().toISOString().slice(0, 10);
-
-    setTurnoIdInModifica(null);
-    setTurnoData(dataBase);
-    setTurnoDataFine(dataBase);
-    setTurnoTipo("lavoro");
+  if (sigla === "R") {
+    setTurnoTipo("riposo");
     setTurnoModoOreFerie("giorni");
     setTurnoQuantitaFerie("");
     setTurnoInizio("08:00");
     setTurnoFine("16:00");
     setTurnoOreOrd("");
-    setTurnoOreStraord("");
-    setTurnoNote("");
     setTurnoPreset("");
     setTurnoManuale(false);
-    setTurnoModalitaPeriodo("singolo");
     setTurnoTipoAssenza("malattia");
-  }
 
-  function apriTurnoForm(dataSelezionata?: string) {
-    setAggiungiSezione("menu");
-    resetCampiTurnoBase(dataSelezionata);
-    setMostraTurnoForm(true);
-  }
+    const notaPulita = (t.note || "").replace(/^RIPOSO\s*•?\s*/i, "").trim();
+    setTurnoNote(notaPulita);
+  } else if (sigla === "F") {
+    setTurnoTipo("ferie");
+    setTurnoInizio("08:00");
+    setTurnoFine("16:00");
+    setTurnoPreset("");
+    setTurnoManuale(false);
+    setTurnoTipoAssenza("malattia");
 
-  function apriModificaTurno(t: Turno) {
-    const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
+    const oreOrd = Number(t.oreOrdinarie || 0);
 
-    setTurnoIdInModifica(t.id);
-    setTurnoData(t.data);
-    setTurnoDataFine(t.data);
-    setTurnoOreStraord(t.oreStraordinarie ? String(t.oreStraordinarie) : "");
-    setTurnoModalitaPeriodo("singolo");
-
-    if (sigla === "R") {
-      setTurnoTipo("riposo");
+    if (oreOrd === 8) {
       setTurnoModoOreFerie("giorni");
-      setTurnoQuantitaFerie("");
-      setTurnoInizio("08:00");
-      setTurnoFine("16:00");
-      setTurnoOreOrd("");
-      setTurnoPreset("");
-      setTurnoManuale(false);
-      setTurnoTipoAssenza("malattia");
-
-      const notaPulita = (t.note || "").replace(/^RIPOSO\s*•?\s*/i, "").trim();
-      setTurnoNote(notaPulita);
-    } else if (sigla === "F") {
-      setTurnoTipo("ferie");
-      setTurnoInizio("08:00");
-      setTurnoFine("16:00");
-      setTurnoPreset("");
-      setTurnoManuale(false);
-      setTurnoTipoAssenza("malattia");
-
-      const oreOrd = Number(t.oreOrdinarie || 0);
-
-      if (oreOrd === 8) {
-        setTurnoModoOreFerie("giorni");
-        setTurnoQuantitaFerie("1");
-      } else {
-        setTurnoModoOreFerie("ore");
-        setTurnoQuantitaFerie(String(oreOrd || ""));
-      }
-
-      setTurnoOreOrd(String(oreOrd || ""));
-      setTurnoOreStraord("");
-
-      const notaPulita = (t.note || "").replace(/^FERIE\s*•?\s*/i, "").trim();
-      setTurnoNote(notaPulita);
-    } else if (sigla === "A") {
-      setTurnoTipo("assenza");
-      setTurnoInizio("08:00");
-      setTurnoFine("16:00");
-      setTurnoPreset("");
-      setTurnoManuale(false);
-      setTurnoModoOreFerie("giorni");
-      setTurnoQuantitaFerie("");
-      setTurnoOreOrd("");
-      setTurnoOreStraord("");
-
-      const notaUpper = (t.note || "").toUpperCase();
-      if (notaUpper.includes("104")) {
-        setTurnoTipoAssenza("104");
-      } else if (notaUpper.includes("MATERNITA FACOLTATIVA") || notaUpper.includes("MATERNITÀ FACOLTATIVA")) {
-        setTurnoTipoAssenza("maternita-facoltativa");
-      } else if (notaUpper.includes("PERMESSO SINDACALE")) {
-        setTurnoTipoAssenza("permesso-sindacale");
-      } else {
-        setTurnoTipoAssenza("malattia");
-      }
-
-      const notaPulita = (t.note || "").replace(/^ASSENZA\s*•?\s*/i, "").trim();
-      setTurnoNote(notaPulita);
+      setTurnoQuantitaFerie("1");
     } else {
-      setTurnoTipo("lavoro");
-      setTurnoInizio(t.inizio);
-      setTurnoFine(t.fine);
-      setTurnoOreOrd(String(t.oreOrdinarie ?? ""));
-      setTurnoNote(t.note ?? "");
-      setTurnoTipoAssenza("malattia");
-
-      const key = `${t.inizio}-${t.fine}`
-        .replace("06:00-14:00", "6-14")
-        .replace("14:00-22:00", "14-22")
-        .replace("22:00-06:00", "22-06")
-        .replace("00:00-06:00", "00-06")
-        .replace("06:00-12:00", "06-12")
-        .replace("12:00-18:00", "12-18")
-        .replace("18:00-00:00", "18-24")
-        .replace("08:00-18:00", "8-18")
-        .replace("08:00-17:00", "8-17");
-
-      if (presetTurni.includes(key)) {
-        setTurnoPreset(key);
-        setTurnoManuale(false);
-      } else {
-        setTurnoPreset("");
-        setTurnoManuale(true);
-      }
-
-      setTurnoModoOreFerie("giorni");
-      setTurnoQuantitaFerie("");
+      setTurnoModoOreFerie("ore");
+      setTurnoQuantitaFerie(String(oreOrd || ""));
     }
 
-    setMostraTurnoForm(true);
-  }
+    setTurnoOreOrd(String(oreOrd || ""));
+    setTurnoOreStraord("");
 
-  void apriModificaTurno;
-
-  function chiudiTurnoForm() {
-    setMostraTurnoForm(false);
-    setTurnoIdInModifica(null);
-    setTurnoTipo("lavoro");
+    const notaPulita = (t.note || "").replace(/^FERIE\s*•?\s*/i, "").trim();
+    setTurnoNote(notaPulita);
+  } else if (sigla === "A") {
+    setTurnoTipo("assenza");
+    setTurnoInizio("08:00");
+    setTurnoFine("16:00");
+    setTurnoPreset("");
+    setTurnoManuale(false);
     setTurnoModoOreFerie("giorni");
     setTurnoQuantitaFerie("");
     setTurnoOreOrd("");
     setTurnoOreStraord("");
-    setTurnoNote("");
-    setTurnoPreset("");
-    setTurnoInizio("08:00");
-    setTurnoFine("16:00");
-    setTurnoManuale(false);
-    setTurnoModalitaPeriodo("singolo");
-    setTurnoDataFine(turnoData);
+
+    const notaUpper = (t.note || "").toUpperCase();
+    if (notaUpper.includes("104")) {
+      setTurnoTipoAssenza("104");
+    } else if (notaUpper.includes("MATERNITA FACOLTATIVA") || notaUpper.includes("MATERNITÀ FACOLTATIVA")) {
+      setTurnoTipoAssenza("maternita-facoltativa");
+    } else if (notaUpper.includes("PERMESSO SINDACALE")) {
+      setTurnoTipoAssenza("permesso-sindacale");
+    } else {
+      setTurnoTipoAssenza("malattia");
+    }
+
+    const notaPulita = (t.note || "").replace(/^ASSENZA\s*•?\s*/i, "").trim();
+    setTurnoNote(notaPulita);
+  } else {
+    setTurnoTipo("lavoro");
+    setTurnoInizio(t.inizio);
+    setTurnoFine(t.fine);
+    setTurnoOreOrd(String(t.oreOrdinarie ?? ""));
+    setTurnoNote(t.note ?? "");
     setTurnoTipoAssenza("malattia");
+
+    const key = `${t.inizio}-${t.fine}`
+      .replace("06:00-14:00", "6-14")
+      .replace("14:00-22:00", "14-22")
+      .replace("22:00-06:00", "22-06")
+      .replace("00:00-06:00", "00-06")
+      .replace("06:00-12:00", "06-12")
+      .replace("12:00-18:00", "12-18")
+      .replace("18:00-00:00", "18-24")
+      .replace("08:00-18:00", "8-18")
+      .replace("08:00-17:00", "8-17");
+
+    if (presetTurni.includes(key)) {
+      setTurnoPreset(key);
+      setTurnoManuale(false);
+    } else {
+      setTurnoPreset("");
+      setTurnoManuale(true);
+    }
+
+    setTurnoModoOreFerie("giorni");
+    setTurnoQuantitaFerie("");
   }
 
-  function salvaTurno() {
-    if (!turnoData) {
-      alert("Inserisci la data del turno.");
+  setMostraTurnoForm(true);
+}
+
+void apriModificaTurno;
+
+function chiudiTurnoForm() {
+  setMostraTurnoForm(false);
+  setTurnoIdInModifica(null);
+  setTurnoTipo("lavoro");
+  setTurnoModoOreFerie("giorni");
+  setTurnoQuantitaFerie("");
+  setTurnoOreOrd("");
+  setTurnoOreStraord("");
+  setTurnoNote("");
+  setTurnoPreset("");
+  setTurnoInizio("08:00");
+  setTurnoFine("16:00");
+  setTurnoManuale(false);
+  setTurnoModalitaPeriodo("singolo");
+  setTurnoDataFine(turnoData);
+  setTurnoTipoAssenza("malattia");
+}
+
+function salvaTurno() {
+  if (!turnoData) {
+    alert("Inserisci la data del turno.");
+    return;
+  }
+
+  if ((turnoTipo === "ferie" || turnoTipo === "assenza") && turnoModalitaPeriodo === "intervallo") {
+    if (!turnoDataFine) {
+      alert("Inserisci la data finale.");
       return;
     }
 
-    if ((turnoTipo === "ferie" || turnoTipo === "assenza") && turnoModalitaPeriodo === "intervallo") {
-      if (!turnoDataFine) {
-        alert("Inserisci la data finale.");
-        return;
-      }
+    const giorni = giorniTraDateInclusive(turnoData, turnoDataFine);
 
-      const giorni = giorniTraDateInclusive(turnoData, turnoDataFine);
-
-      if (giorni.length === 0) {
-        alert("Intervallo date non valido.");
-        return;
-      }
-
-      if (turnoIdInModifica) {
-        alert("Per modificare un intervallo già creato, modifica o elimina i singoli giorni.");
-        return;
-      }
-
-      if (turnoTipo === "ferie") {
-        const recordFerie: Turno[] = giorni.map((dataGiorno) => ({
-          id: safeUUID(),
-          data: dataGiorno,
-          inizio: "FERIE",
-          fine: "FERIE",
-          oreOrdinarie: 8,
-          oreStraordinarie: 0,
-          note:
-            `FERIE • 1 g • intervallo ${turnoData} / ${turnoDataFine}` +
-            (turnoNote.trim() ? ` • ${turnoNote.trim()}` : ""),
-        }));
-
-        setTurni((prev) => [...recordFerie, ...prev]);
-        chiudiTurnoForm();
-        return;
-      }
-
-      const etichettaAssenza =
-        turnoTipoAssenza === "104"
-          ? "104"
-          : turnoTipoAssenza === "maternita-facoltativa"
-          ? "Maternità facoltativa"
-          : turnoTipoAssenza === "permesso-sindacale"
-          ? "Permesso sindacale"
-          : "Malattia";
-
-      const recordAssenza: Turno[] = giorni.map((dataGiorno) => ({
-        id: safeUUID(),
-        data: dataGiorno,
-        inizio: "ASSENZA",
-        fine: "ASSENZA",
-        oreOrdinarie: 0,
-        oreStraordinarie: 0,
-        note:
-          `ASSENZA • ${etichettaAssenza} • intervallo ${turnoData} / ${turnoDataFine}` +
-          (turnoNote.trim() ? ` • ${turnoNote.trim()}` : ""),
-      }));
-
-      setTurni((prev) => [...recordAssenza, ...prev]);
-      chiudiTurnoForm();
+    if (giorni.length === 0) {
+      alert("Intervallo date non valido.");
       return;
     }
 
-    if (turnoTipo === "riposo") {
-      const aggiornato: Turno = {
-        id: turnoIdInModifica ?? safeUUID(),
-        data: turnoData,
-        inizio: "RIPOSO",
-        fine: "RIPOSO",
-        oreOrdinarie: 0,
-        oreStraordinarie: 0,
-        note: turnoNote.trim() ? `RIPOSO • ${turnoNote.trim()}` : "RIPOSO",
-      };
-
-      if (turnoIdInModifica) {
-        setTurni((prev) => prev.map((t) => (t.id === turnoIdInModifica ? aggiornato : t)));
-      } else {
-        setTurni((prev) => [aggiornato, ...prev]);
-      }
-
-      chiudiTurnoForm();
+    if (turnoIdInModifica) {
+      alert("Per modificare un intervallo già creato, modifica o elimina i singoli giorni.");
       return;
     }
 
     if (turnoTipo === "ferie") {
-      const quantita = parseOreItaliane(turnoQuantitaFerie);
-
-      if (quantita === null || quantita <= 0) {
-        alert(turnoModoOreFerie === "giorni" ? "Inserisci giorni ferie validi." : "Inserisci ore ferie valide.");
-        return;
-      }
-
-      if (turnoModoOreFerie === "giorni" && quantita > 1) {
-        alert("Per più di 1 giorno di ferie usa la modalità Da / A.");
-        return;
-      }
-
-      const oreOrd = turnoModoOreFerie === "giorni" ? quantita * 8 : quantita;
-
-      const aggiornato: Turno = {
-        id: turnoIdInModifica ?? safeUUID(),
-        data: turnoData,
+      const recordFerie: Turno[] = giorni.map((dataGiorno) => ({
+        id: safeUUID(),
+        data: dataGiorno,
         inizio: "FERIE",
         fine: "FERIE",
-        oreOrdinarie: oreOrd,
+        oreOrdinarie: 8,
         oreStraordinarie: 0,
         note:
-          `FERIE • ${turnoModoOreFerie === "giorni" ? `${quantita} g` : `${quantita} h`}` +
+          `FERIE • 1 g • intervallo ${turnoData} / ${turnoDataFine}` +
           (turnoNote.trim() ? ` • ${turnoNote.trim()}` : ""),
-      };
+      }));
 
-      if (turnoIdInModifica) {
-        setTurni((prev) => prev.map((t) => (t.id === turnoIdInModifica ? aggiornato : t)));
-      } else {
-        setTurni((prev) => [aggiornato, ...prev]);
-      }
-
+      setTurni((prev) => [...recordFerie, ...prev]);
       chiudiTurnoForm();
       return;
     }
 
-    if (turnoTipo === "assenza") {
-      const etichettaAssenza =
-        turnoTipoAssenza === "104"
-          ? "104"
-          : turnoTipoAssenza === "maternita-facoltativa"
-          ? "Maternità facoltativa"
-          : turnoTipoAssenza === "permesso-sindacale"
-          ? "Permesso sindacale"
-          : "Malattia";
+    const etichettaAssenza =
+      turnoTipoAssenza === "104"
+        ? "104"
+        : turnoTipoAssenza === "maternita-facoltativa"
+        ? "Maternità facoltativa"
+        : turnoTipoAssenza === "permesso-sindacale"
+        ? "Permesso sindacale"
+        : "Malattia";
 
-      const aggiornato: Turno = {
-        id: turnoIdInModifica ?? safeUUID(),
-        data: turnoData,
-        inizio: "ASSENZA",
-        fine: "ASSENZA",
-        oreOrdinarie: 0,
-        oreStraordinarie: 0,
-        note:
-          `ASSENZA • ${etichettaAssenza}` +
-          (turnoNote.trim() ? ` • ${turnoNote.trim()}` : ""),
-      };
+    const recordAssenza: Turno[] = giorni.map((dataGiorno) => ({
+      id: safeUUID(),
+      data: dataGiorno,
+      inizio: "ASSENZA",
+      fine: "ASSENZA",
+      oreOrdinarie: 0,
+      oreStraordinarie: 0,
+      note:
+        `ASSENZA • ${etichettaAssenza} • intervallo ${turnoData} / ${turnoDataFine}` +
+        (turnoNote.trim() ? ` • ${turnoNote.trim()}` : ""),
+    }));
 
-      if (turnoIdInModifica) {
-        setTurni((prev) => prev.map((t) => (t.id === turnoIdInModifica ? aggiornato : t)));
-      } else {
-        setTurni((prev) => [aggiornato, ...prev]);
-      }
+    setTurni((prev) => [...recordAssenza, ...prev]);
+    chiudiTurnoForm();
+    return;
+  }
 
-      chiudiTurnoForm();
-      return;
-    }
-
-    if (!turnoInizio || !turnoFine) {
-      alert("Inserisci inizio e fine turno.");
-      return;
-    }
-
-    const oreOrd = parseOreItaliane(turnoOreOrd);
-    const oreStra = turnoOreStraord.trim() === "" ? 0 : parseOreItaliane(turnoOreStraord);
-
-    if (oreOrd === null || oreOrd < 0) {
-      alert("Inserisci ore ordinarie valide.");
-      return;
-    }
-
-    if (oreStra === null || oreStra < 0) {
-      alert("Inserisci ore straordinarie valide.");
-      return;
-    }
-
+  if (turnoTipo === "riposo") {
     const aggiornato: Turno = {
       id: turnoIdInModifica ?? safeUUID(),
       data: turnoData,
-      inizio: turnoInizio,
-      fine: turnoFine,
-      oreOrdinarie: oreOrd,
-      oreStraordinarie: oreStra,
-      note: turnoNote.trim(),
+      inizio: "RIPOSO",
+      fine: "RIPOSO",
+      oreOrdinarie: 0,
+      oreStraordinarie: 0,
+      note: turnoNote.trim() ? `RIPOSO • ${turnoNote.trim()}` : "RIPOSO",
     };
 
     if (turnoIdInModifica) {
@@ -1618,15 +1463,122 @@ export default function App() {
     }
 
     chiudiTurnoForm();
+    return;
   }
 
-  function eliminaTurno(id: string) {
-    const ok = confirm("Vuoi eliminare questo turno?");
-    if (!ok) return;
-    setTurni((prev) => prev.filter((t) => t.id !== id));
+  if (turnoTipo === "ferie") {
+    const quantita = parseOreItaliane(turnoQuantitaFerie);
+
+    if (quantita === null || quantita <= 0) {
+      alert(turnoModoOreFerie === "giorni" ? "Inserisci giorni ferie validi." : "Inserisci ore ferie valide.");
+      return;
+    }
+
+    if (turnoModoOreFerie === "giorni" && quantita > 1) {
+      alert("Per più di 1 giorno di ferie usa la modalità Da / A.");
+      return;
+    }
+
+    const oreOrd = turnoModoOreFerie === "giorni" ? quantita * 8 : quantita;
+
+    const aggiornato: Turno = {
+      id: turnoIdInModifica ?? safeUUID(),
+      data: turnoData,
+      inizio: "FERIE",
+      fine: "FERIE",
+      oreOrdinarie: oreOrd,
+      oreStraordinarie: 0,
+      note:
+        `FERIE • ${turnoModoOreFerie === "giorni" ? `${quantita} g` : `${quantita} h`}` +
+        (turnoNote.trim() ? ` • ${turnoNote.trim()}` : ""),
+    };
+
+    if (turnoIdInModifica) {
+      setTurni((prev) => prev.map((t) => (t.id === turnoIdInModifica ? aggiornato : t)));
+    } else {
+      setTurni((prev) => [aggiornato, ...prev]);
+    }
+
+    chiudiTurnoForm();
+    return;
   }
 
-  void eliminaTurno;
+  if (turnoTipo === "assenza") {
+    const etichettaAssenza =
+      turnoTipoAssenza === "104"
+        ? "104"
+        : turnoTipoAssenza === "maternita-facoltativa"
+        ? "Maternità facoltativa"
+        : turnoTipoAssenza === "permesso-sindacale"
+        ? "Permesso sindacale"
+        : "Malattia";
+
+    const aggiornato: Turno = {
+      id: turnoIdInModifica ?? safeUUID(),
+      data: turnoData,
+      inizio: "ASSENZA",
+      fine: "ASSENZA",
+      oreOrdinarie: 0,
+      oreStraordinarie: 0,
+      note:
+        `ASSENZA • ${etichettaAssenza}` +
+        (turnoNote.trim() ? ` • ${turnoNote.trim()}` : ""),
+    };
+
+    if (turnoIdInModifica) {
+      setTurni((prev) => prev.map((t) => (t.id === turnoIdInModifica ? aggiornato : t)));
+    } else {
+      setTurni((prev) => [aggiornato, ...prev]);
+    }
+
+    chiudiTurnoForm();
+    return;
+  }
+
+  if (!turnoInizio || !turnoFine) {
+    alert("Inserisci inizio e fine turno.");
+    return;
+  }
+
+  const oreOrd = parseOreItaliane(turnoOreOrd);
+  const oreStra = turnoOreStraord.trim() === "" ? 0 : parseOreItaliane(turnoOreStraord);
+
+  if (oreOrd === null || oreOrd < 0) {
+    alert("Inserisci ore ordinarie valide.");
+    return;
+  }
+
+  if (oreStra === null || oreStra < 0) {
+    alert("Inserisci ore straordinarie valide.");
+    return;
+  }
+
+  const aggiornato: Turno = {
+    id: turnoIdInModifica ?? safeUUID(),
+    data: turnoData,
+    inizio: turnoInizio,
+    fine: turnoFine,
+    oreOrdinarie: oreOrd,
+    oreStraordinarie: oreStra,
+    note: turnoNote.trim(),
+  };
+
+  if (turnoIdInModifica) {
+    setTurni((prev) => prev.map((t) => (t.id === turnoIdInModifica ? aggiornato : t)));
+  } else {
+    setTurni((prev) => [aggiornato, ...prev]);
+  }
+
+  chiudiTurnoForm();
+}
+
+function eliminaTurno(id: string) {
+  const ok = confirm("Vuoi eliminare questo turno?");
+  if (!ok) return;
+  setTurni((prev) => prev.filter((t) => t.id !== id));
+}
+
+void eliminaTurno;
 
 
 
@@ -1908,47 +1860,43 @@ function aggiungiUscitaExtra() {
   }
 
   const nuova: UscitaExtra = {
-    id: uscitaExtraInModificaId ?? safeUUID(),
+    id: safeUUID(),
     data: nuovaUscitaData,
     descrizione: componiDescrizioneMovimento(categoriaFinale, dettaglio),
     importo: importoNum,
     nota: nuovaUscitaNota.trim(),
   };
 
-  const meseDestinazione = nuovaUscitaData.slice(0, 7);
+  setIncassi((prev) => ({
+    ...prev,
+    [meseKey]: {
+      entrateExtra: prev[meseKey]?.entrateExtra ?? [],
+      usciteExtra: [...(prev[meseKey]?.usciteExtra ?? []), nuova],
+    },
+  }));
 
-  setIncassi((prev) => {
-    const next = { ...prev };
+  if (categoriaUscita === "__altro__") {
+    const nuovaLista = (() => {
+      try {
+        const raw = localStorage.getItem(K_CATEGORIE_USCITA_CUSTOM);
+        const parsed = raw ? (JSON.parse(raw) as string[]) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    })();
+    setCategoriaUscita("");
+    setNuovaCategoriaUscita("");
+    void nuovaLista;
+  } else {
+    setCategoriaUscita("");
+    setNuovaCategoriaUscita("");
+  }
 
-    for (const key of Object.keys(next)) {
-      next[key] = {
-        entrateExtra: next[key]?.entrateExtra ?? [],
-        usciteExtra: (next[key]?.usciteExtra ?? []).filter((x) => x.id !== nuova.id),
-      };
-    }
-
-    next[meseDestinazione] = {
-      entrateExtra: next[meseDestinazione]?.entrateExtra ?? [],
-      usciteExtra: [...(next[meseDestinazione]?.usciteExtra ?? []), nuova],
-    };
-
-    return next;
-  });
-
-  setCategoriaUscita("");
-  setNuovaCategoriaUscita("");
   setNuovaUscitaDesc("");
   setNuovaUscitaImporto("");
   setNuovaUscitaNota("");
-  setUscitaExtraInModificaId(null);
   setMovimentoAperto(null);
-
-  if (ritornaAConsultaFinanzaDopoSalvataggio) {
-    setRitornaAConsultaFinanzaDopoSalvataggio(false);
-    setAggiungiSezione("menu");
-    setPagina("consulta");
-    setConsultaSezione("finanza");
-  }
 }
 
   function eliminaUscitaExtra(id: string) {
@@ -1970,8 +1918,6 @@ function aggiungiUscitaExtra() {
   const oreOrdMese = useMemo(() => turniMese.reduce((s, t) => s + t.oreOrdinarie, 0), [turniMese]);
   const oreStraMese = useMemo(() => turniMese.reduce((s, t) => s + t.oreStraordinarie, 0), [turniMese]);
   const oreTotMese = useMemo(() => oreOrdMese + oreStraMese, [oreOrdMese, oreStraMese]);
-
-  void oreTotMese;
 
   const vociMese = useMemo(() => voci.filter((v) => stessoMeseSelezionato(v.data)), [voci, meseCorrente]);
 
@@ -2075,8 +2021,6 @@ const totaleTurniMese = useMemo(() => {
   }).length;
 }, [turniMese]);
 
-void totaleTurniMese;
-
 const turniFerie = useMemo(() => {
   return turni.filter((t) => normalizeTurnoLabel(t.inizio, t.fine, t.note) === "F");
 }, [turni]);
@@ -2108,13 +2052,6 @@ const ferieGiorniResidui = useMemo(() => {
 const ferieOreResidue = useMemo(() => {
   return Math.max(0, ferieTotaliOreBase - ferieOreEffettuate);
 }, [ferieTotaliOreBase, ferieOreEffettuate]);
-
-
-void apriConfigFerie;
-void setApriConfigFerie;
-void ferieGiorniResidui;
-void ferieOreResidue;
-
 
 
 
@@ -2168,308 +2105,7 @@ void ferieOreResidue;
 
 
 
-const annoFinanzaCorrente = useMemo(() => meseCorrente.getFullYear(), [meseCorrente]);
 
-function passaFiltroDataRange(dataMovimento: string, dal: string, al: string) {
-  if (!dataMovimento) return false;
-  if (dal && dataMovimento < dal) return false;
-  if (al && dataMovimento > al) return false;
-  return true;
-}
-
-function passaFiltroCategoriaFinanza(categoriaMovimento: string, filtroCategoria: string) {
-  if (filtroCategoria === "tutte") return true;
-  return categoriaMovimento === filtroCategoria;
-}
-
-const tutteCategorieFinanza = useMemo(() => {
-  const setCategorie = new Set<string>();
-
-  voci.forEach((v) => {
-    if (v.importo !== null && (v.movimento === "entrata" || v.movimento === "uscita")) {
-      const cat = estraiCategoriaMovimento(v.titolo) || "Altro";
-      setCategorie.add(cat);
-    }
-  });
-
-  Object.values(incassi).forEach((mese) => {
-    (mese.entrateExtra ?? []).forEach((x) => {
-      setCategorie.add(estraiCategoriaMovimento(x.descrizione) || "Altro");
-    });
-    (mese.usciteExtra ?? []).forEach((x) => {
-      setCategorie.add(estraiCategoriaMovimento(x.descrizione) || "Altro");
-    });
-  });
-
-  return Array.from(setCategorie).sort((a, b) => a.localeCompare(b, "it"));
-}, [voci, incassi]);
-
-void tutteCategorieFinanza;
-
-const usciteFinanzaMeseBase = useMemo(() => {
-  const usciteDaVoci = vociMese
-    .filter((v) => v.importo !== null && v.movimento === "uscita")
-    .map((v) => ({
-      id: v.id,
-      data: v.data,
-      descrizione: estraiDettaglioMovimento(v.titolo) || estraiCategoriaMovimento(v.titolo) || v.titolo,
-      importo: v.importo ?? 0,
-      categoria: estraiCategoriaMovimento(v.titolo) || "Altro",
-      nota: v.nota || "",
-      origine: "voce" as const,
-    }));
-
-  const usciteDaExtra = usciteExtraVal.map((x) => ({
-    id: x.id,
-    data: x.data,
-    descrizione: estraiDettaglioMovimento(x.descrizione) || estraiCategoriaMovimento(x.descrizione) || x.descrizione,
-    importo: x.importo,
-    categoria: estraiCategoriaMovimento(x.descrizione) || "Altro",
-    nota: x.nota || "",
-    origine: "uscita-extra" as const,
-  }));
-
-  return [...usciteDaVoci, ...usciteDaExtra].sort((a, b) => {
-    const d = b.data.localeCompare(a.data);
-    if (d !== 0) return d;
-    return b.importo - a.importo;
-  });
-}, [vociMese, usciteExtraVal]);
-
-const entrateFinanzaMeseBase = useMemo(() => {
-  return entrateExtraVal
-    .map((x) => ({
-      id: x.id,
-      data: x.data,
-      descrizione: estraiDettaglioMovimento(x.descrizione) || estraiCategoriaMovimento(x.descrizione) || x.descrizione,
-      importo: x.importo,
-      categoria: estraiCategoriaMovimento(x.descrizione) || "Altro",
-    }))
-    .sort((a, b) => {
-      const d = b.data.localeCompare(a.data);
-      if (d !== 0) return d;
-      return b.importo - a.importo;
-    });
-}, [entrateExtraVal]);
-
-const usciteFinanzaMeseFiltrate = useMemo(() => {
-  return usciteFinanzaMeseBase
-    .filter((x) => passaFiltroDataRange(x.data, finanzaMeseFiltroDal, finanzaMeseFiltroAl))
-    .filter((x) => passaFiltroCategoriaFinanza(x.categoria, finanzaMeseFiltroCategoria));
-}, [usciteFinanzaMeseBase, finanzaMeseFiltroDal, finanzaMeseFiltroAl, finanzaMeseFiltroCategoria]);
-
-const entrateFinanzaMeseFiltrate = useMemo(() => {
-  return entrateFinanzaMeseBase
-    .filter((x) => passaFiltroDataRange(x.data, finanzaMeseFiltroDal, finanzaMeseFiltroAl))
-    .filter((x) => passaFiltroCategoriaFinanza(x.categoria, finanzaMeseFiltroCategoria));
-}, [entrateFinanzaMeseBase, finanzaMeseFiltroDal, finanzaMeseFiltroAl, finanzaMeseFiltroCategoria]);
-
-const finanzaEntrateTotMese = useMemo(() => {
-  return entrateFinanzaMeseFiltrate.reduce((acc, x) => acc + x.importo, 0);
-}, [entrateFinanzaMeseFiltrate]);
-
-const finanzaUsciteTotMese = useMemo(() => {
-  return usciteFinanzaMeseFiltrate.reduce((acc, x) => acc + x.importo, 0);
-}, [usciteFinanzaMeseFiltrate]);
-
-const finanzaSaldoMese = useMemo(() => {
-  return finanzaEntrateTotMese - finanzaUsciteTotMese;
-}, [finanzaEntrateTotMese, finanzaUsciteTotMese]);
-
-const finanzaBarreCategorieMese = useMemo(() => {
-  const mappa = new Map<string, number>();
-
-  usciteFinanzaMeseFiltrate.forEach((x) => {
-    mappa.set(x.categoria, (mappa.get(x.categoria) ?? 0) + x.importo);
-  });
-
-  return Array.from(mappa.entries())
-    .map(([categoria, totale]) => ({ categoria, totale }))
-    .sort((a, b) => b.totale - a.totale);
-}, [usciteFinanzaMeseFiltrate]);
-
-const finanzaMaxBarraMese = useMemo(() => {
-  if (finanzaBarreCategorieMese.length === 0) return 1;
-  return Math.max(...finanzaBarreCategorieMese.map((x) => x.totale), 1);
-}, [finanzaBarreCategorieMese]);
-
-const finanzaGradientTortaMese = useMemo(() => {
-  if (finanzaBarreCategorieMese.length === 0) {
-    return "conic-gradient(rgba(226,232,240,0.95) 0% 100%)";
-  }
-
-  const totale = finanzaBarreCategorieMese.reduce((acc, x) => acc + x.totale, 0) || 1;
-  let start = 0;
-
-  const segments = finanzaBarreCategorieMese.map((item, index) => {
-    const perc = (item.totale / totale) * 100;
-    const end = start + perc;
-    const color = finanzaColoriTorta[index % finanzaColoriTorta.length];
-    const seg = `${color} ${start}% ${end}%`;
-    start = end;
-    return seg;
-  });
-
-  return `conic-gradient(${segments.join(", ")})`;
-}, [finanzaBarreCategorieMese]);
-
-
-void finanzaGradientTortaMese
-
-const entrateFinanzaAnnoBase = useMemo(() => {
-  return Object.values(incassi)
-    .flatMap((mese) =>
-      (mese.entrateExtra ?? []).map((x) => ({
-        id: x.id,
-        data: x.data,
-        descrizione: estraiDettaglioMovimento(x.descrizione) || estraiCategoriaMovimento(x.descrizione) || x.descrizione,
-        importo: x.importo,
-        categoria: estraiCategoriaMovimento(x.descrizione) || "Altro",
-      }))
-    )
-    .filter((x) => {
-      const [anno] = x.data.split("-").map(Number);
-      return anno === annoFinanzaCorrente;
-    })
-    .sort((a, b) => {
-      const d = b.data.localeCompare(a.data);
-      if (d !== 0) return d;
-      return b.importo - a.importo;
-    });
-}, [incassi, annoFinanzaCorrente]);
-
-const usciteFinanzaAnnoBase = useMemo(() => {
-  const usciteDaVoci = voci
-    .filter((v) => v.importo !== null && v.movimento === "uscita")
-    .map((v) => ({
-      id: v.id,
-      data: v.data,
-      descrizione: estraiDettaglioMovimento(v.titolo) || estraiCategoriaMovimento(v.titolo) || v.titolo,
-      importo: v.importo ?? 0,
-      categoria: estraiCategoriaMovimento(v.titolo) || "Altro",
-      nota: v.nota || "",
-      origine: "voce" as const,
-    }));
-
-  const usciteDaExtra = Object.values(incassi).flatMap((mese) =>
-    (mese.usciteExtra ?? []).map((x) => ({
-      id: x.id,
-      data: x.data,
-      descrizione: estraiDettaglioMovimento(x.descrizione) || estraiCategoriaMovimento(x.descrizione) || x.descrizione,
-      importo: x.importo,
-      categoria: estraiCategoriaMovimento(x.descrizione) || "Altro",
-      nota: x.nota || "",
-      origine: "uscita-extra" as const,
-    }))
-  );
-
-  return [...usciteDaVoci, ...usciteDaExtra]
-    .filter((x) => {
-      const [anno] = x.data.split("-").map(Number);
-      return anno === annoFinanzaCorrente;
-    })
-    .sort((a, b) => {
-      const d = b.data.localeCompare(a.data);
-      if (d !== 0) return d;
-      return b.importo - a.importo;
-    });
-}, [voci, incassi, annoFinanzaCorrente]);
-
-const entrateFinanzaAnnoFiltrate = useMemo(() => {
-  return entrateFinanzaAnnoBase
-    .filter((x) => passaFiltroDataRange(x.data, finanzaAnnoFiltroDal, finanzaAnnoFiltroAl))
-    .filter((x) => passaFiltroCategoriaFinanza(x.categoria, finanzaAnnoFiltroCategoria));
-}, [entrateFinanzaAnnoBase, finanzaAnnoFiltroDal, finanzaAnnoFiltroAl, finanzaAnnoFiltroCategoria]);
-
-const usciteFinanzaAnnoFiltrate = useMemo(() => {
-  return usciteFinanzaAnnoBase
-    .filter((x) => passaFiltroDataRange(x.data, finanzaAnnoFiltroDal, finanzaAnnoFiltroAl))
-    .filter((x) => passaFiltroCategoriaFinanza(x.categoria, finanzaAnnoFiltroCategoria));
-}, [usciteFinanzaAnnoBase, finanzaAnnoFiltroDal, finanzaAnnoFiltroAl, finanzaAnnoFiltroCategoria]);
-
-const finanzaEntrateAnno = useMemo(() => {
-  return entrateFinanzaAnnoFiltrate.reduce((acc, x) => acc + x.importo, 0);
-}, [entrateFinanzaAnnoFiltrate]);
-
-const finanzaUsciteAnno = useMemo(() => {
-  return usciteFinanzaAnnoFiltrate.reduce((acc, x) => acc + x.importo, 0);
-}, [usciteFinanzaAnnoFiltrate]);
-
-const finanzaSaldoAnno = useMemo(() => {
-  return finanzaEntrateAnno - finanzaUsciteAnno;
-}, [finanzaEntrateAnno, finanzaUsciteAnno]);
-
-void finanzaSaldoAnno
-
-const finanzaCategorieTortaAnno = useMemo(() => {
-  const mappa = new Map<string, number>();
-
-  usciteFinanzaAnnoFiltrate.forEach((x) => {
-    mappa.set(x.categoria, (mappa.get(x.categoria) ?? 0) + x.importo);
-  });
-
-  const ordinato = Array.from(mappa.entries())
-    .map(([categoria, totale]) => ({ categoria, totale }))
-    .sort((a, b) => b.totale - a.totale);
-
-  if (ordinato.length <= 6) return ordinato;
-
-  const top = ordinato.slice(0, 5);
-  const altro = ordinato.slice(5).reduce((acc, x) => acc + x.totale, 0);
-
-  return [...top, { categoria: "Altro", totale: altro }];
-}, [usciteFinanzaAnnoFiltrate]);
-
-const finanzaColoriTorta = [
-  "rgba(16,185,129,0.95)",
-  "rgba(59,130,246,0.95)",
-  "rgba(249,115,22,0.95)",
-  "rgba(124,58,237,0.95)",
-  "rgba(244,63,94,0.95)",
-  "rgba(100,116,139,0.95)",
-];
-
-const finanzaGradientTortaAnno = useMemo(() => {
-  if (finanzaCategorieTortaAnno.length === 0) {
-    return "conic-gradient(rgba(226,232,240,0.95) 0% 100%)";
-  }
-
-  const totale = finanzaCategorieTortaAnno.reduce((acc, x) => acc + x.totale, 0) || 1;
-  let start = 0;
-
-  const segments = finanzaCategorieTortaAnno.map((item, index) => {
-    const perc = (item.totale / totale) * 100;
-    const end = start + perc;
-    const color = finanzaColoriTorta[index % finanzaColoriTorta.length];
-    const segment = `${color} ${start}% ${end}%`;
-    start = end;
-    return segment;
-  });
-
-  return `conic-gradient(${segments.join(", ")})`;
-}, [finanzaCategorieTortaAnno]);
-
-const usciteFinanzaListaFiltrate = useMemo(() => {
-  return usciteFinanzaMeseBase
-    .filter((x) => passaFiltroDataRange(x.data, finanzaListaFiltroDal, finanzaListaFiltroAl))
-    .filter((x) => passaFiltroCategoriaFinanza(x.categoria, finanzaListaFiltroCategoria))
-    .sort((a, b) => {
-      const d = b.data.localeCompare(a.data);
-      if (d !== 0) return d;
-      return b.importo - a.importo;
-    });
-}, [usciteFinanzaMeseBase, finanzaListaFiltroDal, finanzaListaFiltroAl, finanzaListaFiltroCategoria]);
-
-const finanzaTotaleMovimentiFiltrati = useMemo(() => {
-  return usciteFinanzaListaFiltrate.length;
-}, [usciteFinanzaListaFiltrate]);
-
-void finanzaTotaleMovimentiFiltrati
-
-
-const finanzaTotaleListaFiltrata = useMemo(() => {
-  return usciteFinanzaListaFiltrate.reduce((acc, x) => acc + x.importo, 0);
-}, [usciteFinanzaListaFiltrate]);
 
 
 
@@ -6243,6 +5879,8 @@ function MiniCalendarioControllo({
 
 
 
+
+
 {pagina === "consulta" && (
   <div style={{ minHeight: "70vh", display: "grid", placeItems: "start center", padding: 16 }}>
     <div style={{ width: "min(1100px, 100%)", display: "grid", gap: 18 }}>
@@ -6528,672 +6166,471 @@ function MiniCalendarioControllo({
             </button>
           </div>
         </>
-      ) : consultaSezione === "turni" ? (
-        <>
+) : consultaSezione === "turni" ? (
+  <>
+    <div
+      style={{
+        display: "grid",
+        gap: 10,
+        justifyItems: "center",
+        textAlign: "center",
+        padding: "8px 6px 2px",
+      }}
+    >
+      <div
+        style={{
+          fontSize: 34,
+          fontWeight: 1000,
+          letterSpacing: -0.8,
+          color: "rgba(241,245,249,0.98)",
+          textShadow: "0 12px 30px rgba(79,70,229,0.22)",
+          lineHeight: 1.05,
+        }}
+      >
+        Consulta turni
+      </div>
+
+      <div
+        style={{
+          maxWidth: 760,
+          fontSize: 15,
+          fontWeight: 800,
+          color: "rgba(191,219,254,0.90)",
+          lineHeight: 1.5,
+          letterSpacing: 0.1,
+        }}
+      >
+        Calendario mensile turni con navigazione mese, riepilogo compatto e modifica rapida.
+      </div>
+    </div>
+
+    <div
+      style={{
+        maxWidth: 1060,
+        margin: "0 auto",
+        marginTop: 14,
+        display: "grid",
+        gap: 14,
+      }}
+    >
+      <MiniCalendario
+        mese={meseCorrente}
+        vociDelMese={[]}
+        turniDelMese={turniMese}
+        onPrevMonth={mesePrecedente}
+        onNextMonth={meseSuccessivo}
+        onEditTurno={apriModificaTurno}
+      />
+
+      <div
+        style={{
+          ...ui.card,
+          padding: 14,
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+          gap: 10,
+          border: "1px solid rgba(255,255,255,0.55)",
+          boxShadow: "0 18px 40px rgba(15,23,42,0.08)",
+          background:
+            "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92))",
+        }}
+      >
+        <div
+          style={{
+            padding: 12,
+            borderRadius: 16,
+            border: "1px solid rgba(14,165,233,0.14)",
+            background:
+              "linear-gradient(180deg, rgba(14,165,233,0.10), rgba(14,165,233,0.04))",
+            boxShadow: "0 8px 20px rgba(14,165,233,0.06)",
+          }}
+        >
+          <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(8,47,73,0.82)" }}>
+            Totale turni
+          </div>
+          <div
+            style={{
+              marginTop: 6,
+              fontSize: 18,
+              fontWeight: 1000,
+              color: "rgba(15,23,42,0.96)",
+            }}
+          >
+            {totaleTurniMese}
+          </div>
+        </div>
+
+        <div
+          style={{
+            padding: 12,
+            borderRadius: 16,
+            border: "1px solid rgba(16,185,129,0.14)",
+            background:
+              "linear-gradient(180deg, rgba(16,185,129,0.10), rgba(16,185,129,0.04))",
+            boxShadow: "0 8px 20px rgba(16,185,129,0.06)",
+          }}
+        >
+          <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(6,78,59,0.82)" }}>
+            Ore ordinarie
+          </div>
+          <div
+            style={{
+              marginTop: 6,
+              fontSize: 18,
+              fontWeight: 1000,
+              color: "rgba(15,23,42,0.96)",
+            }}
+          >
+            {formatNumeroOre(oreOrdMese)} h
+          </div>
+        </div>
+
+        <div
+          style={{
+            padding: 12,
+            borderRadius: 16,
+            border: "1px solid rgba(249,115,22,0.14)",
+            background:
+              "linear-gradient(180deg, rgba(249,115,22,0.10), rgba(249,115,22,0.04))",
+            boxShadow: "0 8px 20px rgba(249,115,22,0.06)",
+          }}
+        >
+          <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(124,45,18,0.82)" }}>
+            Ore straordinarie
+          </div>
+          <div
+            style={{
+              marginTop: 6,
+              fontSize: 18,
+              fontWeight: 1000,
+              color: "rgba(15,23,42,0.96)",
+            }}
+          >
+            {formatNumeroOre(oreStraMese)} h
+          </div>
+        </div>
+
+        <div
+          style={{
+            padding: 12,
+            borderRadius: 16,
+            border: "1px solid rgba(124,58,237,0.14)",
+            background:
+              "linear-gradient(180deg, rgba(124,58,237,0.10), rgba(124,58,237,0.04))",
+            boxShadow: "0 8px 20px rgba(124,58,237,0.06)",
+          }}
+        >
+          <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(76,29,149,0.82)" }}>
+            Ore totali
+          </div>
+          <div
+            style={{
+              marginTop: 6,
+              fontSize: 18,
+              fontWeight: 1000,
+              color: "rgba(15,23,42,0.96)",
+            }}
+          >
+            {formatNumeroOre(oreTotMese)} h
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          ...ui.card,
+          padding: 14,
+          display: "grid",
+          gap: 12,
+          border: "1px solid rgba(255,255,255,0.58)",
+          boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
+          background:
+            "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 12,
+            flexWrap: "wrap",
+          }}
+        >
+          <div
+            style={{
+              fontSize: 19,
+              fontWeight: 1000,
+              letterSpacing: -0.3,
+              color: "rgba(15,23,42,0.98)",
+            }}
+          >
+            Monitoraggio ferie
+          </div>
+
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+            <button
+              type="button"
+              onClick={() => setApriConfigFerie((prev) => !prev)}
+              style={{
+                width: 42,
+                height: 42,
+                borderRadius: 14,
+                border: "1px solid rgba(148,163,184,0.18)",
+                background:
+                  "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
+                boxShadow: "0 8px 18px rgba(15,23,42,0.08)",
+                cursor: "pointer",
+                display: "grid",
+                placeItems: "center",
+                fontSize: 18,
+              }}
+              title="Configura basi ferie"
+            >
+              ⚙️
+            </button>
+
+            <div
+              style={{
+                padding: "8px 12px",
+                borderRadius: 999,
+                border: "1px solid rgba(16,185,129,0.22)",
+                background:
+                  "linear-gradient(180deg, rgba(220,252,231,1), rgba(240,253,244,0.98))",
+                fontSize: 12,
+                fontWeight: 950,
+                color: "rgba(21,128,61,0.98)",
+                boxShadow: "0 8px 18px rgba(34,197,94,0.10)",
+              }}
+            >
+              Sigla calendario: F
+            </div>
+          </div>
+        </div>
+
+        {apriConfigFerie && (
           <div
             style={{
               display: "grid",
-              gap: 10,
-              justifyItems: "center",
-              textAlign: "center",
-              padding: "8px 6px 2px",
+              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+              gap: 12,
             }}
           >
             <div
               style={{
-                fontSize: 34,
+                padding: 14,
+                borderRadius: 18,
+                border: "1px solid rgba(59,130,246,0.24)",
+                background:
+                  "linear-gradient(180deg, rgba(219,234,254,1), rgba(239,246,255,1))",
+                boxShadow: "0 8px 18px rgba(59,130,246,0.10)",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 950,
+                  color: "rgba(30,64,175,0.98)",
+                }}
+              >
+                Base ferie giorni
+              </div>
+              <input
+                value={String(ferieTotaliGiorniBase)}
+                onChange={(e) => {
+                  const n = Number(e.target.value);
+                  setFerieTotaliGiorniBase(Number.isFinite(n) && n >= 0 ? n : 0);
+                }}
+                inputMode="numeric"
+                style={{
+                  ...inputLight(false),
+                  marginTop: 10,
+                  background: "rgba(255,255,255,1)",
+                  fontWeight: 900,
+                  color: "rgba(15,23,42,0.98)",
+                  WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                  caretColor: "rgba(15,23,42,0.98)",
+                  border: "1px solid rgba(59,130,246,0.22)",
+                }}
+              />
+            </div>
+
+            <div
+              style={{
+                padding: 14,
+                borderRadius: 18,
+                border: "1px solid rgba(168,85,247,0.24)",
+                background:
+                  "linear-gradient(180deg, rgba(243,232,255,1), rgba(250,245,255,1))",
+                boxShadow: "0 8px 18px rgba(168,85,247,0.10)",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 950,
+                  color: "rgba(107,33,168,0.98)",
+                }}
+              >
+                Base ferie ore
+              </div>
+              <input
+                value={String(ferieTotaliOreBase)}
+                onChange={(e) => {
+                  const n = Number(e.target.value.replace(",", "."));
+                  setFerieTotaliOreBase(Number.isFinite(n) && n >= 0 ? n : 0);
+                }}
+                inputMode="decimal"
+                style={{
+                  ...inputLight(false),
+                  marginTop: 10,
+                  background: "rgba(255,255,255,1)",
+                  fontWeight: 900,
+                  color: "rgba(15,23,42,0.98)",
+                  WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                  caretColor: "rgba(15,23,42,0.98)",
+                  border: "1px solid rgba(168,85,247,0.22)",
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(145px, 1fr))",
+            gap: 10,
+          }}
+        >
+          <div
+            style={{
+              padding: 12,
+              borderRadius: 16,
+              border: "1px solid rgba(34,197,94,0.24)",
+              background:
+                "linear-gradient(180deg, rgba(220,252,231,1), rgba(240,253,244,1))",
+              boxShadow: "0 8px 18px rgba(34,197,94,0.10)",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 950,
+                color: "rgba(21,128,61,0.98)",
+              }}
+            >
+              Giorni ferie effettuati
+            </div>
+            <div
+              style={{
+                marginTop: 8,
+                fontSize: 18,
                 fontWeight: 1000,
-                letterSpacing: -0.8,
-                color: "rgba(241,245,249,0.98)",
-                textShadow: "0 12px 30px rgba(79,70,229,0.22)",
-                lineHeight: 1.05,
+                color: "rgba(15,23,42,0.98)",
               }}
             >
-              Consulta turni
-            </div>
-
-            <div
-              style={{
-                maxWidth: 760,
-                fontSize: 15,
-                fontWeight: 800,
-                color: "rgba(191,219,254,0.90)",
-                lineHeight: 1.5,
-                letterSpacing: 0.1,
-              }}
-            >
-              Calendario mensile turni con navigazione mese, riepilogo compatto e modifica rapida.
+              {ferieGiorniEffettuati}
             </div>
           </div>
 
           <div
             style={{
-              maxWidth: 1060,
-              margin: "0 auto",
-              marginTop: 14,
-              display: "grid",
-              gap: 14,
-            }}
-          >
-            <MiniCalendario
-              mese={meseCorrente}
-              vociDelMese={[]}
-              turniDelMese={turniMese}
-              onPrevMonth={mesePrecedente}
-              onNextMonth={meseSuccessivo}
-              onEditTurno={apriModificaTurno}
-            />
-          </div>
-        </>
-      ) : consultaSezione === "finanza" ? (
-        <>
-          <div
-            style={{
-              display: "grid",
-              gap: 10,
-              justifyItems: "center",
-              textAlign: "center",
-              padding: "8px 6px 2px",
+              padding: 12,
+              borderRadius: 16,
+              border: "1px solid rgba(59,130,246,0.24)",
+              background:
+                "linear-gradient(180deg, rgba(219,234,254,1), rgba(239,246,255,1))",
+              boxShadow: "0 8px 18px rgba(59,130,246,0.10)",
             }}
           >
             <div
               style={{
-                fontSize: 34,
+                fontSize: 12,
+                fontWeight: 950,
+                color: "rgba(30,64,175,0.98)",
+              }}
+            >
+              Giorni ferie residui
+            </div>
+            <div
+              style={{
+                marginTop: 8,
+                fontSize: 18,
                 fontWeight: 1000,
-                letterSpacing: -0.8,
-                color: "rgba(241,245,249,0.98)",
-                textShadow: "0 12px 30px rgba(16,185,129,0.18)",
-                lineHeight: 1.05,
+                color: "rgba(15,23,42,0.98)",
               }}
             >
-              Consulta finanza
-            </div>
-
-            <div
-              style={{
-                maxWidth: 760,
-                fontSize: 15,
-                fontWeight: 800,
-                color: "rgba(191,219,254,0.90)",
-                lineHeight: 1.5,
-                letterSpacing: 0.1,
-              }}
-            >
-              Monitoraggio economico mensile e annuale con grafici e lista movimenti.
+              {ferieGiorniResidui}
             </div>
           </div>
 
           <div
             style={{
-              maxWidth: 1060,
-              margin: "0 auto",
-              marginTop: 14,
-              display: "grid",
-              gap: 14,
+              padding: 12,
+              borderRadius: 16,
+              border: "1px solid rgba(168,85,247,0.24)",
+              background:
+                "linear-gradient(180deg, rgba(243,232,255,1), rgba(250,245,255,1))",
+              boxShadow: "0 8px 18px rgba(168,85,247,0.10)",
             }}
           >
             <div
               style={{
-                ...ui.card,
-                padding: 18,
-                display: "grid",
-                gap: 16,
-                border: "1px solid rgba(255,255,255,0.58)",
-                boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
-                background:
-                  "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
+                fontSize: 12,
+                fontWeight: 950,
+                color: "rgba(107,33,168,0.98)",
               }}
             >
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "52px minmax(0, 1fr) 52px",
-                  alignItems: "center",
-                  gap: 10,
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={mesePrecedente}
-                  style={{
-                    width: 52,
-                    height: 52,
-                    borderRadius: 16,
-                    border: "1px solid rgba(148,163,184,0.18)",
-                    background: "rgba(255,255,255,0.96)",
-                    color: "rgba(15,23,42,0.92)",
-                    fontSize: 18,
-                    fontWeight: 1000,
-                    cursor: "pointer",
-                  }}
-                >
-                  ←
-                </button>
-
-                <div style={{ minWidth: 0, textAlign: "center" }}>
-                  <div
-                    style={{
-                      fontSize: 21,
-                      fontWeight: 1000,
-                      letterSpacing: -0.3,
-                      color: "rgba(15,23,42,0.98)",
-                      textTransform: "capitalize",
-                    }}
-                  >
-                    {nomeMese(meseCorrente)}
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={meseSuccessivo}
-                  style={{
-                    width: 52,
-                    height: 52,
-                    borderRadius: 16,
-                    border: "1px solid rgba(148,163,184,0.18)",
-                    background: "rgba(255,255,255,0.96)",
-                    color: "rgba(15,23,42,0.92)",
-                    fontSize: 18,
-                    fontWeight: 1000,
-                    cursor: "pointer",
-                  }}
-                >
-                  →
-                </button>
-              </div>
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                  gap: 10,
-                }}
-              >
-                <div
-                  style={{
-                    padding: 14,
-                    borderRadius: 18,
-                    border: "1px solid rgba(16,185,129,0.16)",
-                    background:
-                      "linear-gradient(180deg, rgba(16,185,129,0.10), rgba(16,185,129,0.04))",
-                  }}
-                >
-                  <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(6,78,59,0.82)" }}>
-                    Entrate mese
-                  </div>
-                  <div style={{ marginTop: 6, fontSize: 22, fontWeight: 1000, color: "rgba(15,23,42,0.96)" }}>
-                    {finanzaEntrateTotMese.toLocaleString("it-IT")} €
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    padding: 14,
-                    borderRadius: 18,
-                    border: "1px solid rgba(239,68,68,0.16)",
-                    background:
-                      "linear-gradient(180deg, rgba(239,68,68,0.10), rgba(239,68,68,0.04))",
-                  }}
-                >
-                  <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(127,29,29,0.82)" }}>
-                    Uscite mese
-                  </div>
-                  <div style={{ marginTop: 6, fontSize: 22, fontWeight: 1000, color: "rgba(15,23,42,0.96)" }}>
-                    {finanzaUsciteTotMese.toLocaleString("it-IT")} €
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    padding: 14,
-                    borderRadius: 18,
-                    border: "1px solid rgba(59,130,246,0.16)",
-                    background:
-                      "linear-gradient(180deg, rgba(59,130,246,0.10), rgba(59,130,246,0.04))",
-                  }}
-                >
-                  <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(30,64,175,0.82)" }}>
-                    Saldo mese
-                  </div>
-                  <div style={{ marginTop: 6, fontSize: 22, fontWeight: 1000, color: "rgba(15,23,42,0.96)" }}>
-                    {finanzaSaldoMese.toLocaleString("it-IT")} €
-                  </div>
-                </div>
-              </div>
+              Ore ferie effettuate
             </div>
-
             <div
               style={{
-                ...ui.card,
-                padding: 18,
-                display: "grid",
-                gap: 14,
-                border: "1px solid rgba(255,255,255,0.58)",
-                boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
-                background:
-                  "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
+                marginTop: 8,
+                fontSize: 18,
+                fontWeight: 1000,
+                color: "rgba(15,23,42,0.98)",
               }}
             >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 10,
-                  flexWrap: "wrap",
-                }}
-              >
-                <div style={{ fontSize: 20, fontWeight: 1000, color: "rgba(15,23,42,0.98)" }}>
-                  Grafico
-                </div>
-
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  <button
-                    type="button"
-                    onClick={() => setFinanzaVistaGraficoPeriodo("mese")}
-                    style={chip(finanzaVistaGraficoPeriodo === "mese")}
-                  >
-                    MESE
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setFinanzaVistaGraficoPeriodo("anno")}
-                    style={chip(finanzaVistaGraficoPeriodo === "anno")}
-                  >
-                    ANNO
-                  </button>
-                </div>
-              </div>
-
-              {finanzaVistaGraficoPeriodo === "mese" ? (
-                <div style={{ display: "grid", gap: 12 }}>
-                  {finanzaBarreCategorieMese.length === 0 ? (
-                    <div
-                      style={{
-                        padding: 18,
-                        borderRadius: 18,
-                        border: "1px solid rgba(148,163,184,0.16)",
-                        background: "rgba(255,255,255,0.72)",
-                        fontSize: 13,
-                        fontWeight: 800,
-                        color: "rgba(51,65,85,0.72)",
-                      }}
-                    >
-                      Nessuna uscita disponibile.
-                    </div>
-                  ) : (
-                    finanzaBarreCategorieMese.map((item) => {
-                      const percentuale = Math.max(8, (item.totale / finanzaMaxBarraMese) * 100);
-
-                      return (
-                        <div key={item.categoria} style={{ display: "grid", gap: 6 }}>
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              gap: 10,
-                              alignItems: "center",
-                              flexWrap: "wrap",
-                            }}
-                          >
-                            <div style={{ fontSize: 13, fontWeight: 950, color: "rgba(15,23,42,0.92)" }}>
-                              {item.categoria}
-                            </div>
-
-                            <div
-                              style={{
-                                fontSize: 12,
-                                fontWeight: 950,
-                                color: "rgba(127,29,29,0.88)",
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              {item.totale.toLocaleString("it-IT")} €
-                            </div>
-                          </div>
-
-                          <div
-                            style={{
-                              height: 16,
-                              borderRadius: 999,
-                              background: "rgba(226,232,240,0.86)",
-                              overflow: "hidden",
-                            }}
-                          >
-                            <div
-                              style={{
-                                width: `${percentuale}%`,
-                                height: "100%",
-                                borderRadius: 999,
-                                background:
-                                  "linear-gradient(90deg, rgba(239,68,68,0.95), rgba(249,115,22,0.90))",
-                              }}
-                            />
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              ) : (
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-                    gap: 16,
-                    alignItems: "start",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 220,
-                      height: 220,
-                      maxWidth: "100%",
-                      margin: "0 auto",
-                      borderRadius: "50%",
-                      background: finanzaGradientTortaAnno,
-                      boxShadow: "0 18px 40px rgba(15,23,42,0.12)",
-                      border: "10px solid rgba(255,255,255,0.96)",
-                    }}
-                  />
-
-                  <div style={{ display: "grid", gap: 10 }}>
-                    {finanzaCategorieTortaAnno.map((item, index) => {
-                      const totale = finanzaCategorieTortaAnno.reduce((acc, x) => acc + x.totale, 0) || 1;
-                      const percentuale = (item.totale / totale) * 100;
-
-                      return (
-                        <div
-                          key={item.categoria}
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns: "16px minmax(0, 1fr) auto",
-                            gap: 10,
-                            alignItems: "center",
-                            padding: "10px 12px",
-                            borderRadius: 14,
-                            border: "1px solid rgba(148,163,184,0.14)",
-                            background: "rgba(255,255,255,0.78)",
-                          }}
-                        >
-                          <div
-                            style={{
-                              width: 16,
-                              height: 16,
-                              borderRadius: 999,
-                              background: finanzaColoriTorta[index % finanzaColoriTorta.length],
-                            }}
-                          />
-
-                          <div
-                            style={{
-                              fontSize: 13,
-                              fontWeight: 900,
-                              color: "rgba(15,23,42,0.92)",
-                              wordBreak: "break-word",
-                            }}
-                          >
-                            {item.categoria}
-                          </div>
-
-                          <div
-                            style={{
-                              fontSize: 12,
-                              fontWeight: 950,
-                              color: "rgba(51,65,85,0.78)",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {item.totale.toLocaleString("it-IT")} € • {percentuale.toFixed(1)}%
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div
-              style={{
-                ...ui.card,
-                padding: 18,
-                display: "grid",
-                gap: 14,
-                border: "1px solid rgba(255,255,255,0.58)",
-                boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
-                background:
-                  "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 12,
-                  flexWrap: "wrap",
-                }}
-              >
-                <div>
-                  <div
-                    style={{
-                      fontSize: 19,
-                      fontWeight: 1000,
-                      letterSpacing: -0.2,
-                      color: "rgba(15,23,42,0.98)",
-                    }}
-                  >
-                    Lista movimenti
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    padding: "8px 12px",
-                    borderRadius: 999,
-                    border: "1px solid rgba(239,68,68,0.16)",
-                    background: "rgba(254,242,242,0.96)",
-                    fontSize: 12,
-                    fontWeight: 950,
-                    color: "rgba(127,29,29,0.90)",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Totale filtrato: {finanzaTotaleListaFiltrata.toLocaleString("it-IT")} €
-                </div>
-              </div>
-
-              {usciteFinanzaListaFiltrate.length === 0 ? (
-                <div
-                  style={{
-                    padding: 16,
-                    borderRadius: 18,
-                    border: "1px solid rgba(148,163,184,0.16)",
-                    background: "rgba(255,255,255,0.72)",
-                    fontSize: 13,
-                    fontWeight: 800,
-                    color: "rgba(51,65,85,0.72)",
-                  }}
-                >
-                  Nessuna uscita trovata.
-                </div>
-              ) : (
-                <div style={{ display: "grid", gap: 10 }}>
-                  {usciteFinanzaListaFiltrate.map((mov) => (
-                    <div
-                      key={`${mov.origine}_${mov.id}`}
-                      style={{
-                        padding: 12,
-                        borderRadius: 18,
-                        border: "1px solid rgba(239,68,68,0.16)",
-                        background:
-                          "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(254,242,242,0.88))",
-                        display: "grid",
-                        gap: 10,
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns: "minmax(0, 1fr) auto",
-                          gap: 10,
-                          alignItems: "start",
-                        }}
-                      >
-                        <div style={{ minWidth: 0, display: "grid", gap: 5 }}>
-                          <div
-                            style={{
-                              display: "flex",
-                              gap: 8,
-                              alignItems: "center",
-                              flexWrap: "wrap",
-                            }}
-                          >
-                            <span
-                              style={{
-                                padding: "5px 9px",
-                                borderRadius: 999,
-                                fontSize: 11,
-                                fontWeight: 950,
-                                background: "rgba(254,226,226,0.98)",
-                                border: "1px solid rgba(239,68,68,0.18)",
-                                color: "rgba(127,29,29,0.92)",
-                              }}
-                            >
-                              {mov.categoria}
-                            </span>
-
-                            <span
-                              style={{
-                                fontSize: 12,
-                                fontWeight: 900,
-                                color: "rgba(51,65,85,0.70)",
-                              }}
-                            >
-                              {formattaDataBreve(mov.data)}
-                            </span>
-                          </div>
-
-                          <div
-                            style={{
-                              fontSize: 15,
-                              fontWeight: 950,
-                              color: "rgba(15,23,42,0.96)",
-                              lineHeight: 1.28,
-                              wordBreak: "break-word",
-                            }}
-                          >
-                            {mov.descrizione || mov.categoria}
-                          </div>
-
-                          {mov.nota && (
-                            <div
-                              style={{
-                                fontSize: 12,
-                                fontWeight: 800,
-                                color: "rgba(51,65,85,0.72)",
-                                lineHeight: 1.35,
-                                wordBreak: "break-word",
-                              }}
-                            >
-                              {mov.nota}
-                            </div>
-                          )}
-                        </div>
-
-                        <div
-                          style={{
-                            padding: "7px 11px",
-                            borderRadius: 999,
-                            border: "2px solid rgba(239,68,68,0.18)",
-                            background: "rgba(254,242,242,0.98)",
-                            fontSize: 12,
-                            fontWeight: 1000,
-                            color: "rgba(127,29,29,0.96)",
-                            whiteSpace: "nowrap",
-                            alignSelf: "start",
-                          }}
-                        >
-                          {mov.importo.toLocaleString("it-IT")} €
-                        </div>
-                      </div>
-
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: 8,
-                          flexWrap: "wrap",
-                          justifyContent: "flex-end",
-                        }}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (mov.origine === "uscita-extra") {
-                              setUscitaExtraInModificaId(mov.id);
-                              setRitornaAConsultaFinanzaDopoSalvataggio(true);
-                              setNuovaUscitaData(mov.data);
-
-                              const categoriaEsiste =
-                                categorieUscitaBase.includes(mov.categoria) ||
-                                categorieUscitaCustom.includes(mov.categoria);
-
-                              setCategoriaUscita(categoriaEsiste ? mov.categoria : "__altro__");
-                              setNuovaCategoriaUscita(categoriaEsiste ? "" : mov.categoria);
-                              setNuovaUscitaDesc(mov.descrizione === mov.categoria ? "" : mov.descrizione);
-                              setNuovaUscitaImporto(String(mov.importo).replace(".", ","));
-                              setNuovaUscitaNota(mov.nota || "");
-                              setPagina("aggiungi");
-                              setAggiungiSezione("movimenti");
-                              setMovimentoAperto("uscita");
-                            } else {
-                              const voceOriginale = voci.find((x) => x.id === mov.id);
-                              if (!voceOriginale) return;
-                              apriModifica(voceOriginale);
-                            }
-                          }}
-                          style={{
-                            ...chip(false),
-                            background: "rgba(255,255,255,0.96)",
-                            color: "rgba(15,23,42,0.92)",
-                            border: "1px solid rgba(148,163,184,0.18)",
-                            padding: "9px 12px",
-                          }}
-                        >
-                          Modifica
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (mov.origine === "uscita-extra") {
-                              eliminaUscitaExtra(mov.id);
-                            } else {
-                              elimina(mov.id);
-                            }
-                          }}
-                          style={{
-                            ...chip(false),
-                            border: "1px solid rgba(239,68,68,0.22)",
-                            color: "rgba(185,28,28,0.96)",
-                            background: "rgba(254,242,242,0.92)",
-                            padding: "9px 12px",
-                          }}
-                        >
-                          Elimina
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              {formatNumeroOre(ferieOreEffettuate)} h
             </div>
           </div>
-        </>
-      ) : (
+
+          <div
+            style={{
+              padding: 12,
+              borderRadius: 16,
+              border: "1px solid rgba(244,114,182,0.24)",
+              background:
+                "linear-gradient(180deg, rgba(252,231,243,1), rgba(253,242,248,1))",
+              boxShadow: "0 8px 18px rgba(244,114,182,0.10)",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 950,
+                color: "rgba(190,24,93,0.98)",
+              }}
+            >
+              Ore ferie residue
+            </div>
+            <div
+              style={{
+                marginTop: 8,
+                fontSize: 18,
+                fontWeight: 1000,
+                color: "rgba(15,23,42,0.98)",
+              }}
+            >
+              {formatNumeroOre(ferieOreResidue)} h
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </>
+) : (
         <div
           style={{
             ...ui.card,
@@ -7209,6 +6646,7 @@ function MiniCalendarioControllo({
     </div>
   </div>
 )}
+
 
 
 
