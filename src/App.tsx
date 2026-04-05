@@ -2051,15 +2051,18 @@ const totaleGraficoUscite = useMemo(() => {
 }, [uscitePerCategoriaGrafico]);
 
 const pieColors = [
-  "#ef4444",
-  "#f97316",
-  "#f59e0b",
-  "#10b981",
-  "#06b6d4",
-  "#3b82f6",
-  "#8b5cf6",
-  "#ec4899",
-  "#64748b",
+  "#ff3b30",
+  "#ff9500",
+  "#ffd60a",
+  "#34c759",
+  "#00c7be",
+  "#0a84ff",
+  "#5856d6",
+  "#bf5af2",
+  "#ff2d55",
+  "#8e8e93",
+  "#30b0c7",
+  "#64d2ff",
 ];
 
 const pieGradientFinanza = useMemo(() => {
@@ -7070,13 +7073,13 @@ function MiniCalendarioControllo({
       <div
         style={{
           ...ui.card,
-          padding: 16,
+          padding: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 16,
           border: "1px solid rgba(255,255,255,0.58)",
           background:
             "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
           boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
           display: "grid",
-          gap: 14,
+          gap: typeof window !== "undefined" && window.innerWidth <= 640 ? 10 : 14,
         }}
       >
         <div
@@ -7092,15 +7095,15 @@ function MiniCalendarioControllo({
             type="button"
             onClick={mesePrecedente}
             style={{
-              width: 42,
-              height: 42,
-              borderRadius: 14,
+              width: typeof window !== "undefined" && window.innerWidth <= 640 ? 36 : 42,
+              height: typeof window !== "undefined" && window.innerWidth <= 640 ? 36 : 42,
+              borderRadius: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 14,
               border: "1px solid rgba(148,163,184,0.18)",
               background:
                 "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
               boxShadow: "0 8px 18px rgba(15,23,42,0.08)",
               cursor: "pointer",
-              fontSize: 18,
+              fontSize: typeof window !== "undefined" && window.innerWidth <= 640 ? 16 : 18,
               fontWeight: 1000,
               color: "rgba(15,23,42,0.88)",
             }}
@@ -7112,7 +7115,7 @@ function MiniCalendarioControllo({
             style={{
               textAlign: "center",
               flex: 1,
-              minWidth: 180,
+              minWidth: typeof window !== "undefined" && window.innerWidth <= 640 ? 120 : 180,
             }}
           >
             <div
@@ -7128,12 +7131,13 @@ function MiniCalendarioControllo({
             </div>
             <div
               style={{
-                marginTop: 4,
-                fontSize: 28,
+                marginTop: 2,
+                fontSize: typeof window !== "undefined" && window.innerWidth <= 640 ? 22 : 28,
                 fontWeight: 1000,
-                letterSpacing: -0.6,
+                letterSpacing: typeof window !== "undefined" && window.innerWidth <= 640 ? -0.3 : -0.6,
                 textTransform: "capitalize",
                 color: "rgba(15,23,42,0.98)",
+                lineHeight: 1.05,
               }}
             >
               {nomeMese(meseCorrente)}
@@ -7144,15 +7148,15 @@ function MiniCalendarioControllo({
             type="button"
             onClick={meseSuccessivo}
             style={{
-              width: 42,
-              height: 42,
-              borderRadius: 14,
+              width: typeof window !== "undefined" && window.innerWidth <= 640 ? 36 : 42,
+              height: typeof window !== "undefined" && window.innerWidth <= 640 ? 36 : 42,
+              borderRadius: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 14,
               border: "1px solid rgba(148,163,184,0.18)",
               background:
                 "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
               boxShadow: "0 8px 18px rgba(15,23,42,0.08)",
               cursor: "pointer",
-              fontSize: 18,
+              fontSize: typeof window !== "undefined" && window.innerWidth <= 640 ? 16 : 18,
               fontWeight: 1000,
               color: "rgba(15,23,42,0.88)",
             }}
@@ -7415,8 +7419,12 @@ function MiniCalendarioControllo({
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
+            gridTemplateColumns:
+              finanzaVistaGrafico === "mese"
+                ? "repeat(auto-fit, minmax(170px, 1fr))"
+                : "minmax(170px, 240px)",
             gap: 10,
+            alignItems: "end",
           }}
         >
           <div>
@@ -7444,93 +7452,95 @@ function MiniCalendarioControllo({
           </div>
 
           {finanzaVistaGrafico === "mese" && (
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
-                Mese
+            <>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
+                  Mese
+                </div>
+                <select
+                  value={finanzaMeseSelezionato}
+                  onChange={(e) => setFinanzaMeseSelezionato(Number(e.target.value))}
+                  style={{
+                    ...inputLight(false),
+                    background: "rgba(255,255,255,1)",
+                    color: "rgba(15,23,42,0.98)",
+                    WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                    caretColor: "rgba(15,23,42,0.98)",
+                    border: "1px solid rgba(148,163,184,0.22)",
+                  }}
+                >
+                  {nomeMesiCompleti.map((meseNome, idx) => (
+                    <option key={meseNome} value={idx}>
+                      {meseNome}
+                    </option>
+                  ))}
+                </select>
               </div>
-              <select
-                value={finanzaMeseSelezionato}
-                onChange={(e) => setFinanzaMeseSelezionato(Number(e.target.value))}
-                style={{
-                  ...inputLight(false),
-                  background: "rgba(255,255,255,1)",
-                  color: "rgba(15,23,42,0.98)",
-                  WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                  caretColor: "rgba(15,23,42,0.98)",
-                  border: "1px solid rgba(148,163,184,0.22)",
-                }}
-              >
-                {nomeMesiCompleti.map((meseNome, idx) => (
-                  <option key={meseNome} value={idx}>
-                    {meseNome}
-                  </option>
-                ))}
-              </select>
-            </div>
+
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
+                  Dal
+                </div>
+                <input
+                  type="date"
+                  value={filtroFinanzaGrafico.dal}
+                  onChange={(e) => setFiltroFinanzaGrafico((prev) => ({ ...prev, dal: e.target.value }))}
+                  style={{
+                    ...inputLight(false),
+                    background: "rgba(255,255,255,1)",
+                    color: "rgba(15,23,42,0.98)",
+                    WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                    caretColor: "rgba(15,23,42,0.98)",
+                    border: "1px solid rgba(148,163,184,0.22)",
+                  }}
+                />
+              </div>
+
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
+                  Al
+                </div>
+                <input
+                  type="date"
+                  value={filtroFinanzaGrafico.al}
+                  onChange={(e) => setFiltroFinanzaGrafico((prev) => ({ ...prev, al: e.target.value }))}
+                  style={{
+                    ...inputLight(false),
+                    background: "rgba(255,255,255,1)",
+                    color: "rgba(15,23,42,0.98)",
+                    WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                    caretColor: "rgba(15,23,42,0.98)",
+                    border: "1px solid rgba(148,163,184,0.22)",
+                  }}
+                />
+              </div>
+
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
+                  Categoria
+                </div>
+                <select
+                  value={filtroFinanzaGrafico.categoria}
+                  onChange={(e) => setFiltroFinanzaGrafico((prev) => ({ ...prev, categoria: e.target.value }))}
+                  style={{
+                    ...inputLight(false),
+                    background: "rgba(255,255,255,1)",
+                    color: "rgba(15,23,42,0.98)",
+                    WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                    caretColor: "rgba(15,23,42,0.98)",
+                    border: "1px solid rgba(148,163,184,0.22)",
+                  }}
+                >
+                  <option value="">Tutte</option>
+                  {categorieUscitaFinanza.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </>
           )}
-
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
-              Dal
-            </div>
-            <input
-              type="date"
-              value={filtroFinanzaGrafico.dal}
-              onChange={(e) => setFiltroFinanzaGrafico((prev) => ({ ...prev, dal: e.target.value }))}
-              style={{
-                ...inputLight(false),
-                background: "rgba(255,255,255,1)",
-                color: "rgba(15,23,42,0.98)",
-                WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                caretColor: "rgba(15,23,42,0.98)",
-                border: "1px solid rgba(148,163,184,0.22)",
-              }}
-            />
-          </div>
-
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
-              Al
-            </div>
-            <input
-              type="date"
-              value={filtroFinanzaGrafico.al}
-              onChange={(e) => setFiltroFinanzaGrafico((prev) => ({ ...prev, al: e.target.value }))}
-              style={{
-                ...inputLight(false),
-                background: "rgba(255,255,255,1)",
-                color: "rgba(15,23,42,0.98)",
-                WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                caretColor: "rgba(15,23,42,0.98)",
-                border: "1px solid rgba(148,163,184,0.22)",
-              }}
-            />
-          </div>
-
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
-              Categoria
-            </div>
-            <select
-              value={filtroFinanzaGrafico.categoria}
-              onChange={(e) => setFiltroFinanzaGrafico((prev) => ({ ...prev, categoria: e.target.value }))}
-              style={{
-                ...inputLight(false),
-                background: "rgba(255,255,255,1)",
-                color: "rgba(15,23,42,0.98)",
-                WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                caretColor: "rgba(15,23,42,0.98)",
-                border: "1px solid rgba(148,163,184,0.22)",
-              }}
-            >
-              <option value="">Tutte</option>
-              {categorieUscitaFinanza.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
-          </div>
         </div>
 
         <div
@@ -7573,14 +7583,27 @@ function MiniCalendarioControllo({
 
             <div
               style={{
-                width: 220,
-                height: 220,
+                width: typeof window !== "undefined" && window.innerWidth <= 640 ? 190 : 230,
+                height: typeof window !== "undefined" && window.innerWidth <= 640 ? 190 : 230,
                 maxWidth: "100%",
                 borderRadius: "50%",
                 background: pieGradientFinanza,
-                boxShadow: "0 24px 50px rgba(15,23,42,0.12)",
-                border: "8px solid rgba(255,255,255,0.96)",
+                boxShadow:
+                  "0 28px 60px rgba(15,23,42,0.16), inset 0 10px 18px rgba(255,255,255,0.28), inset 0 -14px 24px rgba(15,23,42,0.10)",
+                border: "10px solid rgba(255,255,255,0.98)",
                 position: "relative",
+                transition: "transform .22s ease, box-shadow .22s ease",
+                cursor: "default",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "scale(1.03)";
+                e.currentTarget.style.boxShadow =
+                  "0 34px 70px rgba(15,23,42,0.18), inset 0 10px 18px rgba(255,255,255,0.30), inset 0 -14px 24px rgba(15,23,42,0.12)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "scale(1)";
+                e.currentTarget.style.boxShadow =
+                  "0 28px 60px rgba(15,23,42,0.16), inset 0 10px 18px rgba(255,255,255,0.28), inset 0 -14px 24px rgba(15,23,42,0.10)";
               }}
             >
               <div
@@ -7588,13 +7611,17 @@ function MiniCalendarioControllo({
                   position: "absolute",
                   inset: "50% auto auto 50%",
                   transform: "translate(-50%, -50%)",
-                  width: 90,
-                  height: 90,
+                  width: typeof window !== "undefined" && window.innerWidth <= 640 ? 78 : 94,
+                  height: typeof window !== "undefined" && window.innerWidth <= 640 ? 78 : 94,
                   borderRadius: "50%",
-                  background: "rgba(255,255,255,0.98)",
+                  background:
+                    "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.96))",
                   display: "grid",
                   placeItems: "center",
-                  boxShadow: "inset 0 0 0 1px rgba(148,163,184,0.12)",
+                  boxShadow:
+                    "0 10px 22px rgba(15,23,42,0.10), inset 0 0 0 1px rgba(148,163,184,0.12)",
+                  border: "1px solid rgba(255,255,255,0.96)",
+                  backdropFilter: "blur(8px)",
                 }}
               >
                 <div style={{ textAlign: "center" }}>
@@ -7642,10 +7669,12 @@ function MiniCalendarioControllo({
                         gridTemplateColumns: "16px minmax(0, 1fr) auto",
                         gap: 10,
                         alignItems: "center",
-                        padding: "8px 10px",
-                        borderRadius: 14,
-                        background: "rgba(255,255,255,0.88)",
+                        padding: "9px 11px",
+                        borderRadius: 16,
+                        background:
+                          "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92))",
                         border: "1px solid rgba(148,163,184,0.14)",
+                        boxShadow: "0 6px 14px rgba(15,23,42,0.04)",
                       }}
                     >
                       <div
@@ -7654,6 +7683,7 @@ function MiniCalendarioControllo({
                           height: 12,
                           borderRadius: 999,
                           background: pieColors[index % pieColors.length],
+                          boxShadow: `0 0 0 4px ${pieColors[index % pieColors.length]}22`,
                         }}
                       />
                       <div style={{ minWidth: 0 }}>
