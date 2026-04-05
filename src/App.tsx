@@ -1787,6 +1787,19 @@ const [filtroFinanzaLista, setFiltroFinanzaLista] = useState<FiltroFinanza>({
   categoria: "",
 });
 
+
+
+type FiltroEventiPassati = {
+  dal: string;
+  al: string;
+};
+
+const [filtroEventiPassati, setFiltroEventiPassati] = useState<FiltroEventiPassati>({
+  dal: "",
+  al: "",
+});
+
+
 const [movimentoFinanzaInModifica, setMovimentoFinanzaInModifica] = useState<MovimentoFinanzaItem | null>(null);
 const [finanzaModData, setFinanzaModData] = useState("");
 const [finanzaModCategoria, setFinanzaModCategoria] = useState("");
@@ -2559,6 +2572,79 @@ const ferieOreResidue = useMemo(() => {
   const appuntamentiControlloMese = useMemo(() => {
     return eventiControlloMese.filter((x) => x.tipo === "appuntamento");
   }, [eventiControlloMese]);
+
+const eventiConsultaBase = useMemo(() => {
+  return voci
+    .filter((v) => v.tipo === "scadenza" || v.tipo === "appuntamento")
+    .map((v) => ({
+      id: v.id,
+      data: v.data,
+      ora: v.ora,
+      titolo: v.titolo,
+      tipo: v.tipo,
+      urgente: v.urgente,
+      nota: v.nota,
+      fatto: v.fatto,
+      importo: v.importo,
+      movimento: v.movimento,
+    }))
+    .sort((a, b) => {
+      const d = a.data.localeCompare(b.data);
+      if (d !== 0) return d;
+      return a.ora.localeCompare(b.ora);
+    });
+}, [voci]);
+
+const eventiConsultaMese = useMemo(() => {
+  return eventiConsultaBase.filter((ev) => {
+    const [a, m] = ev.data.split("-").map(Number);
+    return a === meseCorrente.getFullYear() && m - 1 === meseCorrente.getMonth();
+  });
+}, [eventiConsultaBase, meseCorrente]);
+
+const eventiConsultaProssimiMese = useMemo(() => {
+  return eventiConsultaMese
+    .filter((ev) => !vocePassata(ev.data, ev.ora))
+    .sort((a, b) => {
+      const d = a.data.localeCompare(b.data);
+      if (d !== 0) return d;
+      return a.ora.localeCompare(b.ora);
+    });
+}, [eventiConsultaMese]);
+
+const eventiConsultaPassatiBase = useMemo(() => {
+  return eventiConsultaBase
+    .filter((ev) => vocePassata(ev.data, ev.ora))
+    .sort((a, b) => {
+      const d = b.data.localeCompare(a.data);
+      if (d !== 0) return d;
+      return b.ora.localeCompare(a.ora);
+    });
+}, [eventiConsultaBase]);
+
+const eventiConsultaPassatiFiltrati = useMemo(() => {
+  return eventiConsultaPassatiBase.filter((ev) => {
+    if (filtroEventiPassati.dal && ev.data < filtroEventiPassati.dal) return false;
+    if (filtroEventiPassati.al && ev.data > filtroEventiPassati.al) return false;
+    return true;
+  });
+}, [eventiConsultaPassatiBase, filtroEventiPassati]);
+
+const totaleEventiMese = useMemo(() => eventiConsultaMese.length, [eventiConsultaMese]);
+
+const totaleScadenzeMeseConsulta = useMemo(() => {
+  return eventiConsultaMese.filter((ev) => ev.tipo === "scadenza").length;
+}, [eventiConsultaMese]);
+
+const totaleAppuntamentiMeseConsulta = useMemo(() => {
+  return eventiConsultaMese.filter((ev) => ev.tipo === "appuntamento").length;
+}, [eventiConsultaMese]);
+
+const prossimoEventoConsulta = useMemo(() => {
+  return eventiConsultaProssimiMese.length > 0 ? eventiConsultaProssimiMese[0] : null;
+}, [eventiConsultaProssimiMese]);
+
+
 
   const entrateControlloMese = useMemo(() => {
     return eventiControlloMese.filter((x) => x.movimento === "entrata");
@@ -4892,6 +4978,621 @@ function MiniCalendarioControllo({
 
 
 
+
+
+
+
+
+function MiniCalendarioEventi({
+  mese,
+  eventi,
+  onPrevMonth,
+  onNextMonth,
+  onOpenEvent,
+}: {
+  mese: Date;
+  eventi: Array<{
+    id: string;
+    data: string;
+    ora: string;
+    titolo: string;
+    tipo: "scadenza" | "appuntamento";
+    urgente: boolean;
+    nota: string;
+  }>;
+  onPrevMonth: () => void;
+  onNextMonth: () => void;
+  onOpenEvent: (id: string) => void;
+}) {
+  const [previewData, setPreviewData] = useState<string | null>(null);
+
+  const isMobile =
+    typeof window !== "undefined" &&
+    (window.innerWidth <= 820 ||
+      window.matchMedia("(hover: none)").matches ||
+      window.matchMedia("(pointer: coarse)").matches);
+
+  function getPasqua(year: number) {
+    const a = year % 19;
+    const b = Math.floor(year / 100);
+    const c = year % 100;
+    const d = Math.floor(b / 4);
+    const e = b % 4;
+    const f = Math.floor((b + 8) / 25);
+    const g = Math.floor((b - f + 1) / 3);
+    const h = (19 * a + b - d - g + 15) % 30;
+    const i = Math.floor(c / 4);
+    const k = c % 4;
+    const l = (32 + 2 * e + 2 * i - h - k) % 7;
+    const m = Math.floor((a + 11 * h + 22 * l) / 451);
+    const month = Math.floor((h + l - 7 * m + 114) / 31);
+    const day = ((h + l - 7 * m + 114) % 31) + 1;
+    return new Date(year, month - 1, day);
+  }
+
+  function addDays(date: Date, days: number) {
+    const d = new Date(date);
+    d.setDate(d.getDate() + days);
+    return d;
+  }
+
+  const { titoloMese, giorni, oggiKey, festivitaSet, eventiPerData } = useMemo(() => {
+    const y = mese.getFullYear();
+    const m0 = mese.getMonth();
+    const first = new Date(y, m0, 1);
+    const offset = weekdayMon0(first);
+    const dim = daysInMonth(y, m0);
+
+    const oggi = new Date();
+    const oggiLocal = ymd(oggi.getFullYear(), oggi.getMonth(), oggi.getDate());
+
+    const giorniLocal: Array<string | null> = [];
+    for (let i = 0; i < offset; i++) giorniLocal.push(null);
+    for (let d = 1; d <= dim; d++) giorniLocal.push(ymd(y, m0, d));
+    while (giorniLocal.length % 7 !== 0) giorniLocal.push(null);
+
+    const map = new Map<string, typeof eventi>();
+    for (const ev of eventi) {
+      const prev = map.get(ev.data) ?? [];
+      prev.push(ev);
+      map.set(ev.data, [...prev].sort((a, b) => a.ora.localeCompare(b.ora)));
+    }
+
+    const setFestivi = new Set<string>();
+    const fisse = [
+      [0, 1],
+      [0, 6],
+      [3, 25],
+      [4, 1],
+      [5, 2],
+      [7, 15],
+      [10, 1],
+      [11, 8],
+      [11, 25],
+      [11, 26],
+    ];
+
+    for (const [month, day] of fisse) {
+      setFestivi.add(ymd(y, month, day));
+    }
+
+    const pasqua = getPasqua(y);
+    const pasquetta = addDays(pasqua, 1);
+    setFestivi.add(ymd(pasqua.getFullYear(), pasqua.getMonth(), pasqua.getDate()));
+    setFestivi.add(ymd(pasquetta.getFullYear(), pasquetta.getMonth(), pasquetta.getDate()));
+
+    return {
+      titoloMese: mese.toLocaleDateString("it-IT", {
+        month: "long",
+        year: "numeric",
+      }),
+      giorni: giorniLocal,
+      oggiKey: oggiLocal,
+      festivitaSet: setFestivi,
+      eventiPerData: map,
+    };
+  }, [mese, eventi]);
+
+  const eventiPreview = useMemo(() => {
+    if (!previewData) return [];
+    return eventiPerData.get(previewData) ?? [];
+  }, [previewData, eventiPerData]);
+
+  const navBtn: React.CSSProperties = {
+    width: isMobile ? 42 : 48,
+    height: isMobile ? 42 : 48,
+    borderRadius: isMobile ? 16 : 18,
+    border: "1px solid rgba(255,255,255,0.72)",
+    background:
+      "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
+    boxShadow: "0 12px 26px rgba(15,23,42,0.10)",
+    color: "rgba(15,23,42,0.88)",
+    fontSize: isMobile ? 16 : 18,
+    fontWeight: 1000,
+    cursor: "pointer",
+    display: "grid",
+    placeItems: "center",
+    padding: 0,
+  };
+
+  return (
+    <>
+      <div
+        style={{
+          ...({
+            border: "1px solid rgba(255,255,255,0.58)",
+            background:
+              "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
+            boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
+            borderRadius: 24,
+          } as React.CSSProperties),
+          padding: isMobile ? 10 : 18,
+          display: "grid",
+          gap: 14,
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: isMobile ? "42px minmax(0,1fr) 42px" : "48px 1fr 48px",
+            alignItems: "center",
+            gap: 12,
+          }}
+        >
+          <button type="button" onClick={onPrevMonth} style={navBtn}>
+            ←
+          </button>
+
+          <div
+            style={{
+              textAlign: "center",
+              fontSize: isMobile ? 21 : 28,
+              fontWeight: 1000,
+              letterSpacing: -0.7,
+              textTransform: "capitalize",
+              color: "rgba(15,23,42,0.98)",
+              lineHeight: 1.05,
+            }}
+          >
+            {titoloMese}
+          </div>
+
+          <button type="button" onClick={onNextMonth} style={navBtn}>
+            →
+          </button>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
+            gap: isMobile ? 4 : 8,
+          }}
+        >
+          {["L", "M", "M", "G", "V", "S", "D"].map((g, i) => (
+            <div
+              key={`${g}_${i}`}
+              style={{
+                textAlign: "center",
+                fontSize: isMobile ? 9 : 11,
+                fontWeight: 950,
+                textTransform: "uppercase",
+                color:
+                  i >= 5
+                    ? "rgba(220,38,38,0.96)"
+                    : "rgba(100,116,139,0.94)",
+                letterSpacing: 0.3,
+              }}
+            >
+              {g}
+            </div>
+          ))}
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
+            gap: isMobile ? 4 : 8,
+          }}
+        >
+          {giorni.map((key, idx) => {
+            if (!key) {
+              return (
+                <div
+                  key={`empty_${idx}`}
+                  style={{
+                    minHeight: isMobile ? 78 : 116,
+                    borderRadius: 18,
+                  }}
+                />
+              );
+            }
+
+            const cellDate = new Date(
+              Number(key.slice(0, 4)),
+              Number(key.slice(5, 7)) - 1,
+              Number(key.slice(8, 10))
+            );
+
+            const evs = eventiPerData.get(key) ?? [];
+            const isToday = key === oggiKey;
+            const isFestivo = festivitaSet.has(key);
+            const isWeekend = cellDate.getDay() === 0 || cellDate.getDay() === 6;
+
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => {
+                  if (evs.length > 0) setPreviewData(key);
+                }}
+                style={{
+                  minHeight: isMobile ? 78 : 116,
+                  borderRadius: isMobile ? 16 : 22,
+                  border: isToday
+                    ? "2px solid rgba(99,102,241,0.30)"
+                    : evs.length > 0
+                    ? "1px solid rgba(79,70,229,0.14)"
+                    : "1px solid rgba(15,23,42,0.06)",
+                  background: isToday
+                    ? "linear-gradient(180deg, rgba(238,242,255,0.98), rgba(248,250,252,0.96))"
+                    : "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92))",
+                  boxShadow: evs.length > 0
+                    ? "0 12px 22px rgba(79,70,229,0.08)"
+                    : "0 8px 16px rgba(15,23,42,0.05)",
+                  padding: isMobile ? 6 : 10,
+                  display: "grid",
+                  gridTemplateRows: "auto 1fr auto",
+                  gap: 6,
+                  cursor: evs.length > 0 ? "pointer" : "default",
+                  textAlign: "left",
+                  overflow: "hidden",
+                }}
+                title={evs.length > 0 ? "Apri anteprima eventi" : ""}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: isMobile ? 30 : 38,
+                      height: isMobile ? 30 : 38,
+                      borderRadius: "50%",
+                      display: "grid",
+                      placeItems: "center",
+                      fontSize: isMobile ? 13 : 16,
+                      fontWeight: 1000,
+                      color: isFestivo
+                        ? "rgba(22,163,74,0.98)"
+                        : isWeekend
+                        ? "rgba(220,38,38,0.98)"
+                        : "rgba(15,23,42,0.94)",
+                      background: isToday
+                        ? "rgba(99,102,241,0.10)"
+                        : "rgba(255,255,255,0.86)",
+                      border: isToday
+                        ? "1px solid rgba(99,102,241,0.22)"
+                        : "1px solid rgba(148,163,184,0.10)",
+                    }}
+                  >
+                    {cellDate.getDate()}
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    display: "grid",
+                    alignContent: "center",
+                    justifyItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  {evs.length > 0 ? (
+                    <>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 6,
+                          flexWrap: "wrap",
+                          justifyContent: "center",
+                        }}
+                      >
+                        {evs.slice(0, 4).map((ev, i) => (
+                          <span
+                            key={`${ev.id}_${i}`}
+                            style={{
+                              width: isMobile ? 9 : 11,
+                              height: isMobile ? 9 : 11,
+                              borderRadius: 999,
+                              background:
+                                ev.tipo === "scadenza"
+                                  ? "linear-gradient(180deg, rgba(16,185,129,0.98), rgba(5,150,105,0.94))"
+                                  : "linear-gradient(180deg, rgba(124,58,237,0.98), rgba(91,33,182,0.94))",
+                              boxShadow:
+                                ev.tipo === "scadenza"
+                                  ? "0 0 0 4px rgba(16,185,129,0.10)"
+                                  : "0 0 0 4px rgba(124,58,237,0.10)",
+                            }}
+                          />
+                        ))}
+                      </div>
+
+                      <div
+                        style={{
+                          fontSize: isMobile ? 9 : 11,
+                          fontWeight: 900,
+                          color: "rgba(71,85,105,0.84)",
+                          textAlign: "center",
+                          lineHeight: 1.1,
+                        }}
+                      >
+                        {evs.length === 1 ? "1 evento" : `${evs.length} eventi`}
+                      </div>
+                    </>
+                  ) : (
+                    <div
+                      style={{
+                        width: isMobile ? 20 : 24,
+                        height: isMobile ? 20 : 24,
+                        borderRadius: 999,
+                        background: "rgba(226,232,240,0.55)",
+                        border: "1px solid rgba(148,163,184,0.12)",
+                      }}
+                    />
+                  )}
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    minHeight: 10,
+                  }}
+                >
+                  {isFestivo ? (
+                    <div
+                      style={{
+                        fontSize: isMobile ? 8 : 10,
+                        fontWeight: 900,
+                        color: "rgba(22,163,74,0.94)",
+                        textTransform: "uppercase",
+                        letterSpacing: 0.3,
+                      }}
+                    >
+                      Festivo
+                    </div>
+                  ) : isWeekend ? (
+                    <div
+                      style={{
+                        fontSize: isMobile ? 8 : 10,
+                        fontWeight: 900,
+                        color: "rgba(220,38,38,0.90)",
+                        textTransform: "uppercase",
+                        letterSpacing: 0.3,
+                      }}
+                    >
+                      Weekend
+                    </div>
+                  ) : (
+                    <div />
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {previewData && (
+        <div
+          onClick={() => setPreviewData(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15,23,42,0.34)",
+            backdropFilter: "blur(10px)",
+            display: "grid",
+            placeItems: "center",
+            padding: 16,
+            zIndex: 1400,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "min(620px, 100%)",
+              maxHeight: "82vh",
+              overflowY: "auto",
+              borderRadius: 26,
+              border: "1px solid rgba(255,255,255,0.60)",
+              background: "rgba(255,255,255,0.94)",
+              boxShadow: "0 40px 120px rgba(15,23,42,0.28)",
+              padding: 18,
+              display: "grid",
+              gap: 12,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 10,
+                flexWrap: "wrap",
+              }}
+            >
+              <div>
+                <div style={{ fontSize: 20, fontWeight: 1000, letterSpacing: -0.3 }}>
+                  Eventi del giorno
+                </div>
+                <div style={{ marginTop: 5, fontSize: 12, fontWeight: 800, opacity: 0.72 }}>
+                  {formattaDataBreve(previewData)}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setPreviewData(null)}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 14,
+                  border: "1px solid rgba(15,23,42,0.08)",
+                  background: "rgba(255,255,255,0.90)",
+                  fontSize: 18,
+                  fontWeight: 1000,
+                  cursor: "pointer",
+                  color: "rgba(15,23,42,0.84)",
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {eventiPreview.length === 0 ? (
+              <div
+                style={{
+                  padding: 14,
+                  borderRadius: 18,
+                  border: "1px solid rgba(148,163,184,0.16)",
+                  background: "rgba(255,255,255,0.84)",
+                  fontSize: 13,
+                  fontWeight: 850,
+                  color: "rgba(100,116,139,0.86)",
+                  textAlign: "center",
+                }}
+              >
+                Nessun evento trovato.
+              </div>
+            ) : (
+              eventiPreview.map((ev) => (
+                <div
+                  key={ev.id}
+                  style={{
+                    padding: 14,
+                    borderRadius: 20,
+                    border:
+                      ev.tipo === "scadenza"
+                        ? "1px solid rgba(16,185,129,0.18)"
+                        : "1px solid rgba(124,58,237,0.18)",
+                    background:
+                      ev.tipo === "scadenza"
+                        ? "linear-gradient(180deg, rgba(236,253,245,0.96), rgba(255,255,255,0.92))"
+                        : "linear-gradient(180deg, rgba(245,243,255,0.96), rgba(255,255,255,0.92))",
+                    boxShadow: "0 10px 22px rgba(15,23,42,0.06)",
+                    display: "grid",
+                    gap: 8,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <span
+                      style={{
+                        padding: "6px 10px",
+                        borderRadius: 999,
+                        fontSize: 11,
+                        fontWeight: 950,
+                        background:
+                          ev.tipo === "scadenza"
+                            ? "rgba(220,252,231,0.96)"
+                            : "rgba(245,243,255,0.96)",
+                        border:
+                          ev.tipo === "scadenza"
+                            ? "1px solid rgba(16,185,129,0.18)"
+                            : "1px solid rgba(168,85,247,0.18)",
+                        color:
+                          ev.tipo === "scadenza"
+                            ? "rgba(6,95,70,0.98)"
+                            : "rgba(107,33,168,0.98)",
+                      }}
+                    >
+                      {ev.tipo === "scadenza" ? "Scadenza" : "Appuntamento"}
+                    </span>
+
+                    {ev.urgente && (
+                      <span
+                        style={{
+                          padding: "6px 10px",
+                          borderRadius: 999,
+                          fontSize: 11,
+                          fontWeight: 1000,
+                          background:
+                            "linear-gradient(180deg, rgba(239,68,68,0.96), rgba(220,38,38,0.94))",
+                          color: "white",
+                          border: "1px solid rgba(239,68,68,0.24)",
+                        }}
+                      >
+                        Urgente
+                      </span>
+                    )}
+                  </div>
+
+                  <div
+                    style={{
+                      fontSize: 16,
+                      fontWeight: 1000,
+                      color: "rgba(15,23,42,0.96)",
+                      lineHeight: 1.25,
+                    }}
+                  >
+                    {ev.titolo}
+                  </div>
+
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 850,
+                      color: "rgba(71,85,105,0.82)",
+                    }}
+                  >
+                    {ev.ora}
+                  </div>
+
+                  {ev.nota && (
+                    <div
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 800,
+                        color: "rgba(71,85,105,0.82)",
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      {ev.nota}
+                    </div>
+                  )}
+
+                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                    <button
+                      type="button"
+                      onClick={() => onOpenEvent(ev.id)}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: 14,
+                        border: "1px solid rgba(79,70,229,0.22)",
+                        background:
+                          "linear-gradient(180deg, rgba(79,70,229,0.16), rgba(124,58,237,0.12))",
+                        color: "rgba(67,56,202,0.98)",
+                        fontSize: 12,
+                        fontWeight: 900,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Apri evento
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
 
 
 
@@ -8533,6 +9234,649 @@ function MiniCalendarioControllo({
         </div>
       </div>
     )}
+  </>
+) : consultaSezione === "eventi" ? (
+  <>
+    <div
+      style={{
+        display: "grid",
+        gap: 10,
+        justifyItems: "center",
+        textAlign: "center",
+        padding: "8px 6px 2px",
+      }}
+    >
+      <div
+        style={{
+          fontSize: 34,
+          fontWeight: 1000,
+          letterSpacing: -0.8,
+          color: "rgba(241,245,249,0.98)",
+          textShadow: "0 12px 30px rgba(79,70,229,0.22)",
+          lineHeight: 1.05,
+        }}
+      >
+        Consulta eventi
+      </div>
+
+      <div
+        style={{
+          maxWidth: 820,
+          fontSize: 15,
+          fontWeight: 800,
+          color: "rgba(191,219,254,0.90)",
+          lineHeight: 1.5,
+          letterSpacing: 0.1,
+        }}
+      >
+        Calendario eventi ultra moderno collegato a scadenze e appuntamenti,
+        con anteprima interattiva, weekend in rosso, festivi in verde e
+        archivio eventi passati filtrabile.
+      </div>
+    </div>
+
+    <div
+      style={{
+        maxWidth: 1060,
+        margin: "0 auto",
+        marginTop: 14,
+        display: "grid",
+        gap: 14,
+      }}
+    >
+      <div
+        style={{
+          ...ui.card,
+          padding: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 16,
+          border: "1px solid rgba(255,255,255,0.58)",
+          background:
+            "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
+          boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
+          display: "grid",
+          gap: 12,
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: 10,
+          }}
+        >
+          <div
+            style={{
+              padding: 14,
+              borderRadius: 20,
+              border: "1px solid rgba(79,70,229,0.18)",
+              background:
+                "linear-gradient(180deg, rgba(79,70,229,0.14), rgba(124,58,237,0.06))",
+              boxShadow: "0 12px 26px rgba(79,70,229,0.10)",
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(67,56,202,0.86)" }}>
+              Eventi nel mese
+            </div>
+            <div
+              style={{
+                marginTop: 8,
+                fontSize: 22,
+                fontWeight: 1000,
+                color: "rgba(15,23,42,0.96)",
+              }}
+            >
+              {totaleEventiMese}
+            </div>
+          </div>
+
+          <div
+            style={{
+              padding: 14,
+              borderRadius: 20,
+              border: "1px solid rgba(16,185,129,0.18)",
+              background:
+                "linear-gradient(180deg, rgba(16,185,129,0.14), rgba(16,185,129,0.06))",
+              boxShadow: "0 12px 26px rgba(16,185,129,0.10)",
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(6,95,70,0.86)" }}>
+              Scadenze mese
+            </div>
+            <div
+              style={{
+                marginTop: 8,
+                fontSize: 22,
+                fontWeight: 1000,
+                color: "rgba(15,23,42,0.96)",
+              }}
+            >
+              {totaleScadenzeMeseConsulta}
+            </div>
+          </div>
+
+          <div
+            style={{
+              padding: 14,
+              borderRadius: 20,
+              border: "1px solid rgba(124,58,237,0.18)",
+              background:
+                "linear-gradient(180deg, rgba(124,58,237,0.14), rgba(124,58,237,0.06))",
+              boxShadow: "0 12px 26px rgba(124,58,237,0.10)",
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(107,33,168,0.86)" }}>
+              Appuntamenti mese
+            </div>
+            <div
+              style={{
+                marginTop: 8,
+                fontSize: 22,
+                fontWeight: 1000,
+                color: "rgba(15,23,42,0.96)",
+              }}
+            >
+              {totaleAppuntamentiMeseConsulta}
+            </div>
+          </div>
+
+          <div
+            style={{
+              padding: 14,
+              borderRadius: 20,
+              border: "1px solid rgba(249,115,22,0.18)",
+              background:
+                "linear-gradient(180deg, rgba(249,115,22,0.14), rgba(249,115,22,0.06))",
+              boxShadow: "0 12px 26px rgba(249,115,22,0.10)",
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(154,52,18,0.86)" }}>
+              Prossimo evento
+            </div>
+            <div
+              style={{
+                marginTop: 8,
+                fontSize: 13,
+                fontWeight: 1000,
+                color: "rgba(15,23,42,0.96)",
+                lineHeight: 1.3,
+              }}
+            >
+              {prossimoEventoConsulta
+                ? `${formattaDataBreve(prossimoEventoConsulta.data)} • ${prossimoEventoConsulta.titolo}`
+                : "Nessun evento futuro nel mese"}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <MiniCalendarioEventi
+        mese={meseCorrente}
+        eventi={eventiConsultaMese}
+        onPrevMonth={mesePrecedente}
+        onNextMonth={meseSuccessivo}
+        onOpenEvent={(id) => {
+          const voceOriginale = voci.find((x) => x.id === id);
+          if (!voceOriginale) return;
+          apriModifica(voceOriginale);
+        }}
+      />
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+          gap: 14,
+        }}
+        className="remember-grid-2"
+      >
+        <div
+          style={{
+            ...ui.card,
+            padding: 18,
+            border: "1px solid rgba(255,255,255,0.58)",
+            background:
+              "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
+            boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
+            display: "grid",
+            gap: 14,
+          }}
+        >
+          <div>
+            <div
+              style={{
+                fontSize: 20,
+                fontWeight: 1000,
+                letterSpacing: -0.3,
+                color: "rgba(15,23,42,0.98)",
+              }}
+            >
+              Eventi prossimi del mese
+            </div>
+            <div
+              style={{
+                marginTop: 4,
+                fontSize: 12,
+                fontWeight: 850,
+                color: "rgba(71,85,105,0.82)",
+              }}
+            >
+              Tutti gli eventi del mese selezionato nel calendario qui sopra
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gap: 10 }}>
+            {eventiConsultaProssimiMese.length === 0 ? (
+              <div
+                style={{
+                  padding: 14,
+                  borderRadius: 18,
+                  border: "1px solid rgba(148,163,184,0.16)",
+                  background: "rgba(255,255,255,0.84)",
+                  fontSize: 13,
+                  fontWeight: 850,
+                  color: "rgba(100,116,139,0.86)",
+                  textAlign: "center",
+                }}
+              >
+                Nessun evento futuro nel mese selezionato.
+              </div>
+            ) : (
+              eventiConsultaProssimiMese.map((ev) => (
+                <div
+                  key={ev.id}
+                  style={{
+                    padding: 14,
+                    borderRadius: 20,
+                    border:
+                      ev.tipo === "scadenza"
+                        ? "1px solid rgba(16,185,129,0.16)"
+                        : "1px solid rgba(124,58,237,0.16)",
+                    background:
+                      ev.tipo === "scadenza"
+                        ? "linear-gradient(180deg, rgba(236,253,245,0.96), rgba(255,255,255,0.92))"
+                        : "linear-gradient(180deg, rgba(245,243,255,0.96), rgba(255,255,255,0.92))",
+                    boxShadow: "0 10px 22px rgba(15,23,42,0.06)",
+                    display: "grid",
+                    gridTemplateColumns:
+                      typeof window !== "undefined" && window.innerWidth <= 640
+                        ? "minmax(0, 1fr)"
+                        : "minmax(0, 1fr) auto",
+                    gap: 12,
+                    alignItems: "start",
+                  }}
+                >
+                  <div style={{ display: "grid", gap: 7, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      {badgeTipo(ev.tipo)}
+                      {ev.urgente && badgeUrgente()}
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: 15,
+                        fontWeight: 1000,
+                        color: "rgba(15,23,42,0.97)",
+                        lineHeight: 1.25,
+                      }}
+                    >
+                      {ev.titolo}
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 850,
+                        color: "rgba(71,85,105,0.82)",
+                      }}
+                    >
+                      {formattaDataBreve(ev.data)} • {ev.ora}
+                    </div>
+
+                    {ev.nota && (
+                      <div
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 800,
+                          color: "rgba(71,85,105,0.82)",
+                          lineHeight: 1.4,
+                        }}
+                      >
+                        {ev.nota}
+                      </div>
+                    )}
+                  </div>
+
+                  <div
+                    style={{
+                      display: "grid",
+                      gap: 8,
+                      justifyItems:
+                        typeof window !== "undefined" && window.innerWidth <= 640 ? "stretch" : "end",
+                    }}
+                  >
+                    <div style={{ minHeight: 34, display: "grid", alignItems: "center" }}>
+                      <span style={styleBadgeScadenza(giorniMancanti(ev.data), ev.urgente)}>
+                        {ev.urgente ? "URGENTE" : labelGiorni(giorniMancanti(ev.data))}
+                      </span>
+                    </div>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: 8,
+                        flexWrap: "wrap",
+                        justifyContent:
+                          typeof window !== "undefined" && window.innerWidth <= 640 ? "stretch" : "flex-end",
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const voceOriginale = voci.find((x) => x.id === ev.id);
+                          if (!voceOriginale) return;
+                          apriModifica(voceOriginale);
+                        }}
+                        style={chip(false)}
+                      >
+                        Modifica
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => elimina(ev.id)}
+                        style={{
+                          ...chip(false),
+                          border: "1px solid rgba(239,68,68,0.22)",
+                          color: "rgba(185,28,28,0.96)",
+                          background: "rgba(254,242,242,0.92)",
+                        }}
+                      >
+                        Elimina
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div
+          style={{
+            ...ui.card,
+            padding: 18,
+            border: "1px solid rgba(255,255,255,0.58)",
+            background:
+              "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
+            boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
+            display: "grid",
+            gap: 14,
+          }}
+        >
+          <div>
+            <div
+              style={{
+                fontSize: 20,
+                fontWeight: 1000,
+                letterSpacing: -0.3,
+                color: "rgba(15,23,42,0.98)",
+              }}
+            >
+              Eventi passati
+            </div>
+            <div
+              style={{
+                marginTop: 4,
+                fontSize: 12,
+                fontWeight: 850,
+                color: "rgba(71,85,105,0.82)",
+              }}
+            >
+              Archivio automatico degli eventi già trascorsi con filtro Dal / Al
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gap: 10,
+              width: "100%",
+              minWidth: 0,
+            }}
+          >
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(0, 1fr))",
+                gap: 10,
+                width: "100%",
+                minWidth: 0,
+              }}
+            >
+              <div style={{ minWidth: 0 }}>
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 900,
+                    color: "rgba(71,85,105,0.86)",
+                    marginBottom: 6,
+                  }}
+                >
+                  Dal
+                </div>
+                <input
+                  type="date"
+                  value={filtroEventiPassati.dal}
+                  onChange={(e) =>
+                    setFiltroEventiPassati((prev) => ({ ...prev, dal: e.target.value }))
+                  }
+                  style={{
+                    ...inputLight(false),
+                    width: "100%",
+                    minWidth: 0,
+                    maxWidth: "100%",
+                    height: typeof window !== "undefined" && window.innerWidth <= 640 ? 56 : 52,
+                    padding: "10px 14px",
+                    boxSizing: "border-box",
+                    appearance: "none",
+                    WebkitAppearance: "none",
+                    background: "rgba(255,255,255,1)",
+                    color: "rgba(15,23,42,0.98)",
+                    WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                    caretColor: "rgba(15,23,42,0.98)",
+                    border: "1px solid rgba(148,163,184,0.22)",
+                    fontSize: 15,
+                    fontWeight: 900,
+                    borderRadius: 18,
+                  }}
+                />
+              </div>
+
+              <div style={{ minWidth: 0 }}>
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 900,
+                    color: "rgba(71,85,105,0.86)",
+                    marginBottom: 6,
+                  }}
+                >
+                  Al
+                </div>
+                <input
+                  type="date"
+                  value={filtroEventiPassati.al}
+                  onChange={(e) =>
+                    setFiltroEventiPassati((prev) => ({ ...prev, al: e.target.value }))
+                  }
+                  style={{
+                    ...inputLight(false),
+                    width: "100%",
+                    minWidth: 0,
+                    maxWidth: "100%",
+                    height: typeof window !== "undefined" && window.innerWidth <= 640 ? 56 : 52,
+                    padding: "10px 14px",
+                    boxSizing: "border-box",
+                    appearance: "none",
+                    WebkitAppearance: "none",
+                    background: "rgba(255,255,255,1)",
+                    color: "rgba(15,23,42,0.98)",
+                    WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                    caretColor: "rgba(15,23,42,0.98)",
+                    border: "1px solid rgba(148,163,184,0.22)",
+                    fontSize: 15,
+                    fontWeight: 900,
+                    borderRadius: 18,
+                  }}
+                />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setFiltroEventiPassati({ dal: "", al: "" })}
+              style={{
+                border: "1px solid rgba(148,163,184,0.18)",
+                background:
+                  "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
+                borderRadius: 16,
+                fontWeight: 900,
+                cursor: "pointer",
+                color: "rgba(15,23,42,0.86)",
+                minHeight: 46,
+                width: "100%",
+                minWidth: 0,
+                boxSizing: "border-box",
+                boxShadow: "0 8px 18px rgba(15,23,42,0.05)",
+              }}
+            >
+              Reset filtri
+            </button>
+          </div>
+
+          <div style={{ display: "grid", gap: 10 }}>
+            {eventiConsultaPassatiFiltrati.length === 0 ? (
+              <div
+                style={{
+                  padding: 14,
+                  borderRadius: 18,
+                  border: "1px solid rgba(148,163,184,0.16)",
+                  background: "rgba(255,255,255,0.84)",
+                  fontSize: 13,
+                  fontWeight: 850,
+                  color: "rgba(100,116,139,0.86)",
+                  textAlign: "center",
+                }}
+              >
+                Nessun evento passato trovato con i filtri selezionati.
+              </div>
+            ) : (
+              eventiConsultaPassatiFiltrati.map((ev) => (
+                <div
+                  key={ev.id}
+                  style={{
+                    padding: 14,
+                    borderRadius: 20,
+                    border:
+                      ev.tipo === "scadenza"
+                        ? "1px solid rgba(16,185,129,0.14)"
+                        : "1px solid rgba(124,58,237,0.14)",
+                    background:
+                      ev.tipo === "scadenza"
+                        ? "linear-gradient(180deg, rgba(236,253,245,0.92), rgba(255,255,255,0.90))"
+                        : "linear-gradient(180deg, rgba(245,243,255,0.92), rgba(255,255,255,0.90))",
+                    boxShadow: "0 8px 18px rgba(15,23,42,0.05)",
+                    display: "grid",
+                    gridTemplateColumns:
+                      typeof window !== "undefined" && window.innerWidth <= 640
+                        ? "minmax(0, 1fr)"
+                        : "minmax(0, 1fr) auto",
+                    gap: 12,
+                    alignItems: "start",
+                  }}
+                >
+                  <div style={{ display: "grid", gap: 7, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      {badgeTipo(ev.tipo)}
+                      {ev.urgente && badgeUrgente()}
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: 15,
+                        fontWeight: 1000,
+                        color: "rgba(15,23,42,0.97)",
+                        lineHeight: 1.25,
+                      }}
+                    >
+                      {ev.titolo}
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 850,
+                        color: "rgba(71,85,105,0.82)",
+                      }}
+                    >
+                      {formattaDataBreve(ev.data)} • {ev.ora}
+                    </div>
+
+                    {ev.nota && (
+                      <div
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 800,
+                          color: "rgba(71,85,105,0.82)",
+                          lineHeight: 1.4,
+                        }}
+                      >
+                        {ev.nota}
+                      </div>
+                    )}
+                  </div>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 8,
+                      flexWrap: "wrap",
+                      justifyContent:
+                        typeof window !== "undefined" && window.innerWidth <= 640 ? "stretch" : "flex-end",
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const voceOriginale = voci.find((x) => x.id === ev.id);
+                        if (!voceOriginale) return;
+                        apriModifica(voceOriginale);
+                      }}
+                      style={chip(false)}
+                    >
+                      Modifica
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => elimina(ev.id)}
+                      style={{
+                        ...chip(false),
+                        border: "1px solid rgba(239,68,68,0.22)",
+                        color: "rgba(185,28,28,0.96)",
+                        background: "rgba(254,242,242,0.92)",
+                      }}
+                    >
+                      Elimina
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
   </>
 ) : (
   <div
