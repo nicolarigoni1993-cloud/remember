@@ -713,7 +713,7 @@ export default function App() {
   const [loginPick, setLoginPick] = useState<string | null>(null);
 
  const [pagina, setPagina] = useState<"home" | "aggiungi" | "consulta" | "agenda" | "controllo" | "archivio">("home");
- const [consultaSezione, setConsultaSezione] = useState<"menu" | "turni" | "finanza" | "eventi" | "archivio">("menu");
+ const [consultaSezione, setConsultaSezione] = useState<"menu" | "turni" | "finanza" | "eventi">("menu");
 const [aggiungiSezione, setAggiungiSezione] = useState<"menu" | "movimenti" | "eventi">("menu");
   const [mostraForm, setMostraForm] = useState(false);
   const [idInModifica, setIdInModifica] = useState<string | null>(null);
@@ -6020,6 +6020,25 @@ function MiniCalendarioControllo({
    <div style={pageBg}>
   {GlobalStyle}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 {pagina !== "home" && pagina !== "aggiungi" && (
   <div style={topBar}>
     <div style={{ ...ui.glass, padding: 22 }}>
@@ -6311,7 +6330,7 @@ function MiniCalendarioControllo({
                 letterSpacing: 0.1,
               }}
             >
-              Area principale di consultazione dell’app. Da qui accederai a turni, finanza, eventi e archivio generale.
+              Area principale di consultazione dell’app. Da qui accederai a turni, finanza, eventi.
             </div>
           </div>
 
@@ -6499,64 +6518,7 @@ function MiniCalendarioControllo({
               </div>
             </button>
 
-            <button
-              data-chip="1"
-              onClick={() => setConsultaSezione("archivio")}
-              style={{
-                ...ui.card,
-                padding: 22,
-                textAlign: "left",
-                border: "1px solid rgba(148,163,184,0.18)",
-                background:
-                  "linear-gradient(180deg, rgba(148,163,184,0.12), rgba(255,255,255,0.94))",
-                boxShadow: "0 18px 40px rgba(148,163,184,0.10)",
-                cursor: "pointer",
-                display: "grid",
-                gap: 12,
-              }}
-            >
-              <div
-                style={{
-                  width: 54,
-                  height: 54,
-                  borderRadius: 18,
-                  display: "grid",
-                  placeItems: "center",
-                  background: "linear-gradient(180deg, rgba(100,116,139,0.94), rgba(71,85,105,0.90))",
-                  color: "white",
-                  fontSize: 24,
-                  boxShadow: "0 14px 28px rgba(100,116,139,0.20)",
-                }}
-              >
-                🗂
-              </div>
-
-              <div>
-                <div
-                  style={{
-                    fontSize: 20,
-                    fontWeight: 1000,
-                    letterSpacing: -0.3,
-                    color: "rgba(15,23,42,0.96)",
-                  }}
-                >
-                  Archivio
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 6,
-                    fontSize: 13,
-                    fontWeight: 800,
-                    opacity: 0.72,
-                    lineHeight: 1.45,
-                    color: "rgba(15,23,42,0.88)",
-                  }}
-                >
-                  Archivio generale con storico dati e riepiloghi futuri
-                </div>
-              </div>
-            </button>
+          
           </div>
         </>
 
