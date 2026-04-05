@@ -5004,13 +5004,21 @@ function MiniCalendarioEventi({
   onNextMonth: () => void;
   onOpenEvent: (id: string) => void;
 }) {
-  const [previewData, setPreviewData] = useState<string | null>(null);
-
   const isMobile =
-    typeof window !== "undefined" &&
-    (window.innerWidth <= 820 ||
-      window.matchMedia("(hover: none)").matches ||
-      window.matchMedia("(pointer: coarse)").matches);
+    typeof window !== "undefined" && window.innerWidth <= 640;
+
+  const [previewEventoId, setPreviewEventoId] = useState<string | null>(null);
+
+  const y = mese.getFullYear();
+  const m0 = mese.getMonth();
+  const first = new Date(y, m0, 1);
+  const offset = weekdayMon0(first);
+  const dim = daysInMonth(y, m0);
+
+  const oggi = new Date();
+  const oggiKey = ymd(oggi.getFullYear(), oggi.getMonth(), oggi.getDate());
+
+  const giorniSettimana = ["L", "M", "M", "G", "V", "S", "D"];
 
   function getPasqua(year: number) {
     const a = year % 19;
@@ -5024,9 +5032,9 @@ function MiniCalendarioEventi({
     const i = Math.floor(c / 4);
     const k = c % 4;
     const l = (32 + 2 * e + 2 * i - h - k) % 7;
-    const m = Math.floor((a + 11 * h + 22 * l) / 451);
-    const month = Math.floor((h + l - 7 * m + 114) / 31);
-    const day = ((h + l - 7 * m + 114) % 31) + 1;
+    const mm = Math.floor((a + 11 * h + 22 * l) / 451);
+    const month = Math.floor((h + l - 7 * mm + 114) / 31);
+    const day = ((h + l - 7 * mm + 114) % 31) + 1;
     return new Date(year, month - 1, day);
   }
 
@@ -5036,29 +5044,9 @@ function MiniCalendarioEventi({
     return d;
   }
 
-  const { titoloMese, giorni, oggiKey, festivitaSet, eventiPerData } = useMemo(() => {
-    const y = mese.getFullYear();
-    const m0 = mese.getMonth();
-    const first = new Date(y, m0, 1);
-    const offset = weekdayMon0(first);
-    const dim = daysInMonth(y, m0);
+  const festivitaSet = useMemo(() => {
+    const set = new Set<string>();
 
-    const oggi = new Date();
-    const oggiLocal = ymd(oggi.getFullYear(), oggi.getMonth(), oggi.getDate());
-
-    const giorniLocal: Array<string | null> = [];
-    for (let i = 0; i < offset; i++) giorniLocal.push(null);
-    for (let d = 1; d <= dim; d++) giorniLocal.push(ymd(y, m0, d));
-    while (giorniLocal.length % 7 !== 0) giorniLocal.push(null);
-
-    const map = new Map<string, typeof eventi>();
-    for (const ev of eventi) {
-      const prev = map.get(ev.data) ?? [];
-      prev.push(ev);
-      map.set(ev.data, [...prev].sort((a, b) => a.ora.localeCompare(b.ora)));
-    }
-
-    const setFestivi = new Set<string>();
     const fisse = [
       [0, 1],
       [0, 6],
@@ -5073,520 +5061,607 @@ function MiniCalendarioEventi({
     ];
 
     for (const [month, day] of fisse) {
-      setFestivi.add(ymd(y, month, day));
+      set.add(ymd(y, month, day));
     }
 
     const pasqua = getPasqua(y);
     const pasquetta = addDays(pasqua, 1);
-    setFestivi.add(ymd(pasqua.getFullYear(), pasqua.getMonth(), pasqua.getDate()));
-    setFestivi.add(ymd(pasquetta.getFullYear(), pasquetta.getMonth(), pasquetta.getDate()));
 
+    set.add(ymd(pasqua.getFullYear(), pasqua.getMonth(), pasqua.getDate()));
+    set.add(ymd(pasquetta.getFullYear(), pasquetta.getMonth(), pasquetta.getDate()));
+
+    return set;
+  }, [y]);
+
+  const giorni: Array<string | null> = [];
+  for (let i = 0; i < offset; i++) giorni.push(null);
+  for (let d = 1; d <= dim; d++) giorni.push(ymd(y, m0, d));
+  while (giorni.length % 7 !== 0) giorni.push(null);
+
+  const titoloMese = mese.toLocaleDateString("it-IT", {
+    month: "long",
+    year: "numeric",
+  });
+
+  const eventiPerData = useMemo(() => {
+    const map = new Map<string, typeof eventi>();
+
+    for (const ev of eventi) {
+      const prev = map.get(ev.data) ?? [];
+      prev.push(ev);
+      map.set(ev.data, prev);
+    }
+
+    for (const arr of map.values()) {
+      arr.sort((a, b) => {
+        const d = a.ora.localeCompare(b.ora);
+        if (d !== 0) return d;
+        return a.titolo.localeCompare(b.titolo);
+      });
+    }
+
+    return map;
+  }, [eventi]);
+
+  const previewEvento = useMemo(() => {
+    if (!previewEventoId) return null;
+    return eventi.find((ev) => ev.id === previewEventoId) ?? null;
+  }, [previewEventoId, eventi]);
+
+  function getTipoPillStyle(tipo: "scadenza" | "appuntamento" | "nota") {
+    if (tipo === "scadenza") {
+      return {
+        background: "rgba(220,252,231,0.98)",
+        border: "1px solid rgba(16,185,129,0.20)",
+        color: "rgba(6,95,70,0.98)",
+        label: "Scadenza",
+      };
+    }
+    if (tipo === "appuntamento") {
+      return {
+        background: "rgba(237,233,254,0.98)",
+        border: "1px solid rgba(139,92,246,0.20)",
+        color: "rgba(91,33,182,0.98)",
+        label: "Appunt.",
+      };
+    }
     return {
-      titoloMese: mese.toLocaleDateString("it-IT", {
-        month: "long",
-        year: "numeric",
-      }),
-      giorni: giorniLocal,
-      oggiKey: oggiLocal,
-      festivitaSet: setFestivi,
-      eventiPerData: map,
+      background: "rgba(254,242,242,0.98)",
+      border: "1px solid rgba(239,68,68,0.20)",
+      color: "rgba(153,27,27,0.98)",
+      label: "Nota",
     };
-  }, [mese, eventi]);
+  }
 
-  const eventiPreview = useMemo(() => {
-    if (!previewData) return [];
-    return eventiPerData.get(previewData) ?? [];
-  }, [previewData, eventiPerData]);
-
-  const navBtn: React.CSSProperties = {
-    width: isMobile ? 42 : 48,
-    height: isMobile ? 42 : 48,
-    borderRadius: isMobile ? 16 : 18,
+  const navBtnStyle: React.CSSProperties = {
+    width: isMobile ? 40 : 46,
+    height: isMobile ? 40 : 46,
+    borderRadius: isMobile ? 14 : 16,
     border: "1px solid rgba(255,255,255,0.72)",
     background:
       "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
-    boxShadow: "0 12px 26px rgba(15,23,42,0.10)",
-    color: "rgba(15,23,42,0.88)",
-    fontSize: isMobile ? 16 : 18,
-    fontWeight: 1000,
-    cursor: "pointer",
+    boxShadow:
+      "0 12px 26px rgba(15,23,42,0.10), inset 0 1px 0 rgba(255,255,255,0.96)",
     display: "grid",
     placeItems: "center",
+    cursor: "pointer",
+    color: "rgba(30,41,59,0.90)",
     padding: 0,
+    flexShrink: 0,
   };
 
   return (
     <>
       <div
         style={{
-          ...({
-            border: "1px solid rgba(255,255,255,0.58)",
-            background:
-              "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
-            boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
-            borderRadius: 24,
-          } as React.CSSProperties),
+          ...ui.card,
+          width: "100%",
+          maxWidth: "100%",
+          boxSizing: "border-box",
           padding: isMobile ? 10 : 18,
-          display: "grid",
-          gap: 14,
+          border: "1px solid rgba(255,255,255,0.58)",
+          background:
+            "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
+          boxShadow: "0 22px 54px rgba(15,23,42,0.12)",
           overflow: "hidden",
+          position: "relative",
         }}
       >
         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: isMobile ? "42px minmax(0,1fr) 42px" : "48px 1fr 48px",
-            alignItems: "center",
-            gap: 12,
+            position: "absolute",
+            inset: 0,
+            background:
+              "radial-gradient(700px 220px at 0% 0%, rgba(79,70,229,0.06), transparent 60%), radial-gradient(700px 220px at 100% 0%, rgba(16,185,129,0.06), transparent 60%)",
+            pointerEvents: "none",
           }}
-        >
-          <button type="button" onClick={onPrevMonth} style={navBtn}>
-            ←
-          </button>
+        />
+
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "40px minmax(0,1fr) 40px" : "46px 1fr 46px",
+              alignItems: "center",
+              gap: isMobile ? 10 : 14,
+              marginBottom: isMobile ? 12 : 16,
+            }}
+          >
+            <button type="button" onClick={onPrevMonth} style={navBtnStyle}>
+              ←
+            </button>
+
+            <div
+              style={{
+                textAlign: "center",
+                fontSize: isMobile ? 20 : 26,
+                fontWeight: 1000,
+                letterSpacing: -0.7,
+                textTransform: "capitalize",
+                color: "rgba(15,23,42,0.98)",
+                lineHeight: 1.05,
+                minWidth: 0,
+              }}
+            >
+              {titoloMese}
+            </div>
+
+            <button type="button" onClick={onNextMonth} style={navBtnStyle}>
+              →
+            </button>
+          </div>
 
           <div
             style={{
-              textAlign: "center",
-              fontSize: isMobile ? 21 : 28,
-              fontWeight: 1000,
-              letterSpacing: -0.7,
-              textTransform: "capitalize",
-              color: "rgba(15,23,42,0.98)",
-              lineHeight: 1.05,
+              display: "grid",
+              gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
+              gap: isMobile ? 4 : 8,
+              marginBottom: isMobile ? 6 : 10,
             }}
           >
-            {titoloMese}
+            {giorniSettimana.map((g, i) => (
+              <div
+                key={`${g}_${i}`}
+                style={{
+                  textAlign: "center",
+                  fontSize: isMobile ? 9 : 11,
+                  fontWeight: 1000,
+                  color: i >= 5 ? "rgba(220,38,38,0.94)" : "rgba(100,116,139,0.96)",
+                  textTransform: "uppercase",
+                  letterSpacing: 0.25,
+                }}
+              >
+                {g}
+              </div>
+            ))}
           </div>
 
-          <button type="button" onClick={onNextMonth} style={navBtn}>
-            →
-          </button>
-        </div>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
+              gap: isMobile ? 5 : 10,
+              width: "100%",
+            }}
+          >
+            {giorni.map((key, idx) => {
+              if (!key) {
+                return (
+                  <div
+                    key={`empty_${idx}`}
+                    style={{
+                      minHeight: isMobile ? 78 : 128,
+                      borderRadius: isMobile ? 16 : 22,
+                    }}
+                  />
+                );
+              }
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
-            gap: isMobile ? 4 : 8,
-          }}
-        >
-          {["L", "M", "M", "G", "V", "S", "D"].map((g, i) => (
-            <div
-              key={`${g}_${i}`}
-              style={{
-                textAlign: "center",
-                fontSize: isMobile ? 9 : 11,
-                fontWeight: 950,
-                textTransform: "uppercase",
-                color:
-                  i >= 5
-                    ? "rgba(220,38,38,0.96)"
-                    : "rgba(100,116,139,0.94)",
-                letterSpacing: 0.3,
-              }}
-            >
-              {g}
-            </div>
-          ))}
-        </div>
+              const cellDate = new Date(
+                Number(key.slice(0, 4)),
+                Number(key.slice(5, 7)) - 1,
+                Number(key.slice(8, 10))
+              );
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
-            gap: isMobile ? 4 : 8,
-          }}
-        >
-          {giorni.map((key, idx) => {
-            if (!key) {
+              const d = cellDate.getDate();
+              const items = eventiPerData.get(key) ?? [];
+              const firstEvent = items[0] ?? null;
+
+              const isToday = key === oggiKey;
+              const jsDay = cellDate.getDay();
+              const isWeekend = jsDay === 0 || jsDay === 6;
+              const isFestivo = festivitaSet.has(key);
+
               return (
                 <div
-                  key={`empty_${idx}`}
+                  key={key}
                   style={{
-                    minHeight: isMobile ? 78 : 116,
-                    borderRadius: 18,
-                  }}
-                />
-              );
-            }
-
-            const cellDate = new Date(
-              Number(key.slice(0, 4)),
-              Number(key.slice(5, 7)) - 1,
-              Number(key.slice(8, 10))
-            );
-
-            const evs = eventiPerData.get(key) ?? [];
-            const isToday = key === oggiKey;
-            const isFestivo = festivitaSet.has(key);
-            const isWeekend = cellDate.getDay() === 0 || cellDate.getDay() === 6;
-
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => {
-                  if (evs.length > 0) setPreviewData(key);
-                }}
-                style={{
-                  minHeight: isMobile ? 78 : 116,
-                  borderRadius: isMobile ? 16 : 22,
-                  border: isToday
-                    ? "2px solid rgba(99,102,241,0.30)"
-                    : evs.length > 0
-                    ? "1px solid rgba(79,70,229,0.14)"
-                    : "1px solid rgba(15,23,42,0.06)",
-                  background: isToday
-                    ? "linear-gradient(180deg, rgba(238,242,255,0.98), rgba(248,250,252,0.96))"
-                    : "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92))",
-                  boxShadow: evs.length > 0
-                    ? "0 12px 22px rgba(79,70,229,0.08)"
-                    : "0 8px 16px rgba(15,23,42,0.05)",
-                  padding: isMobile ? 6 : 10,
-                  display: "grid",
-                  gridTemplateRows: "auto 1fr auto",
-                  gap: 6,
-                  cursor: evs.length > 0 ? "pointer" : "default",
-                  textAlign: "left",
-                  overflow: "hidden",
-                }}
-                title={evs.length > 0 ? "Apri anteprima eventi" : ""}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
+                    minHeight: isMobile ? 78 : 132,
+                    borderRadius: isMobile ? 16 : 22,
+                    border: isToday
+                      ? "2px solid rgba(99,102,241,0.24)"
+                      : "1px solid rgba(148,163,184,0.14)",
+                    background: isToday
+                      ? "linear-gradient(180deg, rgba(238,242,255,0.98), rgba(255,255,255,0.96))"
+                      : "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.95))",
+                    boxShadow: isToday
+                      ? "0 16px 34px rgba(99,102,241,0.10)"
+                      : "0 10px 24px rgba(15,23,42,0.06)",
+                    padding: isMobile ? 6 : 10,
+                    display: "grid",
+                    gridTemplateRows: "auto 1fr",
+                    gap: isMobile ? 6 : 10,
+                    boxSizing: "border-box",
+                    overflow: "hidden",
                   }}
                 >
                   <div
                     style={{
-                      width: isMobile ? 30 : 38,
-                      height: isMobile ? 30 : 38,
-                      borderRadius: "50%",
-                      display: "grid",
-                      placeItems: "center",
-                      fontSize: isMobile ? 13 : 16,
-                      fontWeight: 1000,
-                      color: isFestivo
-                        ? "rgba(22,163,74,0.98)"
-                        : isWeekend
-                        ? "rgba(220,38,38,0.98)"
-                        : "rgba(15,23,42,0.94)",
-                      background: isToday
-                        ? "rgba(99,102,241,0.10)"
-                        : "rgba(255,255,255,0.86)",
-                      border: isToday
-                        ? "1px solid rgba(99,102,241,0.22)"
-                        : "1px solid rgba(148,163,184,0.10)",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
                     }}
                   >
-                    {cellDate.getDate()}
+                    <div
+                      style={{
+                        width: isMobile ? 28 : 36,
+                        height: isMobile ? 28 : 36,
+                        borderRadius: "50%",
+                        display: "grid",
+                        placeItems: "center",
+                        fontSize: isMobile ? 13 : 16,
+                        fontWeight: 1000,
+                        color: isFestivo
+                          ? "rgba(22,101,52,0.98)"
+                          : isWeekend
+                          ? "rgba(220,38,38,0.98)"
+                          : "rgba(15,23,42,0.94)",
+                        background: isToday
+                          ? "rgba(99,102,241,0.12)"
+                          : "rgba(241,245,249,0.78)",
+                        border: isToday
+                          ? "1px solid rgba(99,102,241,0.20)"
+                          : "1px solid rgba(148,163,184,0.10)",
+                      }}
+                    >
+                      {d}
+                    </div>
                   </div>
-                </div>
 
-                <div
-                  style={{
-                    display: "grid",
-                    alignContent: "center",
-                    justifyItems: "center",
-                    gap: 6,
-                  }}
-                >
-                  {evs.length > 0 ? (
-                    <>
+                  <div
+                    style={{
+                      minWidth: 0,
+                      display: "grid",
+                      alignContent: "center",
+                      justifyItems: "center",
+                      gap: isMobile ? 4 : 6,
+                    }}
+                  >
+                    {items.length === 0 ? (
                       <div
                         style={{
-                          display: "flex",
-                          gap: 6,
-                          flexWrap: "wrap",
-                          justifyContent: "center",
+                          width: isMobile ? 18 : 22,
+                          height: isMobile ? 18 : 22,
+                          borderRadius: 999,
+                          background: "rgba(226,232,240,0.55)",
+                          border: "1px solid rgba(148,163,184,0.14)",
                         }}
-                      >
-                        {evs.slice(0, 4).map((ev, i) => (
-                          <span
-                            key={`${ev.id}_${i}`}
+                      />
+                    ) : isMobile ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setPreviewEventoId(firstEvent.id)}
+                          style={{
+                            width: "100%",
+                            maxWidth: 42,
+                            minHeight: 28,
+                            padding: "4px 6px",
+                            borderRadius: 12,
+                            border: "1px solid rgba(148,163,184,0.16)",
+                            background: "rgba(255,255,255,0.95)",
+                            boxShadow: "0 6px 14px rgba(15,23,42,0.06)",
+                            display: "grid",
+                            placeItems: "center",
+                            cursor: "pointer",
+                            lineHeight: 1,
+                          }}
+                        >
+                          <div
                             style={{
-                              width: isMobile ? 9 : 11,
-                              height: isMobile ? 9 : 11,
+                              width: 10,
+                              height: 10,
                               borderRadius: 999,
                               background:
-                                ev.tipo === "scadenza"
-                                  ? "linear-gradient(180deg, rgba(16,185,129,0.98), rgba(5,150,105,0.94))"
-                                  : "linear-gradient(180deg, rgba(124,58,237,0.98), rgba(91,33,182,0.94))",
+                                firstEvent.tipo === "scadenza"
+                                  ? "rgba(16,185,129,0.98)"
+                                  : firstEvent.tipo === "appuntamento"
+                                  ? "rgba(139,92,246,0.98)"
+                                  : "rgba(239,68,68,0.98)",
                               boxShadow:
-                                ev.tipo === "scadenza"
-                                  ? "0 0 0 4px rgba(16,185,129,0.10)"
-                                  : "0 0 0 4px rgba(124,58,237,0.10)",
+                                firstEvent.urgente
+                                  ? "0 0 0 5px rgba(239,68,68,0.12)"
+                                  : "0 0 0 4px rgba(148,163,184,0.08)",
                             }}
                           />
-                        ))}
-                      </div>
+                          <div
+                            style={{
+                              marginTop: 3,
+                              fontSize: 9,
+                              fontWeight: 1000,
+                              color: "rgba(15,23,42,0.86)",
+                            }}
+                          >
+                            {items.length}
+                          </div>
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setPreviewEventoId(firstEvent.id)}
+                          style={{
+                            width: "100%",
+                            maxWidth: 74,
+                            padding: "6px 8px",
+                            borderRadius: 999,
+                            border: "1px solid rgba(148,163,184,0.16)",
+                            background: "rgba(255,255,255,0.96)",
+                            boxShadow: "0 8px 18px rgba(15,23,42,0.05)",
+                            cursor: "pointer",
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            gap: 6,
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: 10,
+                              height: 10,
+                              borderRadius: 999,
+                              background:
+                                firstEvent.tipo === "scadenza"
+                                  ? "rgba(16,185,129,0.98)"
+                                  : firstEvent.tipo === "appuntamento"
+                                  ? "rgba(139,92,246,0.98)"
+                                  : "rgba(239,68,68,0.98)",
+                            }}
+                          />
+                          <span
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 1000,
+                              color: "rgba(15,23,42,0.88)",
+                              lineHeight: 1,
+                            }}
+                          >
+                            {items.length}
+                          </span>
+                        </button>
 
-                      <div
-                        style={{
-                          fontSize: isMobile ? 9 : 11,
-                          fontWeight: 900,
-                          color: "rgba(71,85,105,0.84)",
-                          textAlign: "center",
-                          lineHeight: 1.1,
-                        }}
-                      >
-                        {evs.length === 1 ? "1 evento" : `${evs.length} eventi`}
-                      </div>
-                    </>
-                  ) : (
-                    <div
-                      style={{
-                        width: isMobile ? 20 : 24,
-                        height: isMobile ? 20 : 24,
-                        borderRadius: 999,
-                        background: "rgba(226,232,240,0.55)",
-                        border: "1px solid rgba(148,163,184,0.12)",
-                      }}
-                    />
-                  )}
+                        <div
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 900,
+                            color: "rgba(100,116,139,0.82)",
+                            textAlign: "center",
+                            lineHeight: 1.1,
+                          }}
+                        >
+                          preview
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
+              );
+            })}
+          </div>
 
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    minHeight: 10,
-                  }}
-                >
-                  {isFestivo ? (
-                    <div
-                      style={{
-                        fontSize: isMobile ? 8 : 10,
-                        fontWeight: 900,
-                        color: "rgba(22,163,74,0.94)",
-                        textTransform: "uppercase",
-                        letterSpacing: 0.3,
-                      }}
-                    >
-                      Festivo
-                    </div>
-                  ) : isWeekend ? (
-                    <div
-                      style={{
-                        fontSize: isMobile ? 8 : 10,
-                        fontWeight: 900,
-                        color: "rgba(220,38,38,0.90)",
-                        textTransform: "uppercase",
-                        letterSpacing: 0.3,
-                      }}
-                    >
-                      Weekend
-                    </div>
-                  ) : (
-                    <div />
-                  )}
-                </div>
-              </button>
-            );
-          })}
+          <div
+            style={{
+              marginTop: 14,
+              display: "flex",
+              gap: 10,
+              flexWrap: "wrap",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "7px 12px",
+                borderRadius: 999,
+                background: "rgba(248,250,252,0.95)",
+                border: "1px solid rgba(148,163,184,0.16)",
+                fontSize: 11,
+                fontWeight: 900,
+                color: "rgba(15,23,42,0.82)",
+              }}
+            >
+              <span
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: 999,
+                  background: "rgba(22,101,52,0.98)",
+                }}
+              />
+              Festivo
+            </div>
+          </div>
         </div>
       </div>
 
-      {previewData && (
+      {previewEvento && (
         <div
-          onClick={() => setPreviewData(null)}
+          onClick={() => setPreviewEventoId(null)}
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(15,23,42,0.34)",
+            background: "rgba(15,23,42,0.32)",
             backdropFilter: "blur(10px)",
             display: "grid",
             placeItems: "center",
             padding: 16,
-            zIndex: 1400,
+            zIndex: 1300,
           }}
         >
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              width: "min(620px, 100%)",
-              maxHeight: "82vh",
-              overflowY: "auto",
+              width: "min(460px, 100%)",
               borderRadius: 26,
-              border: "1px solid rgba(255,255,255,0.60)",
-              background: "rgba(255,255,255,0.94)",
-              boxShadow: "0 40px 120px rgba(15,23,42,0.28)",
+              border: "1px solid rgba(255,255,255,0.62)",
+              background:
+                "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96))",
+              boxShadow: "0 34px 90px rgba(15,23,42,0.24)",
               padding: 18,
               display: "grid",
-              gap: 12,
+              gap: 14,
             }}
           >
             <div
               style={{
                 display: "flex",
                 justifyContent: "space-between",
-                alignItems: "center",
-                gap: 10,
-                flexWrap: "wrap",
+                alignItems: "start",
+                gap: 12,
               }}
             >
-              <div>
-                <div style={{ fontSize: 20, fontWeight: 1000, letterSpacing: -0.3 }}>
-                  Eventi del giorno
+              <div style={{ display: "grid", gap: 8 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 8,
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <span
+                    style={{
+                      ...getTipoPillStyle(previewEvento.tipo),
+                      padding: "6px 10px",
+                      borderRadius: 999,
+                      fontSize: 11,
+                      fontWeight: 950,
+                    }}
+                  >
+                    {getTipoPillStyle(previewEvento.tipo).label}
+                  </span>
+
+                  {previewEvento.urgente && badgeUrgente()}
                 </div>
-                <div style={{ marginTop: 5, fontSize: 12, fontWeight: 800, opacity: 0.72 }}>
-                  {formattaDataBreve(previewData)}
+
+                <div
+                  style={{
+                    fontSize: 19,
+                    fontWeight: 1000,
+                    letterSpacing: -0.3,
+                    color: "rgba(15,23,42,0.98)",
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {previewEvento.titolo}
+                </div>
+
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 850,
+                    color: "rgba(71,85,105,0.82)",
+                  }}
+                >
+                  {formattaDataBreve(previewEvento.data)} • {previewEvento.ora}
                 </div>
               </div>
 
               <button
                 type="button"
-                onClick={() => setPreviewData(null)}
+                onClick={() => setPreviewEventoId(null)}
                 style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 14,
-                  border: "1px solid rgba(15,23,42,0.08)",
-                  background: "rgba(255,255,255,0.90)",
+                  width: 38,
+                  height: 38,
+                  borderRadius: 12,
+                  border: "1px solid rgba(148,163,184,0.16)",
+                  background: "rgba(255,255,255,0.92)",
+                  cursor: "pointer",
                   fontSize: 18,
                   fontWeight: 1000,
-                  cursor: "pointer",
-                  color: "rgba(15,23,42,0.84)",
+                  color: "rgba(15,23,42,0.78)",
                 }}
               >
                 ✕
               </button>
             </div>
 
-            {eventiPreview.length === 0 ? (
+            {previewEvento.nota && (
               <div
                 style={{
-                  padding: 14,
-                  borderRadius: 18,
-                  border: "1px solid rgba(148,163,184,0.16)",
-                  background: "rgba(255,255,255,0.84)",
+                  padding: 12,
+                  borderRadius: 16,
+                  border: "1px solid rgba(148,163,184,0.14)",
+                  background: "rgba(248,250,252,0.92)",
                   fontSize: 13,
-                  fontWeight: 850,
-                  color: "rgba(100,116,139,0.86)",
-                  textAlign: "center",
+                  fontWeight: 800,
+                  color: "rgba(51,65,85,0.88)",
+                  lineHeight: 1.45,
                 }}
               >
-                Nessun evento trovato.
+                {previewEvento.nota}
               </div>
-            ) : (
-              eventiPreview.map((ev) => (
-                <div
-                  key={ev.id}
-                  style={{
-                    padding: 14,
-                    borderRadius: 20,
-                    border:
-                      ev.tipo === "scadenza"
-                        ? "1px solid rgba(16,185,129,0.18)"
-                        : "1px solid rgba(124,58,237,0.18)",
-                    background:
-                      ev.tipo === "scadenza"
-                        ? "linear-gradient(180deg, rgba(236,253,245,0.96), rgba(255,255,255,0.92))"
-                        : "linear-gradient(180deg, rgba(245,243,255,0.96), rgba(255,255,255,0.92))",
-                    boxShadow: "0 10px 22px rgba(15,23,42,0.06)",
-                    display: "grid",
-                    gap: 8,
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                    <span
-                      style={{
-                        padding: "6px 10px",
-                        borderRadius: 999,
-                        fontSize: 11,
-                        fontWeight: 950,
-                        background:
-                          ev.tipo === "scadenza"
-                            ? "rgba(220,252,231,0.96)"
-                            : "rgba(245,243,255,0.96)",
-                        border:
-                          ev.tipo === "scadenza"
-                            ? "1px solid rgba(16,185,129,0.18)"
-                            : "1px solid rgba(168,85,247,0.18)",
-                        color:
-                          ev.tipo === "scadenza"
-                            ? "rgba(6,95,70,0.98)"
-                            : "rgba(107,33,168,0.98)",
-                      }}
-                    >
-                      {ev.tipo === "scadenza" ? "Scadenza" : "Appuntamento"}
-                    </span>
-
-                    {ev.urgente && (
-                      <span
-                        style={{
-                          padding: "6px 10px",
-                          borderRadius: 999,
-                          fontSize: 11,
-                          fontWeight: 1000,
-                          background:
-                            "linear-gradient(180deg, rgba(239,68,68,0.96), rgba(220,38,38,0.94))",
-                          color: "white",
-                          border: "1px solid rgba(239,68,68,0.24)",
-                        }}
-                      >
-                        Urgente
-                      </span>
-                    )}
-                  </div>
-
-                  <div
-                    style={{
-                      fontSize: 16,
-                      fontWeight: 1000,
-                      color: "rgba(15,23,42,0.96)",
-                      lineHeight: 1.25,
-                    }}
-                  >
-                    {ev.titolo}
-                  </div>
-
-                  <div
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 850,
-                      color: "rgba(71,85,105,0.82)",
-                    }}
-                  >
-                    {ev.ora}
-                  </div>
-
-                  {ev.nota && (
-                    <div
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 800,
-                        color: "rgba(71,85,105,0.82)",
-                        lineHeight: 1.4,
-                      }}
-                    >
-                      {ev.nota}
-                    </div>
-                  )}
-
-                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                    <button
-                      type="button"
-                      onClick={() => onOpenEvent(ev.id)}
-                      style={{
-                        padding: "10px 14px",
-                        borderRadius: 14,
-                        border: "1px solid rgba(79,70,229,0.22)",
-                        background:
-                          "linear-gradient(180deg, rgba(79,70,229,0.16), rgba(124,58,237,0.12))",
-                        color: "rgba(67,56,202,0.98)",
-                        fontSize: 12,
-                        fontWeight: 900,
-                        cursor: "pointer",
-                      }}
-                    >
-                      Apri evento
-                    </button>
-                  </div>
-                </div>
-              ))
             )}
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: 10,
+                flexWrap: "wrap",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setPreviewEventoId(null)}
+                style={{
+                  padding: "11px 14px",
+                  borderRadius: 14,
+                  border: "1px solid rgba(148,163,184,0.16)",
+                  background: "rgba(255,255,255,0.92)",
+                  fontWeight: 900,
+                  cursor: "pointer",
+                  color: "rgba(15,23,42,0.86)",
+                }}
+              >
+                Chiudi
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenEvent(previewEvento.id);
+                  setPreviewEventoId(null);
+                }}
+                style={{
+                  padding: "11px 14px",
+                  borderRadius: 14,
+                  border: "1px solid rgba(79,70,229,0.20)",
+                  background:
+                    "linear-gradient(180deg, rgba(79,70,229,0.16), rgba(124,58,237,0.12))",
+                  fontWeight: 1000,
+                  cursor: "pointer",
+                  color: "rgba(67,56,202,0.98)",
+                  boxShadow: "0 12px 24px rgba(79,70,229,0.10)",
+                }}
+              >
+                Modifica evento
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -9235,6 +9310,15 @@ function MiniCalendarioEventi({
       </div>
     )}
   </>
+
+
+
+
+
+
+
+
+
 ) : consultaSezione === "eventi" ? (
   <>
     <div
@@ -9261,7 +9345,7 @@ function MiniCalendarioEventi({
 
       <div
         style={{
-          maxWidth: 820,
+          maxWidth: 760,
           fontSize: 15,
           fontWeight: 800,
           color: "rgba(191,219,254,0.90)",
@@ -9269,614 +9353,478 @@ function MiniCalendarioEventi({
           letterSpacing: 0.1,
         }}
       >
-        Calendario eventi ultra moderno collegato a scadenze e appuntamenti,
-        con anteprima interattiva, weekend in rosso, festivi in verde e
-        archivio eventi passati filtrabile.
+        Calendario eventi moderno collegato a scadenze e appuntamenti, con eventi futuri e archivio automatico.
       </div>
     </div>
 
-    <div
-      style={{
-        maxWidth: 1060,
-        margin: "0 auto",
-        marginTop: 14,
-        display: "grid",
-        gap: 14,
-      }}
-    >
-      <div
-        style={{
-          ...ui.card,
-          padding: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 16,
-          border: "1px solid rgba(255,255,255,0.58)",
-          background:
-            "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
-          boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
-          display: "grid",
-          gap: 12,
-          overflow: "hidden",
-        }}
-      >
+    {(() => {
+      const eventiConsultaMese = voci
+        .filter((v) => stessoMeseSelezionato(v.data))
+        .filter((v) => v.tipo === "scadenza" || v.tipo === "appuntamento" || v.tipo === "nota")
+        .slice()
+        .sort((a, b) => {
+          const d = a.data.localeCompare(b.data);
+          if (d !== 0) return d;
+          return a.ora.localeCompare(b.ora);
+        });
+
+      const eventiProssimiConsulta = eventiConsultaMese.filter((v) => !vocePassata(v.data, v.ora));
+
+      const eventiPassatiBase = voci
+        .filter((v) => v.tipo === "scadenza" || v.tipo === "appuntamento" || v.tipo === "nota")
+        .filter((v) => vocePassata(v.data, v.ora))
+        .slice()
+        .sort((a, b) => {
+          const d = b.data.localeCompare(a.data);
+          if (d !== 0) return d;
+          return b.ora.localeCompare(a.ora);
+        });
+
+      const eventiPassatiFiltrati = eventiPassatiBase.filter((v) => {
+        if (filtroFinanzaLista.dal && v.data < filtroFinanzaLista.dal) return false;
+        if (filtroFinanzaLista.al && v.data > filtroFinanzaLista.al) return false;
+        return true;
+      });
+
+      return (
         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-            gap: 10,
-          }}
-        >
-          <div
-            style={{
-              padding: 14,
-              borderRadius: 20,
-              border: "1px solid rgba(79,70,229,0.18)",
-              background:
-                "linear-gradient(180deg, rgba(79,70,229,0.14), rgba(124,58,237,0.06))",
-              boxShadow: "0 12px 26px rgba(79,70,229,0.10)",
-            }}
-          >
-            <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(67,56,202,0.86)" }}>
-              Eventi nel mese
-            </div>
-            <div
-              style={{
-                marginTop: 8,
-                fontSize: 22,
-                fontWeight: 1000,
-                color: "rgba(15,23,42,0.96)",
-              }}
-            >
-              {totaleEventiMese}
-            </div>
-          </div>
-
-          <div
-            style={{
-              padding: 14,
-              borderRadius: 20,
-              border: "1px solid rgba(16,185,129,0.18)",
-              background:
-                "linear-gradient(180deg, rgba(16,185,129,0.14), rgba(16,185,129,0.06))",
-              boxShadow: "0 12px 26px rgba(16,185,129,0.10)",
-            }}
-          >
-            <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(6,95,70,0.86)" }}>
-              Scadenze mese
-            </div>
-            <div
-              style={{
-                marginTop: 8,
-                fontSize: 22,
-                fontWeight: 1000,
-                color: "rgba(15,23,42,0.96)",
-              }}
-            >
-              {totaleScadenzeMeseConsulta}
-            </div>
-          </div>
-
-          <div
-            style={{
-              padding: 14,
-              borderRadius: 20,
-              border: "1px solid rgba(124,58,237,0.18)",
-              background:
-                "linear-gradient(180deg, rgba(124,58,237,0.14), rgba(124,58,237,0.06))",
-              boxShadow: "0 12px 26px rgba(124,58,237,0.10)",
-            }}
-          >
-            <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(107,33,168,0.86)" }}>
-              Appuntamenti mese
-            </div>
-            <div
-              style={{
-                marginTop: 8,
-                fontSize: 22,
-                fontWeight: 1000,
-                color: "rgba(15,23,42,0.96)",
-              }}
-            >
-              {totaleAppuntamentiMeseConsulta}
-            </div>
-          </div>
-
-          <div
-            style={{
-              padding: 14,
-              borderRadius: 20,
-              border: "1px solid rgba(249,115,22,0.18)",
-              background:
-                "linear-gradient(180deg, rgba(249,115,22,0.14), rgba(249,115,22,0.06))",
-              boxShadow: "0 12px 26px rgba(249,115,22,0.10)",
-            }}
-          >
-            <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(154,52,18,0.86)" }}>
-              Prossimo evento
-            </div>
-            <div
-              style={{
-                marginTop: 8,
-                fontSize: 13,
-                fontWeight: 1000,
-                color: "rgba(15,23,42,0.96)",
-                lineHeight: 1.3,
-              }}
-            >
-              {prossimoEventoConsulta
-                ? `${formattaDataBreve(prossimoEventoConsulta.data)} • ${prossimoEventoConsulta.titolo}`
-                : "Nessun evento futuro nel mese"}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <MiniCalendarioEventi
-        mese={meseCorrente}
-        eventi={eventiConsultaMese}
-        onPrevMonth={mesePrecedente}
-        onNextMonth={meseSuccessivo}
-        onOpenEvent={(id) => {
-          const voceOriginale = voci.find((x) => x.id === id);
-          if (!voceOriginale) return;
-          apriModifica(voceOriginale);
-        }}
-      />
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-          gap: 14,
-        }}
-        className="remember-grid-2"
-      >
-        <div
-          style={{
-            ...ui.card,
-            padding: 18,
-            border: "1px solid rgba(255,255,255,0.58)",
-            background:
-              "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
-            boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
+            maxWidth: 1060,
+            margin: "0 auto",
+            marginTop: 14,
             display: "grid",
             gap: 14,
           }}
         >
-          <div>
-            <div
-              style={{
-                fontSize: 20,
-                fontWeight: 1000,
-                letterSpacing: -0.3,
-                color: "rgba(15,23,42,0.98)",
-              }}
-            >
-              Eventi prossimi del mese
-            </div>
-            <div
-              style={{
-                marginTop: 4,
-                fontSize: 12,
-                fontWeight: 850,
-                color: "rgba(71,85,105,0.82)",
-              }}
-            >
-              Tutti gli eventi del mese selezionato nel calendario qui sopra
-            </div>
-          </div>
-
-          <div style={{ display: "grid", gap: 10 }}>
-            {eventiConsultaProssimiMese.length === 0 ? (
-              <div
-                style={{
-                  padding: 14,
-                  borderRadius: 18,
-                  border: "1px solid rgba(148,163,184,0.16)",
-                  background: "rgba(255,255,255,0.84)",
-                  fontSize: 13,
-                  fontWeight: 850,
-                  color: "rgba(100,116,139,0.86)",
-                  textAlign: "center",
-                }}
-              >
-                Nessun evento futuro nel mese selezionato.
-              </div>
-            ) : (
-              eventiConsultaProssimiMese.map((ev) => (
-                <div
-                  key={ev.id}
-                  style={{
-                    padding: 14,
-                    borderRadius: 20,
-                    border:
-                      ev.tipo === "scadenza"
-                        ? "1px solid rgba(16,185,129,0.16)"
-                        : "1px solid rgba(124,58,237,0.16)",
-                    background:
-                      ev.tipo === "scadenza"
-                        ? "linear-gradient(180deg, rgba(236,253,245,0.96), rgba(255,255,255,0.92))"
-                        : "linear-gradient(180deg, rgba(245,243,255,0.96), rgba(255,255,255,0.92))",
-                    boxShadow: "0 10px 22px rgba(15,23,42,0.06)",
-                    display: "grid",
-                    gridTemplateColumns:
-                      typeof window !== "undefined" && window.innerWidth <= 640
-                        ? "minmax(0, 1fr)"
-                        : "minmax(0, 1fr) auto",
-                    gap: 12,
-                    alignItems: "start",
-                  }}
-                >
-                  <div style={{ display: "grid", gap: 7, minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      {badgeTipo(ev.tipo)}
-                      {ev.urgente && badgeUrgente()}
-                    </div>
-
-                    <div
-                      style={{
-                        fontSize: 15,
-                        fontWeight: 1000,
-                        color: "rgba(15,23,42,0.97)",
-                        lineHeight: 1.25,
-                      }}
-                    >
-                      {ev.titolo}
-                    </div>
-
-                    <div
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 850,
-                        color: "rgba(71,85,105,0.82)",
-                      }}
-                    >
-                      {formattaDataBreve(ev.data)} • {ev.ora}
-                    </div>
-
-                    {ev.nota && (
-                      <div
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 800,
-                          color: "rgba(71,85,105,0.82)",
-                          lineHeight: 1.4,
-                        }}
-                      >
-                        {ev.nota}
-                      </div>
-                    )}
-                  </div>
-
-                  <div
-                    style={{
-                      display: "grid",
-                      gap: 8,
-                      justifyItems:
-                        typeof window !== "undefined" && window.innerWidth <= 640 ? "stretch" : "end",
-                    }}
-                  >
-                    <div style={{ minHeight: 34, display: "grid", alignItems: "center" }}>
-                      <span style={styleBadgeScadenza(giorniMancanti(ev.data), ev.urgente)}>
-                        {ev.urgente ? "URGENTE" : labelGiorni(giorniMancanti(ev.data))}
-                      </span>
-                    </div>
-
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: 8,
-                        flexWrap: "wrap",
-                        justifyContent:
-                          typeof window !== "undefined" && window.innerWidth <= 640 ? "stretch" : "flex-end",
-                      }}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const voceOriginale = voci.find((x) => x.id === ev.id);
-                          if (!voceOriginale) return;
-                          apriModifica(voceOriginale);
-                        }}
-                        style={chip(false)}
-                      >
-                        Modifica
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => elimina(ev.id)}
-                        style={{
-                          ...chip(false),
-                          border: "1px solid rgba(239,68,68,0.22)",
-                          color: "rgba(185,28,28,0.96)",
-                          background: "rgba(254,242,242,0.92)",
-                        }}
-                      >
-                        Elimina
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        <div
-          style={{
-            ...ui.card,
-            padding: 18,
-            border: "1px solid rgba(255,255,255,0.58)",
-            background:
-              "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
-            boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
-            display: "grid",
-            gap: 14,
-          }}
-        >
-          <div>
-            <div
-              style={{
-                fontSize: 20,
-                fontWeight: 1000,
-                letterSpacing: -0.3,
-                color: "rgba(15,23,42,0.98)",
-              }}
-            >
-              Eventi passati
-            </div>
-            <div
-              style={{
-                marginTop: 4,
-                fontSize: 12,
-                fontWeight: 850,
-                color: "rgba(71,85,105,0.82)",
-              }}
-            >
-              Archivio automatico degli eventi già trascorsi con filtro Dal / Al
-            </div>
-          </div>
+          <MiniCalendarioEventi
+            mese={meseCorrente}
+            eventi={eventiConsultaMese}
+            onPrevMonth={mesePrecedente}
+            onNextMonth={meseSuccessivo}
+            onOpenEvent={(id) => {
+              const voceOriginale = voci.find((x) => x.id === id);
+              if (!voceOriginale) return;
+              apriModifica(voceOriginale);
+            }}
+          />
 
           <div
             style={{
               display: "grid",
-              gap: 10,
-              width: "100%",
-              minWidth: 0,
+              gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+              gap: 14,
             }}
+            className="remember-grid-2"
           >
             <div
               style={{
+                ...ui.card,
+                padding: 18,
+                border: "1px solid rgba(255,255,255,0.58)",
+                background:
+                  "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
+                boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(0, 1fr))",
-                gap: 10,
-                width: "100%",
-                minWidth: 0,
+                gap: 14,
               }}
             >
-              <div style={{ minWidth: 0 }}>
+              <div>
                 <div
                   style={{
-                    fontSize: 12,
-                    fontWeight: 900,
-                    color: "rgba(71,85,105,0.86)",
-                    marginBottom: 6,
+                    fontSize: 20,
+                    fontWeight: 1000,
+                    letterSpacing: -0.3,
+                    color: "rgba(15,23,42,0.98)",
                   }}
                 >
-                  Dal
+                  Eventi del mese
                 </div>
-                <input
-                  type="date"
-                  value={filtroEventiPassati.dal}
-                  onChange={(e) =>
-                    setFiltroEventiPassati((prev) => ({ ...prev, dal: e.target.value }))
-                  }
+                <div
                   style={{
-                    ...inputLight(false),
-                    width: "100%",
-                    minWidth: 0,
-                    maxWidth: "100%",
-                    height: typeof window !== "undefined" && window.innerWidth <= 640 ? 56 : 52,
-                    padding: "10px 14px",
-                    boxSizing: "border-box",
-                    appearance: "none",
-                    WebkitAppearance: "none",
-                    background: "rgba(255,255,255,1)",
-                    color: "rgba(15,23,42,0.98)",
-                    WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                    caretColor: "rgba(15,23,42,0.98)",
-                    border: "1px solid rgba(148,163,184,0.22)",
-                    fontSize: 15,
-                    fontWeight: 900,
-                    borderRadius: 18,
+                    marginTop: 4,
+                    fontSize: 12,
+                    fontWeight: 850,
+                    color: "rgba(71,85,105,0.82)",
                   }}
-                />
+                >
+                  Tutti gli eventi del mese selezionato nel calendario
+                </div>
               </div>
 
-              <div style={{ minWidth: 0 }}>
-                <div
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 900,
-                    color: "rgba(71,85,105,0.86)",
-                    marginBottom: 6,
-                  }}
-                >
-                  Al
-                </div>
-                <input
-                  type="date"
-                  value={filtroEventiPassati.al}
-                  onChange={(e) =>
-                    setFiltroEventiPassati((prev) => ({ ...prev, al: e.target.value }))
-                  }
-                  style={{
-                    ...inputLight(false),
-                    width: "100%",
-                    minWidth: 0,
-                    maxWidth: "100%",
-                    height: typeof window !== "undefined" && window.innerWidth <= 640 ? 56 : 52,
-                    padding: "10px 14px",
-                    boxSizing: "border-box",
-                    appearance: "none",
-                    WebkitAppearance: "none",
-                    background: "rgba(255,255,255,1)",
-                    color: "rgba(15,23,42,0.98)",
-                    WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                    caretColor: "rgba(15,23,42,0.98)",
-                    border: "1px solid rgba(148,163,184,0.22)",
-                    fontSize: 15,
-                    fontWeight: 900,
-                    borderRadius: 18,
-                  }}
-                />
+              <div style={{ display: "grid", gap: 10 }}>
+                {eventiProssimiConsulta.length === 0 ? (
+                  <div
+                    style={{
+                      padding: 14,
+                      borderRadius: 18,
+                      border: "1px solid rgba(148,163,184,0.16)",
+                      background: "rgba(255,255,255,0.84)",
+                      fontSize: 13,
+                      fontWeight: 850,
+                      color: "rgba(100,116,139,0.86)",
+                      textAlign: "center",
+                    }}
+                  >
+                    Nessun evento futuro nel mese selezionato.
+                  </div>
+                ) : (
+                  eventiProssimiConsulta.map((ev) => (
+                    <div
+                      key={ev.id}
+                      style={{
+                        padding: 14,
+                        borderRadius: 18,
+                        border: "1px solid rgba(79,70,229,0.12)",
+                        background:
+                          "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.94))",
+                        boxShadow: "0 8px 18px rgba(15,23,42,0.05)",
+                        display: "grid",
+                        gridTemplateColumns: "minmax(0, 1fr) auto",
+                        gap: 12,
+                        alignItems: "start",
+                      }}
+                    >
+                      <div style={{ minWidth: 0, display: "grid", gap: 6 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                          {badgeTipo(ev.tipo)}
+                          {ev.urgente && badgeUrgente()}
+                        </div>
+
+                        <div
+                          style={{
+                            fontSize: 15,
+                            fontWeight: 950,
+                            color: "rgba(15,23,42,0.96)",
+                            lineHeight: 1.25,
+                          }}
+                        >
+                          {ev.titolo}
+                        </div>
+
+                        <div
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 850,
+                            color: "rgba(100,116,139,0.84)",
+                          }}
+                        >
+                          {formattaDataBreve(ev.data)} • {ev.ora}
+                        </div>
+
+                        {ev.nota && (
+                          <div
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 800,
+                              color: "rgba(71,85,105,0.82)",
+                              lineHeight: 1.35,
+                            }}
+                          >
+                            {ev.nota}
+                          </div>
+                        )}
+                      </div>
+
+                      <div
+                        style={{
+                          display: "grid",
+                          gap: 8,
+                          justifyItems: "end",
+                        }}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => apriModifica(ev)}
+                          style={chip(false)}
+                        >
+                          Modifica
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => elimina(ev.id)}
+                          style={{
+                            ...chip(false),
+                            border: "1px solid rgba(239,68,68,0.22)",
+                            color: "rgba(185,28,28,0.96)",
+                            background: "rgba(254,242,242,0.92)",
+                          }}
+                        >
+                          Elimina
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setFiltroEventiPassati({ dal: "", al: "" })}
+            <div
               style={{
-                border: "1px solid rgba(148,163,184,0.18)",
+                ...ui.card,
+                padding: 18,
+                border: "1px solid rgba(255,255,255,0.58)",
                 background:
-                  "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
-                borderRadius: 16,
-                fontWeight: 900,
-                cursor: "pointer",
-                color: "rgba(15,23,42,0.86)",
-                minHeight: 46,
-                width: "100%",
-                minWidth: 0,
-                boxSizing: "border-box",
-                boxShadow: "0 8px 18px rgba(15,23,42,0.05)",
+                  "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
+                boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
+                display: "grid",
+                gap: 14,
               }}
             >
-              Reset filtri
-            </button>
-          </div>
-
-          <div style={{ display: "grid", gap: 10 }}>
-            {eventiConsultaPassatiFiltrati.length === 0 ? (
-              <div
-                style={{
-                  padding: 14,
-                  borderRadius: 18,
-                  border: "1px solid rgba(148,163,184,0.16)",
-                  background: "rgba(255,255,255,0.84)",
-                  fontSize: 13,
-                  fontWeight: 850,
-                  color: "rgba(100,116,139,0.86)",
-                  textAlign: "center",
-                }}
-              >
-                Nessun evento passato trovato con i filtri selezionati.
-              </div>
-            ) : (
-              eventiConsultaPassatiFiltrati.map((ev) => (
+              <div>
                 <div
-                  key={ev.id}
                   style={{
-                    padding: 14,
-                    borderRadius: 20,
-                    border:
-                      ev.tipo === "scadenza"
-                        ? "1px solid rgba(16,185,129,0.14)"
-                        : "1px solid rgba(124,58,237,0.14)",
-                    background:
-                      ev.tipo === "scadenza"
-                        ? "linear-gradient(180deg, rgba(236,253,245,0.92), rgba(255,255,255,0.90))"
-                        : "linear-gradient(180deg, rgba(245,243,255,0.92), rgba(255,255,255,0.90))",
-                    boxShadow: "0 8px 18px rgba(15,23,42,0.05)",
-                    display: "grid",
-                    gridTemplateColumns:
-                      typeof window !== "undefined" && window.innerWidth <= 640
-                        ? "minmax(0, 1fr)"
-                        : "minmax(0, 1fr) auto",
-                    gap: 12,
-                    alignItems: "start",
+                    fontSize: 20,
+                    fontWeight: 1000,
+                    letterSpacing: -0.3,
+                    color: "rgba(15,23,42,0.98)",
                   }}
                 >
-                  <div style={{ display: "grid", gap: 7, minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      {badgeTipo(ev.tipo)}
-                      {ev.urgente && badgeUrgente()}
-                    </div>
+                  Eventi passati
+                </div>
+                <div
+                  style={{
+                    marginTop: 4,
+                    fontSize: 12,
+                    fontWeight: 850,
+                    color: "rgba(71,85,105,0.82)",
+                  }}
+                >
+                  Archivio automatico eventi con filtro data
+                </div>
+              </div>
 
-                    <div
-                      style={{
-                        fontSize: 15,
-                        fontWeight: 1000,
-                        color: "rgba(15,23,42,0.97)",
-                        lineHeight: 1.25,
-                      }}
-                    >
-                      {ev.titolo}
-                    </div>
-
+              <div
+                style={{
+                  display: "grid",
+                  gap: 10,
+                  width: "100%",
+                  minWidth: 0,
+                }}
+              >
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(0, 1fr))",
+                    gap: 10,
+                    width: "100%",
+                    minWidth: 0,
+                  }}
+                >
+                  <div style={{ minWidth: 0 }}>
                     <div
                       style={{
                         fontSize: 12,
-                        fontWeight: 850,
-                        color: "rgba(71,85,105,0.82)",
+                        fontWeight: 900,
+                        color: "rgba(71,85,105,0.86)",
+                        marginBottom: 6,
                       }}
                     >
-                      {formattaDataBreve(ev.data)} • {ev.ora}
+                      Dal
                     </div>
-
-                    {ev.nota && (
-                      <div
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 800,
-                          color: "rgba(71,85,105,0.82)",
-                          lineHeight: 1.4,
-                        }}
-                      >
-                        {ev.nota}
-                      </div>
-                    )}
+                    <input
+                      type="date"
+                      value={filtroFinanzaLista.dal}
+                      onChange={(e) =>
+                        setFiltroFinanzaLista((prev) => ({ ...prev, dal: e.target.value }))
+                      }
+                      style={{
+                        ...inputLight(false),
+                        width: "100%",
+                        minWidth: 0,
+                        maxWidth: "100%",
+                        height: typeof window !== "undefined" && window.innerWidth <= 640 ? 56 : 52,
+                        padding: "10px 14px",
+                        boxSizing: "border-box",
+                        appearance: "none",
+                        WebkitAppearance: "none",
+                        background: "rgba(255,255,255,1)",
+                        color: "rgba(15,23,42,0.98)",
+                        WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                        caretColor: "rgba(15,23,42,0.98)",
+                        border: "1px solid rgba(148,163,184,0.22)",
+                        fontSize: 15,
+                        fontWeight: 900,
+                        borderRadius: 18,
+                      }}
+                    />
                   </div>
 
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: 8,
-                      flexWrap: "wrap",
-                      justifyContent:
-                        typeof window !== "undefined" && window.innerWidth <= 640 ? "stretch" : "flex-end",
-                    }}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const voceOriginale = voci.find((x) => x.id === ev.id);
-                        if (!voceOriginale) return;
-                        apriModifica(voceOriginale);
-                      }}
-                      style={chip(false)}
-                    >
-                      Modifica
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => elimina(ev.id)}
+                  <div style={{ minWidth: 0 }}>
+                    <div
                       style={{
-                        ...chip(false),
-                        border: "1px solid rgba(239,68,68,0.22)",
-                        color: "rgba(185,28,28,0.96)",
-                        background: "rgba(254,242,242,0.92)",
+                        fontSize: 12,
+                        fontWeight: 900,
+                        color: "rgba(71,85,105,0.86)",
+                        marginBottom: 6,
                       }}
                     >
-                      Elimina
-                    </button>
+                      Al
+                    </div>
+                    <input
+                      type="date"
+                      value={filtroFinanzaLista.al}
+                      onChange={(e) =>
+                        setFiltroFinanzaLista((prev) => ({ ...prev, al: e.target.value }))
+                      }
+                      style={{
+                        ...inputLight(false),
+                        width: "100%",
+                        minWidth: 0,
+                        maxWidth: "100%",
+                        height: typeof window !== "undefined" && window.innerWidth <= 640 ? 56 : 52,
+                        padding: "10px 14px",
+                        boxSizing: "border-box",
+                        appearance: "none",
+                        WebkitAppearance: "none",
+                        background: "rgba(255,255,255,1)",
+                        color: "rgba(15,23,42,0.98)",
+                        WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                        caretColor: "rgba(15,23,42,0.98)",
+                        border: "1px solid rgba(148,163,184,0.22)",
+                        fontSize: 15,
+                        fontWeight: 900,
+                        borderRadius: 18,
+                      }}
+                    />
                   </div>
                 </div>
-              ))
-            )}
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFiltroFinanzaLista((prev) => ({ ...prev, dal: "", al: "" }))
+                  }
+                  style={{
+                    border: "1px solid rgba(148,163,184,0.18)",
+                    background:
+                      "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
+                    borderRadius: 16,
+                    fontWeight: 900,
+                    cursor: "pointer",
+                    color: "rgba(15,23,42,0.86)",
+                    minHeight: 46,
+                    width: "100%",
+                    minWidth: 0,
+                    boxSizing: "border-box",
+                    boxShadow: "0 8px 18px rgba(15,23,42,0.05)",
+                  }}
+                >
+                  Reset filtri
+                </button>
+              </div>
+
+              <div style={{ display: "grid", gap: 10 }}>
+                {eventiPassatiFiltrati.length === 0 ? (
+                  <div
+                    style={{
+                      padding: 14,
+                      borderRadius: 18,
+                      border: "1px solid rgba(148,163,184,0.16)",
+                      background: "rgba(255,255,255,0.84)",
+                      fontSize: 13,
+                      fontWeight: 850,
+                      color: "rgba(100,116,139,0.86)",
+                      textAlign: "center",
+                    }}
+                  >
+                    Nessun evento passato trovato.
+                  </div>
+                ) : (
+                  eventiPassatiFiltrati.map((ev) => (
+                    <div
+                      key={ev.id}
+                      style={{
+                        padding: 14,
+                        borderRadius: 18,
+                        border: "1px solid rgba(148,163,184,0.14)",
+                        background:
+                          "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.94))",
+                        boxShadow: "0 8px 18px rgba(15,23,42,0.05)",
+                        display: "grid",
+                        gridTemplateColumns: "minmax(0, 1fr) auto",
+                        gap: 12,
+                        alignItems: "start",
+                      }}
+                    >
+                      <div style={{ minWidth: 0, display: "grid", gap: 6 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                          {badgeTipo(ev.tipo)}
+                          {ev.urgente && badgeUrgente()}
+                        </div>
+
+                        <div
+                          style={{
+                            fontSize: 15,
+                            fontWeight: 950,
+                            color: "rgba(15,23,42,0.96)",
+                            lineHeight: 1.25,
+                          }}
+                        >
+                          {ev.titolo}
+                        </div>
+
+                        <div
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 850,
+                            color: "rgba(100,116,139,0.84)",
+                          }}
+                        >
+                          {formattaDataBreve(ev.data)} • {ev.ora}
+                        </div>
+
+                        {ev.nota && (
+                          <div
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 800,
+                              color: "rgba(71,85,105,0.82)",
+                              lineHeight: 1.35,
+                            }}
+                          >
+                            {ev.nota}
+                          </div>
+                        )}
+                      </div>
+
+                      <div
+                        style={{
+                          display: "grid",
+                          gap: 8,
+                          justifyItems: "end",
+                        }}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => apriModifica(ev)}
+                          style={chip(false)}
+                        >
+                          Modifica
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => elimina(ev.id)}
+                          style={{
+                            ...chip(false),
+                            border: "1px solid rgba(239,68,68,0.22)",
+                            color: "rgba(185,28,28,0.96)",
+                            background: "rgba(254,242,242,0.92)",
+                          }}
+                        >
+                          Elimina
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      );
+    })()}
   </>
 ) : (
   <div
