@@ -7925,7 +7925,12 @@ function MiniCalendarioControllo({
           overflow: "hidden",
         }}
       >
-        <div>
+        <div
+          style={{
+            display: "grid",
+            gap: 6,
+          }}
+        >
           <div
             style={{
               fontSize: 20,
@@ -7936,15 +7941,16 @@ function MiniCalendarioControllo({
           >
             Lista movimenti
           </div>
+
           <div
             style={{
-              marginTop: 4,
               fontSize: 12,
               fontWeight: 850,
               color: "rgba(71,85,105,0.82)",
+              lineHeight: 1.45,
             }}
           >
-            Uscite filtrate ordinate per data con card compatte
+            Uscite filtrate ordinate per data con card premium compatte, importo sempre in evidenza e azioni rapide.
           </div>
         </div>
 
@@ -7959,7 +7965,14 @@ function MiniCalendarioControllo({
           }}
         >
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 900,
+                color: "rgba(71,85,105,0.86)",
+                marginBottom: 6,
+              }}
+            >
               Dal
             </div>
             <input
@@ -7982,7 +7995,14 @@ function MiniCalendarioControllo({
           </div>
 
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 900,
+                color: "rgba(71,85,105,0.86)",
+                marginBottom: 6,
+              }}
+            >
               Al
             </div>
             <input
@@ -8005,7 +8025,14 @@ function MiniCalendarioControllo({
           </div>
 
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 900,
+                color: "rgba(71,85,105,0.86)",
+                marginBottom: 6,
+              }}
+            >
               Categoria
             </div>
             <select
@@ -8049,20 +8076,36 @@ function MiniCalendarioControllo({
               width: "100%",
               minWidth: 0,
               boxSizing: "border-box",
+              transition: "transform .16s ease, box-shadow .16s ease",
+              boxShadow: "0 8px 18px rgba(15,23,42,0.05)",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-1px)";
+              e.currentTarget.style.boxShadow = "0 12px 22px rgba(15,23,42,0.08)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 8px 18px rgba(15,23,42,0.05)";
             }}
           >
             Reset filtri
           </button>
         </div>
 
-        <div style={{ display: "grid", gap: 8 }}>
+        <div
+          style={{
+            display: "grid",
+            gap: 10,
+          }}
+        >
           {listaMovimentiFinanza.length === 0 ? (
             <div
               style={{
-                padding: 14,
+                padding: 16,
                 borderRadius: 18,
                 border: "1px solid rgba(148,163,184,0.16)",
-                background: "rgba(255,255,255,0.84)",
+                background:
+                  "linear-gradient(180deg, rgba(255,255,255,0.92), rgba(248,250,252,0.88))",
                 fontSize: 13,
                 fontWeight: 850,
                 color: "rgba(100,116,139,0.86)",
@@ -8076,58 +8119,133 @@ function MiniCalendarioControllo({
               <div
                 key={`${mov.origine}_${mov.id}`}
                 style={{
-                  padding: 12,
-                  borderRadius: 18,
+                  padding: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 14,
+                  borderRadius: 20,
                   border: "1px solid rgba(239,68,68,0.14)",
                   background:
-                    "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.94))",
-                  boxShadow: "0 8px 18px rgba(15,23,42,0.05)",
+                    "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.95))",
+                  boxShadow:
+                    "0 10px 22px rgba(15,23,42,0.06), inset 0 1px 0 rgba(255,255,255,0.75)",
                   display: "grid",
-                  gridTemplateColumns: "minmax(0, 1fr) auto",
-                  gap: 10,
+                  gridTemplateColumns:
+                    typeof window !== "undefined" && window.innerWidth <= 640
+                      ? "minmax(0, 1fr)"
+                      : "minmax(0, 1fr) auto",
+                  gap: 12,
                   alignItems: "start",
+                  position: "relative",
+                  overflow: "hidden",
+                  transition: "transform .18s ease, box-shadow .18s ease, border-color .18s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow =
+                    "0 16px 28px rgba(15,23,42,0.08), inset 0 1px 0 rgba(255,255,255,0.75)";
+                  e.currentTarget.style.borderColor = "rgba(239,68,68,0.22)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow =
+                    "0 10px 22px rgba(15,23,42,0.06), inset 0 1px 0 rgba(255,255,255,0.75)";
+                  e.currentTarget.style.borderColor = "rgba(239,68,68,0.14)";
                 }}
               >
-                <div style={{ minWidth: 0, display: "grid", gap: 4 }}>
+                <div
+                  style={{
+                    position: "absolute",
+                    top: -24,
+                    right: -24,
+                    width: 90,
+                    height: 90,
+                    borderRadius: 999,
+                    background: "radial-gradient(circle, rgba(239,68,68,0.14), transparent 68%)",
+                    pointerEvents: "none",
+                  }}
+                />
+
+                <div
+                  style={{
+                    minWidth: 0,
+                    display: "grid",
+                    gap: 7,
+                    position: "relative",
+                    zIndex: 1,
+                  }}
+                >
                   <div
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: 8,
+                      justifyContent: "space-between",
+                      gap: 10,
                       flexWrap: "wrap",
                     }}
                   >
-                    <span
+                    <div
                       style={{
-                        padding: "5px 9px",
-                        borderRadius: 999,
-                        fontSize: 11,
-                        fontWeight: 950,
-                        background: "rgba(254,226,226,0.96)",
-                        border: "1px solid rgba(239,68,68,0.18)",
-                        color: "rgba(153,27,27,0.96)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        flexWrap: "wrap",
+                        minWidth: 0,
                       }}
                     >
-                      {mov.categoria}
-                    </span>
+                      <span
+                        style={{
+                          padding: "6px 10px",
+                          borderRadius: 999,
+                          fontSize: 11,
+                          fontWeight: 950,
+                          background:
+                            "linear-gradient(180deg, rgba(254,226,226,0.98), rgba(254,242,242,0.98))",
+                          border: "1px solid rgba(239,68,68,0.18)",
+                          color: "rgba(153,27,27,0.96)",
+                          boxShadow: "0 6px 14px rgba(239,68,68,0.06)",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {mov.categoria}
+                      </span>
 
-                    <span
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 900,
-                        color: "rgba(100,116,139,0.84)",
-                      }}
-                    >
-                      {formattaDataBreve(mov.data)}
-                    </span>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 900,
+                          color: "rgba(100,116,139,0.84)",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {formattaDataBreve(mov.data)}
+                      </span>
+                    </div>
+
+                    {typeof window !== "undefined" && window.innerWidth <= 640 && (
+                      <div
+                        style={{
+                          padding: "7px 11px",
+                          borderRadius: 999,
+                          border: "1px solid rgba(239,68,68,0.18)",
+                          background:
+                            "linear-gradient(180deg, rgba(254,242,242,0.98), rgba(254,226,226,0.96))",
+                          fontSize: 12,
+                          fontWeight: 1000,
+                          color: "rgba(153,27,27,0.96)",
+                          whiteSpace: "nowrap",
+                          boxShadow: "0 8px 16px rgba(239,68,68,0.06)",
+                        }}
+                      >
+                        {euro(mov.importo)}
+                      </div>
+                    )}
                   </div>
 
                   <div
                     style={{
-                      fontSize: 14,
-                      fontWeight: 950,
-                      color: "rgba(15,23,42,0.96)",
+                      fontSize: 15,
+                      fontWeight: 1000,
+                      color: "rgba(15,23,42,0.97)",
                       lineHeight: 1.25,
+                      letterSpacing: -0.1,
                     }}
                   >
                     {mov.dettaglio || mov.descrizione}
@@ -8136,13 +8254,17 @@ function MiniCalendarioControllo({
                   {mov.nota && (
                     <div
                       style={{
+                        padding: "8px 10px",
+                        borderRadius: 14,
+                        background: "rgba(241,245,249,0.88)",
+                        border: "1px solid rgba(148,163,184,0.14)",
                         fontSize: 12,
                         fontWeight: 800,
-                        color: "rgba(71,85,105,0.82)",
-                        lineHeight: 1.35,
+                        color: "rgba(71,85,105,0.84)",
+                        lineHeight: 1.4,
                       }}
                     >
-                      Nota: {mov.nota}
+                      <span style={{ fontWeight: 950, color: "rgba(51,65,85,0.92)" }}>Nota:</span> {mov.nota}
                     </div>
                   )}
                 </div>
@@ -8151,30 +8273,52 @@ function MiniCalendarioControllo({
                   style={{
                     display: "grid",
                     gap: 8,
-                    justifyItems: "end",
-                    minWidth: 100,
+                    justifyItems:
+                      typeof window !== "undefined" && window.innerWidth <= 640 ? "stretch" : "end",
+                    minWidth: typeof window !== "undefined" && window.innerWidth <= 640 ? 0 : 112,
+                    position: "relative",
+                    zIndex: 1,
                   }}
                 >
+                  {!(typeof window !== "undefined" && window.innerWidth <= 640) && (
+                    <div
+                      style={{
+                        padding: "7px 11px",
+                        borderRadius: 999,
+                        border: "1px solid rgba(239,68,68,0.18)",
+                        background:
+                          "linear-gradient(180deg, rgba(254,242,242,0.98), rgba(254,226,226,0.96))",
+                        fontSize: 12,
+                        fontWeight: 1000,
+                        color: "rgba(153,27,27,0.96)",
+                        whiteSpace: "nowrap",
+                        boxShadow: "0 8px 16px rgba(239,68,68,0.06)",
+                      }}
+                    >
+                      {euro(mov.importo)}
+                    </div>
+                  )}
+
                   <div
                     style={{
-                      padding: "6px 10px",
-                      borderRadius: 999,
-                      border: "1px solid rgba(239,68,68,0.18)",
-                      background: "rgba(254,242,242,0.98)",
-                      fontSize: 12,
-                      fontWeight: 1000,
-                      color: "rgba(153,27,27,0.96)",
-                      whiteSpace: "nowrap",
+                      display: "flex",
+                      gap: 6,
+                      flexWrap: "wrap",
+                      justifyContent:
+                        typeof window !== "undefined" && window.innerWidth <= 640 ? "stretch" : "flex-end",
                     }}
                   >
-                    {euro(mov.importo)}
-                  </div>
-
-                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
                     <button
                       type="button"
                       onClick={() => apriModificaMovimentoFinanza(mov)}
-                      style={chip(false)}
+                      style={{
+                        ...chip(false),
+                        minWidth: typeof window !== "undefined" && window.innerWidth <= 640 ? 0 : 92,
+                        flex: typeof window !== "undefined" && window.innerWidth <= 640 ? 1 : undefined,
+                        justifyContent: "center",
+                        display: "inline-flex",
+                        alignItems: "center",
+                      }}
                     >
                       Modifica
                     </button>
@@ -8184,9 +8328,15 @@ function MiniCalendarioControllo({
                       onClick={() => eliminaMovimentoFinanza(mov)}
                       style={{
                         ...chip(false),
+                        minWidth: typeof window !== "undefined" && window.innerWidth <= 640 ? 0 : 86,
+                        flex: typeof window !== "undefined" && window.innerWidth <= 640 ? 1 : undefined,
+                        justifyContent: "center",
+                        display: "inline-flex",
+                        alignItems: "center",
                         border: "1px solid rgba(239,68,68,0.22)",
                         color: "rgba(185,28,28,0.96)",
-                        background: "rgba(254,242,242,0.92)",
+                        background:
+                          "linear-gradient(180deg, rgba(254,242,242,0.96), rgba(254,226,226,0.88))",
                       }}
                     >
                       Elimina
@@ -8198,7 +8348,6 @@ function MiniCalendarioControllo({
           )}
         </div>
       </div>
-    </div>
 
     {/* MODALE MODIFICA FINANZA */}
     {movimentoFinanzaInModifica && (
