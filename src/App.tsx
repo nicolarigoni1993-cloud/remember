@@ -1769,7 +1769,7 @@ const [finanzaVistaGrafico, setFinanzaVistaGrafico] = useState<"mese" | "anno">(
 const [finanzaAnnoSelezionato, setFinanzaAnnoSelezionato] = useState(new Date().getFullYear());
 const [finanzaMeseSelezionato, setFinanzaMeseSelezionato] = useState(new Date().getMonth());
 
-const [filtroFinanzaMese, setFiltroFinanzaMese] = useState<FiltroFinanza>({
+const [filtroFinanzaMese,] = useState<FiltroFinanza>({
   dal: "",
   al: "",
   categoria: "",
