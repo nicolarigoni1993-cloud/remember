@@ -763,354 +763,7 @@ const categorieUscitaBase = useMemo(
 
 
 
-const [finanzaVistaGrafico, setFinanzaVistaGrafico] = useState<"mese" | "anno">("mese");
-const [finanzaAnnoSelezionato, setFinanzaAnnoSelezionato] = useState(new Date().getFullYear());
-const [finanzaMeseSelezionato, setFinanzaMeseSelezionato] = useState(new Date().getMonth());
 
-const [filtroFinanzaMese, setFiltroFinanzaMese] = useState<FiltroFinanza>({
-  dal: "",
-  al: "",
-  categoria: "",
-});
-
-const [filtroFinanzaGrafico, setFiltroFinanzaGrafico] = useState<FiltroFinanza>({
-  dal: "",
-  al: "",
-  categoria: "",
-});
-
-const [filtroFinanzaLista, setFiltroFinanzaLista] = useState<FiltroFinanza>({
-  dal: "",
-  al: "",
-  categoria: "",
-});
-
-const [movimentoFinanzaInModifica, setMovimentoFinanzaInModifica] = useState<MovimentoFinanzaItem | null>(null);
-const [finanzaModData, setFinanzaModData] = useState("");
-const [finanzaModCategoria, setFinanzaModCategoria] = useState("");
-const [finanzaModDettaglio, setFinanzaModDettaglio] = useState("");
-const [finanzaModImporto, setFinanzaModImporto] = useState("");
-const [finanzaModNota, setFinanzaModNota] = useState("");
-
-const euro = (n: number) =>
-  n.toLocaleString("it-IT", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }) + " €";
-
-const nomeMesiBrevi = ["Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic"];
-const nomeMesiCompleti = [
-  "Gennaio",
-  "Febbraio",
-  "Marzo",
-  "Aprile",
-  "Maggio",
-  "Giugno",
-  "Luglio",
-  "Agosto",
-  "Settembre",
-  "Ottobre",
-  "Novembre",
-  "Dicembre",
-];
-
-const tutteUsciteExtraStorico = useMemo(() => {
-  return Object.entries(incassi).flatMap(([meseKey, dati]) =>
-    (dati.usciteExtra ?? []).map((x) => ({
-      id: x.id,
-      origine: "uscita-extra" as const,
-      meseKeyOrigine: meseKey,
-      data: x.data,
-      descrizione: x.descrizione,
-      importo: x.importo,
-      nota: x.nota,
-      categoria: estraiCategoriaMovimento(x.descrizione) || "Altro",
-      dettaglio: estraiDettaglioMovimento(x.descrizione),
-    }))
-  );
-}, [incassi]);
-
-const tutteVociUscitaStorico = useMemo(() => {
-  return voci
-    .filter((v) => v.movimento === "uscita" && v.importo !== null)
-    .map((v) => ({
-      id: v.id,
-      origine: "voce-uscita" as const,
-      data: v.data,
-      descrizione: v.titolo,
-      importo: v.importo ?? 0,
-      nota: v.nota ?? "",
-      categoria: estraiCategoriaMovimento(v.titolo) || "Altro",
-      dettaglio: estraiDettaglioMovimento(v.titolo),
-      voceTipo: v.tipo,
-      voceOra: v.ora,
-      voceUrgente: v.urgente,
-      voceFatto: v.fatto,
-    }));
-}, [voci]);
-
-const tuttiMovimentiFinanza = useMemo<MovimentoFinanzaItem[]>(() => {
-  return [...tutteUsciteExtraStorico, ...tutteVociUscitaStorico].sort((a, b) => {
-    const d = a.data.localeCompare(b.data);
-    if (d !== 0) return d;
-    return a.descrizione.localeCompare(b.descrizione);
-  });
-}, [tutteUsciteExtraStorico, tutteVociUscitaStorico]);
-
-const categorieUscitaFinanza = useMemo(() => {
-  const base = [...categorieUscitaBase, ...categorieUscitaCustom];
-  const dinamiche = tuttiMovimentiFinanza.map((x) => x.categoria).filter(Boolean);
-  return Array.from(new Set([...base, ...dinamiche])).sort((a, b) => a.localeCompare(b, "it"));
-}, [categorieUscitaBase, categorieUscitaCustom, tuttiMovimentiFinanza]);
-
-function applicaFiltroFinanza<T extends { data: string; categoria?: string }>(
-  lista: T[],
-  filtro: FiltroFinanza
-) {
-  return lista.filter((item) => {
-    if (filtro.dal && item.data < filtro.dal) return false;
-    if (filtro.al && item.data > filtro.al) return false;
-    if (filtro.categoria && (item.categoria ?? "") !== filtro.categoria) return false;
-    return true;
-  });
-}
-
-function apriModificaMovimentoFinanza(item: MovimentoFinanzaItem) {
-  setMovimentoFinanzaInModifica(item);
-  setFinanzaModData(item.data);
-  setFinanzaModCategoria(item.categoria || "");
-  setFinanzaModDettaglio(item.dettaglio || "");
-  setFinanzaModImporto(String(item.importo ?? ""));
-  setFinanzaModNota(item.nota ?? "");
-}
-
-function chiudiModificaMovimentoFinanza() {
-  setMovimentoFinanzaInModifica(null);
-  setFinanzaModData("");
-  setFinanzaModCategoria("");
-  setFinanzaModDettaglio("");
-  setFinanzaModImporto("");
-  setFinanzaModNota("");
-}
-
-function salvaModificaMovimentoFinanza() {
-  if (!movimentoFinanzaInModifica) return;
-
-  const importoNum = Number(finanzaModImporto.replace(",", "."));
-
-  if (!finanzaModData) {
-    alert("Inserisci la data.");
-    return;
-  }
-
-  if (!finanzaModCategoria.trim()) {
-    alert("Seleziona una categoria.");
-    return;
-  }
-
-  if (!Number.isFinite(importoNum) || importoNum <= 0) {
-    alert("Inserisci un importo valido.");
-    return;
-  }
-
-  const descrizioneFinale = componiDescrizioneMovimento(finanzaModCategoria.trim(), finanzaModDettaglio.trim());
-
-  if (movimentoFinanzaInModifica.origine === "voce-uscita") {
-    setVoci((prev) =>
-      prev.map((x) =>
-        x.id === movimentoFinanzaInModifica.id
-          ? {
-              ...x,
-              data: finanzaModData,
-              titolo: descrizioneFinale,
-              importo: importoNum,
-              nota: finanzaModNota.trim(),
-              movimento: "uscita" as Movimento,
-              fatto: vocePassata(finanzaModData, x.ora),
-            }
-          : x
-      )
-    );
-  } else {
-    const nuovoMeseKey = finanzaModData.slice(0, 7);
-    const vecchioMeseKey = movimentoFinanzaInModifica.meseKeyOrigine ?? nuovoMeseKey;
-
-    setIncassi((prev) => {
-      const next = { ...prev };
-
-      next[vecchioMeseKey] = {
-        entrateExtra: next[vecchioMeseKey]?.entrateExtra ?? [],
-        usciteExtra: (next[vecchioMeseKey]?.usciteExtra ?? []).filter((x) => x.id !== movimentoFinanzaInModifica.id),
-      };
-
-      const recordAggiornato: UscitaExtra = {
-        id: movimentoFinanzaInModifica.id,
-        data: finanzaModData,
-        descrizione: descrizioneFinale,
-        importo: importoNum,
-        nota: finanzaModNota.trim(),
-      };
-
-      if (nuovoMeseKey === vecchioMeseKey) {
-        next[nuovoMeseKey] = {
-          entrateExtra: next[nuovoMeseKey]?.entrateExtra ?? [],
-          usciteExtra: [...(next[nuovoMeseKey]?.usciteExtra ?? []), recordAggiornato].sort((a, b) =>
-            a.data.localeCompare(b.data)
-          ),
-        };
-      } else {
-        next[nuovoMeseKey] = {
-          entrateExtra: next[nuovoMeseKey]?.entrateExtra ?? [],
-          usciteExtra: [...(next[nuovoMeseKey]?.usciteExtra ?? []), recordAggiornato].sort((a, b) =>
-            a.data.localeCompare(b.data)
-          ),
-        };
-      }
-
-      return next;
-    });
-  }
-
-  chiudiModificaMovimentoFinanza();
-  setPagina("consulta");
-  setConsultaSezione("finanza");
-}
-
-function eliminaMovimentoFinanza(item: MovimentoFinanzaItem) {
-  const ok = confirm("Vuoi eliminare questo movimento?");
-  if (!ok) return;
-
-  if (item.origine === "voce-uscita") {
-    setVoci((prev) => prev.filter((x) => x.id !== item.id));
-    return;
-  }
-
-  const meseKey = item.meseKeyOrigine ?? item.data.slice(0, 7);
-
-  setIncassi((prev) => ({
-    ...prev,
-    [meseKey]: {
-      entrateExtra: prev[meseKey]?.entrateExtra ?? [],
-      usciteExtra: (prev[meseKey]?.usciteExtra ?? []).filter((x) => x.id !== item.id),
-    },
-  }));
-}
-
-const entrateMeseSezioneFinanza = useMemo(() => {
-  const base = entrateExtraVal.map((x) => ({
-    ...x,
-    categoria: estraiCategoriaMovimento(x.descrizione) || "",
-  }));
-
-  const filtrate = applicaFiltroFinanza(base, {
-    ...filtroFinanzaMese,
-    categoria: "",
-  });
-
-  return filtrate.reduce((s, x) => s + x.importo, 0);
-}, [entrateExtraVal, filtroFinanzaMese]);
-
-const usciteMeseSezioneFinanza = useMemo(() => {
-  const base = tuttiMovimentiFinanza.filter((x) => {
-    const [a, m] = x.data.split("-").map(Number);
-    return a === meseCorrente.getFullYear() && (m - 1) === meseCorrente.getMonth();
-  });
-
-  return applicaFiltroFinanza(base, filtroFinanzaMese).reduce((s, x) => s + x.importo, 0);
-}, [tuttiMovimentiFinanza, meseCorrente, filtroFinanzaMese]);
-
-const saldoMeseSezioneFinanza = entrateMeseSezioneFinanza - usciteMeseSezioneFinanza;
-
-const usciteGraficoBase = useMemo(() => {
-  return tuttiMovimentiFinanza.filter((x) => {
-    const [a, m] = x.data.split("-").map(Number);
-
-    if (finanzaVistaGrafico === "mese") {
-      return a === finanzaAnnoSelezionato && (m - 1) === finanzaMeseSelezionato;
-    }
-
-    return a === finanzaAnnoSelezionato;
-  });
-}, [tuttiMovimentiFinanza, finanzaVistaGrafico, finanzaAnnoSelezionato, finanzaMeseSelezionato]);
-
-const usciteGraficoFiltrate = useMemo(() => {
-  return applicaFiltroFinanza(usciteGraficoBase, filtroFinanzaGrafico);
-}, [usciteGraficoBase, filtroFinanzaGrafico]);
-
-const uscitePerCategoriaGrafico = useMemo(() => {
-  const grouped = new Map<string, number>();
-
-  for (const mov of usciteGraficoFiltrate) {
-    grouped.set(mov.categoria, (grouped.get(mov.categoria) ?? 0) + mov.importo);
-  }
-
-  return Array.from(grouped.entries())
-    .map(([categoria, totale]) => ({ categoria, totale }))
-    .sort((a, b) => b.totale - a.totale);
-}, [usciteGraficoFiltrate]);
-
-const totaleGraficoUscite = useMemo(() => {
-  return uscitePerCategoriaGrafico.reduce((s, x) => s + x.totale, 0);
-}, [uscitePerCategoriaGrafico]);
-
-const pieColors = [
-  "#ef4444",
-  "#f97316",
-  "#f59e0b",
-  "#10b981",
-  "#06b6d4",
-  "#3b82f6",
-  "#8b5cf6",
-  "#ec4899",
-  "#64748b",
-];
-
-const pieGradientFinanza = useMemo(() => {
-  if (uscitePerCategoriaGrafico.length === 0 || totaleGraficoUscite <= 0) {
-    return "conic-gradient(#e5e7eb 0deg 360deg)";
-  }
-
-  let corrente = 0;
-  const parti: string[] = [];
-
-  uscitePerCategoriaGrafico.forEach((item, index) => {
-    const angolo = (item.totale / totaleGraficoUscite) * 360;
-    const start = corrente;
-    const end = corrente + angolo;
-    parti.push(`${pieColors[index % pieColors.length]} ${start}deg ${end}deg`);
-    corrente = end;
-  });
-
-  return `conic-gradient(${parti.join(", ")})`;
-}, [uscitePerCategoriaGrafico, totaleGraficoUscite]);
-
-const maxBarFinanza = useMemo(() => {
-  return Math.max(...uscitePerCategoriaGrafico.map((x) => x.totale), 1);
-}, [uscitePerCategoriaGrafico]);
-
-const listaMovimentiFinanza = useMemo(() => {
-  return applicaFiltroFinanza(tuttiMovimentiFinanza, filtroFinanzaLista)
-    .slice()
-    .sort((a, b) => {
-      const d = b.data.localeCompare(a.data);
-      if (d !== 0) return d;
-      return b.importo - a.importo;
-    });
-}, [tuttiMovimentiFinanza, filtroFinanzaLista]);
-
-const anniFinanzaDisponibili = useMemo(() => {
-  const anni = Array.from(
-    new Set(tuttiMovimentiFinanza.map((x) => Number(x.data.slice(0, 4))).filter((n) => Number.isFinite(n)))
-  ).sort((a, b) => b - a);
-
-  return anni.length ? anni : [new Date().getFullYear()];
-}, [tuttiMovimentiFinanza]);
-
-useEffect(() => {
-  if (!anniFinanzaDisponibili.includes(finanzaAnnoSelezionato)) {
-    setFinanzaAnnoSelezionato(anniFinanzaDisponibili[0]);
-  }
-}, [anniFinanzaDisponibili, finanzaAnnoSelezionato]);
 
 
 
@@ -2110,6 +1763,360 @@ void elimina;
 
   const entrateExtraVal = incassi[meseKey]?.entrateExtra ?? [];
   const usciteExtraVal = incassi[meseKey]?.usciteExtra ?? [];
+
+
+const [finanzaVistaGrafico, setFinanzaVistaGrafico] = useState<"mese" | "anno">("mese");
+const [finanzaAnnoSelezionato, setFinanzaAnnoSelezionato] = useState(new Date().getFullYear());
+const [finanzaMeseSelezionato, setFinanzaMeseSelezionato] = useState(new Date().getMonth());
+
+const [filtroFinanzaMese, setFiltroFinanzaMese] = useState<FiltroFinanza>({
+  dal: "",
+  al: "",
+  categoria: "",
+});
+
+const [filtroFinanzaGrafico, setFiltroFinanzaGrafico] = useState<FiltroFinanza>({
+  dal: "",
+  al: "",
+  categoria: "",
+});
+
+const [filtroFinanzaLista, setFiltroFinanzaLista] = useState<FiltroFinanza>({
+  dal: "",
+  al: "",
+  categoria: "",
+});
+
+const [movimentoFinanzaInModifica, setMovimentoFinanzaInModifica] = useState<MovimentoFinanzaItem | null>(null);
+const [finanzaModData, setFinanzaModData] = useState("");
+const [finanzaModCategoria, setFinanzaModCategoria] = useState("");
+const [finanzaModDettaglio, setFinanzaModDettaglio] = useState("");
+const [finanzaModImporto, setFinanzaModImporto] = useState("");
+const [finanzaModNota, setFinanzaModNota] = useState("");
+
+const euro = (n: number) =>
+  n.toLocaleString("it-IT", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }) + " €";
+
+const nomeMesiCompleti = [
+  "Gennaio",
+  "Febbraio",
+  "Marzo",
+  "Aprile",
+  "Maggio",
+  "Giugno",
+  "Luglio",
+  "Agosto",
+  "Settembre",
+  "Ottobre",
+  "Novembre",
+  "Dicembre",
+];
+
+const tutteUsciteExtraStorico = useMemo(() => {
+  return Object.entries(incassi).flatMap(([meseKeyStorico, dati]) =>
+    (dati.usciteExtra ?? []).map((x) => ({
+      id: x.id,
+      origine: "uscita-extra" as const,
+      meseKeyOrigine: meseKeyStorico,
+      data: x.data,
+      descrizione: x.descrizione,
+      importo: x.importo,
+      nota: x.nota,
+      categoria: estraiCategoriaMovimento(x.descrizione) || "Altro",
+      dettaglio: estraiDettaglioMovimento(x.descrizione),
+    }))
+  );
+}, [incassi]);
+
+const tutteVociUscitaStorico = useMemo(() => {
+  return voci
+    .filter((v) => v.movimento === "uscita" && v.importo !== null)
+    .map((v) => ({
+      id: v.id,
+      origine: "voce-uscita" as const,
+      data: v.data,
+      descrizione: v.titolo,
+      importo: v.importo ?? 0,
+      nota: v.nota ?? "",
+      categoria: estraiCategoriaMovimento(v.titolo) || "Altro",
+      dettaglio: estraiDettaglioMovimento(v.titolo),
+      voceTipo: v.tipo,
+      voceOra: v.ora,
+      voceUrgente: v.urgente,
+      voceFatto: v.fatto,
+    }));
+}, [voci]);
+
+const tuttiMovimentiFinanza = useMemo<MovimentoFinanzaItem[]>(() => {
+  return [...tutteUsciteExtraStorico, ...tutteVociUscitaStorico].sort((a, b) => {
+    const d = a.data.localeCompare(b.data);
+    if (d !== 0) return d;
+    return a.descrizione.localeCompare(b.descrizione);
+  });
+}, [tutteUsciteExtraStorico, tutteVociUscitaStorico]);
+
+const categorieUscitaFinanza = useMemo(() => {
+  const base = [...categorieUscitaBase, ...categorieUscitaCustom];
+  const dinamiche = tuttiMovimentiFinanza.map((x) => x.categoria).filter(Boolean);
+  return Array.from(new Set([...base, ...dinamiche])).sort((a, b) => a.localeCompare(b, "it"));
+}, [categorieUscitaBase, categorieUscitaCustom, tuttiMovimentiFinanza]);
+
+function applicaFiltroFinanza<T extends { data: string; categoria?: string }>(
+  lista: T[],
+  filtro: FiltroFinanza
+) {
+  return lista.filter((item) => {
+    if (filtro.dal && item.data < filtro.dal) return false;
+    if (filtro.al && item.data > filtro.al) return false;
+    if (filtro.categoria && (item.categoria ?? "") !== filtro.categoria) return false;
+    return true;
+  });
+}
+
+function apriModificaMovimentoFinanza(item: MovimentoFinanzaItem) {
+  setMovimentoFinanzaInModifica(item);
+  setFinanzaModData(item.data);
+  setFinanzaModCategoria(item.categoria || "");
+  setFinanzaModDettaglio(item.dettaglio || "");
+  setFinanzaModImporto(String(item.importo ?? ""));
+  setFinanzaModNota(item.nota ?? "");
+}
+
+function chiudiModificaMovimentoFinanza() {
+  setMovimentoFinanzaInModifica(null);
+  setFinanzaModData("");
+  setFinanzaModCategoria("");
+  setFinanzaModDettaglio("");
+  setFinanzaModImporto("");
+  setFinanzaModNota("");
+}
+
+function salvaModificaMovimentoFinanza() {
+  if (!movimentoFinanzaInModifica) return;
+
+  const importoNum = Number(finanzaModImporto.replace(",", "."));
+
+  if (!finanzaModData) {
+    alert("Inserisci la data.");
+    return;
+  }
+
+  if (!finanzaModCategoria.trim()) {
+    alert("Seleziona una categoria.");
+    return;
+  }
+
+  if (!Number.isFinite(importoNum) || importoNum <= 0) {
+    alert("Inserisci un importo valido.");
+    return;
+  }
+
+  const descrizioneFinale = componiDescrizioneMovimento(
+    finanzaModCategoria.trim(),
+    finanzaModDettaglio.trim()
+  );
+
+  if (movimentoFinanzaInModifica.origine === "voce-uscita") {
+    setVoci((prev) =>
+      prev.map((x) =>
+        x.id === movimentoFinanzaInModifica.id
+          ? {
+              ...x,
+              data: finanzaModData,
+              titolo: descrizioneFinale,
+              importo: importoNum,
+              nota: finanzaModNota.trim(),
+              movimento: "uscita" as Movimento,
+              fatto: vocePassata(finanzaModData, x.ora),
+            }
+          : x
+      )
+    );
+  } else {
+    const nuovoMeseKey = finanzaModData.slice(0, 7);
+    const vecchioMeseKey = movimentoFinanzaInModifica.meseKeyOrigine ?? nuovoMeseKey;
+
+    setIncassi((prev) => {
+      const next = { ...prev };
+
+      next[vecchioMeseKey] = {
+        entrateExtra: next[vecchioMeseKey]?.entrateExtra ?? [],
+        usciteExtra: (next[vecchioMeseKey]?.usciteExtra ?? []).filter(
+          (x) => x.id !== movimentoFinanzaInModifica.id
+        ),
+      };
+
+      const recordAggiornato: UscitaExtra = {
+        id: movimentoFinanzaInModifica.id,
+        data: finanzaModData,
+        descrizione: descrizioneFinale,
+        importo: importoNum,
+        nota: finanzaModNota.trim(),
+      };
+
+      next[nuovoMeseKey] = {
+        entrateExtra: next[nuovoMeseKey]?.entrateExtra ?? [],
+        usciteExtra: [...(next[nuovoMeseKey]?.usciteExtra ?? []), recordAggiornato].sort((a, b) =>
+          a.data.localeCompare(b.data)
+        ),
+      };
+
+      return next;
+    });
+  }
+
+  chiudiModificaMovimentoFinanza();
+  setPagina("consulta");
+  setConsultaSezione("finanza");
+}
+
+function eliminaMovimentoFinanza(item: MovimentoFinanzaItem) {
+  const ok = confirm("Vuoi eliminare questo movimento?");
+  if (!ok) return;
+
+  if (item.origine === "voce-uscita") {
+    setVoci((prev) => prev.filter((x) => x.id !== item.id));
+    return;
+  }
+
+  const meseKeyOrigine = item.meseKeyOrigine ?? item.data.slice(0, 7);
+
+  setIncassi((prev) => ({
+    ...prev,
+    [meseKeyOrigine]: {
+      entrateExtra: prev[meseKeyOrigine]?.entrateExtra ?? [],
+      usciteExtra: (prev[meseKeyOrigine]?.usciteExtra ?? []).filter((x) => x.id !== item.id),
+    },
+  }));
+}
+
+const entrateMeseSezioneFinanza = useMemo(() => {
+  const base = entrateExtraVal.map((x) => ({
+    ...x,
+    categoria: estraiCategoriaMovimento(x.descrizione) || "",
+  }));
+
+  const filtrate = applicaFiltroFinanza(base, {
+    ...filtroFinanzaMese,
+    categoria: "",
+  });
+
+  return filtrate.reduce((s, x) => s + x.importo, 0);
+}, [entrateExtraVal, filtroFinanzaMese]);
+
+const usciteMeseSezioneFinanza = useMemo(() => {
+  const base = tuttiMovimentiFinanza.filter((x) => {
+    const [a, m] = x.data.split("-").map(Number);
+    return a === meseCorrente.getFullYear() && m - 1 === meseCorrente.getMonth();
+  });
+
+  return applicaFiltroFinanza(base, filtroFinanzaMese).reduce((s, x) => s + x.importo, 0);
+}, [tuttiMovimentiFinanza, meseCorrente, filtroFinanzaMese]);
+
+const saldoMeseSezioneFinanza = entrateMeseSezioneFinanza - usciteMeseSezioneFinanza;
+
+const usciteGraficoBase = useMemo(() => {
+  return tuttiMovimentiFinanza.filter((x) => {
+    const [a, m] = x.data.split("-").map(Number);
+
+    if (finanzaVistaGrafico === "mese") {
+      return a === finanzaAnnoSelezionato && m - 1 === finanzaMeseSelezionato;
+    }
+
+    return a === finanzaAnnoSelezionato;
+  });
+}, [tuttiMovimentiFinanza, finanzaVistaGrafico, finanzaAnnoSelezionato, finanzaMeseSelezionato]);
+
+const usciteGraficoFiltrate = useMemo(() => {
+  return applicaFiltroFinanza(usciteGraficoBase, filtroFinanzaGrafico);
+}, [usciteGraficoBase, filtroFinanzaGrafico]);
+
+const uscitePerCategoriaGrafico = useMemo(() => {
+  const grouped = new Map<string, number>();
+
+  for (const mov of usciteGraficoFiltrate) {
+    grouped.set(mov.categoria, (grouped.get(mov.categoria) ?? 0) + mov.importo);
+  }
+
+  return Array.from(grouped.entries())
+    .map(([categoria, totale]) => ({ categoria, totale }))
+    .sort((a, b) => b.totale - a.totale);
+}, [usciteGraficoFiltrate]);
+
+const totaleGraficoUscite = useMemo(() => {
+  return uscitePerCategoriaGrafico.reduce((s, x) => s + x.totale, 0);
+}, [uscitePerCategoriaGrafico]);
+
+const pieColors = [
+  "#ef4444",
+  "#f97316",
+  "#f59e0b",
+  "#10b981",
+  "#06b6d4",
+  "#3b82f6",
+  "#8b5cf6",
+  "#ec4899",
+  "#64748b",
+];
+
+const pieGradientFinanza = useMemo(() => {
+  if (uscitePerCategoriaGrafico.length === 0 || totaleGraficoUscite <= 0) {
+    return "conic-gradient(#e5e7eb 0deg 360deg)";
+  }
+
+  let corrente = 0;
+  const parti: string[] = [];
+
+  uscitePerCategoriaGrafico.forEach((item, index) => {
+    const angolo = (item.totale / totaleGraficoUscite) * 360;
+    const start = corrente;
+    const end = corrente + angolo;
+    parti.push(`${pieColors[index % pieColors.length]} ${start}deg ${end}deg`);
+    corrente = end;
+  });
+
+  return `conic-gradient(${parti.join(", ")})`;
+}, [uscitePerCategoriaGrafico, totaleGraficoUscite]);
+
+const maxBarFinanza = useMemo(() => {
+  return Math.max(...uscitePerCategoriaGrafico.map((x) => x.totale), 1);
+}, [uscitePerCategoriaGrafico]);
+
+const listaMovimentiFinanza = useMemo(() => {
+  return applicaFiltroFinanza(tuttiMovimentiFinanza, filtroFinanzaLista)
+    .slice()
+    .sort((a, b) => {
+      const d = b.data.localeCompare(a.data);
+      if (d !== 0) return d;
+      return b.importo - a.importo;
+    });
+}, [tuttiMovimentiFinanza, filtroFinanzaLista]);
+
+const anniFinanzaDisponibili = useMemo(() => {
+  const anni = Array.from(
+    new Set(
+      tuttiMovimentiFinanza
+        .map((x) => Number(x.data.slice(0, 4)))
+        .filter((n) => Number.isFinite(n))
+    )
+  ).sort((a, b) => b - a);
+
+  return anni.length ? anni : [new Date().getFullYear()];
+}, [tuttiMovimentiFinanza]);
+
+useEffect(() => {
+  if (!anniFinanzaDisponibili.includes(finanzaAnnoSelezionato)) {
+    setFinanzaAnnoSelezionato(anniFinanzaDisponibili[0]);
+  }
+}, [anniFinanzaDisponibili, finanzaAnnoSelezionato]);
+
+
+
+
+
 
 function aggiungiEntrataExtra() {
   const importoNum = Number(nuovaEntrataImporto.replace(",", "."));
