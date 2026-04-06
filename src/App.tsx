@@ -847,7 +847,7 @@ const [categorieUscitaCustom] = useState<string[]>(() => {
 const eventiProssimiAggiungi = useMemo(() => {
   return voci
     .filter((v) => v.tipo === "scadenza" || v.tipo === "appuntamento")
-    .filter((v) => !v.fatto)
+    .filter((v) => !vocePassata(v.data, v.ora))
     .slice()
     .sort((a, b) => {
       const d = a.data.localeCompare(b.data);
@@ -1110,6 +1110,21 @@ const ui = useMemo(() => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function chiudiForm() {
   resetForm();
   setMostraForm(false);
@@ -1131,48 +1146,50 @@ function resetForm() {
 
 function apriNuova() {
   resetForm();
+  setPagina("aggiungi");
+  setConsultaSezione("eventi");
+  setAggiungiSezione("eventi");
   setTipo("appuntamento");
   setOra("09:00");
   setMostraForm(false);
-  setAggiungiSezione("eventi");
 }
 
 function apriNuovaConData(dataSelezionata: string) {
   resetForm();
+  setPagina("aggiungi");
+  setConsultaSezione("eventi");
+  setAggiungiSezione("eventi");
   setData(dataSelezionata);
   setOra("09:00");
   setTipo("appuntamento");
   setMostraForm(false);
-  setAggiungiSezione("eventi");
 }
 
 function apriModifica(v: Voce) {
   setIdInModifica(v.id);
   setTitolo(v.titolo);
   setData(v.data);
-  setOra(v.ora);
-  setTipo(v.tipo === "nota" ? "scadenza" : v.tipo);
-  setUrgente(v.urgente);
-  setNota("");
+  setOra(v.ora || "09:00");
+  setTipo(v.tipo === "nota" ? "appuntamento" : v.tipo);
+  setUrgente(Boolean(v.urgente));
+  setNota(typeof v.nota === "string" ? v.nota : "");
   setImporto(v.importo !== null ? String(v.importo) : "");
-  setNotificheMinutiPrima([]);
+  setNotificheMinutiPrima(Array.isArray(v.notificheMinutiPrima) ? v.notificheMinutiPrima : []);
   setCustomNotificaOre("");
-  setMostraForm(false);
+  setPagina("aggiungi");
   setAggiungiSezione("eventi");
+  setMostraForm(false);
 }
 
-
-
-
-
 function salva() {
-  if (classNameIsEmpty(titolo)) {
+  const titoloFinale = titolo.trim();
+  const dataFinale = data.trim();
+  const oraFinale = ora.trim() || "09:00";
+
+  if (classNameIsEmpty(titoloFinale)) {
     alert("Compila almeno la descrizione");
     return;
   }
-
-  const dataFinale = data.trim();
-  const oraFinale = ora.trim();
 
   if (classNameIsEmpty(dataFinale) || classNameIsEmpty(oraFinale)) {
     alert("Compila data e ora");
@@ -1185,7 +1202,7 @@ function salva() {
         x.id === idInModifica
           ? {
               ...x,
-              titolo: titolo.trim(),
+              titolo: titoloFinale,
               data: dataFinale,
               ora: oraFinale,
               tipo: "appuntamento",
@@ -1202,7 +1219,7 @@ function salva() {
   } else {
     const nuova: Voce = {
       id: safeUUID(),
-      titolo: titolo.trim(),
+      titolo: titoloFinale,
       data: dataFinale,
       ora: oraFinale,
       tipo: "appuntamento",
@@ -1218,30 +1235,6 @@ function salva() {
   }
 
   chiudiForm();
-}
-
-function applicaPresetTurno(val: string) {
-  setTurnoPreset(val);
-  setTurnoManuale(false);
-
-  const parti = val.split("-");
-  if (parti.length !== 2) return;
-
-  let start = parti[0].trim();
-  let end = parti[1].trim();
-
-  if (/^\d$/.test(start)) start = `0${start}`;
-  if (/^\d$/.test(end)) end = `0${end}`;
-  if (end === "24") end = "00";
-
-  setTurnoInizio(`${start}:00`);
-  setTurnoFine(`${end}:00`);
-
-  if (turnoOreOrd.trim() === "") {
-    const oreCalcolate =
-      ((Number(end === "00" ? "24" : end) - Number(start) + 24) % 24) || 0;
-    if (oreCalcolate > 0) setTurnoOreOrd(String(oreCalcolate));
-  }
 }
 
 function giorniTraDateInclusive(dataInizio: string, dataFine: string) {
@@ -4853,8 +4846,7 @@ function MiniCalendarioEventi({
   onNextMonth: () => void;
   onOpenEvent: (id: string) => void;
 }) {
-  const isMobile =
-    typeof window !== "undefined" && window.innerWidth <= 640;
+  const isMobile = typeof window !== "undefined" && window.innerWidth <= 640;
 
   const [previewEventoId, setPreviewEventoId] = useState<string | null>(null);
 
@@ -5088,7 +5080,7 @@ function MiniCalendarioEventi({
                   <div
                     key={`empty_${idx}`}
                     style={{
-                      minHeight: isMobile ? 78 : 120,
+                      minHeight: isMobile ? 76 : 118,
                       borderRadius: isMobile ? 16 : 22,
                     }}
                   />
@@ -5111,10 +5103,16 @@ function MiniCalendarioEventi({
               const isFestivo = festivitaSet.has(key);
 
               return (
-                <div
+                <button
                   key={key}
+                  type="button"
+                  onClick={() => {
+                    if (items.length > 0 && firstEvent) {
+                      setPreviewEventoId(firstEvent.id);
+                    }
+                  }}
                   style={{
-                    minHeight: isMobile ? 78 : 120,
+                    minHeight: isMobile ? 76 : 118,
                     borderRadius: isMobile ? 16 : 22,
                     border: isToday
                       ? "2px solid rgba(99,102,241,0.24)"
@@ -5131,6 +5129,10 @@ function MiniCalendarioEventi({
                     gap: isMobile ? 6 : 10,
                     boxSizing: "border-box",
                     overflow: "hidden",
+                    cursor: items.length > 0 ? "pointer" : "default",
+                    appearance: "none",
+                    WebkitAppearance: "none",
+                    textAlign: "initial",
                   }}
                 >
                   <div
@@ -5186,62 +5188,57 @@ function MiniCalendarioEventi({
                         }}
                       />
                     ) : isMobile ? (
-                      <button
-                        type="button"
-                        onClick={() => setPreviewEventoId(firstEvent.id)}
-                        style={{
-                          width: "100%",
-                          maxWidth: 42,
-                          minHeight: 28,
-                          padding: "4px 6px",
-                          borderRadius: 12,
-                          border: "1px solid rgba(148,163,184,0.16)",
-                          background: "rgba(255,255,255,0.95)",
-                          boxShadow: "0 6px 14px rgba(15,23,42,0.06)",
-                          display: "grid",
-                          placeItems: "center",
-                          cursor: "pointer",
-                          lineHeight: 1,
-                        }}
-                      >
+                      <>
                         <div
                           style={{
-                            width: 10,
-                            height: 10,
+                            width: 30,
+                            height: 30,
                             borderRadius: 999,
-                            background: firstEvent.urgente
-                              ? "rgba(239,68,68,0.98)"
-                              : "rgba(139,92,246,0.98)",
-                            boxShadow: firstEvent.urgente
-                              ? "0 0 0 5px rgba(239,68,68,0.12)"
-                              : "0 0 0 4px rgba(139,92,246,0.10)",
-                          }}
-                        />
-                        <div
-                          style={{
-                            marginTop: 3,
-                            fontSize: 9,
-                            fontWeight: 1000,
-                            color: "rgba(15,23,42,0.86)",
+                            border: "1px solid rgba(148,163,184,0.16)",
+                            background: "rgba(255,255,255,0.96)",
+                            boxShadow: "0 6px 14px rgba(15,23,42,0.06)",
+                            display: "grid",
+                            placeItems: "center",
+                            lineHeight: 1,
                           }}
                         >
-                          {items.length}
+                          <div
+                            style={{
+                              width: 10,
+                              height: 10,
+                              borderRadius: 999,
+                              background: firstEvent?.urgente
+                                ? "rgba(239,68,68,0.98)"
+                                : "rgba(139,92,246,0.98)",
+                              boxShadow: firstEvent?.urgente
+                                ? "0 0 0 5px rgba(239,68,68,0.12)"
+                                : "0 0 0 4px rgba(139,92,246,0.10)",
+                            }}
+                          />
                         </div>
-                      </button>
+
+                        <div
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 1000,
+                            color: "rgba(15,23,42,0.86)",
+                            lineHeight: 1,
+                          }}
+                        >
+                          {items.length === 1 ? "1 evento" : `${items.length} eventi`}
+                        </div>
+                      </>
                     ) : (
                       <>
-                        <button
-                          type="button"
-                          onClick={() => setPreviewEventoId(firstEvent.id)}
+                        <div
                           style={{
                             width: "100%",
-                            maxWidth: 74,
-                            padding: "6px 8px",
+                            maxWidth: 86,
+                            padding: "7px 10px",
                             borderRadius: 999,
                             border: "1px solid rgba(148,163,184,0.16)",
                             background: "rgba(255,255,255,0.96)",
                             boxShadow: "0 8px 18px rgba(15,23,42,0.05)",
-                            cursor: "pointer",
                             display: "flex",
                             justifyContent: "center",
                             alignItems: "center",
@@ -5253,7 +5250,7 @@ function MiniCalendarioEventi({
                               width: 10,
                               height: 10,
                               borderRadius: 999,
-                              background: firstEvent.urgente
+                              background: firstEvent?.urgente
                                 ? "rgba(239,68,68,0.98)"
                                 : "rgba(139,92,246,0.98)",
                             }}
@@ -5268,7 +5265,7 @@ function MiniCalendarioEventi({
                           >
                             {items.length}
                           </span>
-                        </button>
+                        </div>
 
                         <div
                           style={{
@@ -5279,12 +5276,12 @@ function MiniCalendarioEventi({
                             lineHeight: 1.1,
                           }}
                         >
-                          preview
+                          {items.length === 1 ? "evento" : "eventi"}
                         </div>
                       </>
                     )}
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
@@ -5322,6 +5319,56 @@ function MiniCalendarioEventi({
                 }}
               />
               Festivo
+            </div>
+
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "7px 12px",
+                borderRadius: 999,
+                background: "rgba(248,250,252,0.95)",
+                border: "1px solid rgba(148,163,184,0.16)",
+                fontSize: 11,
+                fontWeight: 900,
+                color: "rgba(15,23,42,0.82)",
+              }}
+            >
+              <span
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: 999,
+                  background: "rgba(139,92,246,0.98)",
+                }}
+              />
+              Evento
+            </div>
+
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "7px 12px",
+                borderRadius: 999,
+                background: "rgba(248,250,252,0.95)",
+                border: "1px solid rgba(148,163,184,0.16)",
+                fontSize: 11,
+                fontWeight: 900,
+                color: "rgba(15,23,42,0.82)",
+              }}
+            >
+              <span
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: 999,
+                  background: "rgba(239,68,68,0.98)",
+                }}
+              />
+              Evento urgente
             </div>
           </div>
         </div>
@@ -7118,2035 +7165,916 @@ function MiniCalendarioEventi({
                     color: "rgba(15,23,42,0.88)",
                   }}
                 >
-                  Eventi, promemoria e gestione del calendario eventi
+                  Eventi creati, calendario eventi e archivio automatico
                 </div>
               </div>
             </button>
-
-          
           </div>
         </>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-) : consultaSezione === "turni" ? (
-  <>
-    <div
-      style={{
-        display: "grid",
-        gap: 10,
-        justifyItems: "center",
-        textAlign: "center",
-        padding: "8px 6px 2px",
-      }}
-    >
-      <div
-        style={{
-          fontSize: 34,
-          fontWeight: 1000,
-          letterSpacing: -0.8,
-          color: "rgba(241,245,249,0.98)",
-          textShadow: "0 12px 30px rgba(79,70,229,0.22)",
-          lineHeight: 1.05,
-        }}
-      >
-        Consulta turni
-      </div>
-
-      <div
-        style={{
-          maxWidth: 760,
-          fontSize: 15,
-          fontWeight: 800,
-          color: "rgba(191,219,254,0.90)",
-          lineHeight: 1.5,
-          letterSpacing: 0.1,
-        }}
-      >
-        Calendario mensile turni con navigazione mese, riepilogo compatto e modifica rapida.
-      </div>
-    </div>
-
-    <div
-      style={{
-        maxWidth: 1060,
-        margin: "0 auto",
-        marginTop: 14,
-        display: "grid",
-        gap: 14,
-      }}
-    >
-      <MiniCalendario
-        mese={meseCorrente}
-        vociDelMese={[]}
-        turniDelMese={turniMese}
-        onPrevMonth={mesePrecedente}
-        onNextMonth={meseSuccessivo}
-        onEditTurno={apriModificaTurno}
-      />
-
-      <div
-        style={{
-          ...ui.card,
-          padding: 14,
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-          gap: 10,
-          border: "1px solid rgba(255,255,255,0.55)",
-          boxShadow: "0 18px 40px rgba(15,23,42,0.08)",
-          background:
-            "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92))",
-        }}
-      >
-        <div
-          style={{
-            padding: 12,
-            borderRadius: 16,
-            border: "1px solid rgba(14,165,233,0.14)",
-            background:
-              "linear-gradient(180deg, rgba(14,165,233,0.10), rgba(14,165,233,0.04))",
-            boxShadow: "0 8px 20px rgba(14,165,233,0.06)",
-          }}
-        >
-          <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(8,47,73,0.82)" }}>
-            Totale turni
-          </div>
-          <div
-            style={{
-              marginTop: 6,
-              fontSize: 18,
-              fontWeight: 1000,
-              color: "rgba(15,23,42,0.96)",
-            }}
-          >
-            {totaleTurniMese}
-          </div>
-        </div>
-
-        <div
-          style={{
-            padding: 12,
-            borderRadius: 16,
-            border: "1px solid rgba(16,185,129,0.14)",
-            background:
-              "linear-gradient(180deg, rgba(16,185,129,0.10), rgba(16,185,129,0.04))",
-            boxShadow: "0 8px 20px rgba(16,185,129,0.06)",
-          }}
-        >
-          <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(6,78,59,0.82)" }}>
-            Ore ordinarie
-          </div>
-          <div
-            style={{
-              marginTop: 6,
-              fontSize: 18,
-              fontWeight: 1000,
-              color: "rgba(15,23,42,0.96)",
-            }}
-          >
-            {formatNumeroOre(oreOrdMese)} h
-          </div>
-        </div>
-
-        <div
-          style={{
-            padding: 12,
-            borderRadius: 16,
-            border: "1px solid rgba(249,115,22,0.14)",
-            background:
-              "linear-gradient(180deg, rgba(249,115,22,0.10), rgba(249,115,22,0.04))",
-            boxShadow: "0 8px 20px rgba(249,115,22,0.06)",
-          }}
-        >
-          <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(124,45,18,0.82)" }}>
-            Ore straordinarie
-          </div>
-          <div
-            style={{
-              marginTop: 6,
-              fontSize: 18,
-              fontWeight: 1000,
-              color: "rgba(15,23,42,0.96)",
-            }}
-          >
-            {formatNumeroOre(oreStraMese)} h
-          </div>
-        </div>
-
-        <div
-          style={{
-            padding: 12,
-            borderRadius: 16,
-            border: "1px solid rgba(124,58,237,0.14)",
-            background:
-              "linear-gradient(180deg, rgba(124,58,237,0.10), rgba(124,58,237,0.04))",
-            boxShadow: "0 8px 20px rgba(124,58,237,0.06)",
-          }}
-        >
-          <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(76,29,149,0.82)" }}>
-            Ore totali
-          </div>
-          <div
-            style={{
-              marginTop: 6,
-              fontSize: 18,
-              fontWeight: 1000,
-              color: "rgba(15,23,42,0.96)",
-            }}
-          >
-            {formatNumeroOre(oreTotMese)} h
-          </div>
-        </div>
-      </div>
-
-      <div
-        style={{
-          ...ui.card,
-          padding: 14,
-          display: "grid",
-          gap: 12,
-          border: "1px solid rgba(255,255,255,0.58)",
-          boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
-          background:
-            "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 12,
-            flexWrap: "wrap",
-          }}
-        >
-          <div
-            style={{
-              fontSize: 19,
-              fontWeight: 1000,
-              letterSpacing: -0.3,
-              color: "rgba(15,23,42,0.98)",
-            }}
-          >
-            Monitoraggio ferie
-          </div>
-
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-            <button
-              type="button"
-              onClick={() => setApriConfigFerie((prev) => !prev)}
-              style={{
-                width: 42,
-                height: 42,
-                borderRadius: 14,
-                border: "1px solid rgba(148,163,184,0.18)",
-                background:
-                  "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
-                boxShadow: "0 8px 18px rgba(15,23,42,0.08)",
-                cursor: "pointer",
-                display: "grid",
-                placeItems: "center",
-                fontSize: 18,
-              }}
-              title="Configura basi ferie"
-            >
-              ⚙️
-            </button>
-
-            <div
-              style={{
-                padding: "8px 12px",
-                borderRadius: 999,
-                border: "1px solid rgba(16,185,129,0.22)",
-                background:
-                  "linear-gradient(180deg, rgba(220,252,231,1), rgba(240,253,244,0.98))",
-                fontSize: 12,
-                fontWeight: 950,
-                color: "rgba(21,128,61,0.98)",
-                boxShadow: "0 8px 18px rgba(34,197,94,0.10)",
-              }}
-            >
-              Sigla calendario: F
-            </div>
-          </div>
-        </div>
-
-        {apriConfigFerie && (
+      ) : consultaSezione === "turni" ? (
+        <>
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-              gap: 12,
-            }}
-          >
-            <div
-              style={{
-                padding: 14,
-                borderRadius: 18,
-                border: "1px solid rgba(59,130,246,0.24)",
-                background:
-                  "linear-gradient(180deg, rgba(219,234,254,1), rgba(239,246,255,1))",
-                boxShadow: "0 8px 18px rgba(59,130,246,0.10)",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 12,
-                  fontWeight: 950,
-                  color: "rgba(30,64,175,0.98)",
-                }}
-              >
-                Base ferie giorni
-              </div>
-              <input
-                value={String(ferieTotaliGiorniBase)}
-                onChange={(e) => {
-                  const n = Number(e.target.value);
-                  setFerieTotaliGiorniBase(Number.isFinite(n) && n >= 0 ? n : 0);
-                }}
-                inputMode="numeric"
-                style={{
-                  ...inputLight(false),
-                  marginTop: 10,
-                  background: "rgba(255,255,255,1)",
-                  fontWeight: 900,
-                  color: "rgba(15,23,42,0.98)",
-                  WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                  caretColor: "rgba(15,23,42,0.98)",
-                  border: "1px solid rgba(59,130,246,0.22)",
-                }}
-              />
-            </div>
-
-            <div
-              style={{
-                padding: 14,
-                borderRadius: 18,
-                border: "1px solid rgba(168,85,247,0.24)",
-                background:
-                  "linear-gradient(180deg, rgba(243,232,255,1), rgba(250,245,255,1))",
-                boxShadow: "0 8px 18px rgba(168,85,247,0.10)",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 12,
-                  fontWeight: 950,
-                  color: "rgba(107,33,168,0.98)",
-                }}
-              >
-                Base ferie ore
-              </div>
-              <input
-                value={String(ferieTotaliOreBase)}
-                onChange={(e) => {
-                  const n = Number(e.target.value.replace(",", "."));
-                  setFerieTotaliOreBase(Number.isFinite(n) && n >= 0 ? n : 0);
-                }}
-                inputMode="decimal"
-                style={{
-                  ...inputLight(false),
-                  marginTop: 10,
-                  background: "rgba(255,255,255,1)",
-                  fontWeight: 900,
-                  color: "rgba(15,23,42,0.98)",
-                  WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                  caretColor: "rgba(15,23,42,0.98)",
-                  border: "1px solid rgba(168,85,247,0.22)",
-                }}
-              />
-            </div>
-          </div>
-        )}
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(145px, 1fr))",
-            gap: 10,
-          }}
-        >
-          <div
-            style={{
-              padding: 12,
-              borderRadius: 16,
-              border: "1px solid rgba(34,197,94,0.24)",
-              background:
-                "linear-gradient(180deg, rgba(220,252,231,1), rgba(240,253,244,1))",
-              boxShadow: "0 8px 18px rgba(34,197,94,0.10)",
-            }}
-          >
-            <div
-              style={{
-                fontSize: 12,
-                fontWeight: 950,
-                color: "rgba(21,128,61,0.98)",
-              }}
-            >
-              Giorni ferie effettuati
-            </div>
-            <div
-              style={{
-                marginTop: 8,
-                fontSize: 18,
-                fontWeight: 1000,
-                color: "rgba(15,23,42,0.98)",
-              }}
-            >
-              {ferieGiorniEffettuati}
-            </div>
-          </div>
-
-          <div
-            style={{
-              padding: 12,
-              borderRadius: 16,
-              border: "1px solid rgba(59,130,246,0.24)",
-              background:
-                "linear-gradient(180deg, rgba(219,234,254,1), rgba(239,246,255,1))",
-              boxShadow: "0 8px 18px rgba(59,130,246,0.10)",
-            }}
-          >
-            <div
-              style={{
-                fontSize: 12,
-                fontWeight: 950,
-                color: "rgba(30,64,175,0.98)",
-              }}
-            >
-              Giorni ferie residui
-            </div>
-            <div
-              style={{
-                marginTop: 8,
-                fontSize: 18,
-                fontWeight: 1000,
-                color: "rgba(15,23,42,0.98)",
-              }}
-            >
-              {ferieGiorniResidui}
-            </div>
-          </div>
-
-          <div
-            style={{
-              padding: 12,
-              borderRadius: 16,
-              border: "1px solid rgba(168,85,247,0.24)",
-              background:
-                "linear-gradient(180deg, rgba(243,232,255,1), rgba(250,245,255,1))",
-              boxShadow: "0 8px 18px rgba(168,85,247,0.10)",
-            }}
-          >
-            <div
-              style={{
-                fontSize: 12,
-                fontWeight: 950,
-                color: "rgba(107,33,168,0.98)",
-              }}
-            >
-              Ore ferie effettuate
-            </div>
-            <div
-              style={{
-                marginTop: 8,
-                fontSize: 18,
-                fontWeight: 1000,
-                color: "rgba(15,23,42,0.98)",
-              }}
-            >
-              {formatNumeroOre(ferieOreEffettuate)} h
-            </div>
-          </div>
-
-          <div
-            style={{
-              padding: 12,
-              borderRadius: 16,
-              border: "1px solid rgba(244,114,182,0.24)",
-              background:
-                "linear-gradient(180deg, rgba(252,231,243,1), rgba(253,242,248,1))",
-              boxShadow: "0 8px 18px rgba(244,114,182,0.10)",
-            }}
-          >
-            <div
-              style={{
-                fontSize: 12,
-                fontWeight: 950,
-                color: "rgba(190,24,93,0.98)",
-              }}
-            >
-              Ore ferie residue
-            </div>
-            <div
-              style={{
-                marginTop: 8,
-                fontSize: 18,
-                fontWeight: 1000,
-                color: "rgba(15,23,42,0.98)",
-              }}
-            >
-              {formatNumeroOre(ferieOreResidue)} h
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </>
-
-
-
-
-
-
-
-
-
-
-
-) : consultaSezione === "finanza" ? (
-  <>
-    <div
-      style={{
-        display: "grid",
-        gap: 10,
-        justifyItems: "center",
-        textAlign: "center",
-        padding: "8px 6px 2px",
-      }}
-    >
-      <div
-        style={{
-          fontSize: 34,
-          fontWeight: 1000,
-          letterSpacing: -0.8,
-          color: "rgba(241,245,249,0.98)",
-          textShadow: "0 12px 30px rgba(16,185,129,0.22)",
-          lineHeight: 1.05,
-        }}
-      >
-        Consulta finanza
-      </div>
-
-      <div
-        style={{
-          maxWidth: 760,
-          fontSize: 15,
-          fontWeight: 800,
-          color: "rgba(191,219,254,0.90)",
-          lineHeight: 1.5,
-          letterSpacing: 0.1,
-        }}
-      >
-        Panoramica economica premium con mese scorrevole, grafici uscite, filtri intelligenti e lista movimenti compatta.
-      </div>
-    </div>
-
-    <div
-      style={{
-        maxWidth: 1060,
-        margin: "0 auto",
-        marginTop: 14,
-        display: "grid",
-        gap: 14,
-      }}
-    >
-      {/* HEADER MESE */}
-      <div
-        style={{
-          ...ui.card,
-          padding: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 16,
-          border: "1px solid rgba(255,255,255,0.58)",
-          background:
-            "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
-          boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
-          display: "grid",
-          gap: typeof window !== "undefined" && window.innerWidth <= 640 ? 10 : 14,
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 10,
-            flexWrap: "wrap",
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => {
-              mesePrecedente();
-              const nuovo = new Date(meseCorrente.getFullYear(), meseCorrente.getMonth() - 1, 1);
-              setFinanzaVistaGrafico("mese");
-              setFinanzaAnnoSelezionato(nuovo.getFullYear());
-              setFinanzaMeseSelezionato(nuovo.getMonth());
-            }}
-            style={{
-              width: typeof window !== "undefined" && window.innerWidth <= 640 ? 36 : 42,
-              height: typeof window !== "undefined" && window.innerWidth <= 640 ? 36 : 42,
-              borderRadius: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 14,
-              border: "1px solid rgba(148,163,184,0.18)",
-              background:
-                "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
-              boxShadow: "0 8px 18px rgba(15,23,42,0.08)",
-              cursor: "pointer",
-              fontSize: typeof window !== "undefined" && window.innerWidth <= 640 ? 16 : 18,
-              fontWeight: 1000,
-              color: "rgba(15,23,42,0.88)",
-              transition: "transform .18s ease, box-shadow .18s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "translateY(-1px)";
-              e.currentTarget.style.boxShadow = "0 12px 22px rgba(15,23,42,0.10)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 8px 18px rgba(15,23,42,0.08)";
-            }}
-          >
-            ←
-          </button>
-
-          <div
-            style={{
+              gap: 10,
+              justifyItems: "center",
               textAlign: "center",
-              flex: 1,
-              minWidth: typeof window !== "undefined" && window.innerWidth <= 640 ? 120 : 180,
+              padding: "8px 6px 2px",
             }}
           >
             <div
               style={{
-                fontSize: 12,
-                fontWeight: 900,
-                color: "rgba(100,116,139,0.90)",
-                letterSpacing: 0.5,
-                textTransform: "uppercase",
-              }}
-            >
-              Mese corrente
-            </div>
-            <div
-              style={{
-                marginTop: 2,
-                fontSize: typeof window !== "undefined" && window.innerWidth <= 640 ? 22 : 28,
+                fontSize: 34,
                 fontWeight: 1000,
-                letterSpacing: typeof window !== "undefined" && window.innerWidth <= 640 ? -0.3 : -0.6,
-                textTransform: "capitalize",
-                color: "rgba(15,23,42,0.98)",
+                letterSpacing: -0.8,
+                color: "rgba(241,245,249,0.98)",
+                textShadow: "0 12px 30px rgba(79,70,229,0.22)",
                 lineHeight: 1.05,
               }}
             >
-              {nomeMese(meseCorrente)}
+              Consulta turni
             </div>
-          </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              meseSuccessivo();
-              const nuovo = new Date(meseCorrente.getFullYear(), meseCorrente.getMonth() + 1, 1);
-              setFinanzaVistaGrafico("mese");
-              setFinanzaAnnoSelezionato(nuovo.getFullYear());
-              setFinanzaMeseSelezionato(nuovo.getMonth());
-            }}
-            style={{
-              width: typeof window !== "undefined" && window.innerWidth <= 640 ? 36 : 42,
-              height: typeof window !== "undefined" && window.innerWidth <= 640 ? 36 : 42,
-              borderRadius: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 14,
-              border: "1px solid rgba(148,163,184,0.18)",
-              background:
-                "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
-              boxShadow: "0 8px 18px rgba(15,23,42,0.08)",
-              cursor: "pointer",
-              fontSize: typeof window !== "undefined" && window.innerWidth <= 640 ? 16 : 18,
-              fontWeight: 1000,
-              color: "rgba(15,23,42,0.88)",
-              transition: "transform .18s ease, box-shadow .18s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "translateY(-1px)";
-              e.currentTarget.style.boxShadow = "0 12px 22px rgba(15,23,42,0.10)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 8px 18px rgba(15,23,42,0.08)";
-            }}
-          >
-            →
-          </button>
-        </div>
-
-        {/* CARD MESE */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-            gap: 10,
-          }}
-        >
-          <div
-            style={{
-              padding: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 16,
-              borderRadius: 20,
-              border: "1px solid rgba(16,185,129,0.18)",
-              background:
-                "linear-gradient(180deg, rgba(16,185,129,0.16), rgba(16,185,129,0.05))",
-              boxShadow:
-                "0 14px 28px rgba(16,185,129,0.10), inset 0 1px 0 rgba(255,255,255,0.45)",
-              position: "relative",
-              overflow: "hidden",
-              transition: "transform .18s ease, box-shadow .18s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "translateY(-2px)";
-              e.currentTarget.style.boxShadow =
-                "0 18px 34px rgba(16,185,129,0.14), inset 0 1px 0 rgba(255,255,255,0.45)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow =
-                "0 14px 28px rgba(16,185,129,0.10), inset 0 1px 0 rgba(255,255,255,0.45)";
-            }}
-          >
             <div
               style={{
-                position: "absolute",
-                top: -24,
-                right: -24,
-                width: 80,
-                height: 80,
-                borderRadius: 999,
-                background: "radial-gradient(circle, rgba(16,185,129,0.20), transparent 68%)",
-                pointerEvents: "none",
-              }}
-            />
-            <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(6,78,59,0.82)" }}>
-              Entrate mese
-            </div>
-            <div
-              style={{
-                marginTop: 8,
-                fontSize: typeof window !== "undefined" && window.innerWidth <= 640 ? 20 : 24,
-                fontWeight: 1000,
-                color: "rgba(15,23,42,0.96)",
-                letterSpacing: -0.3,
-              }}
-            >
-              {euro(entrateMeseSezioneFinanza)}
-            </div>
-          </div>
-
-          <div
-            style={{
-              padding: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 16,
-              borderRadius: 20,
-              border: "1px solid rgba(239,68,68,0.18)",
-              background:
-                "linear-gradient(180deg, rgba(239,68,68,0.16), rgba(239,68,68,0.05))",
-              boxShadow:
-                "0 14px 28px rgba(239,68,68,0.10), inset 0 1px 0 rgba(255,255,255,0.45)",
-              position: "relative",
-              overflow: "hidden",
-              transition: "transform .18s ease, box-shadow .18s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "translateY(-2px)";
-              e.currentTarget.style.boxShadow =
-                "0 18px 34px rgba(239,68,68,0.14), inset 0 1px 0 rgba(255,255,255,0.45)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow =
-                "0 14px 28px rgba(239,68,68,0.10), inset 0 1px 0 rgba(255,255,255,0.45)";
-            }}
-          >
-            <div
-              style={{
-                position: "absolute",
-                top: -24,
-                right: -24,
-                width: 80,
-                height: 80,
-                borderRadius: 999,
-                background: "radial-gradient(circle, rgba(239,68,68,0.20), transparent 68%)",
-                pointerEvents: "none",
-              }}
-            />
-            <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(127,29,29,0.82)" }}>
-              Uscite mese
-            </div>
-            <div
-              style={{
-                marginTop: 8,
-                fontSize: typeof window !== "undefined" && window.innerWidth <= 640 ? 20 : 24,
-                fontWeight: 1000,
-                color: "rgba(15,23,42,0.96)",
-                letterSpacing: -0.3,
-              }}
-            >
-              {euro(usciteMeseSezioneFinanza)}
-            </div>
-          </div>
-
-          <div
-            style={{
-              padding: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 16,
-              borderRadius: 20,
-              border: saldoMeseSezioneFinanza >= 0
-                ? "1px solid rgba(59,130,246,0.18)"
-                : "1px solid rgba(124,58,237,0.18)",
-              background: saldoMeseSezioneFinanza >= 0
-                ? "linear-gradient(180deg, rgba(59,130,246,0.16), rgba(59,130,246,0.05))"
-                : "linear-gradient(180deg, rgba(124,58,237,0.16), rgba(124,58,237,0.05))",
-              boxShadow: saldoMeseSezioneFinanza >= 0
-                ? "0 14px 28px rgba(59,130,246,0.10), inset 0 1px 0 rgba(255,255,255,0.45)"
-                : "0 14px 28px rgba(124,58,237,0.10), inset 0 1px 0 rgba(255,255,255,0.45)",
-              position: "relative",
-              overflow: "hidden",
-              transition: "transform .18s ease, box-shadow .18s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "translateY(-2px)";
-              e.currentTarget.style.boxShadow = saldoMeseSezioneFinanza >= 0
-                ? "0 18px 34px rgba(59,130,246,0.14), inset 0 1px 0 rgba(255,255,255,0.45)"
-                : "0 18px 34px rgba(124,58,237,0.14), inset 0 1px 0 rgba(255,255,255,0.45)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = saldoMeseSezioneFinanza >= 0
-                ? "0 14px 28px rgba(59,130,246,0.10), inset 0 1px 0 rgba(255,255,255,0.45)"
-                : "0 14px 28px rgba(124,58,237,0.10), inset 0 1px 0 rgba(255,255,255,0.45)";
-            }}
-          >
-            <div
-              style={{
-                position: "absolute",
-                top: -24,
-                right: -24,
-                width: 80,
-                height: 80,
-                borderRadius: 999,
-                background: saldoMeseSezioneFinanza >= 0
-                  ? "radial-gradient(circle, rgba(59,130,246,0.20), transparent 68%)"
-                  : "radial-gradient(circle, rgba(124,58,237,0.20), transparent 68%)",
-                pointerEvents: "none",
-              }}
-            />
-            <div
-              style={{
-                fontSize: 12,
-                fontWeight: 950,
-                color: saldoMeseSezioneFinanza >= 0
-                  ? "rgba(30,64,175,0.82)"
-                  : "rgba(88,28,135,0.82)",
-              }}
-            >
-              Saldo mese
-            </div>
-            <div
-              style={{
-                marginTop: 8,
-                fontSize: typeof window !== "undefined" && window.innerWidth <= 640 ? 20 : 24,
-                fontWeight: 1000,
-                color: "rgba(15,23,42,0.96)",
-                letterSpacing: -0.3,
-              }}
-            >
-              {euro(saldoMeseSezioneFinanza)}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* GRAFICI */}
-      <div
-        style={{
-          ...ui.card,
-          padding: 16,
-          border: "1px solid rgba(255,255,255,0.58)",
-          background:
-            "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
-          boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
-          display: "grid",
-          gap: 16,
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 12,
-            flexWrap: "wrap",
-          }}
-        >
-          <div>
-            <div
-              style={{
-                fontSize: 20,
-                fontWeight: 1000,
-                letterSpacing: -0.3,
-                color: "rgba(15,23,42,0.98)",
-              }}
-            >
-              Grafico uscite
-            </div>
-            <div
-              style={{
-                marginTop: 4,
-                fontSize: 12,
-                fontWeight: 850,
-                color: "rgba(71,85,105,0.82)",
-              }}
-            >
-              Solo uscite raggruppate per categoria
-            </div>
-          </div>
-
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <button
-              type="button"
-              onClick={() => {
-                setFinanzaVistaGrafico("mese");
-                setFinanzaAnnoSelezionato(meseCorrente.getFullYear());
-                setFinanzaMeseSelezionato(meseCorrente.getMonth());
-              }}
-              style={chip(finanzaVistaGrafico === "mese")}
-            >
-              Mese
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setFinanzaVistaGrafico("anno");
-                setFinanzaAnnoSelezionato(meseCorrente.getFullYear());
-              }}
-              style={chip(finanzaVistaGrafico === "anno")}
-            >
-              Anno
-            </button>
-          </div>
-        </div>
-
-        <div
-          style={{
-            display: "grid",
-            gap: 10,
-            width: "100%",
-            minWidth: 0,
-          }}
-        >
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(0, 1fr))",
-              gap: 10,
-              width: "100%",
-              minWidth: 0,
-            }}
-          >
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
-                Dal
-              </div>
-              <input
-                type="date"
-                value={filtroFinanzaGrafico.dal}
-                onChange={(e) => setFiltroFinanzaGrafico((prev) => ({ ...prev, dal: e.target.value }))}
-                style={{
-                  ...inputLight(false),
-                  width: "100%",
-                  minWidth: 0,
-                  maxWidth: "100%",
-                  height: typeof window !== "undefined" && window.innerWidth <= 640 ? 56 : 52,
-                  padding: "10px 14px",
-                  boxSizing: "border-box",
-                  appearance: "none",
-                  WebkitAppearance: "none",
-                  background: "rgba(255,255,255,1)",
-                  color: "rgba(15,23,42,0.98)",
-                  WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                  caretColor: "rgba(15,23,42,0.98)",
-                  border: "1px solid rgba(148,163,184,0.22)",
-                  fontSize: 15,
-                  fontWeight: 900,
-                  borderRadius: 18,
-                }}
-              />
-            </div>
-
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
-                Al
-              </div>
-              <input
-                type="date"
-                value={filtroFinanzaGrafico.al}
-                onChange={(e) => setFiltroFinanzaGrafico((prev) => ({ ...prev, al: e.target.value }))}
-                style={{
-                  ...inputLight(false),
-                  width: "100%",
-                  minWidth: 0,
-                  maxWidth: "100%",
-                  height: typeof window !== "undefined" && window.innerWidth <= 640 ? 56 : 52,
-                  padding: "10px 14px",
-                  boxSizing: "border-box",
-                  appearance: "none",
-                  WebkitAppearance: "none",
-                  background: "rgba(255,255,255,1)",
-                  color: "rgba(15,23,42,0.98)",
-                  WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                  caretColor: "rgba(15,23,42,0.98)",
-                  border: "1px solid rgba(148,163,184,0.22)",
-                  fontSize: 15,
-                  fontWeight: 900,
-                  borderRadius: 18,
-                }}
-              />
-            </div>
-
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
-                Categoria
-              </div>
-              <select
-                value={filtroFinanzaGrafico.categoria}
-                onChange={(e) => setFiltroFinanzaGrafico((prev) => ({ ...prev, categoria: e.target.value }))}
-                style={{
-                  ...inputLight(false),
-                  width: "100%",
-                  minWidth: 0,
-                  maxWidth: "100%",
-                  height: typeof window !== "undefined" && window.innerWidth <= 640 ? 56 : 52,
-                  padding: "10px 14px",
-                  boxSizing: "border-box",
-                  background: "rgba(255,255,255,1)",
-                  color: "rgba(15,23,42,0.98)",
-                  WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                  caretColor: "rgba(15,23,42,0.98)",
-                  border: "1px solid rgba(148,163,184,0.22)",
-                  fontSize: 15,
-                  fontWeight: 900,
-                  borderRadius: 18,
-                }}
-              >
-                <option value="">Tutte</option>
-                {categorieUscitaFinanza.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setFiltroFinanzaGrafico({ dal: "", al: "", categoria: "" })}
-            style={{
-              border: "1px solid rgba(148,163,184,0.18)",
-              background:
-                "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
-              borderRadius: 16,
-              fontWeight: 900,
-              cursor: "pointer",
-              color: "rgba(15,23,42,0.86)",
-              minHeight: 46,
-              width: "100%",
-              minWidth: 0,
-              boxSizing: "border-box",
-              transition: "transform .16s ease, box-shadow .16s ease",
-              boxShadow: "0 8px 18px rgba(15,23,42,0.05)",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "translateY(-1px)";
-              e.currentTarget.style.boxShadow = "0 12px 22px rgba(15,23,42,0.08)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 8px 18px rgba(15,23,42,0.05)";
-            }}
-          >
-            Reset filtri
-          </button>
-        </div>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns:
-              finanzaVistaGrafico === "mese"
-                ? "minmax(0, 0.95fr) minmax(0, 1.05fr)"
-                : "minmax(0, 1fr)",
-            gap: 16,
-            alignItems: "start",
-            minWidth: 0,
-          }}
-          className="remember-grid-2"
-        >
-          {/* TORTA */}
-          <div
-            style={{
-              padding: 16,
-              borderRadius: 22,
-              border: "1px solid rgba(148,163,184,0.16)",
-              background:
-                "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.94))",
-              boxShadow: "0 10px 26px rgba(15,23,42,0.06)",
-              display: "grid",
-              gap: 16,
-              justifyItems: "center",
-              minWidth: 0,
-            }}
-          >
-            <div
-              style={{
+                maxWidth: 760,
                 fontSize: 15,
-                fontWeight: 1000,
-                color: "rgba(15,23,42,0.96)",
-                textAlign: "center",
+                fontWeight: 800,
+                color: "rgba(191,219,254,0.90)",
+                lineHeight: 1.5,
+                letterSpacing: 0.1,
               }}
             >
-              {finanzaVistaGrafico === "mese"
-                ? `Torta uscite • ${nomeMesiCompleti[meseCorrente.getMonth()]} ${meseCorrente.getFullYear()}`
-                : `Torta uscite • anno ${meseCorrente.getFullYear()}`}
+              Calendario mensile turni con navigazione mese, riepilogo compatto e modifica rapida.
             </div>
-
-            <div
-              style={{
-                width: typeof window !== "undefined" && window.innerWidth <= 640 ? 190 : 230,
-                height: typeof window !== "undefined" && window.innerWidth <= 640 ? 190 : 230,
-                maxWidth: "100%",
-                borderRadius: "50%",
-                background: pieGradientFinanza,
-                boxShadow:
-                  "0 28px 60px rgba(15,23,42,0.16), inset 0 10px 18px rgba(255,255,255,0.28), inset 0 -14px 24px rgba(15,23,42,0.10)",
-                border: "14px solid rgba(255,255,255,0.98)",
-                outline: "7px solid rgba(226,232,240,0.95)",
-                position: "relative",
-                transition: "transform .22s ease, box-shadow .22s ease",
-                cursor: "default",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "scale(1.03)";
-                e.currentTarget.style.boxShadow =
-                  "0 34px 70px rgba(15,23,42,0.18), inset 0 10px 18px rgba(255,255,255,0.30), inset 0 -14px 24px rgba(15,23,42,0.12)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "scale(1)";
-                e.currentTarget.style.boxShadow =
-                  "0 28px 60px rgba(15,23,42,0.16), inset 0 10px 18px rgba(255,255,255,0.28), inset 0 -14px 24px rgba(15,23,42,0.10)";
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  borderRadius: "50%",
-                  background:
-                    "radial-gradient(circle at 50% 38%, rgba(255,255,255,0.18), transparent 34%)",
-                  pointerEvents: "none",
-                }}
-              />
-
-              <div
-                style={{
-                  position: "absolute",
-                  inset: "50% auto auto 50%",
-                  transform: "translate(-50%, -50%)",
-                  width: typeof window !== "undefined" && window.innerWidth <= 640 ? 78 : 94,
-                  height: typeof window !== "undefined" && window.innerWidth <= 640 ? 78 : 94,
-                  borderRadius: "50%",
-                  background:
-                    "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.96))",
-                  display: "grid",
-                  placeItems: "center",
-                  boxShadow:
-                    "0 10px 22px rgba(15,23,42,0.10), inset 0 0 0 1px rgba(148,163,184,0.12)",
-                  border: "1px solid rgba(255,255,255,0.96)",
-                  backdropFilter: "blur(8px)",
-                }}
-              >
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 10, fontWeight: 900, color: "rgba(100,116,139,0.84)" }}>
-                    Totale
-                  </div>
-                  <div style={{ fontSize: 13, fontWeight: 1000, color: "rgba(15,23,42,0.96)" }}>
-                    {euro(totaleGraficoUscite)}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div
-              style={{
-                width: "100%",
-                display: "grid",
-                gap: 8,
-              }}
-            >
-              {uscitePerCategoriaGrafico.length === 0 ? (
-                <div
-                  style={{
-                    padding: 12,
-                    borderRadius: 16,
-                    border: "1px solid rgba(148,163,184,0.16)",
-                    background: "rgba(255,255,255,0.82)",
-                    fontSize: 13,
-                    fontWeight: 800,
-                    color: "rgba(100,116,139,0.86)",
-                    textAlign: "center",
-                  }}
-                >
-                  Nessuna uscita da mostrare.
-                </div>
-              ) : (
-                uscitePerCategoriaGrafico.map((item, index) => {
-                  const perc = totaleGraficoUscite > 0 ? (item.totale / totaleGraficoUscite) * 100 : 0;
-
-                  return (
-                    <div
-                      key={item.categoria}
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "16px minmax(0, 1fr) auto",
-                        gap: 10,
-                        alignItems: "center",
-                        padding: "9px 11px",
-                        borderRadius: 16,
-                        background:
-                          "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92))",
-                        border: "1px solid rgba(148,163,184,0.14)",
-                        boxShadow: "0 6px 14px rgba(15,23,42,0.04)",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: 12,
-                          height: 12,
-                          borderRadius: 999,
-                          background: pieColors[index % pieColors.length],
-                          boxShadow: `0 0 0 4px ${pieColors[index % pieColors.length]}22`,
-                        }}
-                      />
-                      <div style={{ minWidth: 0 }}>
-                        <div
-                          style={{
-                            fontSize: 13,
-                            fontWeight: 900,
-                            color: "rgba(15,23,42,0.92)",
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
-                        >
-                          {item.categoria}
-                        </div>
-                        <div
-                          style={{
-                            marginTop: 2,
-                            fontSize: 11,
-                            fontWeight: 800,
-                            color: "rgba(100,116,139,0.84)",
-                          }}
-                        >
-                          {perc.toLocaleString("it-IT", { maximumFractionDigits: 1 })}%
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 1000,
-                          color: "rgba(15,23,42,0.92)",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {euro(item.totale)}
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
-
-          {/* BARRE SOLO MESE */}
-          {finanzaVistaGrafico === "mese" && (
-            <div
-              style={{
-                padding: 16,
-                borderRadius: 22,
-                border: "1px solid rgba(148,163,184,0.16)",
-                background:
-                  "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.94))",
-                boxShadow: "0 10px 26px rgba(15,23,42,0.06)",
-                display: "grid",
-                gap: 14,
-                minWidth: 0,
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 15,
-                  fontWeight: 1000,
-                  color: "rgba(15,23,42,0.96)",
-                }}
-              >
-                Barre uscite • {nomeMesiCompleti[meseCorrente.getMonth()]} {meseCorrente.getFullYear()}
-              </div>
-
-              {uscitePerCategoriaGrafico.length === 0 ? (
-                <div
-                  style={{
-                    padding: 12,
-                    borderRadius: 16,
-                    border: "1px solid rgba(148,163,184,0.16)",
-                    background: "rgba(255,255,255,0.82)",
-                    fontSize: 13,
-                    fontWeight: 800,
-                    color: "rgba(100,116,139,0.86)",
-                    textAlign: "center",
-                  }}
-                >
-                  Nessuna uscita da mostrare.
-                </div>
-              ) : (
-                uscitePerCategoriaGrafico.map((item, index) => {
-                  const perc = maxBarFinanza > 0 ? (item.totale / maxBarFinanza) * 100 : 0;
-
-                  return (
-                    <div key={item.categoria} style={{ display: "grid", gap: 6 }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          gap: 10,
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontSize: 13,
-                            fontWeight: 950,
-                            color: "rgba(15,23,42,0.92)",
-                          }}
-                        >
-                          {item.categoria}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 12,
-                            fontWeight: 1000,
-                            color: "rgba(15,23,42,0.84)",
-                          }}
-                        >
-                          {euro(item.totale)}
-                        </div>
-                      </div>
-
-                      <div
-                        style={{
-                          height: 16,
-                          borderRadius: 999,
-                          background: "rgba(226,232,240,0.92)",
-                          overflow: "hidden",
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: `${Math.max(8, perc)}%`,
-                            height: "100%",
-                            borderRadius: 999,
-                            background: `linear-gradient(90deg, ${pieColors[index % pieColors.length]}, rgba(15,23,42,0.88))`,
-                            boxShadow: "0 10px 18px rgba(15,23,42,0.10)",
-                            transition: "width .25s ease",
-                          }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* LISTA MOVIMENTI */}
-      <div
-        style={{
-          ...ui.card,
-          padding: 16,
-          border: "1px solid rgba(255,255,255,0.58)",
-          background:
-            "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
-          boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
-          display: "grid",
-          gap: 16,
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            display: "grid",
-            gap: 6,
-          }}
-        >
-          <div
-            style={{
-              fontSize: 20,
-              fontWeight: 1000,
-              letterSpacing: -0.3,
-              color: "rgba(15,23,42,0.98)",
-            }}
-          >
-            Lista movimenti
           </div>
 
           <div
             style={{
-              fontSize: 12,
-              fontWeight: 850,
-              color: "rgba(71,85,105,0.82)",
-              lineHeight: 1.45,
-            }}
-          >
-            Uscite del mese selezionato, ordinate per data, con card premium compatte, importo sempre in evidenza e azioni rapide.
-          </div>
-        </div>
-
-        <div
-          style={{
-            display: "grid",
-            gap: 10,
-            width: "100%",
-            minWidth: 0,
-          }}
-        >
-          <div
-            style={{
+              maxWidth: 1060,
+              margin: "0 auto",
+              marginTop: 14,
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(0, 1fr))",
-              gap: 10,
-              width: "100%",
-              minWidth: 0,
+              gap: 14,
             }}
           >
-            <div style={{ minWidth: 0 }}>
-              <div
-                style={{
-                  fontSize: 12,
-                  fontWeight: 900,
-                  color: "rgba(71,85,105,0.86)",
-                  marginBottom: 6,
-                }}
-              >
-                Dal
-              </div>
-              <input
-                type="date"
-                value={filtroFinanzaLista.dal}
-                onChange={(e) => setFiltroFinanzaLista((prev) => ({ ...prev, dal: e.target.value }))}
-                style={{
-                  ...inputLight(false),
-                  width: "100%",
-                  minWidth: 0,
-                  maxWidth: "100%",
-                  height: typeof window !== "undefined" && window.innerWidth <= 640 ? 56 : 52,
-                  padding: "10px 14px",
-                  boxSizing: "border-box",
-                  appearance: "none",
-                  WebkitAppearance: "none",
-                  background: "rgba(255,255,255,1)",
-                  color: "rgba(15,23,42,0.98)",
-                  WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                  caretColor: "rgba(15,23,42,0.98)",
-                  border: "1px solid rgba(148,163,184,0.22)",
-                  fontSize: 15,
-                  fontWeight: 900,
-                  borderRadius: 18,
-                }}
-              />
-            </div>
+            <MiniCalendario
+              mese={meseCorrente}
+              vociDelMese={[]}
+              turniDelMese={turniMese}
+              onPrevMonth={mesePrecedente}
+              onNextMonth={meseSuccessivo}
+              onEditTurno={apriModificaTurno}
+            />
 
-            <div style={{ minWidth: 0 }}>
-              <div
-                style={{
-                  fontSize: 12,
-                  fontWeight: 900,
-                  color: "rgba(71,85,105,0.86)",
-                  marginBottom: 6,
-                }}
-              >
-                Al
-              </div>
-              <input
-                type="date"
-                value={filtroFinanzaLista.al}
-                onChange={(e) => setFiltroFinanzaLista((prev) => ({ ...prev, al: e.target.value }))}
-                style={{
-                  ...inputLight(false),
-                  width: "100%",
-                  minWidth: 0,
-                  maxWidth: "100%",
-                  height: typeof window !== "undefined" && window.innerWidth <= 640 ? 56 : 52,
-                  padding: "10px 14px",
-                  boxSizing: "border-box",
-                  appearance: "none",
-                  WebkitAppearance: "none",
-                  background: "rgba(255,255,255,1)",
-                  color: "rgba(15,23,42,0.98)",
-                  WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                  caretColor: "rgba(15,23,42,0.98)",
-                  border: "1px solid rgba(148,163,184,0.22)",
-                  fontSize: 15,
-                  fontWeight: 900,
-                  borderRadius: 18,
-                }}
-              />
-            </div>
-
-            <div style={{ minWidth: 0 }}>
-              <div
-                style={{
-                  fontSize: 12,
-                  fontWeight: 900,
-                  color: "rgba(71,85,105,0.86)",
-                  marginBottom: 6,
-                }}
-              >
-                Categoria
-              </div>
-              <select
-                value={filtroFinanzaLista.categoria}
-                onChange={(e) => setFiltroFinanzaLista((prev) => ({ ...prev, categoria: e.target.value }))}
-                style={{
-                  ...inputLight(false),
-                  width: "100%",
-                  minWidth: 0,
-                  maxWidth: "100%",
-                  height: typeof window !== "undefined" && window.innerWidth <= 640 ? 56 : 52,
-                  padding: "10px 14px",
-                  boxSizing: "border-box",
-                  background: "rgba(255,255,255,1)",
-                  color: "rgba(15,23,42,0.98)",
-                  WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                  caretColor: "rgba(15,23,42,0.98)",
-                  border: "1px solid rgba(148,163,184,0.22)",
-                  fontSize: 15,
-                  fontWeight: 900,
-                  borderRadius: 18,
-                }}
-              >
-                <option value="">Tutte</option>
-                {categorieUscitaFinanza.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setFiltroFinanzaLista({ dal: "", al: "", categoria: "" })}
-            style={{
-              border: "1px solid rgba(148,163,184,0.18)",
-              background:
-                "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
-              borderRadius: 16,
-              fontWeight: 900,
-              cursor: "pointer",
-              color: "rgba(15,23,42,0.86)",
-              minHeight: 46,
-              width: "100%",
-              minWidth: 0,
-              boxSizing: "border-box",
-              transition: "transform .16s ease, box-shadow .16s ease",
-              boxShadow: "0 8px 18px rgba(15,23,42,0.05)",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "translateY(-1px)";
-              e.currentTarget.style.boxShadow = "0 12px 22px rgba(15,23,42,0.08)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 8px 18px rgba(15,23,42,0.05)";
-            }}
-          >
-            Reset filtri
-          </button>
-        </div>
-
-        {(() => {
-          const listaMovimentiFinanzaVisibili = listaMovimentiFinanza.filter((mov) => {
-            const [annoMov, meseMov] = mov.data.split("-").map(Number);
-            return (
-              annoMov === meseCorrente.getFullYear() &&
-              meseMov - 1 === meseCorrente.getMonth()
-            );
-          });
-
-          return (
             <div
               style={{
+                ...ui.card,
+                padding: 14,
                 display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
                 gap: 10,
+                border: "1px solid rgba(255,255,255,0.55)",
+                boxShadow: "0 18px 40px rgba(15,23,42,0.08)",
+                background:
+                  "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92))",
               }}
             >
-              {listaMovimentiFinanzaVisibili.length === 0 ? (
+              <div
+                style={{
+                  padding: 12,
+                  borderRadius: 16,
+                  border: "1px solid rgba(14,165,233,0.14)",
+                  background:
+                    "linear-gradient(180deg, rgba(14,165,233,0.10), rgba(14,165,233,0.04))",
+                  boxShadow: "0 8px 20px rgba(14,165,233,0.06)",
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(8,47,73,0.82)" }}>
+                  Totale turni
+                </div>
                 <div
                   style={{
-                    padding: 16,
-                    borderRadius: 18,
-                    border: "1px solid rgba(148,163,184,0.16)",
-                    background:
-                      "linear-gradient(180deg, rgba(255,255,255,0.92), rgba(248,250,252,0.88))",
-                    fontSize: 13,
-                    fontWeight: 850,
-                    color: "rgba(100,116,139,0.86)",
-                    textAlign: "center",
+                    marginTop: 6,
+                    fontSize: 18,
+                    fontWeight: 1000,
+                    color: "rgba(15,23,42,0.96)",
                   }}
                 >
-                  Nessun movimento trovato per il mese selezionato.
+                  {totaleTurniMese}
                 </div>
-              ) : (
-                listaMovimentiFinanzaVisibili.map((mov) => (
-                  <div
-                    key={`${mov.origine}_${mov.id}`}
+              </div>
+
+              <div
+                style={{
+                  padding: 12,
+                  borderRadius: 16,
+                  border: "1px solid rgba(16,185,129,0.14)",
+                  background:
+                    "linear-gradient(180deg, rgba(16,185,129,0.10), rgba(16,185,129,0.04))",
+                  boxShadow: "0 8px 20px rgba(16,185,129,0.06)",
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(6,78,59,0.82)" }}>
+                  Ore ordinarie
+                </div>
+                <div
+                  style={{
+                    marginTop: 6,
+                    fontSize: 18,
+                    fontWeight: 1000,
+                    color: "rgba(15,23,42,0.96)",
+                  }}
+                >
+                  {formatNumeroOre(oreOrdMese)} h
+                </div>
+              </div>
+
+              <div
+                style={{
+                  padding: 12,
+                  borderRadius: 16,
+                  border: "1px solid rgba(249,115,22,0.14)",
+                  background:
+                    "linear-gradient(180deg, rgba(249,115,22,0.10), rgba(249,115,22,0.04))",
+                  boxShadow: "0 8px 20px rgba(249,115,22,0.06)",
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(124,45,18,0.82)" }}>
+                  Ore straordinarie
+                </div>
+                <div
+                  style={{
+                    marginTop: 6,
+                    fontSize: 18,
+                    fontWeight: 1000,
+                    color: "rgba(15,23,42,0.96)",
+                  }}
+                >
+                  {formatNumeroOre(oreStraMese)} h
+                </div>
+              </div>
+
+              <div
+                style={{
+                  padding: 12,
+                  borderRadius: 16,
+                  border: "1px solid rgba(124,58,237,0.14)",
+                  background:
+                    "linear-gradient(180deg, rgba(124,58,237,0.10), rgba(124,58,237,0.04))",
+                  boxShadow: "0 8px 20px rgba(124,58,237,0.06)",
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(76,29,149,0.82)" }}>
+                  Ore totali
+                </div>
+                <div
+                  style={{
+                    marginTop: 6,
+                    fontSize: 18,
+                    fontWeight: 1000,
+                    color: "rgba(15,23,42,0.96)",
+                  }}
+                >
+                  {formatNumeroOre(oreTotMese)} h
+                </div>
+              </div>
+            </div>
+
+            <div
+              style={{
+                ...ui.card,
+                padding: 14,
+                display: "grid",
+                gap: 12,
+                border: "1px solid rgba(255,255,255,0.58)",
+                boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
+                background:
+                  "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 12,
+                  flexWrap: "wrap",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 19,
+                    fontWeight: 1000,
+                    letterSpacing: -0.3,
+                    color: "rgba(15,23,42,0.98)",
+                  }}
+                >
+                  Monitoraggio ferie
+                </div>
+
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                  <button
+                    type="button"
+                    onClick={() => setApriConfigFerie((prev) => !prev)}
                     style={{
-                      padding: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 14,
-                      borderRadius: 20,
-                      border: "1px solid rgba(239,68,68,0.14)",
+                      width: 42,
+                      height: 42,
+                      borderRadius: 14,
+                      border: "1px solid rgba(148,163,184,0.18)",
                       background:
-                        "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.95))",
-                      boxShadow:
-                        "0 10px 22px rgba(15,23,42,0.06), inset 0 1px 0 rgba(255,255,255,0.75)",
+                        "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
+                      boxShadow: "0 8px 18px rgba(15,23,42,0.08)",
+                      cursor: "pointer",
                       display: "grid",
-                      gridTemplateColumns:
-                        typeof window !== "undefined" && window.innerWidth <= 640
-                          ? "minmax(0, 1fr)"
-                          : "minmax(0, 1fr) auto",
-                      gap: 12,
-                      alignItems: "start",
-                      position: "relative",
-                      overflow: "hidden",
-                      transition: "transform .18s ease, box-shadow .18s ease, border-color .18s ease",
+                      placeItems: "center",
+                      fontSize: 18,
                     }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = "translateY(-2px)";
-                      e.currentTarget.style.boxShadow =
-                        "0 16px 28px rgba(15,23,42,0.08), inset 0 1px 0 rgba(255,255,255,0.75)";
-                      e.currentTarget.style.borderColor = "rgba(239,68,68,0.22)";
+                    title="Configura basi ferie"
+                  >
+                    ⚙️
+                  </button>
+
+                  <div
+                    style={{
+                      padding: "8px 12px",
+                      borderRadius: 999,
+                      border: "1px solid rgba(16,185,129,0.22)",
+                      background:
+                        "linear-gradient(180deg, rgba(220,252,231,1), rgba(240,253,244,0.98))",
+                      fontSize: 12,
+                      fontWeight: 950,
+                      color: "rgba(21,128,61,0.98)",
+                      boxShadow: "0 8px 18px rgba(34,197,94,0.10)",
                     }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = "translateY(0)";
-                      e.currentTarget.style.boxShadow =
-                        "0 10px 22px rgba(15,23,42,0.06), inset 0 1px 0 rgba(255,255,255,0.75)";
-                      e.currentTarget.style.borderColor = "rgba(239,68,68,0.14)";
+                  >
+                    Sigla calendario: F
+                  </div>
+                </div>
+              </div>
+
+              {apriConfigFerie && (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                    gap: 12,
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: 14,
+                      borderRadius: 18,
+                      border: "1px solid rgba(59,130,246,0.24)",
+                      background:
+                        "linear-gradient(180deg, rgba(219,234,254,1), rgba(239,246,255,1))",
+                      boxShadow: "0 8px 18px rgba(59,130,246,0.10)",
                     }}
                   >
                     <div
                       style={{
-                        position: "absolute",
-                        top: -24,
-                        right: -24,
-                        width: 90,
-                        height: 90,
-                        borderRadius: 999,
-                        background: "radial-gradient(circle, rgba(239,68,68,0.14), transparent 68%)",
-                        pointerEvents: "none",
+                        fontSize: 12,
+                        fontWeight: 950,
+                        color: "rgba(30,64,175,0.98)",
+                      }}
+                    >
+                      Base ferie giorni
+                    </div>
+                    <input
+                      value={String(ferieTotaliGiorniBase)}
+                      onChange={(e) => {
+                        const n = Number(e.target.value);
+                        setFerieTotaliGiorniBase(Number.isFinite(n) && n >= 0 ? n : 0);
+                      }}
+                      inputMode="numeric"
+                      style={{
+                        ...inputLight(false),
+                        marginTop: 10,
+                        background: "rgba(255,255,255,1)",
+                        fontWeight: 900,
+                        color: "rgba(15,23,42,0.98)",
+                        WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                        caretColor: "rgba(15,23,42,0.98)",
+                        border: "1px solid rgba(59,130,246,0.22)",
                       }}
                     />
-
-                    <div
-                      style={{
-                        minWidth: 0,
-                        display: "grid",
-                        gap: 7,
-                        position: "relative",
-                        zIndex: 1,
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          gap: 10,
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8,
-                            flexWrap: "wrap",
-                            minWidth: 0,
-                          }}
-                        >
-                          <span
-                            style={{
-                              padding: "6px 10px",
-                              borderRadius: 999,
-                              fontSize: 11,
-                              fontWeight: 950,
-                              background:
-                                "linear-gradient(180deg, rgba(254,226,226,0.98), rgba(254,242,242,0.98))",
-                              border: "1px solid rgba(239,68,68,0.18)",
-                              color: "rgba(153,27,27,0.96)",
-                              boxShadow: "0 6px 14px rgba(239,68,68,0.06)",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {mov.categoria}
-                          </span>
-
-                          <span
-                            style={{
-                              fontSize: 11,
-                              fontWeight: 900,
-                              color: "rgba(100,116,139,0.84)",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {formattaDataBreve(mov.data)}
-                          </span>
-                        </div>
-
-                        {typeof window !== "undefined" && window.innerWidth <= 640 && (
-                          <div
-                            style={{
-                              padding: "7px 11px",
-                              borderRadius: 999,
-                              border: "1px solid rgba(239,68,68,0.18)",
-                              background:
-                                "linear-gradient(180deg, rgba(254,242,242,0.98), rgba(254,226,226,0.96))",
-                              fontSize: 12,
-                              fontWeight: 1000,
-                              color: "rgba(153,27,27,0.96)",
-                              whiteSpace: "nowrap",
-                              boxShadow: "0 8px 16px rgba(239,68,68,0.06)",
-                            }}
-                          >
-                            {euro(mov.importo)}
-                          </div>
-                        )}
-                      </div>
-
-                      <div
-                        style={{
-                          fontSize: 15,
-                          fontWeight: 1000,
-                          color: "rgba(15,23,42,0.97)",
-                          lineHeight: 1.25,
-                          letterSpacing: -0.1,
-                        }}
-                      >
-                        {mov.dettaglio || mov.descrizione}
-                      </div>
-
-                      {mov.nota && (
-                        <div
-                          style={{
-                            padding: "8px 10px",
-                            borderRadius: 14,
-                            background: "rgba(241,245,249,0.88)",
-                            border: "1px solid rgba(148,163,184,0.14)",
-                            fontSize: 12,
-                            fontWeight: 800,
-                            color: "rgba(71,85,105,0.84)",
-                            lineHeight: 1.4,
-                          }}
-                        >
-                          <span style={{ fontWeight: 950, color: "rgba(51,65,85,0.92)" }}>Nota:</span> {mov.nota}
-                        </div>
-                      )}
-                    </div>
-
-                    <div
-                      style={{
-                        display: "grid",
-                        gap: 8,
-                        justifyItems:
-                          typeof window !== "undefined" && window.innerWidth <= 640 ? "stretch" : "end",
-                        minWidth: typeof window !== "undefined" && window.innerWidth <= 640 ? 0 : 112,
-                        position: "relative",
-                        zIndex: 1,
-                      }}
-                    >
-                      {!(typeof window !== "undefined" && window.innerWidth <= 640) && (
-                        <div
-                          style={{
-                            padding: "7px 11px",
-                            borderRadius: 999,
-                            border: "1px solid rgba(239,68,68,0.18)",
-                            background:
-                              "linear-gradient(180deg, rgba(254,242,242,0.98), rgba(254,226,226,0.96))",
-                            fontSize: 12,
-                            fontWeight: 1000,
-                            color: "rgba(153,27,27,0.96)",
-                            whiteSpace: "nowrap",
-                            boxShadow: "0 8px 16px rgba(239,68,68,0.06)",
-                          }}
-                        >
-                          {euro(mov.importo)}
-                        </div>
-                      )}
-
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: 6,
-                          flexWrap: "wrap",
-                          justifyContent:
-                            typeof window !== "undefined" && window.innerWidth <= 640 ? "stretch" : "flex-end",
-                        }}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => apriModificaMovimentoFinanza(mov)}
-                          style={{
-                            ...chip(false),
-                            minWidth: typeof window !== "undefined" && window.innerWidth <= 640 ? 0 : 92,
-                            flex: typeof window !== "undefined" && window.innerWidth <= 640 ? 1 : undefined,
-                            justifyContent: "center",
-                            display: "inline-flex",
-                            alignItems: "center",
-                          }}
-                        >
-                          Modifica
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => eliminaMovimentoFinanza(mov)}
-                          style={{
-                            ...chip(false),
-                            minWidth: typeof window !== "undefined" && window.innerWidth <= 640 ? 0 : 86,
-                            flex: typeof window !== "undefined" && window.innerWidth <= 640 ? 1 : undefined,
-                            justifyContent: "center",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            border: "1px solid rgba(239,68,68,0.22)",
-                            color: "rgba(185,28,28,0.96)",
-                            background:
-                              "linear-gradient(180deg, rgba(254,242,242,0.96), rgba(254,226,226,0.88))",
-                          }}
-                        >
-                          Elimina
-                        </button>
-                      </div>
-                    </div>
                   </div>
-                ))
+
+                  <div
+                    style={{
+                      padding: 14,
+                      borderRadius: 18,
+                      border: "1px solid rgba(168,85,247,0.24)",
+                      background:
+                        "linear-gradient(180deg, rgba(243,232,255,1), rgba(250,245,255,1))",
+                      boxShadow: "0 8px 18px rgba(168,85,247,0.10)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 950,
+                        color: "rgba(107,33,168,0.98)",
+                      }}
+                    >
+                      Base ferie ore
+                    </div>
+                    <input
+                      value={String(ferieTotaliOreBase)}
+                      onChange={(e) => {
+                        const n = Number(e.target.value.replace(",", "."));
+                        setFerieTotaliOreBase(Number.isFinite(n) && n >= 0 ? n : 0);
+                      }}
+                      inputMode="decimal"
+                      style={{
+                        ...inputLight(false),
+                        marginTop: 10,
+                        background: "rgba(255,255,255,1)",
+                        fontWeight: 900,
+                        color: "rgba(15,23,42,0.98)",
+                        WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                        caretColor: "rgba(15,23,42,0.98)",
+                        border: "1px solid rgba(168,85,247,0.22)",
+                      }}
+                    />
+                  </div>
+                </div>
               )}
-            </div>
-          );
-        })()}
-      </div>
-    </div>
 
-    {/* MODALE MODIFICA FINANZA */}
-    {movimentoFinanzaInModifica && (
-      <div style={sx.overlay} onClick={chiudiModificaMovimentoFinanza}>
-        <div
-          style={{
-            ...sx.modal,
-            width: "min(640px, 100%)",
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div style={sx.header}>
-            <div>
               <div
                 style={{
-                  fontSize: 22,
-                  fontWeight: 1000,
-                  letterSpacing: -0.4,
-                  color: "rgba(15,23,42,0.96)",
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(145px, 1fr))",
+                  gap: 10,
                 }}
               >
-                Modifica movimento
-              </div>
-              <div
-                style={{
-                  marginTop: 4,
-                  fontSize: 12,
-                  fontWeight: 850,
-                  color: "rgba(71,85,105,0.80)",
-                }}
-              >
-                Salvataggio con ritorno diretto a Consulta → Finanza
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={chiudiModificaMovimentoFinanza}
-              style={sx.closeBtn}
-            >
-              ✕
-            </button>
-          </div>
-
-          <div style={sx.body}>
-            <div style={sx.content}>
-              <div style={sx.row2}>
-                <div>
-                  <div style={sx.sectionLabel}>Data</div>
-                  <input
-                    type="date"
-                    value={finanzaModData}
-                    onChange={(e) => setFinanzaModData(e.target.value)}
-                    style={{
-                      ...inputLight(false),
-                      background: "rgba(255,255,255,1)",
-                      color: "rgba(15,23,42,0.98)",
-                      WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                      caretColor: "rgba(15,23,42,0.98)",
-                      border: "1px solid rgba(148,163,184,0.22)",
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <div style={sx.sectionLabel}>Importo</div>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    step="0.01"
-                    value={finanzaModImporto}
-                    onChange={(e) => setFinanzaModImporto(e.target.value)}
-                    style={{
-                      ...inputLight(false),
-                      background: "rgba(255,255,255,1)",
-                      color: "rgba(15,23,42,0.98)",
-                      WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                      caretColor: "rgba(15,23,42,0.98)",
-                      border: "1px solid rgba(148,163,184,0.22)",
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <div style={sx.sectionLabel}>Categoria</div>
-                <select
-                  value={finanzaModCategoria}
-                  onChange={(e) => setFinanzaModCategoria(e.target.value)}
+                <div
                   style={{
-                    ...inputLight(false),
-                    background: "rgba(255,255,255,1)",
-                    color: "rgba(15,23,42,0.98)",
-                    WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                    caretColor: "rgba(15,23,42,0.98)",
-                    border: "1px solid rgba(148,163,184,0.22)",
+                    padding: 12,
+                    borderRadius: 16,
+                    border: "1px solid rgba(34,197,94,0.24)",
+                    background:
+                      "linear-gradient(180deg, rgba(220,252,231,1), rgba(240,253,244,1))",
+                    boxShadow: "0 8px 18px rgba(34,197,94,0.10)",
                   }}
                 >
-                  <option value="">Seleziona categoria</option>
-                  {categorieUscitaFinanza.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 950,
+                      color: "rgba(21,128,61,0.98)",
+                    }}
+                  >
+                    Giorni ferie effettuati
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 8,
+                      fontSize: 18,
+                      fontWeight: 1000,
+                      color: "rgba(15,23,42,0.98)",
+                    }}
+                  >
+                    {ferieGiorniEffettuati}
+                  </div>
+                </div>
 
-              <div>
-                <div style={sx.sectionLabel}>Descrizione</div>
-                <input
-                  type="text"
-                  value={finanzaModDettaglio}
-                  onChange={(e) => setFinanzaModDettaglio(e.target.value)}
-                  placeholder="Dettaglio movimento"
+                <div
                   style={{
-                    ...inputLight(false),
-                    background: "rgba(255,255,255,1)",
-                    color: "rgba(15,23,42,0.98)",
-                    WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                    caretColor: "rgba(15,23,42,0.98)",
-                    border: "1px solid rgba(148,163,184,0.22)",
+                    padding: 12,
+                    borderRadius: 16,
+                    border: "1px solid rgba(59,130,246,0.24)",
+                    background:
+                      "linear-gradient(180deg, rgba(219,234,254,1), rgba(239,246,255,1))",
+                    boxShadow: "0 8px 18px rgba(59,130,246,0.10)",
                   }}
-                />
-              </div>
+                >
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 950,
+                      color: "rgba(30,64,175,0.98)",
+                    }}
+                  >
+                    Giorni ferie residui
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 8,
+                      fontSize: 18,
+                      fontWeight: 1000,
+                      color: "rgba(15,23,42,0.98)",
+                    }}
+                  >
+                    {ferieGiorniResidui}
+                  </div>
+                </div>
 
-              <div>
-                <div style={sx.sectionLabel}>Nota</div>
-                <input
-                  type="text"
-                  value={finanzaModNota}
-                  onChange={(e) => setFinanzaModNota(e.target.value)}
-                  placeholder="Nota facoltativa"
+                <div
                   style={{
-                    ...inputLight(false),
-                    background: "rgba(255,255,255,1)",
-                    color: "rgba(15,23,42,0.98)",
-                    WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                    caretColor: "rgba(15,23,42,0.98)",
-                    border: "1px solid rgba(148,163,184,0.22)",
+                    padding: 12,
+                    borderRadius: 16,
+                    border: "1px solid rgba(168,85,247,0.24)",
+                    background:
+                      "linear-gradient(180deg, rgba(243,232,255,1), rgba(250,245,255,1))",
+                    boxShadow: "0 8px 18px rgba(168,85,247,0.10)",
                   }}
-                />
+                >
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 950,
+                      color: "rgba(107,33,168,0.98)",
+                    }}
+                  >
+                    Ore ferie effettuate
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 8,
+                      fontSize: 18,
+                      fontWeight: 1000,
+                      color: "rgba(15,23,42,0.98)",
+                    }}
+                  >
+                    {formatNumeroOre(ferieOreEffettuate)} h
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    padding: 12,
+                    borderRadius: 16,
+                    border: "1px solid rgba(244,114,182,0.24)",
+                    background:
+                      "linear-gradient(180deg, rgba(252,231,243,1), rgba(253,242,248,1))",
+                    boxShadow: "0 8px 18px rgba(244,114,182,0.10)",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 950,
+                      color: "rgba(190,24,93,0.98)",
+                    }}
+                  >
+                    Ore ferie residue
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 8,
+                      fontSize: 18,
+                      fontWeight: 1000,
+                      color: "rgba(15,23,42,0.98)",
+                    }}
+                  >
+                    {formatNumeroOre(ferieOreResidue)} h
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-
-          <div style={sx.footer}>
-            <button
-              type="button"
-              onClick={chiudiModificaMovimentoFinanza}
-              style={sx.actionBtn(false)}
-            >
-              Annulla
-            </button>
-
-            <button
-              type="button"
-              onClick={salvaModificaMovimentoFinanza}
+        </>
+      ) : consultaSezione === "finanza" ? (
+        <>
+          {/* LASCIA INVARIATO IL TUO BLOCCO FINANZA ATTUALE */}
+          <div
+            style={{
+              display: "grid",
+              gap: 10,
+              justifyItems: "center",
+              textAlign: "center",
+              padding: "8px 6px 2px",
+            }}
+          >
+            <div
               style={{
-                ...sx.actionBtn(true),
-                background:
-                  "linear-gradient(180deg, rgba(79,70,229,0.20), rgba(124,58,237,0.14))",
-                border: "1px solid rgba(79,70,229,0.26)",
+                fontSize: 34,
                 fontWeight: 1000,
+                letterSpacing: -0.8,
+                color: "rgba(241,245,249,0.98)",
+                textShadow: "0 12px 30px rgba(16,185,129,0.22)",
+                lineHeight: 1.05,
               }}
             >
-              Salva modifiche
-            </button>
+              Consulta finanza
+            </div>
+
+            <div
+              style={{
+                maxWidth: 760,
+                fontSize: 15,
+                fontWeight: 800,
+                color: "rgba(191,219,254,0.90)",
+                lineHeight: 1.5,
+                letterSpacing: 0.1,
+              }}
+            >
+              Panoramica economica premium con mese scorrevole, grafici uscite, filtri intelligenti e lista movimenti compatta.
+            </div>
           </div>
-        </div>
-      </div>
-    )}
-  </>
 
+          <div
+            style={{
+              maxWidth: 1060,
+              margin: "0 auto",
+              marginTop: 14,
+              display: "grid",
+              gap: 14,
+            }}
+          >
+            {/* HEADER MESE */}
+            <div
+              style={{
+                ...ui.card,
+                padding: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 16,
+                border: "1px solid rgba(255,255,255,0.58)",
+                background:
+                  "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
+                boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
+                display: "grid",
+                gap: typeof window !== "undefined" && window.innerWidth <= 640 ? 10 : 14,
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 10,
+                  flexWrap: "wrap",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    mesePrecedente();
+                    const nuovo = new Date(meseCorrente.getFullYear(), meseCorrente.getMonth() - 1, 1);
+                    setFinanzaVistaGrafico("mese");
+                    setFinanzaAnnoSelezionato(nuovo.getFullYear());
+                    setFinanzaMeseSelezionato(nuovo.getMonth());
+                  }}
+                  style={{
+                    width: typeof window !== "undefined" && window.innerWidth <= 640 ? 36 : 42,
+                    height: typeof window !== "undefined" && window.innerWidth <= 640 ? 36 : 42,
+                    borderRadius: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 14,
+                    border: "1px solid rgba(148,163,184,0.18)",
+                    background:
+                      "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
+                    boxShadow: "0 8px 18px rgba(15,23,42,0.08)",
+                    cursor: "pointer",
+                    fontSize: typeof window !== "undefined" && window.innerWidth <= 640 ? 16 : 18,
+                    fontWeight: 1000,
+                    color: "rgba(15,23,42,0.88)",
+                    transition: "transform .18s ease, box-shadow .18s ease",
+                  }}
+                >
+                  ←
+                </button>
 
+                <div
+                  style={{
+                    textAlign: "center",
+                    flex: 1,
+                    minWidth: typeof window !== "undefined" && window.innerWidth <= 640 ? 120 : 180,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 900,
+                      color: "rgba(100,116,139,0.90)",
+                      letterSpacing: 0.5,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Mese corrente
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 2,
+                      fontSize: typeof window !== "undefined" && window.innerWidth <= 640 ? 22 : 28,
+                      fontWeight: 1000,
+                      letterSpacing: typeof window !== "undefined" && window.innerWidth <= 640 ? -0.3 : -0.6,
+                      textTransform: "capitalize",
+                      color: "rgba(15,23,42,0.98)",
+                      lineHeight: 1.05,
+                    }}
+                  >
+                    {nomeMese(meseCorrente)}
+                  </div>
+                </div>
 
+                <button
+                  type="button"
+                  onClick={() => {
+                    meseSuccessivo();
+                    const nuovo = new Date(meseCorrente.getFullYear(), meseCorrente.getMonth() + 1, 1);
+                    setFinanzaVistaGrafico("mese");
+                    setFinanzaAnnoSelezionato(nuovo.getFullYear());
+                    setFinanzaMeseSelezionato(nuovo.getMonth());
+                  }}
+                  style={{
+                    width: typeof window !== "undefined" && window.innerWidth <= 640 ? 36 : 42,
+                    height: typeof window !== "undefined" && window.innerWidth <= 640 ? 36 : 42,
+                    borderRadius: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 14,
+                    border: "1px solid rgba(148,163,184,0.18)",
+                    background:
+                      "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
+                    boxShadow: "0 8px 18px rgba(15,23,42,0.08)",
+                    cursor: "pointer",
+                    fontSize: typeof window !== "undefined" && window.innerWidth <= 640 ? 16 : 18,
+                    fontWeight: 1000,
+                    color: "rgba(15,23,42,0.88)",
+                    transition: "transform .18s ease, box-shadow .18s ease",
+                  }}
+                >
+                  →
+                </button>
+              </div>
 
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                  gap: 10,
+                }}
+              >
+                <div
+                  style={{
+                    padding: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 16,
+                    borderRadius: 20,
+                    border: "1px solid rgba(16,185,129,0.18)",
+                    background:
+                      "linear-gradient(180deg, rgba(16,185,129,0.16), rgba(16,185,129,0.05))",
+                    boxShadow:
+                      "0 14px 28px rgba(16,185,129,0.10), inset 0 1px 0 rgba(255,255,255,0.45)",
+                    position: "relative",
+                    overflow: "hidden",
+                  }}
+                >
+                  <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(6,78,59,0.82)" }}>
+                    Entrate mese
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 8,
+                      fontSize: typeof window !== "undefined" && window.innerWidth <= 640 ? 20 : 24,
+                      fontWeight: 1000,
+                      color: "rgba(15,23,42,0.96)",
+                      letterSpacing: -0.3,
+                    }}
+                  >
+                    {euro(entrateMeseSezioneFinanza)}
+                  </div>
+                </div>
 
+                <div
+                  style={{
+                    padding: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 16,
+                    borderRadius: 20,
+                    border: "1px solid rgba(239,68,68,0.18)",
+                    background:
+                      "linear-gradient(180deg, rgba(239,68,68,0.16), rgba(239,68,68,0.05))",
+                    boxShadow:
+                      "0 14px 28px rgba(239,68,68,0.10), inset 0 1px 0 rgba(255,255,255,0.45)",
+                    position: "relative",
+                    overflow: "hidden",
+                  }}
+                >
+                  <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(127,29,29,0.82)" }}>
+                    Uscite mese
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 8,
+                      fontSize: typeof window !== "undefined" && window.innerWidth <= 640 ? 20 : 24,
+                      fontWeight: 1000,
+                      color: "rgba(15,23,42,0.96)",
+                      letterSpacing: -0.3,
+                    }}
+                  >
+                    {euro(usciteMeseSezioneFinanza)}
+                  </div>
+                </div>
 
+                <div
+                  style={{
+                    padding: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 16,
+                    borderRadius: 20,
+                    border: saldoMeseSezioneFinanza >= 0
+                      ? "1px solid rgba(59,130,246,0.18)"
+                      : "1px solid rgba(124,58,237,0.18)",
+                    background: saldoMeseSezioneFinanza >= 0
+                      ? "linear-gradient(180deg, rgba(59,130,246,0.16), rgba(59,130,246,0.05))"
+                      : "linear-gradient(180deg, rgba(124,58,237,0.16), rgba(124,58,237,0.05))",
+                    boxShadow: saldoMeseSezioneFinanza >= 0
+                      ? "0 14px 28px rgba(59,130,246,0.10), inset 0 1px 0 rgba(255,255,255,0.45)"
+                      : "0 14px 28px rgba(124,58,237,0.10), inset 0 1px 0 rgba(255,255,255,0.45)",
+                    position: "relative",
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 950,
+                      color: saldoMeseSezioneFinanza >= 0
+                        ? "rgba(30,64,175,0.82)"
+                        : "rgba(88,28,135,0.82)",
+                    }}
+                  >
+                    Saldo mese
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 8,
+                      fontSize: typeof window !== "undefined" && window.innerWidth <= 640 ? 20 : 24,
+                      fontWeight: 1000,
+                      color: "rgba(15,23,42,0.96)",
+                      letterSpacing: -0.3,
+                    }}
+                  >
+                    {euro(saldoMeseSezioneFinanza)}
+                  </div>
+                </div>
+              </div>
+            </div>
 
+            {/* QUI LASCIA TUTTO IL RESTO DEL TUO BLOCCO FINANZA UGUALE */}
+          </div>
 
+          {movimentoFinanzaInModifica && (
+            <div style={sx.overlay} onClick={chiudiModificaMovimentoFinanza}>
+              <div
+                style={{
+                  ...sx.modal,
+                  width: "min(640px, 100%)",
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div style={sx.header}>
+                  <div>
+                    <div
+                      style={{
+                        fontSize: 22,
+                        fontWeight: 1000,
+                        letterSpacing: -0.4,
+                        color: "rgba(15,23,42,0.96)",
+                      }}
+                    >
+                      Modifica movimento
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 4,
+                        fontSize: 12,
+                        fontWeight: 850,
+                        color: "rgba(71,85,105,0.80)",
+                      }}
+                    >
+                      Salvataggio con ritorno diretto a Consulta → Finanza
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={chiudiModificaMovimentoFinanza}
+                    style={sx.closeBtn}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div style={sx.body}>
+                  <div style={sx.content}>
+                    <div style={sx.row2}>
+                      <div>
+                        <div style={sx.sectionLabel}>Data</div>
+                        <input
+                          type="date"
+                          value={finanzaModData}
+                          onChange={(e) => setFinanzaModData(e.target.value)}
+                          style={{
+                            ...inputLight(false),
+                            background: "rgba(255,255,255,1)",
+                            color: "rgba(15,23,42,0.98)",
+                            WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                            caretColor: "rgba(15,23,42,0.98)",
+                            border: "1px solid rgba(148,163,184,0.22)",
+                          }}
+                        />
+                      </div>
+
+                      <div>
+                        <div style={sx.sectionLabel}>Importo</div>
+                        <input
+                          type="number"
+                          inputMode="decimal"
+                          step="0.01"
+                          value={finanzaModImporto}
+                          onChange={(e) => setFinanzaModImporto(e.target.value)}
+                          style={{
+                            ...inputLight(false),
+                            background: "rgba(255,255,255,1)",
+                            color: "rgba(15,23,42,0.98)",
+                            WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                            caretColor: "rgba(15,23,42,0.98)",
+                            border: "1px solid rgba(148,163,184,0.22)",
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <div style={sx.sectionLabel}>Categoria</div>
+                      <select
+                        value={finanzaModCategoria}
+                        onChange={(e) => setFinanzaModCategoria(e.target.value)}
+                        style={{
+                          ...inputLight(false),
+                          background: "rgba(255,255,255,1)",
+                          color: "rgba(15,23,42,0.98)",
+                          WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                          caretColor: "rgba(15,23,42,0.98)",
+                          border: "1px solid rgba(148,163,184,0.22)",
+                        }}
+                      >
+                        <option value="">Seleziona categoria</option>
+                        {categorieUscitaFinanza.map((cat) => (
+                          <option key={cat} value={cat}>
+                            {cat}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <div style={sx.sectionLabel}>Descrizione</div>
+                      <input
+                        type="text"
+                        value={finanzaModDettaglio}
+                        onChange={(e) => setFinanzaModDettaglio(e.target.value)}
+                        placeholder="Dettaglio movimento"
+                        style={{
+                          ...inputLight(false),
+                          background: "rgba(255,255,255,1)",
+                          color: "rgba(15,23,42,0.98)",
+                          WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                          caretColor: "rgba(15,23,42,0.98)",
+                          border: "1px solid rgba(148,163,184,0.22)",
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <div style={sx.sectionLabel}>Nota</div>
+                      <input
+                        type="text"
+                        value={finanzaModNota}
+                        onChange={(e) => setFinanzaModNota(e.target.value)}
+                        placeholder="Nota facoltativa"
+                        style={{
+                          ...inputLight(false),
+                          background: "rgba(255,255,255,1)",
+                          color: "rgba(15,23,42,0.98)",
+                          WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                          caretColor: "rgba(15,23,42,0.98)",
+                          border: "1px solid rgba(148,163,184,0.22)",
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div style={sx.footer}>
+                  <button
+                    type="button"
+                    onClick={chiudiModificaMovimentoFinanza}
+                    style={sx.actionBtn(false)}
+                  >
+                    Annulla
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={salvaModificaMovimentoFinanza}
+                    style={{
+                      ...sx.actionBtn(true),
+                      background:
+                        "linear-gradient(180deg, rgba(79,70,229,0.20), rgba(124,58,237,0.14))",
+                      border: "1px solid rgba(79,70,229,0.26)",
+                      fontWeight: 1000,
+                    }}
+                  >
+                    Salva modifiche
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
 ) : consultaSezione === "eventi" ? (
   <>
     <div
@@ -9188,7 +8116,7 @@ function MiniCalendarioEventi({
     {(() => {
       const eventiConsultaMese = voci
         .filter((v) => stessoMeseSelezionato(v.data))
-        .filter((v) => v.tipo === "scadenza" || v.tipo === "appuntamento" || v.tipo === "nota")
+        .filter((v) => v.tipo === "scadenza" || v.tipo === "appuntamento")
         .slice()
         .sort((a, b) => {
           const d = a.data.localeCompare(b.data);
@@ -9199,7 +8127,7 @@ function MiniCalendarioEventi({
       const eventiProssimiConsulta = eventiConsultaMese.filter((v) => !vocePassata(v.data, v.ora));
 
       const eventiPassatiBase = voci
-        .filter((v) => v.tipo === "scadenza" || v.tipo === "appuntamento" || v.tipo === "nota")
+        .filter((v) => v.tipo === "scadenza" || v.tipo === "appuntamento")
         .filter((v) => vocePassata(v.data, v.ora))
         .slice()
         .sort((a, b) => {
@@ -9307,7 +8235,10 @@ function MiniCalendarioEventi({
                           "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.94))",
                         boxShadow: "0 8px 18px rgba(15,23,42,0.05)",
                         display: "grid",
-                        gridTemplateColumns: "minmax(0, 1fr) auto",
+                        gridTemplateColumns:
+                          typeof window !== "undefined" && window.innerWidth <= 640
+                            ? "minmax(0, 1fr)"
+                            : "minmax(0, 1fr) auto",
                         gap: 12,
                         alignItems: "start",
                       }}
@@ -9356,10 +8287,14 @@ function MiniCalendarioEventi({
                         {ev.nota && (
                           <div
                             style={{
+                              padding: "8px 10px",
+                              borderRadius: 14,
+                              background: "rgba(241,245,249,0.88)",
+                              border: "1px solid rgba(148,163,184,0.14)",
                               fontSize: 12,
                               fontWeight: 800,
-                              color: "rgba(71,85,105,0.82)",
-                              lineHeight: 1.35,
+                              color: "rgba(71,85,105,0.84)",
+                              lineHeight: 1.4,
                             }}
                           >
                             {ev.nota}
@@ -9371,7 +8306,8 @@ function MiniCalendarioEventi({
                         style={{
                           display: "grid",
                           gap: 8,
-                          justifyItems: "end",
+                          justifyItems:
+                            typeof window !== "undefined" && window.innerWidth <= 640 ? "stretch" : "end",
                         }}
                       >
                         <button
@@ -9381,7 +8317,12 @@ function MiniCalendarioEventi({
                             if (!voceOriginale) return;
                             apriModifica(voceOriginale);
                           }}
-                          style={chip(false)}
+                          style={{
+                            ...chip(false),
+                            justifyContent: "center",
+                            display: "inline-flex",
+                            alignItems: "center",
+                          }}
                         >
                           Modifica
                         </button>
@@ -9391,6 +8332,9 @@ function MiniCalendarioEventi({
                           onClick={() => elimina(ev.id)}
                           style={{
                             ...chip(false),
+                            justifyContent: "center",
+                            display: "inline-flex",
+                            alignItems: "center",
                             border: "1px solid rgba(239,68,68,0.22)",
                             color: "rgba(185,28,28,0.96)",
                             background: "rgba(254,242,242,0.92)",
@@ -9588,7 +8532,10 @@ function MiniCalendarioEventi({
                           "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.94))",
                         boxShadow: "0 8px 18px rgba(15,23,42,0.05)",
                         display: "grid",
-                        gridTemplateColumns: "minmax(0, 1fr) auto",
+                        gridTemplateColumns:
+                          typeof window !== "undefined" && window.innerWidth <= 640
+                            ? "minmax(0, 1fr)"
+                            : "minmax(0, 1fr) auto",
                         gap: 12,
                         alignItems: "start",
                       }}
@@ -9637,10 +8584,14 @@ function MiniCalendarioEventi({
                         {ev.nota && (
                           <div
                             style={{
+                              padding: "8px 10px",
+                              borderRadius: 14,
+                              background: "rgba(241,245,249,0.88)",
+                              border: "1px solid rgba(148,163,184,0.14)",
                               fontSize: 12,
                               fontWeight: 800,
-                              color: "rgba(71,85,105,0.82)",
-                              lineHeight: 1.35,
+                              color: "rgba(71,85,105,0.84)",
+                              lineHeight: 1.4,
                             }}
                           >
                             {ev.nota}
@@ -9652,7 +8603,8 @@ function MiniCalendarioEventi({
                         style={{
                           display: "grid",
                           gap: 8,
-                          justifyItems: "end",
+                          justifyItems:
+                            typeof window !== "undefined" && window.innerWidth <= 640 ? "stretch" : "end",
                         }}
                       >
                         <button
@@ -9662,7 +8614,12 @@ function MiniCalendarioEventi({
                             if (!voceOriginale) return;
                             apriModifica(voceOriginale);
                           }}
-                          style={chip(false)}
+                          style={{
+                            ...chip(false),
+                            justifyContent: "center",
+                            display: "inline-flex",
+                            alignItems: "center",
+                          }}
                         >
                           Modifica
                         </button>
@@ -9672,6 +8629,9 @@ function MiniCalendarioEventi({
                           onClick={() => elimina(ev.id)}
                           style={{
                             ...chip(false),
+                            justifyContent: "center",
+                            display: "inline-flex",
+                            alignItems: "center",
                             border: "1px solid rgba(239,68,68,0.22)",
                             color: "rgba(185,28,28,0.96)",
                             background: "rgba(254,242,242,0.92)",
@@ -9690,21 +8650,19 @@ function MiniCalendarioEventi({
       );
     })()}
   </>
-) : (
-  <div
-    style={{
-      ...ui.card,
-      padding: 22,
-      fontSize: 16,
-      fontWeight: 900,
-      color: "rgba(15,23,42,0.82)",
-    }}
-  >
-    Sezione in preparazione
-  </div>
-)}
-
-
+      ) : (
+        <div
+          style={{
+            ...ui.card,
+            padding: 22,
+            fontSize: 16,
+            fontWeight: 900,
+            color: "rgba(15,23,42,0.82)",
+          }}
+        >
+          Sezione in preparazione
+        </div>
+      )}
     </div>
   </div>
 )}
@@ -9750,26 +8708,26 @@ function MiniCalendarioEventi({
             }}
           >
             <div
-  style={{
-    width: "100%",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    textAlign: "center",
-  }}
->
-<div
-  style={{
-    width: "100%",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    textAlign: "center",
-  }}
->
-  <RememberLogo size={56} centered />
-</div>
-</div>
+              style={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                textAlign: "center",
+              }}
+            >
+              <div
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  textAlign: "center",
+                }}
+              >
+                <RememberLogo size={56} centered />
+              </div>
+            </div>
 
             <div
               style={{
@@ -9805,67 +8763,63 @@ function MiniCalendarioEventi({
               Utente attivo: {currentUser.nome}
             </div>
 
-<div
-  style={{
-    display: "flex",
-    gap: 12,
-    flexWrap: "wrap",
-    justifyContent: "center",
-    alignItems: "center",
-  }}
->
-  <button
-    data-chip="1"
-    onClick={() => {
-      resetForm();
-      setAggiungiSezione("menu");
-      setPagina("home");
-    }}
-    style={chip(false)}
-  >
-    Home
-  </button>
+            <div
+              style={{
+                display: "flex",
+                gap: 12,
+                flexWrap: "wrap",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <button
+                data-chip="1"
+                onClick={() => {
+                  resetForm();
+                  setAggiungiSezione("menu");
+                  setPagina("home");
+                }}
+                style={chip(false)}
+              >
+                Home
+              </button>
 
-  <button
-    data-chip="1"
-    onClick={() => {
-      resetForm();
-      setAggiungiSezione("menu");
-      setPagina("consulta");
-    }}
-    style={chip(false)}
-  >
-    Consulta
-  </button>
+              <button
+                data-chip="1"
+                onClick={() => {
+                  resetForm();
+                  setAggiungiSezione("menu");
+                  setPagina("consulta");
+                }}
+                style={chip(false)}
+              >
+                Consulta
+              </button>
 
-  <button
-    data-chip="1"
-    onClick={() => {
-      resetForm();
-      setAggiungiSezione("menu");
-      setPagina("aggiungi");
-    }}
-    style={chip(true)}
-  >
-    Aggiungi
-  </button>
+              <button
+                data-chip="1"
+                onClick={() => {
+                  resetForm();
+                  setAggiungiSezione("menu");
+                  setPagina("aggiungi");
+                }}
+                style={chip(true)}
+              >
+                Aggiungi
+              </button>
 
-  <button
-    data-chip="1"
-    onClick={() => {
-      if (typeof window !== "undefined") {
-        window.close();
-      }
-    }}
-    style={chip(false)}
-  >
-    Esci
-  </button>
-</div>
-
-
-
-
+              <button
+                data-chip="1"
+                onClick={() => {
+                  if (typeof window !== "undefined") {
+                    window.close();
+                  }
+                }}
+                style={chip(false)}
+              >
+                Esci
+              </button>
+            </div>
 
             {aggiungiSezione !== "menu" && (
               <div style={{ display: "flex", justifyContent: "center" }}>
@@ -10006,7 +8960,6 @@ function MiniCalendarioEventi({
             data-chip="1"
             onClick={() => {
               resetForm();
-              setTipo("scadenza");
               setAggiungiSezione("eventi");
             }}
             style={{
@@ -10049,7 +9002,7 @@ function MiniCalendarioEventi({
                   color: "rgba(15,23,42,0.96)",
                 }}
               >
-                Appuntamento / Scadenza
+                Evento
               </div>
 
               <div
@@ -10062,7 +9015,7 @@ function MiniCalendarioEventi({
                   color: "rgba(15,23,42,0.88)",
                 }}
               >
-                Nuova area dedicata a promemoria, appuntamenti e scadenze
+                Nuova area dedicata a tutti gli eventi dell’app in un unico flusso
               </div>
             </div>
           </button>
