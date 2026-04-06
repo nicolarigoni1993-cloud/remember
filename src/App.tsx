@@ -2523,16 +2523,19 @@ const eventiConsultaMese = useMemo(() => {
     return a === meseCorrente.getFullYear() && m - 1 === meseCorrente.getMonth();
   });
 }, [eventiConsultaBase, meseCorrente]);
+const eventiCalendarioControllo = useMemo(() => {
+  return eventiControlloMese.filter((x) => {
+    if (x.tipo !== "scadenza" && x.tipo !== "appuntamento" && x.tipo !== "nota") {
+      return false;
+    }
 
-const eventiConsultaProssimiMese = useMemo(() => {
-  return eventiConsultaMese
-    .filter((ev) => !vocePassata(ev.data, ev.ora))
-    .sort((a, b) => {
-      const d = a.data.localeCompare(b.data);
-      if (d !== 0) return d;
-      return a.ora.localeCompare(b.ora);
-    });
-}, [eventiConsultaMese]);
+    if (x.tipo === "nota" && x.nota.startsWith("[NOTA_LIBERA_MESE]")) {
+      return false;
+    }
+
+    return true;
+  });
+}, [eventiControlloMese]);
 
 const eventiControlloGiornoSelezionato = useMemo(() => {
   if (!controlloDettaglioData) return [];
@@ -2557,20 +2560,6 @@ const usciteControlloMese = useMemo(() => {
   return eventiControlloMese.filter((x) => x.movimento === "uscita" && x.importo !== null);
 }, [eventiControlloMese]);
 
-const eventiCalendarioControllo = useMemo(() => {
-  return eventiControlloMese.filter((x) => {
-    if (x.tipo !== "scadenza" && x.tipo !== "appuntamento" && x.tipo !== "nota") {
-      return false;
-    }
-
-    if (x.tipo === "nota" && x.nota.startsWith("[NOTA_LIBERA_MESE]")) {
-      return false;
-    }
-
-    return true;
-  });
-}, [eventiControlloMese]);
-
 const eventiControlloMeseVisibili = useMemo(() => {
   return eventiControlloMese.filter((ev) => {
     if (ev.tipo === "scadenza" || ev.tipo === "appuntamento") {
@@ -2581,7 +2570,6 @@ const eventiControlloMeseVisibili = useMemo(() => {
 }, [eventiControlloMese]);
 
 const annoCorrenteArchivio = meseCorrente.getFullYear();
-
 const entrateArchivioMese = useMemo(() => {
   return entrateExtraVal.reduce((s, x) => s + x.importo, 0);
 }, [entrateExtraVal]);
