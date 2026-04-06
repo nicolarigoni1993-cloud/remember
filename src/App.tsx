@@ -2517,12 +2517,7 @@ const eventiConsultaBase = useMemo(() => {
     });
 }, [voci]);
 
-const eventiConsultaMese = useMemo(() => {
-  return eventiConsultaBase.filter((ev) => {
-    const [a, m] = ev.data.split("-").map(Number);
-    return a === meseCorrente.getFullYear() && m - 1 === meseCorrente.getMonth();
-  });
-}, [eventiConsultaBase, meseCorrente]);
+
 const eventiCalendarioControllo = useMemo(() => {
   return eventiControlloMese.filter((x) => {
     if (x.tipo !== "scadenza" && x.tipo !== "appuntamento" && x.tipo !== "nota") {
