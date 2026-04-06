@@ -5108,31 +5108,6 @@ function MiniCalendarioEventi({
     return eventi.find((ev) => ev.id === previewEventoId) ?? null;
   }, [previewEventoId, eventi]);
 
-  function getTipoPillStyle(tipo: "scadenza" | "appuntamento" | "nota") {
-    if (tipo === "scadenza") {
-      return {
-        background: "rgba(220,252,231,0.98)",
-        border: "1px solid rgba(16,185,129,0.20)",
-        color: "rgba(6,95,70,0.98)",
-        label: "Scadenza",
-      };
-    }
-    if (tipo === "appuntamento") {
-      return {
-        background: "rgba(237,233,254,0.98)",
-        border: "1px solid rgba(139,92,246,0.20)",
-        color: "rgba(91,33,182,0.98)",
-        label: "Appunt.",
-      };
-    }
-    return {
-      background: "rgba(254,242,242,0.98)",
-      border: "1px solid rgba(239,68,68,0.20)",
-      color: "rgba(153,27,27,0.98)",
-      label: "Nota",
-    };
-  }
-
   const navBtnStyle: React.CSSProperties = {
     width: isMobile ? 40 : 46,
     height: isMobile ? 40 : 46,
@@ -5149,6 +5124,20 @@ function MiniCalendarioEventi({
     padding: 0,
     flexShrink: 0,
   };
+
+  function pillEventoStyle(ev: { urgente: boolean }) {
+    return {
+      background: ev.urgente
+        ? "rgba(254,226,226,0.98)"
+        : "rgba(237,233,254,0.98)",
+      border: ev.urgente
+        ? "1px solid rgba(239,68,68,0.22)"
+        : "1px solid rgba(139,92,246,0.18)",
+      color: ev.urgente
+        ? "rgba(153,27,27,0.98)"
+        : "rgba(91,33,182,0.98)",
+    };
+  }
 
   return (
     <>
@@ -5250,7 +5239,7 @@ function MiniCalendarioEventi({
                   <div
                     key={`empty_${idx}`}
                     style={{
-                      minHeight: isMobile ? 78 : 128,
+                      minHeight: isMobile ? 78 : 120,
                       borderRadius: isMobile ? 16 : 22,
                     }}
                   />
@@ -5276,7 +5265,7 @@ function MiniCalendarioEventi({
                 <div
                   key={key}
                   style={{
-                    minHeight: isMobile ? 78 : 132,
+                    minHeight: isMobile ? 78 : 120,
                     borderRadius: isMobile ? 16 : 22,
                     border: isToday
                       ? "2px solid rgba(99,102,241,0.24)"
@@ -5348,54 +5337,48 @@ function MiniCalendarioEventi({
                         }}
                       />
                     ) : isMobile ? (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => setPreviewEventoId(firstEvent.id)}
+                      <button
+                        type="button"
+                        onClick={() => setPreviewEventoId(firstEvent.id)}
+                        style={{
+                          width: "100%",
+                          maxWidth: 42,
+                          minHeight: 28,
+                          padding: "4px 6px",
+                          borderRadius: 12,
+                          border: "1px solid rgba(148,163,184,0.16)",
+                          background: "rgba(255,255,255,0.95)",
+                          boxShadow: "0 6px 14px rgba(15,23,42,0.06)",
+                          display: "grid",
+                          placeItems: "center",
+                          cursor: "pointer",
+                          lineHeight: 1,
+                        }}
+                      >
+                        <div
                           style={{
-                            width: "100%",
-                            maxWidth: 42,
-                            minHeight: 28,
-                            padding: "4px 6px",
-                            borderRadius: 12,
-                            border: "1px solid rgba(148,163,184,0.16)",
-                            background: "rgba(255,255,255,0.95)",
-                            boxShadow: "0 6px 14px rgba(15,23,42,0.06)",
-                            display: "grid",
-                            placeItems: "center",
-                            cursor: "pointer",
-                            lineHeight: 1,
+                            width: 10,
+                            height: 10,
+                            borderRadius: 999,
+                            background: firstEvent.urgente
+                              ? "rgba(239,68,68,0.98)"
+                              : "rgba(139,92,246,0.98)",
+                            boxShadow: firstEvent.urgente
+                              ? "0 0 0 5px rgba(239,68,68,0.12)"
+                              : "0 0 0 4px rgba(139,92,246,0.10)",
+                          }}
+                        />
+                        <div
+                          style={{
+                            marginTop: 3,
+                            fontSize: 9,
+                            fontWeight: 1000,
+                            color: "rgba(15,23,42,0.86)",
                           }}
                         >
-                          <div
-                            style={{
-                              width: 10,
-                              height: 10,
-                              borderRadius: 999,
-                              background:
-                                firstEvent.tipo === "scadenza"
-                                  ? "rgba(16,185,129,0.98)"
-                                  : firstEvent.tipo === "appuntamento"
-                                  ? "rgba(139,92,246,0.98)"
-                                  : "rgba(239,68,68,0.98)",
-                              boxShadow:
-                                firstEvent.urgente
-                                  ? "0 0 0 5px rgba(239,68,68,0.12)"
-                                  : "0 0 0 4px rgba(148,163,184,0.08)",
-                            }}
-                          />
-                          <div
-                            style={{
-                              marginTop: 3,
-                              fontSize: 9,
-                              fontWeight: 1000,
-                              color: "rgba(15,23,42,0.86)",
-                            }}
-                          >
-                            {items.length}
-                          </div>
-                        </button>
-                      </>
+                          {items.length}
+                        </div>
+                      </button>
                     ) : (
                       <>
                         <button
@@ -5421,12 +5404,9 @@ function MiniCalendarioEventi({
                               width: 10,
                               height: 10,
                               borderRadius: 999,
-                              background:
-                                firstEvent.tipo === "scadenza"
-                                  ? "rgba(16,185,129,0.98)"
-                                  : firstEvent.tipo === "appuntamento"
-                                  ? "rgba(139,92,246,0.98)"
-                                  : "rgba(239,68,68,0.98)",
+                              background: firstEvent.urgente
+                                ? "rgba(239,68,68,0.98)"
+                                : "rgba(139,92,246,0.98)",
                             }}
                           />
                           <span
@@ -5545,14 +5525,14 @@ function MiniCalendarioEventi({
                 >
                   <span
                     style={{
-                      ...getTipoPillStyle(previewEvento.tipo),
+                      ...pillEventoStyle(previewEvento),
                       padding: "6px 10px",
                       borderRadius: 999,
                       fontSize: 11,
                       fontWeight: 950,
                     }}
                   >
-                    {getTipoPillStyle(previewEvento.tipo).label}
+                    Evento
                   </span>
 
                   {previewEvento.urgente && badgeUrgente()}
@@ -9318,7 +9298,6 @@ function MiniCalendarioEventi({
 
 
 
-
 ) : consultaSezione === "eventi" ? (
   <>
     <div
@@ -9353,7 +9332,7 @@ function MiniCalendarioEventi({
           letterSpacing: 0.1,
         }}
       >
-        Calendario eventi moderno collegato a scadenze e appuntamenti, con eventi futuri e archivio automatico.
+        Calendario eventi moderno collegato ai tuoi eventi, con eventi futuri e archivio automatico.
       </div>
     </div>
 
@@ -9447,7 +9426,7 @@ function MiniCalendarioEventi({
                     color: "rgba(71,85,105,0.82)",
                   }}
                 >
-                  Tutti gli eventi del mese selezionato nel calendario
+                  Tutti gli eventi futuri del mese selezionato nel calendario
                 </div>
               </div>
 
@@ -9486,7 +9465,21 @@ function MiniCalendarioEventi({
                     >
                       <div style={{ minWidth: 0, display: "grid", gap: 6 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                          {badgeTipo(ev.tipo)}
+                          <span
+                            style={{
+                              padding: "6px 10px",
+                              borderRadius: 999,
+                              fontSize: 12,
+                              fontWeight: 950,
+                              background: "rgba(79,70,229,0.10)",
+                              border: "1px solid rgba(79,70,229,0.18)",
+                              color: "rgba(79,70,229,0.98)",
+                              lineHeight: 1,
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            Evento
+                          </span>
                           {ev.urgente && badgeUrgente()}
                         </div>
 
@@ -9534,7 +9527,11 @@ function MiniCalendarioEventi({
                       >
                         <button
                           type="button"
-                          onClick={() => apriModifica(ev)}
+                          onClick={() => {
+                            const voceOriginale = voci.find((x) => x.id === ev.id);
+                            if (!voceOriginale) return;
+                            apriModifica(voceOriginale);
+                          }}
                           style={chip(false)}
                         >
                           Modifica
@@ -9749,7 +9746,21 @@ function MiniCalendarioEventi({
                     >
                       <div style={{ minWidth: 0, display: "grid", gap: 6 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                          {badgeTipo(ev.tipo)}
+                          <span
+                            style={{
+                              padding: "6px 10px",
+                              borderRadius: 999,
+                              fontSize: 12,
+                              fontWeight: 950,
+                              background: "rgba(79,70,229,0.10)",
+                              border: "1px solid rgba(79,70,229,0.18)",
+                              color: "rgba(79,70,229,0.98)",
+                              lineHeight: 1,
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            Evento
+                          </span>
                           {ev.urgente && badgeUrgente()}
                         </div>
 
@@ -9797,7 +9808,11 @@ function MiniCalendarioEventi({
                       >
                         <button
                           type="button"
-                          onClick={() => apriModifica(ev)}
+                          onClick={() => {
+                            const voceOriginale = voci.find((x) => x.id === ev.id);
+                            if (!voceOriginale) return;
+                            apriModifica(voceOriginale);
+                          }}
                           style={chip(false)}
                         >
                           Modifica
