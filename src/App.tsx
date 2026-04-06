@@ -840,31 +840,9 @@ const [categorieUscitaCustom] = useState<string[]>(() => {
   const presetTurni = ["00-06", "06-12", "12-18", "18-24", "6-14", "14-22", "22-06", "8-18", "8-17"];
 
 
-const applicaPresetTurno = (val: string) => {
-  setTurnoPreset(val);
-  setTurnoManuale(false);
-
-  const parti = val.split("-");
-  if (parti.length !== 2) return;
-
-  let start = parti[0].trim();
-  let end = parti[1].trim();
-
-  if (/^\d$/.test(start)) start = `0${start}`;
-  if (/^\d$/.test(end)) end = `0${end}`;
-  if (end === "24") end = "00";
-
-  setTurnoInizio(`${start}:00`);
-  setTurnoFine(`${end}:00`);
-
-  if (turnoOreOrd.trim() === "") {
-    const oreCalcolate =
-      ((Number(end === "00" ? "24" : end) - Number(start) + 24) % 24) || 0;
-    if (oreCalcolate > 0) setTurnoOreOrd(String(oreCalcolate));
-  }
-};
 
 
+  
 
   const [controlloDettaglioData, setControlloDettaglioData] = useState<string | null>(null);
 
@@ -1223,6 +1201,8 @@ function salva() {
     return;
   }
 
+  const eraModifica = Boolean(idInModifica);
+
   if (idInModifica) {
     setVoci((prev) =>
       prev.map((x) =>
@@ -1259,6 +1239,15 @@ function salva() {
     };
 
     setVoci((prev) => [nuova, ...prev]);
+  }
+
+  if (eraModifica) {
+    resetForm();
+    setMostraForm(false);
+    setAggiungiSezione("menu");
+    setPagina("consulta");
+    setConsultaSezione("eventi");
+    return;
   }
 
   chiudiForm();
@@ -5082,8 +5071,8 @@ function MiniCalendarioEventi({
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
-              gap: isMobile ? 4 : 8,
-              marginBottom: isMobile ? 6 : 10,
+              gap: isMobile ? 6 : 8,
+              marginBottom: isMobile ? 8 : 10,
             }}
           >
             {giorniSettimana.map((g, i) => (
@@ -5091,7 +5080,7 @@ function MiniCalendarioEventi({
                 key={`${g}_${i}`}
                 style={{
                   textAlign: "center",
-                  fontSize: isMobile ? 9 : 11,
+                  fontSize: isMobile ? 10 : 11,
                   fontWeight: 1000,
                   color: i >= 5 ? "rgba(220,38,38,0.94)" : "rgba(100,116,139,0.96)",
                   textTransform: "uppercase",
@@ -5107,7 +5096,7 @@ function MiniCalendarioEventi({
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
-              gap: isMobile ? 5 : 10,
+              gap: isMobile ? 6 : 10,
               width: "100%",
             }}
           >
@@ -5117,8 +5106,8 @@ function MiniCalendarioEventi({
                   <div
                     key={`empty_${idx}`}
                     style={{
-                      minHeight: isMobile ? 76 : 118,
-                      borderRadius: isMobile ? 16 : 22,
+                      minHeight: isMobile ? 54 : 86,
+                      borderRadius: 16,
                     }}
                   />
                 );
@@ -5149,8 +5138,8 @@ function MiniCalendarioEventi({
                     }
                   }}
                   style={{
-                    minHeight: isMobile ? 76 : 118,
-                    borderRadius: isMobile ? 16 : 22,
+                    minHeight: isMobile ? 54 : 86,
+                    borderRadius: 18,
                     border: isToday
                       ? "2px solid rgba(99,102,241,0.24)"
                       : "1px solid rgba(148,163,184,0.14)",
@@ -5158,12 +5147,13 @@ function MiniCalendarioEventi({
                       ? "linear-gradient(180deg, rgba(238,242,255,0.98), rgba(255,255,255,0.96))"
                       : "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.95))",
                     boxShadow: isToday
-                      ? "0 16px 34px rgba(99,102,241,0.10)"
-                      : "0 10px 24px rgba(15,23,42,0.06)",
-                    padding: isMobile ? 6 : 10,
+                      ? "0 12px 28px rgba(99,102,241,0.10)"
+                      : "0 8px 20px rgba(15,23,42,0.05)",
+                    padding: isMobile ? "6px 4px" : "8px 6px",
                     display: "grid",
-                    gridTemplateRows: "auto 1fr",
-                    gap: isMobile ? 6 : 10,
+                    alignContent: "space-between",
+                    justifyItems: "center",
+                    gap: isMobile ? 6 : 8,
                     boxSizing: "border-box",
                     overflow: "hidden",
                     cursor: items.length > 0 ? "pointer" : "default",
@@ -5174,148 +5164,43 @@ function MiniCalendarioEventi({
                 >
                   <div
                     style={{
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
+                      fontSize: isMobile ? 13 : 15,
+                      fontWeight: 1000,
+                      color: isFestivo
+                        ? "rgba(22,101,52,0.98)"
+                        : isWeekend
+                        ? "rgba(220,38,38,0.98)"
+                        : "rgba(15,23,42,0.94)",
+                      lineHeight: 1,
                     }}
                   >
-                    <div
-                      style={{
-                        width: isMobile ? 28 : 36,
-                        height: isMobile ? 28 : 36,
-                        borderRadius: "50%",
-                        display: "grid",
-                        placeItems: "center",
-                        fontSize: isMobile ? 13 : 16,
-                        fontWeight: 1000,
-                        color: isFestivo
-                          ? "rgba(22,101,52,0.98)"
-                          : isWeekend
-                          ? "rgba(220,38,38,0.98)"
-                          : "rgba(15,23,42,0.94)",
-                        background: isToday
-                          ? "rgba(99,102,241,0.12)"
-                          : "rgba(241,245,249,0.78)",
-                        border: isToday
-                          ? "1px solid rgba(99,102,241,0.20)"
-                          : "1px solid rgba(148,163,184,0.10)",
-                      }}
-                    >
-                      {d}
-                    </div>
+                    {d}
                   </div>
 
                   <div
                     style={{
-                      minWidth: 0,
-                      display: "grid",
-                      alignContent: "center",
-                      justifyItems: "center",
-                      gap: isMobile ? 4 : 6,
+                      minHeight: 14,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
-                    {items.length === 0 ? (
+                    {items.length > 0 ? (
                       <div
                         style={{
-                          width: isMobile ? 18 : 22,
-                          height: isMobile ? 18 : 22,
+                          width: isMobile ? 10 : 12,
+                          height: isMobile ? 10 : 12,
                           borderRadius: 999,
-                          background: "rgba(226,232,240,0.55)",
-                          border: "1px solid rgba(148,163,184,0.14)",
+                          background: firstEvent?.urgente
+                            ? "rgba(239,68,68,0.98)"
+                            : "rgba(139,92,246,0.98)",
+                          boxShadow: firstEvent?.urgente
+                            ? "0 0 0 5px rgba(239,68,68,0.12)"
+                            : "0 0 0 4px rgba(139,92,246,0.10)",
                         }}
                       />
-                    ) : isMobile ? (
-                      <>
-                        <div
-                          style={{
-                            width: 30,
-                            height: 30,
-                            borderRadius: 999,
-                            border: "1px solid rgba(148,163,184,0.16)",
-                            background: "rgba(255,255,255,0.96)",
-                            boxShadow: "0 6px 14px rgba(15,23,42,0.06)",
-                            display: "grid",
-                            placeItems: "center",
-                            lineHeight: 1,
-                          }}
-                        >
-                          <div
-                            style={{
-                              width: 10,
-                              height: 10,
-                              borderRadius: 999,
-                              background: firstEvent?.urgente
-                                ? "rgba(239,68,68,0.98)"
-                                : "rgba(139,92,246,0.98)",
-                              boxShadow: firstEvent?.urgente
-                                ? "0 0 0 5px rgba(239,68,68,0.12)"
-                                : "0 0 0 4px rgba(139,92,246,0.10)",
-                            }}
-                          />
-                        </div>
-
-                        <div
-                          style={{
-                            fontSize: 10,
-                            fontWeight: 1000,
-                            color: "rgba(15,23,42,0.86)",
-                            lineHeight: 1,
-                          }}
-                        >
-                          {items.length === 1 ? "1 evento" : `${items.length} eventi`}
-                        </div>
-                      </>
                     ) : (
-                      <>
-                        <div
-                          style={{
-                            width: "100%",
-                            maxWidth: 86,
-                            padding: "7px 10px",
-                            borderRadius: 999,
-                            border: "1px solid rgba(148,163,184,0.16)",
-                            background: "rgba(255,255,255,0.96)",
-                            boxShadow: "0 8px 18px rgba(15,23,42,0.05)",
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            gap: 6,
-                          }}
-                        >
-                          <div
-                            style={{
-                              width: 10,
-                              height: 10,
-                              borderRadius: 999,
-                              background: firstEvent?.urgente
-                                ? "rgba(239,68,68,0.98)"
-                                : "rgba(139,92,246,0.98)",
-                            }}
-                          />
-                          <span
-                            style={{
-                              fontSize: 11,
-                              fontWeight: 1000,
-                              color: "rgba(15,23,42,0.88)",
-                              lineHeight: 1,
-                            }}
-                          >
-                            {items.length}
-                          </span>
-                        </div>
-
-                        <div
-                          style={{
-                            fontSize: 10,
-                            fontWeight: 900,
-                            color: "rgba(100,116,139,0.82)",
-                            textAlign: "center",
-                            lineHeight: 1.1,
-                          }}
-                        >
-                          {items.length === 1 ? "evento" : "eventi"}
-                        </div>
-                      </>
+                      <div style={{ width: isMobile ? 10 : 12, height: isMobile ? 10 : 12 }} />
                     )}
                   </div>
                 </button>
@@ -5356,56 +5241,6 @@ function MiniCalendarioEventi({
                 }}
               />
               Festivo
-            </div>
-
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "7px 12px",
-                borderRadius: 999,
-                background: "rgba(248,250,252,0.95)",
-                border: "1px solid rgba(148,163,184,0.16)",
-                fontSize: 11,
-                fontWeight: 900,
-                color: "rgba(15,23,42,0.82)",
-              }}
-            >
-              <span
-                style={{
-                  width: 10,
-                  height: 10,
-                  borderRadius: 999,
-                  background: "rgba(139,92,246,0.98)",
-                }}
-              />
-              Evento
-            </div>
-
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "7px 12px",
-                borderRadius: 999,
-                background: "rgba(248,250,252,0.95)",
-                border: "1px solid rgba(148,163,184,0.16)",
-                fontSize: 11,
-                fontWeight: 900,
-                color: "rgba(15,23,42,0.82)",
-              }}
-            >
-              <span
-                style={{
-                  width: 10,
-                  height: 10,
-                  borderRadius: 999,
-                  background: "rgba(239,68,68,0.98)",
-                }}
-              />
-              Evento urgente
             </div>
           </div>
         </div>
