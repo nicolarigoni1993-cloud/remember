@@ -839,6 +839,33 @@ const [categorieUscitaCustom] = useState<string[]>(() => {
 
   const presetTurni = ["00-06", "06-12", "12-18", "18-24", "6-14", "14-22", "22-06", "8-18", "8-17"];
 
+
+const applicaPresetTurno = (val: string) => {
+  setTurnoPreset(val);
+  setTurnoManuale(false);
+
+  const parti = val.split("-");
+  if (parti.length !== 2) return;
+
+  let start = parti[0].trim();
+  let end = parti[1].trim();
+
+  if (/^\d$/.test(start)) start = `0${start}`;
+  if (/^\d$/.test(end)) end = `0${end}`;
+  if (end === "24") end = "00";
+
+  setTurnoInizio(`${start}:00`);
+  setTurnoFine(`${end}:00`);
+
+  if (turnoOreOrd.trim() === "") {
+    const oreCalcolate =
+      ((Number(end === "00" ? "24" : end) - Number(start) + 24) % 24) || 0;
+    if (oreCalcolate > 0) setTurnoOreOrd(String(oreCalcolate));
+  }
+};
+
+
+
   const [controlloDettaglioData, setControlloDettaglioData] = useState<string | null>(null);
 
   const meseKey = useMemo(() => yyyymmFromDate(meseCorrente), [meseCorrente]);
@@ -2089,6 +2116,16 @@ const listaMovimentiFinanza = useMemo(() => {
       return b.importo - a.importo;
     });
 }, [tuttiMovimentiFinanza, filtroFinanzaLista]);
+
+
+void setFiltroFinanzaGrafico;
+void nomeMesiCompleti;
+void apriModificaMovimentoFinanza;
+void eliminaMovimentoFinanza;
+void pieGradientFinanza;
+void maxBarFinanza;
+void listaMovimentiFinanza;
+
 
 const anniFinanzaDisponibili = useMemo(() => {
   const anni = Array.from(
