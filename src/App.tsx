@@ -2495,27 +2495,6 @@ const appuntamentiControlloMese = useMemo(() => {
   return eventiControlloMese.filter((x) => x.tipo === "appuntamento");
 }, [eventiControlloMese]);
 
-const eventiConsultaBase = useMemo(() => {
-  return voci
-    .filter((v) => v.tipo === "scadenza" || v.tipo === "appuntamento")
-    .map((v) => ({
-      id: v.id,
-      data: v.data,
-      ora: v.ora,
-      titolo: v.titolo,
-      tipo: v.tipo,
-      urgente: v.urgente,
-      nota: v.nota,
-      fatto: v.fatto,
-      importo: v.importo,
-      movimento: v.movimento,
-    }))
-    .sort((a, b) => {
-      const d = a.data.localeCompare(b.data);
-      if (d !== 0) return d;
-      return a.ora.localeCompare(b.ora);
-    });
-}, [voci]);
 
 
 const eventiCalendarioControllo = useMemo(() => {
