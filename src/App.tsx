@@ -1733,7 +1733,6 @@ function MiniCalendarioSettimanaTurni({
 
 
 
-
 function elimina(id: string) {
   const ok = confirm("Vuoi eliminare questa voce?");
   if (!ok) return;
@@ -1743,33 +1742,32 @@ function elimina(id: string) {
 
 void elimina;
 
-  function mesePrecedente() {
-    setMeseCorrente((d) => new Date(d.getFullYear(), d.getMonth() - 1, 1));
-  }
+function mesePrecedente() {
+  setMeseCorrente((d) => new Date(d.getFullYear(), d.getMonth() - 1, 1));
+}
 
-  function meseSuccessivo() {
-    setMeseCorrente((d) => new Date(d.getFullYear(), d.getMonth() + 1, 1));
-  }
+function meseSuccessivo() {
+  setMeseCorrente((d) => new Date(d.getFullYear(), d.getMonth() + 1, 1));
+}
 
-  function nomeMese(d: Date) {
-    return d.toLocaleDateString("it-IT", { month: "long", year: "numeric" });
-  }
+function nomeMese(d: Date) {
+  return d.toLocaleDateString("it-IT", { month: "long", year: "numeric" });
+}
 
-  function stessoMeseSelezionato(dataStr: string) {
-    const [a, m, g] = dataStr.split("-").map(Number);
-    const d = new Date(a, (m ?? 1) - 1, g ?? 1);
-    return d.getFullYear() === meseCorrente.getFullYear() && d.getMonth() === meseCorrente.getMonth();
-  }
+function stessoMeseSelezionato(dataStr: string) {
+  const [a, m, g] = dataStr.split("-").map(Number);
+  const d = new Date(a, (m ?? 1) - 1, g ?? 1);
+  return d.getFullYear() === meseCorrente.getFullYear() && d.getMonth() === meseCorrente.getMonth();
+}
 
-  const entrateExtraVal = incassi[meseKey]?.entrateExtra ?? [];
-  const usciteExtraVal = incassi[meseKey]?.usciteExtra ?? [];
-
+const entrateExtraVal = incassi[meseKey]?.entrateExtra ?? [];
+const usciteExtraVal = incassi[meseKey]?.usciteExtra ?? [];
 
 const [finanzaVistaGrafico, setFinanzaVistaGrafico] = useState<"mese" | "anno">("mese");
 const [finanzaAnnoSelezionato, setFinanzaAnnoSelezionato] = useState(new Date().getFullYear());
 const [finanzaMeseSelezionato, setFinanzaMeseSelezionato] = useState(new Date().getMonth());
 
-const [filtroFinanzaMese,] = useState<FiltroFinanza>({
+const [filtroFinanzaMese] = useState<FiltroFinanza>({
   dal: "",
   al: "",
   categoria: "",
@@ -1786,19 +1784,6 @@ const [filtroFinanzaLista, setFiltroFinanzaLista] = useState<FiltroFinanza>({
   al: "",
   categoria: "",
 });
-
-
-
-type FiltroEventiPassati = {
-  dal: string;
-  al: string;
-};
-
-const [filtroEventiPassati, setFiltroEventiPassati] = useState<FiltroEventiPassati>({
-  dal: "",
-  al: "",
-});
-
 
 const [movimentoFinanzaInModifica, setMovimentoFinanzaInModifica] = useState<MovimentoFinanzaItem | null>(null);
 const [finanzaModData, setFinanzaModData] = useState("");
@@ -2130,11 +2115,6 @@ useEffect(() => {
   }
 }, [anniFinanzaDisponibili, finanzaAnnoSelezionato]);
 
-
-
-
-
-
 function aggiungiEntrataExtra() {
   const importoNum = Number(nuovaEntrataImporto.replace(",", "."));
   const dettaglio = nuovaEntrataDesc.trim();
@@ -2191,38 +2171,22 @@ function aggiungiEntrataExtra() {
     },
   }));
 
-  if (categoriaEntrata === "__altro__") {
-    const nuovaLista = (() => {
-      try {
-        const raw = localStorage.getItem(K_CATEGORIE_ENTRATA_CUSTOM);
-        const parsed = raw ? (JSON.parse(raw) as string[]) : [];
-        return Array.isArray(parsed) ? parsed : [];
-      } catch {
-        return [];
-      }
-    })();
-    setCategoriaEntrata("");
-    setNuovaCategoriaEntrata("");
-    void nuovaLista;
-  } else {
-    setCategoriaEntrata("");
-    setNuovaCategoriaEntrata("");
-  }
-
+  setCategoriaEntrata("");
+  setNuovaCategoriaEntrata("");
   setNuovaEntrataDesc("");
   setNuovaEntrataImporto("");
   setMovimentoAperto(null);
 }
 
-  function eliminaEntrataExtra(id: string) {
-    setIncassi((prev) => ({
-      ...prev,
-      [meseKey]: {
-        entrateExtra: (prev[meseKey]?.entrateExtra ?? []).filter((x) => x.id !== id),
-        usciteExtra: prev[meseKey]?.usciteExtra ?? [],
-      },
-    }));
-  }
+function eliminaEntrataExtra(id: string) {
+  setIncassi((prev) => ({
+    ...prev,
+    [meseKey]: {
+      entrateExtra: (prev[meseKey]?.entrateExtra ?? []).filter((x) => x.id !== id),
+      usciteExtra: prev[meseKey]?.usciteExtra ?? [],
+    },
+  }));
+}
 
 function aggiungiUscitaExtra() {
   const importoNum = Number(nuovaUscitaImporto.replace(",", "."));
@@ -2281,144 +2245,110 @@ function aggiungiUscitaExtra() {
     },
   }));
 
-  if (categoriaUscita === "__altro__") {
-    const nuovaLista = (() => {
-      try {
-        const raw = localStorage.getItem(K_CATEGORIE_USCITA_CUSTOM);
-        const parsed = raw ? (JSON.parse(raw) as string[]) : [];
-        return Array.isArray(parsed) ? parsed : [];
-      } catch {
-        return [];
-      }
-    })();
-    setCategoriaUscita("");
-    setNuovaCategoriaUscita("");
-    void nuovaLista;
-  } else {
-    setCategoriaUscita("");
-    setNuovaCategoriaUscita("");
-  }
-
+  setCategoriaUscita("");
+  setNuovaCategoriaUscita("");
   setNuovaUscitaDesc("");
   setNuovaUscitaImporto("");
   setNuovaUscitaNota("");
   setMovimentoAperto(null);
 }
 
-  function eliminaUscitaExtra(id: string) {
-    setIncassi((prev) => ({
-      ...prev,
-      [meseKey]: {
-        entrateExtra: prev[meseKey]?.entrateExtra ?? [],
-        usciteExtra: (prev[meseKey]?.usciteExtra ?? []).filter((x) => x.id !== id),
-      },
-    }));
-  }
+function eliminaUscitaExtra(id: string) {
+  setIncassi((prev) => ({
+    ...prev,
+    [meseKey]: {
+      entrateExtra: prev[meseKey]?.entrateExtra ?? [],
+      usciteExtra: (prev[meseKey]?.usciteExtra ?? []).filter((x) => x.id !== id),
+    },
+  }));
+}
 
+const totaleEntrateExtra = useMemo(() => entrateExtraVal.reduce((s, x) => s + x.importo, 0), [entrateExtraVal]);
 
+const turniMese = useMemo(() => turni.filter((t) => stessoMeseSelezionato(t.data)), [turni, meseCorrente]);
+const oreOrdMese = useMemo(() => turniMese.reduce((s, t) => s + t.oreOrdinarie, 0), [turniMese]);
+const oreStraMese = useMemo(() => turniMese.reduce((s, t) => s + t.oreStraordinarie, 0), [turniMese]);
+const oreTotMese = useMemo(() => oreOrdMese + oreStraMese, [oreOrdMese, oreStraMese]);
 
+const vociMese = useMemo(() => voci.filter((v) => stessoMeseSelezionato(v.data)), [voci, meseCorrente]);
 
-  const totaleEntrateExtra = useMemo(() => entrateExtraVal.reduce((s, x) => s + x.importo, 0), [entrateExtraVal]);
+const usciteTotMese = useMemo(() => {
+  const usciteDaVoci = vociMese
+    .filter((v) => v.importo !== null && v.movimento === "uscita")
+    .reduce((s, v) => s + (v.importo ?? 0), 0);
 
- const turniMese = useMemo(() => turni.filter((t) => stessoMeseSelezionato(t.data)), [turni, meseCorrente]);
-  const oreOrdMese = useMemo(() => turniMese.reduce((s, t) => s + t.oreOrdinarie, 0), [turniMese]);
-  const oreStraMese = useMemo(() => turniMese.reduce((s, t) => s + t.oreStraordinarie, 0), [turniMese]);
-  const oreTotMese = useMemo(() => oreOrdMese + oreStraMese, [oreOrdMese, oreStraMese]);
+  const usciteDaExtra = usciteExtraVal.reduce((s, x) => s + x.importo, 0);
 
-  const vociMese = useMemo(() => voci.filter((v) => stessoMeseSelezionato(v.data)), [voci, meseCorrente]);
+  return usciteDaVoci + usciteDaExtra;
+}, [vociMese, usciteExtraVal]);
 
+const entrateTotMese = totaleEntrateExtra;
+const saldoMese = entrateTotMese - usciteTotMese;
 
+const entrateArchivioTotali = useMemo(() => {
+  return Object.values(incassi).reduce((acc, mese) => {
+    return acc + (mese.entrateExtra ?? []).reduce((s, x) => s + x.importo, 0);
+  }, 0);
+}, [incassi]);
 
-   const usciteTotMese = useMemo(() => {
-    const usciteDaVoci = vociMese
-      .filter((v) => v.importo !== null && v.movimento === "uscita")
-      .reduce((s, v) => s + (v.importo ?? 0), 0);
+const usciteArchivioTotali = useMemo(() => {
+  return voci
+    .filter((v) => v.importo !== null && v.movimento === "uscita")
+    .reduce((s, v) => s + (v.importo ?? 0), 0);
+}, [voci]);
 
-    const usciteDaExtra = usciteExtraVal.reduce((s, x) => s + x.importo, 0);
+const saldoArchivioTotale = entrateArchivioTotali - usciteArchivioTotali;
+void saldoArchivioTotale;
 
-    return usciteDaVoci + usciteDaExtra;
-  }, [vociMese, usciteExtraVal]);
+const turniArchivio = useMemo(
+  () => turni.filter((t) => !stessoMeseSelezionato(t.data) || vocePassata(t.data, "23:59")),
+  [turni, meseCorrente]
+);
+void turniArchivio;
 
-  const entrateTotMese = totaleEntrateExtra;
-  const saldoMese = entrateTotMese - usciteTotMese;
+const vociArchivio = useMemo(() => voci.filter((v) => v.fatto), [voci]);
+void vociArchivio;
 
-  const entrateArchivioTotali = useMemo(() => {
-    return Object.values(incassi).reduce((acc, mese) => {
-      return acc + (mese.entrateExtra ?? []).reduce((s, x) => s + x.importo, 0);
-    }, 0);
-  }, [incassi]);
+const vociDelMesePerCalendario = useMemo(() => {
+  if (pagina === "agenda") return [];
+  if (pagina === "archivio") return voci.filter((v) => v.fatto).filter((v) => stessoMeseSelezionato(v.data));
+  return voci.filter((v) => !v.fatto).filter((v) => stessoMeseSelezionato(v.data));
+}, [voci, meseCorrente, pagina]);
+void vociDelMesePerCalendario;
 
-  const usciteArchivioTotali = useMemo(() => {
-    return voci
-      .filter((v) => v.importo !== null && v.movimento === "uscita")
-      .reduce((s, v) => s + (v.importo ?? 0), 0);
-  }, [voci]);
+function vociFiltrate() {
+  const base = pagina === "archivio" ? voci.filter((v) => v.fatto) : voci.filter((v) => !v.fatto);
+  const nelMese = base.filter((v) => stessoMeseSelezionato(v.data));
 
-  const saldoArchivioTotale = entrateArchivioTotali - usciteArchivioTotali;
-  void saldoArchivioTotale;
+  if (filtro === null) return ordinaIntelligente(nelMese);
 
-  const turniArchivio = useMemo(
-    () => turni.filter((t) => !stessoMeseSelezionato(t.data) || vocePassata(t.data, "23:59")),
-    [turni, meseCorrente]
-  );
-  void turniArchivio;
+  const oggi = new Date();
+  const inizioOggi = new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDate());
 
-  const vociArchivio = useMemo(() => voci.filter((v) => v.fatto), [voci]);
-  void vociArchivio;
-
-  const vociDelMesePerCalendario = useMemo(() => {
-    if (pagina === "agenda") return [];
-    if (pagina === "archivio") return voci.filter((v) => v.fatto).filter((v) => stessoMeseSelezionato(v.data));
-    return voci.filter((v) => !v.fatto).filter((v) => stessoMeseSelezionato(v.data));
-  }, [voci, meseCorrente, pagina]);
-  void vociDelMesePerCalendario;
-
-
-
-
-
-  function vociFiltrate() {
-    const base = pagina === "archivio" ? voci.filter((v) => v.fatto) : voci.filter((v) => !v.fatto);
-    const nelMese = base.filter((v) => stessoMeseSelezionato(v.data));
-
-
-    if (filtro === null) return ordinaIntelligente(nelMese);
-
-    const oggi = new Date();
-    const inizioOggi = new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDate());
-
-    if (filtro === "oggi") {
-      const filtrateOggi = nelMese.filter((v) => {
-        const [a, m, g] = v.data.split("-").map(Number);
-        const dataVoce = new Date(a, (m ?? 1) - 1, g ?? 1);
-        return dataVoce.getTime() === inizioOggi.getTime();
-      });
-
-      return ordinaIntelligente(filtrateOggi);
-    }
-
-
-    const fine = new Date(inizioOggi);
-
-    if (filtro === "7giorni") fine.setDate(fine.getDate() + 7);
-    else if (filtro === "30giorni") fine.setDate(fine.getDate() + 30);
-
-    const filtrate = nelMese.filter((v) => {
+  if (filtro === "oggi") {
+    const filtrateOggi = nelMese.filter((v) => {
       const [a, m, g] = v.data.split("-").map(Number);
       const dataVoce = new Date(a, (m ?? 1) - 1, g ?? 1);
-      return dataVoce >= inizioOggi && dataVoce <= fine;
+      return dataVoce.getTime() === inizioOggi.getTime();
     });
 
-    return ordinaIntelligente(filtrate);
+    return ordinaIntelligente(filtrateOggi);
   }
- void vociFiltrate;
 
+  const fine = new Date(inizioOggi);
 
+  if (filtro === "7giorni") fine.setDate(fine.getDate() + 7);
+  else if (filtro === "30giorni") fine.setDate(fine.getDate() + 30);
 
+  const filtrate = nelMese.filter((v) => {
+    const [a, m, g] = v.data.split("-").map(Number);
+    const dataVoce = new Date(a, (m ?? 1) - 1, g ?? 1);
+    return dataVoce >= inizioOggi && dataVoce <= fine;
+  });
 
-
-
-
+  return ordinaIntelligente(filtrate);
+}
+void vociFiltrate;
 
 const totaleTurniMese = useMemo(() => {
   return turniMese.filter((t) => {
@@ -2459,119 +2389,111 @@ const ferieOreResidue = useMemo(() => {
   return Math.max(0, ferieTotaliOreBase - ferieOreEffettuate);
 }, [ferieTotaliOreBase, ferieOreEffettuate]);
 
+const tutteEntrateExtra = useMemo(() => {
+  return Object.entries(incassi).flatMap(([mese, dati]) =>
+    (dati.entrateExtra ?? []).map((x) => ({
+      ...x,
+      mese,
+    }))
+  );
+}, [incassi]);
 
+const entrateAnnoCorrente = useMemo(() => {
+  const anno = meseCorrente.getFullYear();
+  return tutteEntrateExtra
+    .filter((x) => {
+      const [a] = x.data.split("-").map(Number);
+      return a === anno;
+    })
+    .reduce((acc, x) => acc + x.importo, 0);
+}, [tutteEntrateExtra, meseCorrente]);
 
-    const tutteEntrateExtra = useMemo(() => {
-    return Object.entries(incassi).flatMap(([mese, dati]) =>
-      (dati.entrateExtra ?? []).map((x) => ({
-        ...x,
-        mese,
-      }))
+const usciteAnnoCorrente = useMemo(() => {
+  const anno = meseCorrente.getFullYear();
+
+  const usciteDaVoci = voci
+    .filter((v) => v.importo !== null && v.movimento === "uscita")
+    .filter((v) => {
+      const [a] = v.data.split("-").map(Number);
+      return a === anno;
+    })
+    .reduce((acc, v) => acc + (v.importo ?? 0), 0);
+
+  const usciteDaExtra = Object.values(incassi).reduce((acc, mese) => {
+    return (
+      acc +
+      (mese.usciteExtra ?? [])
+        .filter((x) => {
+          const [a] = x.data.split("-").map(Number);
+          return a === anno;
+        })
+        .reduce((s, x) => s + x.importo, 0)
     );
-  }, [incassi]);
+  }, 0);
 
-  const entrateAnnoCorrente = useMemo(() => {
-    const anno = meseCorrente.getFullYear();
-    return tutteEntrateExtra
-      .filter((x) => {
-        const [a] = x.data.split("-").map(Number);
-        return a === anno;
-      })
-      .reduce((acc, x) => acc + x.importo, 0);
-  }, [tutteEntrateExtra, meseCorrente]);
-  const usciteAnnoCorrente = useMemo(() => {
-    const anno = meseCorrente.getFullYear();
+  return usciteDaVoci + usciteDaExtra;
+}, [voci, incassi, meseCorrente]);
 
-    const usciteDaVoci = voci
-      .filter((v) => v.importo !== null && v.movimento === "uscita")
-      .filter((v) => {
-        const [a] = v.data.split("-").map(Number);
-        return a === anno;
-      })
-      .reduce((acc, v) => acc + (v.importo ?? 0), 0);
+const saldoAnno = useMemo(() => {
+  return entrateAnnoCorrente - usciteAnnoCorrente;
+}, [entrateAnnoCorrente, usciteAnnoCorrente]);
 
-    const usciteDaExtra = Object.values(incassi).reduce((acc, mese) => {
-      return (
-        acc +
-        (mese.usciteExtra ?? [])
-          .filter((x) => {
-            const [a] = x.data.split("-").map(Number);
-            return a === anno;
-          })
-          .reduce((s, x) => s + x.importo, 0)
-      );
-    }, 0);
-
-    return usciteDaVoci + usciteDaExtra;
-  }, [voci, incassi, meseCorrente]);
-
-  const saldoAnno = useMemo(() => {
-    return entrateAnnoCorrente - usciteAnnoCorrente;
-  }, [entrateAnnoCorrente, usciteAnnoCorrente]);
-
-
-
-
-
-
-
-
-  const eventiControlloMese = useMemo(() => {
-    const eventiVoci = voci
-      .filter((v) => stessoMeseSelezionato(v.data))
-      .map((v) => ({
-        id: v.id,
-        data: v.data,
-        tipo: v.tipo,
-        titolo: v.titolo,
-        ora: v.ora,
-        importo: v.importo,
-        movimento: v.movimento,
-        nota: v.nota,
-        urgente: v.urgente,
-        sorgente: "voce" as const,
-      }));
-
-    const eventiEntrate = entrateExtraVal.map((e) => ({
-      id: e.id,
-      data: e.data,
-      tipo: "entrata" as const,
-      titolo: e.descrizione,
-      ora: "09:00",
-      importo: e.importo,
-      movimento: "entrata" as const,
-      nota: "",
-      urgente: false,
-      sorgente: "entrata" as const,
+const eventiControlloMese = useMemo(() => {
+  const eventiVoci = voci
+    .filter((v) => stessoMeseSelezionato(v.data))
+    .map((v) => ({
+      id: v.id,
+      data: v.data,
+      tipo: v.tipo,
+      titolo: v.titolo,
+      ora: v.ora,
+      importo: v.importo,
+      movimento: v.movimento,
+      nota: v.nota,
+      urgente: v.urgente,
+      sorgente: "voce" as const,
     }));
 
-    const eventiUscite = usciteExtraVal.map((e) => ({
-      id: e.id,
-      data: e.data,
-      tipo: "uscita" as const,
-      titolo: e.descrizione,
-      ora: "09:00",
-      importo: e.importo,
-      movimento: "uscita" as const,
-      nota: e.nota,
-      urgente: false,
-      sorgente: "uscita-extra" as const,
-    }));
+  const eventiEntrate = entrateExtraVal.map((e) => ({
+    id: e.id,
+    data: e.data,
+    tipo: "entrata" as const,
+    titolo: e.descrizione,
+    ora: "09:00",
+    importo: e.importo,
+    movimento: "entrata" as const,
+    nota: "",
+    urgente: false,
+    sorgente: "entrata" as const,
+  }));
 
-    return [...eventiVoci, ...eventiEntrate, ...eventiUscite].sort((a, b) => {
-      const d = a.data.localeCompare(b.data);
-      if (d !== 0) return d;
-      return a.ora.localeCompare(b.ora);
-    });
-  }, [voci, entrateExtraVal, usciteExtraVal, meseCorrente]);
+  const eventiUscite = usciteExtraVal.map((e) => ({
+    id: e.id,
+    data: e.data,
+    tipo: "uscita" as const,
+    titolo: e.descrizione,
+    ora: "09:00",
+    importo: e.importo,
+    movimento: "uscita" as const,
+    nota: e.nota,
+    urgente: false,
+    sorgente: "uscita-extra" as const,
+  }));
 
-  const scadenzeControlloMese = useMemo(() => {
-    return eventiControlloMese.filter((x) => x.tipo === "scadenza");
-  }, [eventiControlloMese]);
+  return [...eventiVoci, ...eventiEntrate, ...eventiUscite].sort((a, b) => {
+    const d = a.data.localeCompare(b.data);
+    if (d !== 0) return d;
+    return a.ora.localeCompare(b.ora);
+  });
+}, [voci, entrateExtraVal, usciteExtraVal, meseCorrente]);
 
-  const appuntamentiControlloMese = useMemo(() => {
-    return eventiControlloMese.filter((x) => x.tipo === "appuntamento");
-  }, [eventiControlloMese]);
+const scadenzeControlloMese = useMemo(() => {
+  return eventiControlloMese.filter((x) => x.tipo === "scadenza");
+}, [eventiControlloMese]);
+
+const appuntamentiControlloMese = useMemo(() => {
+  return eventiControlloMese.filter((x) => x.tipo === "appuntamento");
+}, [eventiControlloMese]);
 
 const eventiConsultaBase = useMemo(() => {
   return voci
@@ -2612,305 +2534,271 @@ const eventiConsultaProssimiMese = useMemo(() => {
     });
 }, [eventiConsultaMese]);
 
-const eventiConsultaPassatiBase = useMemo(() => {
-  return eventiConsultaBase
-    .filter((ev) => vocePassata(ev.data, ev.ora))
+const eventiControlloGiornoSelezionato = useMemo(() => {
+  if (!controlloDettaglioData) return [];
+
+  return eventiCalendarioControllo
+    .filter((ev) => ev.data === controlloDettaglioData)
+    .slice()
     .sort((a, b) => {
-      const d = b.data.localeCompare(a.data);
+      const oraA = a.ora || "09:00";
+      const oraB = b.ora || "09:00";
+      const d = oraA.localeCompare(oraB);
       if (d !== 0) return d;
-      return b.ora.localeCompare(a.ora);
+      return a.titolo.localeCompare(b.titolo);
     });
-}, [eventiConsultaBase]);
+}, [controlloDettaglioData, eventiCalendarioControllo]);
 
-const eventiConsultaPassatiFiltrati = useMemo(() => {
-  return eventiConsultaPassatiBase.filter((ev) => {
-    if (filtroEventiPassati.dal && ev.data < filtroEventiPassati.dal) return false;
-    if (filtroEventiPassati.al && ev.data > filtroEventiPassati.al) return false;
-    return true;
-  });
-}, [eventiConsultaPassatiBase, filtroEventiPassati]);
+const entrateControlloMese = useMemo(() => {
+  return eventiControlloMese.filter((x) => x.movimento === "entrata");
+}, [eventiControlloMese]);
 
-const totaleEventiMese = useMemo(() => eventiConsultaMese.length, [eventiConsultaMese]);
+const usciteControlloMese = useMemo(() => {
+  return eventiControlloMese.filter((x) => x.movimento === "uscita" && x.importo !== null);
+}, [eventiControlloMese]);
 
-const totaleScadenzeMeseConsulta = useMemo(() => {
-  return eventiConsultaMese.filter((ev) => ev.tipo === "scadenza").length;
-}, [eventiConsultaMese]);
-
-const totaleAppuntamentiMeseConsulta = useMemo(() => {
-  return eventiConsultaMese.filter((ev) => ev.tipo === "appuntamento").length;
-}, [eventiConsultaMese]);
-
-const prossimoEventoConsulta = useMemo(() => {
-  return eventiConsultaProssimiMese.length > 0 ? eventiConsultaProssimiMese[0] : null;
-}, [eventiConsultaProssimiMese]);
-
-
-
-  const entrateControlloMese = useMemo(() => {
-    return eventiControlloMese.filter((x) => x.movimento === "entrata");
-  }, [eventiControlloMese]);
-
-  const usciteControlloMese = useMemo(() => {
-    return eventiControlloMese.filter((x) => x.movimento === "uscita" && x.importo !== null);
-  }, [eventiControlloMese]);
-
-  const eventiCalendarioControllo = useMemo(() => {
-    return eventiControlloMese.filter((x) => {
-      if (x.tipo !== "scadenza" && x.tipo !== "appuntamento" && x.tipo !== "nota") {
-        return false;
-      }
-
-      if (x.tipo === "nota" && x.nota.startsWith("[NOTA_LIBERA_MESE]")) {
-        return false;
-      }
-
-      return true;
-    });
-  }, [eventiControlloMese]);
-
-  const eventiControlloMeseVisibili = useMemo(() => {
-    return eventiControlloMese.filter((ev) => {
-      if (ev.tipo === "scadenza" || ev.tipo === "appuntamento") {
-        return giorniMancanti(ev.data) >= 0;
-      }
-      return true;
-    });
-  }, [eventiControlloMese]);
-
-  const eventiControlloGiornoSelezionato = useMemo(() => {
-    if (!controlloDettaglioData) return [];
-
-    return eventiCalendarioControllo
-      .filter((ev) => ev.data === controlloDettaglioData)
-      .slice()
-      .sort((a, b) => {
-        const oraA = a.ora || "09:00";
-        const oraB = b.ora || "09:00";
-        const d = oraA.localeCompare(oraB);
-        if (d !== 0) return d;
-        return a.titolo.localeCompare(b.titolo);
-      });
-  }, [controlloDettaglioData, eventiCalendarioControllo]);
-
-  const annoCorrenteArchivio = meseCorrente.getFullYear();
-
-  const entrateArchivioMese = useMemo(() => {
-    return entrateExtraVal.reduce((s, x) => s + x.importo, 0);
-  }, [entrateExtraVal]);
-
-  const usciteArchivioMese = useMemo(() => {
-    const usciteVoci = voci
-      .filter((v) => stessoMeseSelezionato(v.data))
-      .filter((v) => v.importo !== null && v.movimento === "uscita")
-      .reduce((s, v) => s + (v.importo ?? 0), 0);
-
-    const usciteExtra = usciteExtraVal.reduce((s, x) => s + x.importo, 0);
-
-    return usciteVoci + usciteExtra;
-  }, [voci, usciteExtraVal, meseCorrente]);
-
-  const saldoArchivioMese = useMemo(() => {
-    return entrateArchivioMese - usciteArchivioMese;
-  }, [entrateArchivioMese, usciteArchivioMese]);
-
-  const turniArchivioMese = useMemo(() => {
-    return turni.filter((t) => stessoMeseSelezionato(t.data));
-  }, [turni, meseCorrente]);
-
-  const turniStatsArchivioMese = useMemo(() => {
-    const stats = { N: 0, M: 0, P: 0, S: 0, R: 0, F: 0, T: 0 };
-
-    for (const t of turniArchivioMese) {
-      const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
-      stats[sigla as keyof typeof stats] += 1;
+const eventiCalendarioControllo = useMemo(() => {
+  return eventiControlloMese.filter((x) => {
+    if (x.tipo !== "scadenza" && x.tipo !== "appuntamento" && x.tipo !== "nota") {
+      return false;
     }
 
-    return stats;
-  }, [turniArchivioMese]);
+    if (x.tipo === "nota" && x.nota.startsWith("[NOTA_LIBERA_MESE]")) {
+      return false;
+    }
 
-  const oreArchivioMese = useMemo(() => {
-    return turniArchivioMese.reduce((s, t) => s + t.oreOrdinarie + t.oreStraordinarie, 0);
-  }, [turniArchivioMese]);
+    return true;
+  });
+}, [eventiControlloMese]);
 
-  const entrateArchivioAnno = useMemo(() => {
-    return Object.values(incassi).reduce((acc, mese) => {
-      return (
-        acc +
-        (mese.entrateExtra ?? [])
-          .filter((x) => {
-            const [a] = x.data.split("-").map(Number);
-            return a === annoCorrenteArchivio;
-          })
-          .reduce((s, x) => s + x.importo, 0)
-      );
-    }, 0);
-  }, [incassi, annoCorrenteArchivio]);
+const eventiControlloMeseVisibili = useMemo(() => {
+  return eventiControlloMese.filter((ev) => {
+    if (ev.tipo === "scadenza" || ev.tipo === "appuntamento") {
+      return giorniMancanti(ev.data) >= 0;
+    }
+    return true;
+  });
+}, [eventiControlloMese]);
 
-  const usciteArchivioAnno = useMemo(() => {
-    const usciteDaVoci = voci
-      .filter((v) => v.importo !== null && v.movimento === "uscita")
-      .filter((v) => {
-        const [a] = v.data.split("-").map(Number);
-        return a === annoCorrenteArchivio;
-      })
-      .reduce((s, v) => s + (v.importo ?? 0), 0);
+const annoCorrenteArchivio = meseCorrente.getFullYear();
 
-    const usciteDaExtra = Object.values(incassi).reduce((acc, mese) => {
-      return (
-        acc +
-        (mese.usciteExtra ?? [])
-          .filter((x) => {
-            const [a] = x.data.split("-").map(Number);
-            return a === annoCorrenteArchivio;
-          })
-          .reduce((s, x) => s + x.importo, 0)
-      );
-    }, 0);
+const entrateArchivioMese = useMemo(() => {
+  return entrateExtraVal.reduce((s, x) => s + x.importo, 0);
+}, [entrateExtraVal]);
 
-    return usciteDaVoci + usciteDaExtra;
-  }, [voci, incassi, annoCorrenteArchivio]);
+const usciteArchivioMese = useMemo(() => {
+  const usciteVoci = voci
+    .filter((v) => stessoMeseSelezionato(v.data))
+    .filter((v) => v.importo !== null && v.movimento === "uscita")
+    .reduce((s, v) => s + (v.importo ?? 0), 0);
 
-  const saldoArchivioAnno = useMemo(() => {
-    return entrateArchivioAnno - usciteArchivioAnno;
-  }, [entrateArchivioAnno, usciteArchivioAnno]);
+  const usciteExtra = usciteExtraVal.reduce((s, x) => s + x.importo, 0);
 
-  const eventiArchivioMese = useMemo(() => {
-    const vociArchiviateMese = voci
-      .filter((v) => stessoMeseSelezionato(v.data))
-      .map((v) => ({
-        id: v.id,
-        data: v.data,
-        ora: v.ora,
-        titolo: v.titolo,
-        tipo: v.tipo,
-        importo: v.importo,
-        movimento: v.movimento,
-        nota: v.nota,
-        urgente: v.urgente,
-        origine: "voce" as const,
-      }));
+  return usciteVoci + usciteExtra;
+}, [voci, usciteExtraVal, meseCorrente]);
 
-    const entrateMese = entrateExtraVal.map((x) => ({
-      id: x.id,
-      data: x.data,
-      ora: "09:00",
-      titolo: x.descrizione,
-      tipo: "entrata" as const,
-      importo: x.importo,
-      movimento: "entrata" as const,
-      nota: "",
-      urgente: false,
-      origine: "entrata" as const,
+const saldoArchivioMese = useMemo(() => {
+  return entrateArchivioMese - usciteArchivioMese;
+}, [entrateArchivioMese, usciteArchivioMese]);
+
+const turniArchivioMese = useMemo(() => {
+  return turni.filter((t) => stessoMeseSelezionato(t.data));
+}, [turni, meseCorrente]);
+
+const turniStatsArchivioMese = useMemo(() => {
+  const stats = { N: 0, M: 0, P: 0, S: 0, R: 0, F: 0, T: 0 };
+
+  for (const t of turniArchivioMese) {
+    const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
+    stats[sigla as keyof typeof stats] += 1;
+  }
+
+  return stats;
+}, [turniArchivioMese]);
+
+const oreArchivioMese = useMemo(() => {
+  return turniArchivioMese.reduce((s, t) => s + t.oreOrdinarie + t.oreStraordinarie, 0);
+}, [turniArchivioMese]);
+
+const entrateArchivioAnno = useMemo(() => {
+  return Object.values(incassi).reduce((acc, mese) => {
+    return (
+      acc +
+      (mese.entrateExtra ?? [])
+        .filter((x) => {
+          const [a] = x.data.split("-").map(Number);
+          return a === annoCorrenteArchivio;
+        })
+        .reduce((s, x) => s + x.importo, 0)
+    );
+  }, 0);
+}, [incassi, annoCorrenteArchivio]);
+
+const usciteArchivioAnno = useMemo(() => {
+  const usciteDaVoci = voci
+    .filter((v) => v.importo !== null && v.movimento === "uscita")
+    .filter((v) => {
+      const [a] = v.data.split("-").map(Number);
+      return a === annoCorrenteArchivio;
+    })
+    .reduce((s, v) => s + (v.importo ?? 0), 0);
+
+  const usciteDaExtra = Object.values(incassi).reduce((acc, mese) => {
+    return (
+      acc +
+      (mese.usciteExtra ?? [])
+        .filter((x) => {
+          const [a] = x.data.split("-").map(Number);
+          return a === annoCorrenteArchivio;
+        })
+        .reduce((s, x) => s + x.importo, 0)
+    );
+  }, 0);
+
+  return usciteDaVoci + usciteDaExtra;
+}, [voci, incassi, annoCorrenteArchivio]);
+
+const saldoArchivioAnno = useMemo(() => {
+  return entrateArchivioAnno - usciteArchivioAnno;
+}, [entrateArchivioAnno, usciteArchivioAnno]);
+
+const eventiArchivioMese = useMemo(() => {
+  const vociArchiviateMese = voci
+    .filter((v) => stessoMeseSelezionato(v.data))
+    .map((v) => ({
+      id: v.id,
+      data: v.data,
+      ora: v.ora,
+      titolo: v.titolo,
+      tipo: v.tipo,
+      importo: v.importo,
+      movimento: v.movimento,
+      nota: v.nota,
+      urgente: v.urgente,
+      origine: "voce" as const,
     }));
 
-    const usciteMese = usciteExtraVal.map((x) => ({
-      id: x.id,
-      data: x.data,
-      ora: "09:00",
-      titolo: x.descrizione,
-      tipo: "uscita" as const,
-      importo: x.importo,
-      movimento: "uscita" as const,
-      nota: x.nota,
-      urgente: false,
-      origine: "uscita-extra" as const,
-    }));
+  const entrateMese = entrateExtraVal.map((x) => ({
+    id: x.id,
+    data: x.data,
+    ora: "09:00",
+    titolo: x.descrizione,
+    tipo: "entrata" as const,
+    importo: x.importo,
+    movimento: "entrata" as const,
+    nota: "",
+    urgente: false,
+    origine: "entrata" as const,
+  }));
 
-    return [...vociArchiviateMese, ...entrateMese, ...usciteMese].sort((a, b) => {
-      const d = a.data.localeCompare(b.data);
-      if (d !== 0) return d;
-      return a.ora.localeCompare(b.ora);
-    });
-  }, [voci, entrateExtraVal, usciteExtraVal, meseCorrente]);
+  const usciteMese = usciteExtraVal.map((x) => ({
+    id: x.id,
+    data: x.data,
+    ora: "09:00",
+    titolo: x.descrizione,
+    tipo: "uscita" as const,
+    importo: x.importo,
+    movimento: "uscita" as const,
+    nota: x.nota,
+    urgente: false,
+    origine: "uscita-extra" as const,
+  }));
 
-  function badgeTipo(t: Voce["tipo"]) {
-    const map = {
-      scadenza: {
-        bg: "rgba(52,211,153,0.16)",
-        bd: "rgba(5,150,105,0.26)",
-        tx: "rgba(6,95,70,0.98)",
-        label: "Scadenza",
-      },
-      appuntamento: {
-        bg: "rgba(168,85,247,0.16)",
-        bd: "rgba(147,51,234,0.24)",
-        tx: "rgba(91,33,182,0.98)",
-        label: "Appuntamento",
-      },
-      nota: {
-        bg: "rgba(239,68,68,0.12)",
-        bd: "rgba(220,38,38,0.22)",
-        tx: "rgba(153,27,27,0.96)",
-        label: "Nota",
-      },
-    } as const;
+  return [...vociArchiviateMese, ...entrateMese, ...usciteMese].sort((a, b) => {
+    const d = a.data.localeCompare(b.data);
+    if (d !== 0) return d;
+    return a.ora.localeCompare(b.ora);
+  });
+}, [voci, entrateExtraVal, usciteExtraVal, meseCorrente]);
 
-    const s = map[t];
+function badgeTipo(t: Voce["tipo"]) {
+  const map = {
+    scadenza: {
+      bg: "rgba(52,211,153,0.16)",
+      bd: "rgba(5,150,105,0.26)",
+      tx: "rgba(6,95,70,0.98)",
+      label: "Scadenza",
+    },
+    appuntamento: {
+      bg: "rgba(168,85,247,0.16)",
+      bd: "rgba(147,51,234,0.24)",
+      tx: "rgba(91,33,182,0.98)",
+      label: "Appuntamento",
+    },
+    nota: {
+      bg: "rgba(239,68,68,0.12)",
+      bd: "rgba(220,38,38,0.22)",
+      tx: "rgba(153,27,27,0.96)",
+      label: "Nota",
+    },
+  } as const;
 
-    return (
-      <span
-        style={{
-          padding: "6px 10px",
-          borderRadius: 999,
-          fontSize: 12,
-          fontWeight: 950,
-          background: s.bg,
-          border: `1px solid ${s.bd}`,
-          color: s.tx,
-          lineHeight: 1,
-          whiteSpace: "nowrap",
-        }}
-      >
-        {s.label}
-      </span>
-    );
-  }
+  const s = map[t];
 
-  function badgeMov(m: Exclude<Movimento, "nessuno">) {
-    const map = {
-      uscita: { bg: "rgba(255,59,48,0.10)", bd: "rgba(255,59,48,0.22)", tx: "rgba(120,10,8,0.88)" },
-      entrata: { bg: "rgba(52,199,89,0.10)", bd: "rgba(52,199,89,0.22)", tx: "rgba(10,85,35,0.88)" },
-    } as const;
+  return (
+    <span
+      style={{
+        padding: "6px 10px",
+        borderRadius: 999,
+        fontSize: 12,
+        fontWeight: 950,
+        background: s.bg,
+        border: `1px solid ${s.bd}`,
+        color: s.tx,
+        lineHeight: 1,
+        whiteSpace: "nowrap",
+      }}
+    >
+      {s.label}
+    </span>
+  );
+}
 
-    const s = map[m];
-    return (
-      <span
-        style={{
-          padding: "6px 10px",
-          borderRadius: 999,
-          fontSize: 12,
-          fontWeight: 950,
-          background: s.bg,
-          border: `1px solid ${s.bd}`,
-          color: s.tx,
-          textTransform: "capitalize",
-        }}
-      >
-        {m === "entrata" ? "Entrata" : "Uscita"}
-      </span>
-    );
-  }
+function badgeMov(m: Exclude<Movimento, "nessuno">) {
+  const map = {
+    uscita: { bg: "rgba(255,59,48,0.10)", bd: "rgba(255,59,48,0.22)", tx: "rgba(120,10,8,0.88)" },
+    entrata: { bg: "rgba(52,199,89,0.10)", bd: "rgba(52,199,89,0.22)", tx: "rgba(10,85,35,0.88)" },
+  } as const;
 
-  function badgeUrgente() {
-    return (
-      <span
-        style={{
-          padding: "6px 10px",
-          borderRadius: 999,
-          fontSize: 12,
-          fontWeight: 1000,
-          background: "linear-gradient(180deg, rgba(255,59,48,0.96), rgba(220,24,20,0.94))",
-          border: "1px solid rgba(255,59,48,0.42)",
-          color: "rgba(255,255,255,0.98)",
-          boxShadow: "0 10px 24px rgba(255,59,48,0.22)",
-          letterSpacing: 0.3,
-          textTransform: "uppercase",
-        }}
-      >
-        Urgente
-      </span>
-    );
-  }
+  const s = map[m];
+  return (
+    <span
+      style={{
+        padding: "6px 10px",
+        borderRadius: 999,
+        fontSize: 12,
+        fontWeight: 950,
+        background: s.bg,
+        border: `1px solid ${s.bd}`,
+        color: s.tx,
+        textTransform: "capitalize",
+      }}
+    >
+      {m === "entrata" ? "Entrata" : "Uscita"}
+    </span>
+  );
+}
+
+function badgeUrgente() {
+  return (
+    <span
+      style={{
+        padding: "6px 10px",
+        borderRadius: 999,
+        fontSize: 12,
+        fontWeight: 1000,
+        background: "linear-gradient(180deg, rgba(255,59,48,0.96), rgba(220,24,20,0.94))",
+        border: "1px solid rgba(255,59,48,0.42)",
+        color: "rgba(255,255,255,0.98)",
+        boxShadow: "0 10px 24px rgba(255,59,48,0.22)",
+        letterSpacing: 0.3,
+        textTransform: "uppercase",
+      }}
+    >
+      Urgente
+    </span>
+  );
+}
 
 const pageBg: React.CSSProperties = {
   minHeight: "100vh",
@@ -2921,12 +2809,12 @@ const pageBg: React.CSSProperties = {
     "radial-gradient(1200px 900px at 0% 0%, rgba(79,70,229,0.22), transparent 56%), radial-gradient(1000px 760px at 100% 10%, rgba(168,85,247,0.16), transparent 52%), radial-gradient(1000px 900px at 50% 100%, rgba(14,165,233,0.12), transparent 56%), linear-gradient(180deg, #020617 0%, #081127 36%, #0f172a 72%, #111827 100%)",
 };
 
-  const topBar: React.CSSProperties = {
-    maxWidth: 1060,
-    margin: "0 auto",
-    display: "grid",
-    gap: 14,
-  };
+const topBar: React.CSSProperties = {
+  maxWidth: 1060,
+  margin: "0 auto",
+  display: "grid",
+  gap: 14,
+};
 
 const chip = (active: boolean): React.CSSProperties => ({
   padding: "11px 13px",
@@ -2947,7 +2835,6 @@ const chip = (active: boolean): React.CSSProperties => ({
   transition: "transform .14s ease, box-shadow .14s ease, background .14s ease",
   userSelect: "none",
 });
-
 
 const inputLight = (focused = false): React.CSSProperties => ({
   width: "100%",
