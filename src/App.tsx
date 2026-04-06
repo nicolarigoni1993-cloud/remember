@@ -5167,12 +5167,18 @@ function MiniCalendarioEventi({
                     borderRadius: 18,
                     border: isToday
                       ? "2px solid rgba(99,102,241,0.24)"
+                      : isFestivo
+                      ? "1px solid rgba(22,101,52,0.24)"
                       : "1px solid rgba(148,163,184,0.14)",
                     background: isToday
                       ? "linear-gradient(180deg, rgba(238,242,255,0.98), rgba(255,255,255,0.96))"
+                      : isFestivo
+                      ? "linear-gradient(180deg, rgba(240,253,244,0.98), rgba(255,255,255,0.96))"
                       : "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.95))",
                     boxShadow: isToday
                       ? "0 12px 28px rgba(99,102,241,0.10)"
+                      : isFestivo
+                      ? "0 8px 20px rgba(22,101,52,0.08)"
                       : "0 8px 20px rgba(15,23,42,0.05)",
                     padding: isMobile ? "6px 4px" : "8px 6px",
                     display: "grid",
@@ -5222,6 +5228,16 @@ function MiniCalendarioEventi({
                           boxShadow: firstEvent?.urgente
                             ? "0 0 0 5px rgba(239,68,68,0.12)"
                             : "0 0 0 4px rgba(139,92,246,0.10)",
+                        }}
+                      />
+                    ) : isFestivo ? (
+                      <div
+                        style={{
+                          width: isMobile ? 10 : 12,
+                          height: isMobile ? 10 : 12,
+                          borderRadius: 999,
+                          background: "rgba(22,101,52,0.98)",
+                          boxShadow: "0 0 0 4px rgba(22,101,52,0.10)",
                         }}
                       />
                     ) : (
