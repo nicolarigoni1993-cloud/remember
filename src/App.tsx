@@ -6601,9 +6601,6 @@ function MiniCalendarioEventi({
 
 
 
-
-
-
 {pagina !== "home" && pagina !== "aggiungi" && (
   <div style={topBar}>
     <div style={{ ...ui.glass, padding: 22 }}>
@@ -6722,132 +6719,269 @@ function MiniCalendarioEventi({
   </div>
 )}
 
+{pagina === "home" && (() => {
+  const oggi = new Date();
+  const oggiKey = oggi.toISOString().slice(0, 10);
 
+  const domani = new Date();
+  domani.setDate(domani.getDate() + 1);
+  const domaniKey = domani.toISOString().slice(0, 10);
 
+  const eventiAvviso = voci
+    .filter((v) => v.tipo === "scadenza" || v.tipo === "appuntamento")
+    .filter((v) => v.data === oggiKey || v.data === domaniKey)
+    .slice()
+    .sort((a, b) => {
+      const d = a.data.localeCompare(b.data);
+      if (d !== 0) return d;
+      return a.ora.localeCompare(b.ora);
+    });
 
+  const titoloAlert =
+    eventiAvviso.length === 0
+      ? "Nessun evento tra oggi e domani."
+      : eventiAvviso
+          .map((ev) => {
+            const when = ev.data === oggiKey ? "OGGI" : "DOMANI";
+            return `${when} • ${ev.ora} • ${ev.titolo}`;
+          })
+          .join("\n");
 
+  return (
+    <div style={{ minHeight: "70vh", display: "grid", placeItems: "center", padding: 16 }}>
+      <div style={{ width: "min(520px, 100%)", display: "grid", gap: 20 }}>
+        <div
+          style={{
+            ...ui.card,
+            padding: 26,
+            textAlign: "center",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              top: 14,
+              right: 14,
+              zIndex: 3,
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => alert(titoloAlert)}
+              title="Eventi di oggi e domani"
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: 999,
+                border:
+                  eventiAvviso.length > 0
+                    ? "1px solid rgba(245,158,11,0.30)"
+                    : "1px solid rgba(148,163,184,0.24)",
+                background:
+                  eventiAvviso.length > 0
+                    ? "linear-gradient(180deg, rgba(251,191,36,0.98), rgba(245,158,11,0.94))"
+                    : "linear-gradient(180deg, rgba(255,255,255,0.92), rgba(226,232,240,0.88))",
+                color:
+                  eventiAvviso.length > 0
+                    ? "rgba(120,53,15,0.98)"
+                    : "rgba(71,85,105,0.96)",
+                fontSize: 28,
+                fontWeight: 1000,
+                cursor: "pointer",
+                display: "grid",
+                placeItems: "center",
+                boxShadow:
+                  eventiAvviso.length > 0
+                    ? "0 18px 34px rgba(245,158,11,0.22)"
+                    : "0 14px 28px rgba(15,23,42,0.10)",
+                transition: "transform .18s ease, box-shadow .18s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-2px) scale(1.03)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0) scale(1)";
+              }}
+            >
+              !
+            </button>
 
+            {eventiAvviso.length > 0 && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: -4,
+                  right: -4,
+                  minWidth: 22,
+                  height: 22,
+                  padding: "0 6px",
+                  borderRadius: 999,
+                  background: "linear-gradient(180deg, rgba(239,68,68,0.98), rgba(220,38,38,0.95))",
+                  color: "white",
+                  fontSize: 11,
+                  fontWeight: 1000,
+                  display: "grid",
+                  placeItems: "center",
+                  boxShadow: "0 10px 20px rgba(239,68,68,0.24)",
+                }}
+              >
+                {eventiAvviso.length}
+              </div>
+            )}
+          </div>
 
+          <RememberLogo size={64} centered />
 
+          <div
+            style={{
+              marginTop: 18,
+              display: "grid",
+              gap: 8,
+              textAlign: "center",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 22,
+                fontWeight: 1000,
+                letterSpacing: -0.4,
+                color: "rgba(241,245,249,0.98)",
+                textShadow: "0 10px 30px rgba(79,70,229,0.18)",
+                lineHeight: 1.08,
+              }}
+            >
+              Scrivi qui il tuo titolo
+            </div>
 
+            <div
+              style={{
+                fontSize: 14,
+                fontWeight: 800,
+                color: "rgba(191,219,254,0.88)",
+                letterSpacing: 0.2,
+                lineHeight: 1.35,
+              }}
+            >
+              Sottotitolo personalizzabile
+            </div>
+          </div>
 
-       {pagina === "home" && (
-  <div style={{ minHeight: "70vh", display: "grid", placeItems: "center", padding: 16 }}>
-    <div style={{ width: "min(520px, 100%)", display: "grid", gap: 20 }}>
+          {eventiAvviso.length > 0 && (
+            <div
+              style={{
+                marginTop: 18,
+                display: "grid",
+                gap: 8,
+                textAlign: "left",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 950,
+                  color: "rgba(251,191,36,0.98)",
+                  letterSpacing: 0.35,
+                  textTransform: "uppercase",
+                  textAlign: "center",
+                }}
+              >
+                Avvisi rapidi
+              </div>
 
-      {/* LOGO */}
-      <div style={{ ...ui.card, padding: 26, textAlign: "center" }}>
-        <RememberLogo size={64} centered />
+              <div style={{ display: "grid", gap: 8 }}>
+                {eventiAvviso.slice(0, 2).map((ev) => (
+                  <div
+                    key={ev.id}
+                    style={{
+                      padding: "10px 12px",
+                      borderRadius: 16,
+                      border: "1px solid rgba(245,158,11,0.20)",
+                      background:
+                        "linear-gradient(180deg, rgba(255,251,235,0.96), rgba(254,243,199,0.88))",
+                      color: "rgba(120,53,15,0.98)",
+                      fontSize: 12,
+                      fontWeight: 900,
+                      lineHeight: 1.35,
+                      boxShadow: "0 10px 20px rgba(245,158,11,0.10)",
+                    }}
+                  >
+                    <div style={{ fontSize: 11, fontWeight: 1000, opacity: 0.82 }}>
+                      {ev.data === oggiKey ? "OGGI" : "DOMANI"} • {ev.ora}
+                    </div>
+                    <div style={{ marginTop: 2 }}>{ev.titolo}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
 
-    <div
-  style={{
-    marginTop: 18,
-    display: "grid",
-    gap: 8,
-    textAlign: "center",
-  }}
->
-  <div
-    style={{
-      fontSize: 22,
-      fontWeight: 1000,
-      letterSpacing: -0.4,
-      color: "rgba(241,245,249,0.98)",
-      textShadow: "0 10px 30px rgba(79,70,229,0.18)",
-      lineHeight: 1.08,
-    }}
-  >
-    Scrivi qui il tuo titolo
-  </div>
+        <div style={{ display: "grid", gap: 14 }}>
+          <button
+            data-chip="1"
+            onClick={() => setPagina("aggiungi")}
+            style={{
+              padding: "22px 18px",
+              borderRadius: 26,
+              border: "1px solid rgba(16,185,129,0.28)",
+              background:
+                "linear-gradient(180deg, rgba(16,185,129,0.30), rgba(5,150,105,0.18))",
+              color: "rgba(6,95,70,0.98)",
+              fontSize: 18,
+              fontWeight: 1000,
+              letterSpacing: 0.3,
+              boxShadow: "0 22px 50px rgba(16,185,129,0.25)",
+            }}
+          >
+            ➕ AGGIUNGI
+          </button>
 
-  <div
-    style={{
-      fontSize: 14,
-      fontWeight: 800,
-      color: "rgba(191,219,254,0.88)",
-      letterSpacing: 0.2,
-      lineHeight: 1.35,
-    }}
-  >
-    Sottotitolo personalizzabile
-  </div>
-</div>
-      </div>
-
-      {/* BOTTONI PRINCIPALI */}
-      <div style={{ display: "grid", gap: 14 }}>
-
-        {/* AGGIUNGI */}
-    <button
-  data-chip="1"
-  onClick={() => setPagina("aggiungi")}
-  style={{
-    padding: "22px 18px",
-    borderRadius: 26,
-    border: "1px solid rgba(16,185,129,0.28)",
-    background:
-      "linear-gradient(180deg, rgba(16,185,129,0.30), rgba(5,150,105,0.18))",
-    color: "rgba(6,95,70,0.98)",
-    fontSize: 18,
-    fontWeight: 1000,
-    letterSpacing: 0.3,
-    boxShadow: "0 22px 50px rgba(16,185,129,0.25)",
-  }}
->
-  ➕ AGGIUNGI
-</button>
-
-        {/* CONSULTA */}
-        <button
+          <button
             data-chip="1"
             onClick={() => {
-                setConsultaSezione("menu");
-                setPagina("consulta");
-              }}
-          style={{
-            padding: "22px 18px",
-            borderRadius: 26,
-            border: "1px solid rgba(79,70,229,0.28)",
-            background:
-              "linear-gradient(180deg, rgba(79,70,229,0.30), rgba(124,58,237,0.18))",
-            color: "rgba(67,56,202,0.98)",
-            fontSize: 18,
-            fontWeight: 1000,
-            letterSpacing: 0.3,
-            boxShadow: "0 22px 50px rgba(79,70,229,0.25)",
-          }}
-        >
-          📊 CONSULTA
-        </button>
+              setConsultaSezione("menu");
+              setPagina("consulta");
+            }}
+            style={{
+              padding: "22px 18px",
+              borderRadius: 26,
+              border: "1px solid rgba(79,70,229,0.28)",
+              background:
+                "linear-gradient(180deg, rgba(79,70,229,0.30), rgba(124,58,237,0.18))",
+              color: "rgba(67,56,202,0.98)",
+              fontSize: 18,
+              fontWeight: 1000,
+              letterSpacing: 0.3,
+              boxShadow: "0 22px 50px rgba(79,70,229,0.25)",
+            }}
+          >
+            📊 CONSULTA
+          </button>
 
-        {/* NOTA RAPIDA */}
-        <button
-       onClick={() => apriNuova()}
-          style={{
-            padding: "22px 18px",
-            borderRadius: 26,
-            border: "1px solid rgba(249,115,22,0.28)",
-            background:
-              "linear-gradient(180deg, rgba(249,115,22,0.30), rgba(234,88,12,0.18))",
-            color: "rgba(154,52,18,0.98)",
-            fontSize: 18,
-            fontWeight: 1000,
-            letterSpacing: 0.3,
-            boxShadow: "0 22px 50px rgba(249,115,22,0.25)",
-          }}
-        >
-          📝 NOTA RAPIDA
-        </button>
+          <button
+            onClick={() => apriNuova()}
+            style={{
+              padding: "22px 18px",
+              borderRadius: 26,
+              border: "1px solid rgba(249,115,22,0.28)",
+              background:
+                "linear-gradient(180deg, rgba(249,115,22,0.30), rgba(234,88,12,0.18))",
+              color: "rgba(154,52,18,0.98)",
+              fontSize: 18,
+              fontWeight: 1000,
+              letterSpacing: 0.3,
+              boxShadow: "0 22px 50px rgba(249,115,22,0.25)",
+            }}
+          >
+            📝 NOTA RAPIDA
+          </button>
+        </div>
       </div>
-
     </div>
-  </div>
-)}
-
-
-
-
-
+  );
+})()}
 
 
 
@@ -7548,446 +7682,448 @@ function MiniCalendarioEventi({
             </div>
           </div>
         </>
-      ) : consultaSezione === "finanza" ? (
-        <>
-          {/* LASCIA INVARIATO IL TUO BLOCCO FINANZA ATTUALE */}
+) : consultaSezione === "finanza" ? (
+  <>
+    {/* HEADER */}
+    <div
+      style={{
+        display: "grid",
+        gap: 10,
+        justifyItems: "center",
+        textAlign: "center",
+        padding: "8px 6px 2px",
+      }}
+    >
+      <div
+        style={{
+          fontSize: 34,
+          fontWeight: 1000,
+          letterSpacing: -0.8,
+          color: "rgba(241,245,249,0.98)",
+          textShadow: "0 12px 30px rgba(16,185,129,0.22)",
+          lineHeight: 1.05,
+        }}
+      >
+        Consulta finanza
+      </div>
+
+      <div
+        style={{
+          maxWidth: 760,
+          fontSize: 15,
+          fontWeight: 800,
+          color: "rgba(191,219,254,0.90)",
+          lineHeight: 1.5,
+          letterSpacing: 0.1,
+        }}
+      >
+        Panoramica economica premium con mese scorrevole, grafici uscite, filtri intelligenti e lista movimenti compatta.
+      </div>
+    </div>
+
+    <div
+      style={{
+        maxWidth: 1060,
+        margin: "0 auto",
+        marginTop: 14,
+        display: "grid",
+        gap: 14,
+      }}
+    >
+      {/* HEADER MESE */}
+      <div
+        style={{
+          ...ui.card,
+          padding: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 16,
+          border: "1px solid rgba(255,255,255,0.58)",
+          background:
+            "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
+          boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
+          display: "grid",
+          gap: typeof window !== "undefined" && window.innerWidth <= 640 ? 10 : 14,
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 10,
+            flexWrap: "wrap",
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              mesePrecedente();
+              const nuovo = new Date(meseCorrente.getFullYear(), meseCorrente.getMonth() - 1, 1);
+              setFinanzaVistaGrafico("mese");
+              setFinanzaAnnoSelezionato(nuovo.getFullYear());
+              setFinanzaMeseSelezionato(nuovo.getMonth());
+            }}
+            style={{
+              width: typeof window !== "undefined" && window.innerWidth <= 640 ? 36 : 42,
+              height: typeof window !== "undefined" && window.innerWidth <= 640 ? 36 : 42,
+              borderRadius: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 14,
+              border: "1px solid rgba(148,163,184,0.18)",
+              background:
+                "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
+              boxShadow: "0 8px 18px rgba(15,23,42,0.08)",
+              cursor: "pointer",
+              fontSize: typeof window !== "undefined" && window.innerWidth <= 640 ? 16 : 18,
+              fontWeight: 1000,
+              color: "rgba(15,23,42,0.88)",
+              transition: "transform .18s ease, box-shadow .18s ease",
+            }}
+          >
+            ←
+          </button>
+
           <div
             style={{
-              display: "grid",
-              gap: 10,
-              justifyItems: "center",
               textAlign: "center",
-              padding: "8px 6px 2px",
+              flex: 1,
+              minWidth: typeof window !== "undefined" && window.innerWidth <= 640 ? 120 : 180,
             }}
           >
             <div
               style={{
-                fontSize: 34,
+                fontSize: 12,
+                fontWeight: 900,
+                color: "rgba(100,116,139,0.90)",
+                letterSpacing: 0.5,
+                textTransform: "uppercase",
+              }}
+            >
+              Mese corrente
+            </div>
+            <div
+              style={{
+                marginTop: 2,
+                fontSize: typeof window !== "undefined" && window.innerWidth <= 640 ? 22 : 28,
                 fontWeight: 1000,
-                letterSpacing: -0.8,
-                color: "rgba(241,245,249,0.98)",
-                textShadow: "0 12px 30px rgba(16,185,129,0.22)",
+                letterSpacing: typeof window !== "undefined" && window.innerWidth <= 640 ? -0.3 : -0.6,
+                textTransform: "capitalize",
+                color: "rgba(15,23,42,0.98)",
                 lineHeight: 1.05,
               }}
             >
-              Consulta finanza
+              {nomeMese(meseCorrente)}
             </div>
+          </div>
 
+          <button
+            type="button"
+            onClick={() => {
+              meseSuccessivo();
+              const nuovo = new Date(meseCorrente.getFullYear(), meseCorrente.getMonth() + 1, 1);
+              setFinanzaVistaGrafico("mese");
+              setFinanzaAnnoSelezionato(nuovo.getFullYear());
+              setFinanzaMeseSelezionato(nuovo.getMonth());
+            }}
+            style={{
+              width: typeof window !== "undefined" && window.innerWidth <= 640 ? 36 : 42,
+              height: typeof window !== "undefined" && window.innerWidth <= 640 ? 36 : 42,
+              borderRadius: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 14,
+              border: "1px solid rgba(148,163,184,0.18)",
+              background:
+                "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
+              boxShadow: "0 8px 18px rgba(15,23,42,0.08)",
+              cursor: "pointer",
+              fontSize: typeof window !== "undefined" && window.innerWidth <= 640 ? 16 : 18,
+              fontWeight: 1000,
+              color: "rgba(15,23,42,0.88)",
+              transition: "transform .18s ease, box-shadow .18s ease",
+            }}
+          >
+            →
+          </button>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: 10,
+          }}
+        >
+          <div
+            style={{
+              padding: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 16,
+              borderRadius: 20,
+              border: "1px solid rgba(16,185,129,0.18)",
+              background:
+                "linear-gradient(180deg, rgba(16,185,129,0.16), rgba(16,185,129,0.05))",
+              boxShadow:
+                "0 14px 28px rgba(16,185,129,0.10), inset 0 1px 0 rgba(255,255,255,0.45)",
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(6,78,59,0.82)" }}>
+              Entrate mese
+            </div>
             <div
               style={{
-                maxWidth: 760,
-                fontSize: 15,
-                fontWeight: 800,
-                color: "rgba(191,219,254,0.90)",
-                lineHeight: 1.5,
-                letterSpacing: 0.1,
+                marginTop: 8,
+                fontSize: typeof window !== "undefined" && window.innerWidth <= 640 ? 20 : 24,
+                fontWeight: 1000,
+                color: "rgba(15,23,42,0.96)",
+                letterSpacing: -0.3,
               }}
             >
-              Panoramica economica premium con mese scorrevole, grafici uscite, filtri intelligenti e lista movimenti compatta.
+              {euro(entrateMeseSezioneFinanza)}
             </div>
           </div>
 
           <div
             style={{
-              maxWidth: 1060,
-              margin: "0 auto",
-              marginTop: 14,
-              display: "grid",
-              gap: 14,
+              padding: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 16,
+              borderRadius: 20,
+              border: "1px solid rgba(239,68,68,0.18)",
+              background:
+                "linear-gradient(180deg, rgba(239,68,68,0.16), rgba(239,68,68,0.05))",
+              boxShadow:
+                "0 14px 28px rgba(239,68,68,0.10), inset 0 1px 0 rgba(255,255,255,0.45)",
+              position: "relative",
+              overflow: "hidden",
             }}
           >
-            {/* HEADER MESE */}
+            <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(127,29,29,0.82)" }}>
+              Uscite mese
+            </div>
             <div
               style={{
-                ...ui.card,
-                padding: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 16,
-                border: "1px solid rgba(255,255,255,0.58)",
-                background:
-                  "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
-                boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
-                display: "grid",
-                gap: typeof window !== "undefined" && window.innerWidth <= 640 ? 10 : 14,
-                overflow: "hidden",
+                marginTop: 8,
+                fontSize: typeof window !== "undefined" && window.innerWidth <= 640 ? 20 : 24,
+                fontWeight: 1000,
+                color: "rgba(15,23,42,0.96)",
+                letterSpacing: -0.3,
               }}
             >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 10,
-                  flexWrap: "wrap",
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => {
-                    mesePrecedente();
-                    const nuovo = new Date(meseCorrente.getFullYear(), meseCorrente.getMonth() - 1, 1);
-                    setFinanzaVistaGrafico("mese");
-                    setFinanzaAnnoSelezionato(nuovo.getFullYear());
-                    setFinanzaMeseSelezionato(nuovo.getMonth());
-                  }}
-                  style={{
-                    width: typeof window !== "undefined" && window.innerWidth <= 640 ? 36 : 42,
-                    height: typeof window !== "undefined" && window.innerWidth <= 640 ? 36 : 42,
-                    borderRadius: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 14,
-                    border: "1px solid rgba(148,163,184,0.18)",
-                    background:
-                      "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
-                    boxShadow: "0 8px 18px rgba(15,23,42,0.08)",
-                    cursor: "pointer",
-                    fontSize: typeof window !== "undefined" && window.innerWidth <= 640 ? 16 : 18,
-                    fontWeight: 1000,
-                    color: "rgba(15,23,42,0.88)",
-                    transition: "transform .18s ease, box-shadow .18s ease",
-                  }}
-                >
-                  ←
-                </button>
-
-                <div
-                  style={{
-                    textAlign: "center",
-                    flex: 1,
-                    minWidth: typeof window !== "undefined" && window.innerWidth <= 640 ? 120 : 180,
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 900,
-                      color: "rgba(100,116,139,0.90)",
-                      letterSpacing: 0.5,
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    Mese corrente
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 2,
-                      fontSize: typeof window !== "undefined" && window.innerWidth <= 640 ? 22 : 28,
-                      fontWeight: 1000,
-                      letterSpacing: typeof window !== "undefined" && window.innerWidth <= 640 ? -0.3 : -0.6,
-                      textTransform: "capitalize",
-                      color: "rgba(15,23,42,0.98)",
-                      lineHeight: 1.05,
-                    }}
-                  >
-                    {nomeMese(meseCorrente)}
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    meseSuccessivo();
-                    const nuovo = new Date(meseCorrente.getFullYear(), meseCorrente.getMonth() + 1, 1);
-                    setFinanzaVistaGrafico("mese");
-                    setFinanzaAnnoSelezionato(nuovo.getFullYear());
-                    setFinanzaMeseSelezionato(nuovo.getMonth());
-                  }}
-                  style={{
-                    width: typeof window !== "undefined" && window.innerWidth <= 640 ? 36 : 42,
-                    height: typeof window !== "undefined" && window.innerWidth <= 640 ? 36 : 42,
-                    borderRadius: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 14,
-                    border: "1px solid rgba(148,163,184,0.18)",
-                    background:
-                      "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
-                    boxShadow: "0 8px 18px rgba(15,23,42,0.08)",
-                    cursor: "pointer",
-                    fontSize: typeof window !== "undefined" && window.innerWidth <= 640 ? 16 : 18,
-                    fontWeight: 1000,
-                    color: "rgba(15,23,42,0.88)",
-                    transition: "transform .18s ease, box-shadow .18s ease",
-                  }}
-                >
-                  →
-                </button>
-              </div>
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                  gap: 10,
-                }}
-              >
-                <div
-                  style={{
-                    padding: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 16,
-                    borderRadius: 20,
-                    border: "1px solid rgba(16,185,129,0.18)",
-                    background:
-                      "linear-gradient(180deg, rgba(16,185,129,0.16), rgba(16,185,129,0.05))",
-                    boxShadow:
-                      "0 14px 28px rgba(16,185,129,0.10), inset 0 1px 0 rgba(255,255,255,0.45)",
-                    position: "relative",
-                    overflow: "hidden",
-                  }}
-                >
-                  <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(6,78,59,0.82)" }}>
-                    Entrate mese
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 8,
-                      fontSize: typeof window !== "undefined" && window.innerWidth <= 640 ? 20 : 24,
-                      fontWeight: 1000,
-                      color: "rgba(15,23,42,0.96)",
-                      letterSpacing: -0.3,
-                    }}
-                  >
-                    {euro(entrateMeseSezioneFinanza)}
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    padding: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 16,
-                    borderRadius: 20,
-                    border: "1px solid rgba(239,68,68,0.18)",
-                    background:
-                      "linear-gradient(180deg, rgba(239,68,68,0.16), rgba(239,68,68,0.05))",
-                    boxShadow:
-                      "0 14px 28px rgba(239,68,68,0.10), inset 0 1px 0 rgba(255,255,255,0.45)",
-                    position: "relative",
-                    overflow: "hidden",
-                  }}
-                >
-                  <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(127,29,29,0.82)" }}>
-                    Uscite mese
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 8,
-                      fontSize: typeof window !== "undefined" && window.innerWidth <= 640 ? 20 : 24,
-                      fontWeight: 1000,
-                      color: "rgba(15,23,42,0.96)",
-                      letterSpacing: -0.3,
-                    }}
-                  >
-                    {euro(usciteMeseSezioneFinanza)}
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    padding: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 16,
-                    borderRadius: 20,
-                    border: saldoMeseSezioneFinanza >= 0
-                      ? "1px solid rgba(59,130,246,0.18)"
-                      : "1px solid rgba(124,58,237,0.18)",
-                    background: saldoMeseSezioneFinanza >= 0
-                      ? "linear-gradient(180deg, rgba(59,130,246,0.16), rgba(59,130,246,0.05))"
-                      : "linear-gradient(180deg, rgba(124,58,237,0.16), rgba(124,58,237,0.05))",
-                    boxShadow: saldoMeseSezioneFinanza >= 0
-                      ? "0 14px 28px rgba(59,130,246,0.10), inset 0 1px 0 rgba(255,255,255,0.45)"
-                      : "0 14px 28px rgba(124,58,237,0.10), inset 0 1px 0 rgba(255,255,255,0.45)",
-                    position: "relative",
-                    overflow: "hidden",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 950,
-                      color: saldoMeseSezioneFinanza >= 0
-                        ? "rgba(30,64,175,0.82)"
-                        : "rgba(88,28,135,0.82)",
-                    }}
-                  >
-                    Saldo mese
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 8,
-                      fontSize: typeof window !== "undefined" && window.innerWidth <= 640 ? 20 : 24,
-                      fontWeight: 1000,
-                      color: "rgba(15,23,42,0.96)",
-                      letterSpacing: -0.3,
-                    }}
-                  >
-                    {euro(saldoMeseSezioneFinanza)}
-                  </div>
-                </div>
-              </div>
+              {euro(usciteMeseSezioneFinanza)}
             </div>
-
-            {/* QUI LASCIA TUTTO IL RESTO DEL TUO BLOCCO FINANZA UGUALE */}
           </div>
 
-          {movimentoFinanzaInModifica && (
-            <div style={sx.overlay} onClick={chiudiModificaMovimentoFinanza}>
+          <div
+            style={{
+              padding: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 16,
+              borderRadius: 20,
+              border:
+                saldoMeseSezioneFinanza >= 0
+                  ? "1px solid rgba(59,130,246,0.18)"
+                  : "1px solid rgba(124,58,237,0.18)",
+              background:
+                saldoMeseSezioneFinanza >= 0
+                  ? "linear-gradient(180deg, rgba(59,130,246,0.16), rgba(59,130,246,0.05))"
+                  : "linear-gradient(180deg, rgba(124,58,237,0.16), rgba(124,58,237,0.05))",
+              boxShadow:
+                saldoMeseSezioneFinanza >= 0
+                  ? "0 14px 28px rgba(59,130,246,0.10), inset 0 1px 0 rgba(255,255,255,0.45)"
+                  : "0 14px 28px rgba(124,58,237,0.10), inset 0 1px 0 rgba(255,255,255,0.45)",
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 950,
+                color:
+                  saldoMeseSezioneFinanza >= 0
+                    ? "rgba(30,64,175,0.82)"
+                    : "rgba(88,28,135,0.82)",
+              }}
+            >
+              Saldo mese
+            </div>
+            <div
+              style={{
+                marginTop: 8,
+                fontSize: typeof window !== "undefined" && window.innerWidth <= 640 ? 20 : 24,
+                fontWeight: 1000,
+                color: "rgba(15,23,42,0.96)",
+                letterSpacing: -0.3,
+              }}
+            >
+              {euro(saldoMeseSezioneFinanza)}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {movimentoFinanzaInModifica && (
+      <div style={sx.overlay} onClick={chiudiModificaMovimentoFinanza}>
+        <div
+          style={{
+            ...sx.modal,
+            width: "min(640px, 100%)",
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div style={sx.header}>
+            <div>
               <div
                 style={{
-                  ...sx.modal,
-                  width: "min(640px, 100%)",
+                  fontSize: 22,
+                  fontWeight: 1000,
+                  letterSpacing: -0.4,
+                  color: "rgba(15,23,42,0.96)",
                 }}
-                onClick={(e) => e.stopPropagation()}
               >
-                <div style={sx.header}>
-                  <div>
-                    <div
-                      style={{
-                        fontSize: 22,
-                        fontWeight: 1000,
-                        letterSpacing: -0.4,
-                        color: "rgba(15,23,42,0.96)",
-                      }}
-                    >
-                      Modifica movimento
-                    </div>
-                    <div
-                      style={{
-                        marginTop: 4,
-                        fontSize: 12,
-                        fontWeight: 850,
-                        color: "rgba(71,85,105,0.80)",
-                      }}
-                    >
-                      Salvataggio con ritorno diretto a Consulta → Finanza
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={chiudiModificaMovimentoFinanza}
-                    style={sx.closeBtn}
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                <div style={sx.body}>
-                  <div style={sx.content}>
-                    <div style={sx.row2}>
-                      <div>
-                        <div style={sx.sectionLabel}>Data</div>
-                        <input
-                          type="date"
-                          value={finanzaModData}
-                          onChange={(e) => setFinanzaModData(e.target.value)}
-                          style={{
-                            ...inputLight(false),
-                            background: "rgba(255,255,255,1)",
-                            color: "rgba(15,23,42,0.98)",
-                            WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                            caretColor: "rgba(15,23,42,0.98)",
-                            border: "1px solid rgba(148,163,184,0.22)",
-                          }}
-                        />
-                      </div>
-
-                      <div>
-                        <div style={sx.sectionLabel}>Importo</div>
-                        <input
-                          type="number"
-                          inputMode="decimal"
-                          step="0.01"
-                          value={finanzaModImporto}
-                          onChange={(e) => setFinanzaModImporto(e.target.value)}
-                          style={{
-                            ...inputLight(false),
-                            background: "rgba(255,255,255,1)",
-                            color: "rgba(15,23,42,0.98)",
-                            WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                            caretColor: "rgba(15,23,42,0.98)",
-                            border: "1px solid rgba(148,163,184,0.22)",
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <div style={sx.sectionLabel}>Categoria</div>
-                      <select
-                        value={finanzaModCategoria}
-                        onChange={(e) => setFinanzaModCategoria(e.target.value)}
-                        style={{
-                          ...inputLight(false),
-                          background: "rgba(255,255,255,1)",
-                          color: "rgba(15,23,42,0.98)",
-                          WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                          caretColor: "rgba(15,23,42,0.98)",
-                          border: "1px solid rgba(148,163,184,0.22)",
-                        }}
-                      >
-                        <option value="">Seleziona categoria</option>
-                        {categorieUscitaFinanza.map((cat) => (
-                          <option key={cat} value={cat}>
-                            {cat}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <div style={sx.sectionLabel}>Descrizione</div>
-                      <input
-                        type="text"
-                        value={finanzaModDettaglio}
-                        onChange={(e) => setFinanzaModDettaglio(e.target.value)}
-                        placeholder="Dettaglio movimento"
-                        style={{
-                          ...inputLight(false),
-                          background: "rgba(255,255,255,1)",
-                          color: "rgba(15,23,42,0.98)",
-                          WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                          caretColor: "rgba(15,23,42,0.98)",
-                          border: "1px solid rgba(148,163,184,0.22)",
-                        }}
-                      />
-                    </div>
-
-                    <div>
-                      <div style={sx.sectionLabel}>Nota</div>
-                      <input
-                        type="text"
-                        value={finanzaModNota}
-                        onChange={(e) => setFinanzaModNota(e.target.value)}
-                        placeholder="Nota facoltativa"
-                        style={{
-                          ...inputLight(false),
-                          background: "rgba(255,255,255,1)",
-                          color: "rgba(15,23,42,0.98)",
-                          WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                          caretColor: "rgba(15,23,42,0.98)",
-                          border: "1px solid rgba(148,163,184,0.22)",
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div style={sx.footer}>
-                  <button
-                    type="button"
-                    onClick={chiudiModificaMovimentoFinanza}
-                    style={sx.actionBtn(false)}
-                  >
-                    Annulla
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={salvaModificaMovimentoFinanza}
-                    style={{
-                      ...sx.actionBtn(true),
-                      background:
-                        "linear-gradient(180deg, rgba(79,70,229,0.20), rgba(124,58,237,0.14))",
-                      border: "1px solid rgba(79,70,229,0.26)",
-                      fontWeight: 1000,
-                    }}
-                  >
-                    Salva modifiche
-                  </button>
-                </div>
+                Modifica movimento
+              </div>
+              <div
+                style={{
+                  marginTop: 4,
+                  fontSize: 12,
+                  fontWeight: 850,
+                  color: "rgba(71,85,105,0.80)",
+                }}
+              >
+                Salvataggio con ritorno diretto a Consulta → Finanza
               </div>
             </div>
-          )}
-        </>
+
+            <button
+              type="button"
+              onClick={chiudiModificaMovimentoFinanza}
+              style={sx.closeBtn}
+            >
+              ✕
+            </button>
+          </div>
+
+          <div style={sx.body}>
+            <div style={sx.content}>
+              <div style={sx.row2}>
+                <div>
+                  <div style={sx.sectionLabel}>Data</div>
+                  <input
+                    type="date"
+                    value={finanzaModData}
+                    onChange={(e) => setFinanzaModData(e.target.value)}
+                    style={{
+                      ...inputLight(false),
+                      background: "rgba(255,255,255,1)",
+                      color: "rgba(15,23,42,0.98)",
+                      WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                      caretColor: "rgba(15,23,42,0.98)",
+                      border: "1px solid rgba(148,163,184,0.22)",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <div style={sx.sectionLabel}>Importo</div>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="0.01"
+                    value={finanzaModImporto}
+                    onChange={(e) => setFinanzaModImporto(e.target.value)}
+                    style={{
+                      ...inputLight(false),
+                      background: "rgba(255,255,255,1)",
+                      color: "rgba(15,23,42,0.98)",
+                      WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                      caretColor: "rgba(15,23,42,0.98)",
+                      border: "1px solid rgba(148,163,184,0.22)",
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div style={sx.sectionLabel}>Categoria</div>
+                <select
+                  value={finanzaModCategoria}
+                  onChange={(e) => setFinanzaModCategoria(e.target.value)}
+                  style={{
+                    ...inputLight(false),
+                    background: "rgba(255,255,255,1)",
+                    color: "rgba(15,23,42,0.98)",
+                    WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                    caretColor: "rgba(15,23,42,0.98)",
+                    border: "1px solid rgba(148,163,184,0.22)",
+                  }}
+                >
+                  <option value="">Seleziona categoria</option>
+                  {categorieUscitaFinanza.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <div style={sx.sectionLabel}>Descrizione</div>
+                <input
+                  type="text"
+                  value={finanzaModDettaglio}
+                  onChange={(e) => setFinanzaModDettaglio(e.target.value)}
+                  placeholder="Dettaglio movimento"
+                  style={{
+                    ...inputLight(false),
+                    background: "rgba(255,255,255,1)",
+                    color: "rgba(15,23,42,0.98)",
+                    WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                    caretColor: "rgba(15,23,42,0.98)",
+                    border: "1px solid rgba(148,163,184,0.22)",
+                  }}
+                />
+              </div>
+
+              <div>
+                <div style={sx.sectionLabel}>Nota</div>
+                <input
+                  type="text"
+                  value={finanzaModNota}
+                  onChange={(e) => setFinanzaModNota(e.target.value)}
+                  placeholder="Nota facoltativa"
+                  style={{
+                    ...inputLight(false),
+                    background: "rgba(255,255,255,1)",
+                    color: "rgba(15,23,42,0.98)",
+                    WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                    caretColor: "rgba(15,23,42,0.98)",
+                    border: "1px solid rgba(148,163,184,0.22)",
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div style={sx.footer}>
+            <button
+              type="button"
+              onClick={chiudiModificaMovimentoFinanza}
+              style={sx.actionBtn(false)}
+            >
+              Annulla
+            </button>
+
+            <button
+              type="button"
+              onClick={salvaModificaMovimentoFinanza}
+              style={{
+                ...sx.actionBtn(true),
+                background:
+                  "linear-gradient(180deg, rgba(79,70,229,0.20), rgba(124,58,237,0.14))",
+                border: "1px solid rgba(79,70,229,0.26)",
+                fontWeight: 1000,
+              }}
+            >
+              Salva modifiche
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+  </>
 ) : consultaSezione === "eventi" ? (
   <>
     <div
@@ -8563,19 +8699,19 @@ function MiniCalendarioEventi({
       );
     })()}
   </>
-      ) : (
-        <div
-          style={{
-            ...ui.card,
-            padding: 22,
-            fontSize: 16,
-            fontWeight: 900,
-            color: "rgba(15,23,42,0.82)",
-          }}
-        >
-          Sezione in preparazione
-        </div>
-      )}
+) : (
+  <div
+    style={{
+      ...ui.card,
+      padding: 22,
+      fontSize: 16,
+      fontWeight: 900,
+      color: "rgba(15,23,42,0.82)",
+    }}
+  >
+    Sezione in preparazione
+  </div>
+)}
     </div>
   </div>
 )}
