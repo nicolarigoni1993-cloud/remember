@@ -1222,15 +1222,7 @@ function resetForm() {
   setCustomNotificaOre("");
 }
 
-function apriNuova() {
-  resetForm();
-  setPagina("aggiungi");
-  setConsultaSezione("eventi");
-  setAggiungiSezione("eventi");
-  setTipo("appuntamento");
-  setOra("09:00");
-  setMostraForm(false);
-}
+
 
 function apriNuovaConData(dataSelezionata: string) {
   resetForm();
@@ -8132,9 +8124,17 @@ function MiniCalendarioEventi({
             </div>
           </div>
         </>
+
+
+
+
+
+
+
+
+
 ) : consultaSezione === "finanza" ? (
   <>
-    {/* HEADER */}
     <div
       style={{
         display: "grid",
@@ -8180,7 +8180,6 @@ function MiniCalendarioEventi({
         gap: 14,
       }}
     >
-      {/* HEADER MESE */}
       <div
         style={{
           ...ui.card,
@@ -8225,6 +8224,14 @@ function MiniCalendarioEventi({
               fontWeight: 1000,
               color: "rgba(15,23,42,0.88)",
               transition: "transform .18s ease, box-shadow .18s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-1px)";
+              e.currentTarget.style.boxShadow = "0 12px 22px rgba(15,23,42,0.10)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 8px 18px rgba(15,23,42,0.08)";
             }}
           >
             ←
@@ -8286,6 +8293,14 @@ function MiniCalendarioEventi({
               color: "rgba(15,23,42,0.88)",
               transition: "transform .18s ease, box-shadow .18s ease",
             }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-1px)";
+              e.currentTarget.style.boxShadow = "0 12px 22px rgba(15,23,42,0.10)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 8px 18px rgba(15,23,42,0.08)";
+            }}
           >
             →
           </button>
@@ -8309,8 +8324,31 @@ function MiniCalendarioEventi({
                 "0 14px 28px rgba(16,185,129,0.10), inset 0 1px 0 rgba(255,255,255,0.45)",
               position: "relative",
               overflow: "hidden",
+              transition: "transform .18s ease, box-shadow .18s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-2px)";
+              e.currentTarget.style.boxShadow =
+                "0 18px 34px rgba(16,185,129,0.14), inset 0 1px 0 rgba(255,255,255,0.45)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow =
+                "0 14px 28px rgba(16,185,129,0.10), inset 0 1px 0 rgba(255,255,255,0.45)";
             }}
           >
+            <div
+              style={{
+                position: "absolute",
+                top: -24,
+                right: -24,
+                width: 80,
+                height: 80,
+                borderRadius: 999,
+                background: "radial-gradient(circle, rgba(16,185,129,0.20), transparent 68%)",
+                pointerEvents: "none",
+              }}
+            />
             <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(6,78,59,0.82)" }}>
               Entrate mese
             </div>
@@ -8338,8 +8376,31 @@ function MiniCalendarioEventi({
                 "0 14px 28px rgba(239,68,68,0.10), inset 0 1px 0 rgba(255,255,255,0.45)",
               position: "relative",
               overflow: "hidden",
+              transition: "transform .18s ease, box-shadow .18s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-2px)";
+              e.currentTarget.style.boxShadow =
+                "0 18px 34px rgba(239,68,68,0.14), inset 0 1px 0 rgba(255,255,255,0.45)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow =
+                "0 14px 28px rgba(239,68,68,0.10), inset 0 1px 0 rgba(255,255,255,0.45)";
             }}
           >
+            <div
+              style={{
+                position: "absolute",
+                top: -24,
+                right: -24,
+                width: 80,
+                height: 80,
+                borderRadius: 999,
+                background: "radial-gradient(circle, rgba(239,68,68,0.20), transparent 68%)",
+                pointerEvents: "none",
+              }}
+            />
             <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(127,29,29,0.82)" }}>
               Uscite mese
             </div>
@@ -8360,30 +8421,53 @@ function MiniCalendarioEventi({
             style={{
               padding: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 16,
               borderRadius: 20,
-              border:
-                saldoMeseSezioneFinanza >= 0
-                  ? "1px solid rgba(59,130,246,0.18)"
-                  : "1px solid rgba(124,58,237,0.18)",
-              background:
-                saldoMeseSezioneFinanza >= 0
-                  ? "linear-gradient(180deg, rgba(59,130,246,0.16), rgba(59,130,246,0.05))"
-                  : "linear-gradient(180deg, rgba(124,58,237,0.16), rgba(124,58,237,0.05))",
-              boxShadow:
-                saldoMeseSezioneFinanza >= 0
-                  ? "0 14px 28px rgba(59,130,246,0.10), inset 0 1px 0 rgba(255,255,255,0.45)"
-                  : "0 14px 28px rgba(124,58,237,0.10), inset 0 1px 0 rgba(255,255,255,0.45)",
+              border: saldoMeseSezioneFinanza >= 0
+                ? "1px solid rgba(59,130,246,0.18)"
+                : "1px solid rgba(124,58,237,0.18)",
+              background: saldoMeseSezioneFinanza >= 0
+                ? "linear-gradient(180deg, rgba(59,130,246,0.16), rgba(59,130,246,0.05))"
+                : "linear-gradient(180deg, rgba(124,58,237,0.16), rgba(124,58,237,0.05))",
+              boxShadow: saldoMeseSezioneFinanza >= 0
+                ? "0 14px 28px rgba(59,130,246,0.10), inset 0 1px 0 rgba(255,255,255,0.45)"
+                : "0 14px 28px rgba(124,58,237,0.10), inset 0 1px 0 rgba(255,255,255,0.45)",
               position: "relative",
               overflow: "hidden",
+              transition: "transform .18s ease, box-shadow .18s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-2px)";
+              e.currentTarget.style.boxShadow = saldoMeseSezioneFinanza >= 0
+                ? "0 18px 34px rgba(59,130,246,0.14), inset 0 1px 0 rgba(255,255,255,0.45)"
+                : "0 18px 34px rgba(124,58,237,0.14), inset 0 1px 0 rgba(255,255,255,0.45)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = saldoMeseSezioneFinanza >= 0
+                ? "0 14px 28px rgba(59,130,246,0.10), inset 0 1px 0 rgba(255,255,255,0.45)"
+                : "0 14px 28px rgba(124,58,237,0.10), inset 0 1px 0 rgba(255,255,255,0.45)";
             }}
           >
             <div
               style={{
+                position: "absolute",
+                top: -24,
+                right: -24,
+                width: 80,
+                height: 80,
+                borderRadius: 999,
+                background: saldoMeseSezioneFinanza >= 0
+                  ? "radial-gradient(circle, rgba(59,130,246,0.20), transparent 68%)"
+                  : "radial-gradient(circle, rgba(124,58,237,0.20), transparent 68%)",
+                pointerEvents: "none",
+              }}
+            />
+            <div
+              style={{
                 fontSize: 12,
                 fontWeight: 950,
-                color:
-                  saldoMeseSezioneFinanza >= 0
-                    ? "rgba(30,64,175,0.82)"
-                    : "rgba(88,28,135,0.82)",
+                color: saldoMeseSezioneFinanza >= 0
+                  ? "rgba(30,64,175,0.82)"
+                  : "rgba(88,28,135,0.82)",
               }}
             >
               Saldo mese
@@ -8401,6 +8485,994 @@ function MiniCalendarioEventi({
             </div>
           </div>
         </div>
+      </div>
+
+      <div
+        style={{
+          ...ui.card,
+          padding: 16,
+          border: "1px solid rgba(255,255,255,0.58)",
+          background:
+            "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
+          boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
+          display: "grid",
+          gap: 16,
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 12,
+            flexWrap: "wrap",
+          }}
+        >
+          <div>
+            <div
+              style={{
+                fontSize: 20,
+                fontWeight: 1000,
+                letterSpacing: -0.3,
+                color: "rgba(15,23,42,0.98)",
+              }}
+            >
+              Grafico uscite
+            </div>
+            <div
+              style={{
+                marginTop: 4,
+                fontSize: 12,
+                fontWeight: 850,
+                color: "rgba(71,85,105,0.82)",
+              }}
+            >
+              Solo uscite raggruppate per categoria
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              onClick={() => {
+                setFinanzaVistaGrafico("mese");
+                setFinanzaAnnoSelezionato(meseCorrente.getFullYear());
+                setFinanzaMeseSelezionato(meseCorrente.getMonth());
+              }}
+              style={chip(finanzaVistaGrafico === "mese")}
+            >
+              Mese
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setFinanzaVistaGrafico("anno");
+                setFinanzaAnnoSelezionato(meseCorrente.getFullYear());
+              }}
+              style={chip(finanzaVistaGrafico === "anno")}
+            >
+              Anno
+            </button>
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gap: 10,
+            width: "100%",
+            minWidth: 0,
+          }}
+        >
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(0, 1fr))",
+              gap: 10,
+              width: "100%",
+              minWidth: 0,
+            }}
+          >
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
+                Dal
+              </div>
+              <input
+                type="date"
+                value={filtroFinanzaGrafico.dal}
+                onChange={(e) => setFiltroFinanzaGrafico((prev) => ({ ...prev, dal: e.target.value }))}
+                style={{
+                  ...inputLight(false),
+                  width: "100%",
+                  minWidth: 0,
+                  maxWidth: "100%",
+                  height: typeof window !== "undefined" && window.innerWidth <= 640 ? 56 : 52,
+                  padding: "10px 14px",
+                  boxSizing: "border-box",
+                  appearance: "none",
+                  WebkitAppearance: "none",
+                  background: "rgba(255,255,255,1)",
+                  color: "rgba(15,23,42,0.98)",
+                  WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                  caretColor: "rgba(15,23,42,0.98)",
+                  border: "1px solid rgba(148,163,184,0.22)",
+                  fontSize: 15,
+                  fontWeight: 900,
+                  borderRadius: 18,
+                }}
+              />
+            </div>
+
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
+                Al
+              </div>
+              <input
+                type="date"
+                value={filtroFinanzaGrafico.al}
+                onChange={(e) => setFiltroFinanzaGrafico((prev) => ({ ...prev, al: e.target.value }))}
+                style={{
+                  ...inputLight(false),
+                  width: "100%",
+                  minWidth: 0,
+                  maxWidth: "100%",
+                  height: typeof window !== "undefined" && window.innerWidth <= 640 ? 56 : 52,
+                  padding: "10px 14px",
+                  boxSizing: "border-box",
+                  appearance: "none",
+                  WebkitAppearance: "none",
+                  background: "rgba(255,255,255,1)",
+                  color: "rgba(15,23,42,0.98)",
+                  WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                  caretColor: "rgba(15,23,42,0.98)",
+                  border: "1px solid rgba(148,163,184,0.22)",
+                  fontSize: 15,
+                  fontWeight: 900,
+                  borderRadius: 18,
+                }}
+              />
+            </div>
+
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(71,85,105,0.86)", marginBottom: 6 }}>
+                Categoria
+              </div>
+              <select
+                value={filtroFinanzaGrafico.categoria}
+                onChange={(e) => setFiltroFinanzaGrafico((prev) => ({ ...prev, categoria: e.target.value }))}
+                style={{
+                  ...inputLight(false),
+                  width: "100%",
+                  minWidth: 0,
+                  maxWidth: "100%",
+                  height: typeof window !== "undefined" && window.innerWidth <= 640 ? 56 : 52,
+                  padding: "10px 14px",
+                  boxSizing: "border-box",
+                  background: "rgba(255,255,255,1)",
+                  color: "rgba(15,23,42,0.98)",
+                  WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                  caretColor: "rgba(15,23,42,0.98)",
+                  border: "1px solid rgba(148,163,184,0.22)",
+                  fontSize: 15,
+                  fontWeight: 900,
+                  borderRadius: 18,
+                }}
+              >
+                <option value="">Tutte</option>
+                {categorieUscitaFinanza.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setFiltroFinanzaGrafico({ dal: "", al: "", categoria: "" })}
+            style={{
+              border: "1px solid rgba(148,163,184,0.18)",
+              background:
+                "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
+              borderRadius: 16,
+              fontWeight: 900,
+              cursor: "pointer",
+              color: "rgba(15,23,42,0.86)",
+              minHeight: 46,
+              width: "100%",
+              minWidth: 0,
+              boxSizing: "border-box",
+              transition: "transform .16s ease, box-shadow .16s ease",
+              boxShadow: "0 8px 18px rgba(15,23,42,0.05)",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-1px)";
+              e.currentTarget.style.boxShadow = "0 12px 22px rgba(15,23,42,0.08)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 8px 18px rgba(15,23,42,0.05)";
+            }}
+          >
+            Reset filtri
+          </button>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns:
+              finanzaVistaGrafico === "mese"
+                ? "minmax(0, 0.95fr) minmax(0, 1.05fr)"
+                : "minmax(0, 1fr)",
+            gap: 16,
+            alignItems: "start",
+            minWidth: 0,
+          }}
+          className="remember-grid-2"
+        >
+          <div
+            style={{
+              padding: 16,
+              borderRadius: 22,
+              border: "1px solid rgba(148,163,184,0.16)",
+              background:
+                "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.94))",
+              boxShadow: "0 10px 26px rgba(15,23,42,0.06)",
+              display: "grid",
+              gap: 16,
+              justifyItems: "center",
+              minWidth: 0,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 15,
+                fontWeight: 1000,
+                color: "rgba(15,23,42,0.96)",
+                textAlign: "center",
+              }}
+            >
+              {finanzaVistaGrafico === "mese"
+                ? `Torta uscite • ${nomeMesiCompleti[meseCorrente.getMonth()]} ${meseCorrente.getFullYear()}`
+                : `Torta uscite • anno ${meseCorrente.getFullYear()}`}
+            </div>
+
+            <div
+              style={{
+                width: typeof window !== "undefined" && window.innerWidth <= 640 ? 190 : 230,
+                height: typeof window !== "undefined" && window.innerWidth <= 640 ? 190 : 230,
+                maxWidth: "100%",
+                borderRadius: "50%",
+                background: pieGradientFinanza,
+                boxShadow:
+                  "0 28px 60px rgba(15,23,42,0.16), inset 0 10px 18px rgba(255,255,255,0.28), inset 0 -14px 24px rgba(15,23,42,0.10)",
+                border: "14px solid rgba(255,255,255,0.98)",
+                outline: "7px solid rgba(226,232,240,0.95)",
+                position: "relative",
+                transition: "transform .22s ease, box-shadow .22s ease",
+                cursor: "default",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "scale(1.03)";
+                e.currentTarget.style.boxShadow =
+                  "0 34px 70px rgba(15,23,42,0.18), inset 0 10px 18px rgba(255,255,255,0.30), inset 0 -14px 24px rgba(15,23,42,0.12)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "scale(1)";
+                e.currentTarget.style.boxShadow =
+                  "0 28px 60px rgba(15,23,42,0.16), inset 0 10px 18px rgba(255,255,255,0.28), inset 0 -14px 24px rgba(15,23,42,0.10)";
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  borderRadius: "50%",
+                  background:
+                    "radial-gradient(circle at 50% 38%, rgba(255,255,255,0.18), transparent 34%)",
+                  pointerEvents: "none",
+                }}
+              />
+
+              <div
+                style={{
+                  position: "absolute",
+                  inset: "50% auto auto 50%",
+                  transform: "translate(-50%, -50%)",
+                  width: typeof window !== "undefined" && window.innerWidth <= 640 ? 78 : 94,
+                  height: typeof window !== "undefined" && window.innerWidth <= 640 ? 78 : 94,
+                  borderRadius: "50%",
+                  background:
+                    "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.96))",
+                  display: "grid",
+                  placeItems: "center",
+                  boxShadow:
+                    "0 10px 22px rgba(15,23,42,0.10), inset 0 0 0 1px rgba(148,163,184,0.12)",
+                  border: "1px solid rgba(255,255,255,0.96)",
+                  backdropFilter: "blur(8px)",
+                }}
+              >
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 10, fontWeight: 900, color: "rgba(100,116,139,0.84)" }}>
+                    Totale
+                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 1000, color: "rgba(15,23,42,0.96)" }}>
+                    {euro(totaleGraficoUscite)}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              style={{
+                width: "100%",
+                display: "grid",
+                gap: 8,
+              }}
+            >
+              {uscitePerCategoriaGrafico.length === 0 ? (
+                <div
+                  style={{
+                    padding: 12,
+                    borderRadius: 16,
+                    border: "1px solid rgba(148,163,184,0.16)",
+                    background: "rgba(255,255,255,0.82)",
+                    fontSize: 13,
+                    fontWeight: 800,
+                    color: "rgba(100,116,139,0.86)",
+                    textAlign: "center",
+                  }}
+                >
+                  Nessuna uscita da mostrare.
+                </div>
+              ) : (
+                uscitePerCategoriaGrafico.map((item, index) => {
+                  const perc = totaleGraficoUscite > 0 ? (item.totale / totaleGraficoUscite) * 100 : 0;
+
+                  return (
+                    <div
+                      key={item.categoria}
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "16px minmax(0, 1fr) auto",
+                        gap: 10,
+                        alignItems: "center",
+                        padding: "9px 11px",
+                        borderRadius: 16,
+                        background:
+                          "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92))",
+                        border: "1px solid rgba(148,163,184,0.14)",
+                        boxShadow: "0 6px 14px rgba(15,23,42,0.04)",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 12,
+                          height: 12,
+                          borderRadius: 999,
+                          background: pieColors[index % pieColors.length],
+                          boxShadow: `0 0 0 4px ${pieColors[index % pieColors.length]}22`,
+                        }}
+                      />
+                      <div style={{ minWidth: 0 }}>
+                        <div
+                          style={{
+                            fontSize: 13,
+                            fontWeight: 900,
+                            color: "rgba(15,23,42,0.92)",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {item.categoria}
+                        </div>
+                        <div
+                          style={{
+                            marginTop: 2,
+                            fontSize: 11,
+                            fontWeight: 800,
+                            color: "rgba(100,116,139,0.84)",
+                          }}
+                        >
+                          {perc.toLocaleString("it-IT", { maximumFractionDigits: 1 })}%
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 1000,
+                          color: "rgba(15,23,42,0.92)",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {euro(item.totale)}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {finanzaVistaGrafico === "mese" && (
+            <div
+              style={{
+                padding: 16,
+                borderRadius: 22,
+                border: "1px solid rgba(148,163,184,0.16)",
+                background:
+                  "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.94))",
+                boxShadow: "0 10px 26px rgba(15,23,42,0.06)",
+                display: "grid",
+                gap: 14,
+                minWidth: 0,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 15,
+                  fontWeight: 1000,
+                  color: "rgba(15,23,42,0.96)",
+                }}
+              >
+                Barre uscite • {nomeMesiCompleti[meseCorrente.getMonth()]} {meseCorrente.getFullYear()}
+              </div>
+
+              {uscitePerCategoriaGrafico.length === 0 ? (
+                <div
+                  style={{
+                    padding: 12,
+                    borderRadius: 16,
+                    border: "1px solid rgba(148,163,184,0.16)",
+                    background: "rgba(255,255,255,0.82)",
+                    fontSize: 13,
+                    fontWeight: 800,
+                    color: "rgba(100,116,139,0.86)",
+                    textAlign: "center",
+                  }}
+                >
+                  Nessuna uscita da mostrare.
+                </div>
+              ) : (
+                uscitePerCategoriaGrafico.map((item, index) => {
+                  const perc = maxBarFinanza > 0 ? (item.totale / maxBarFinanza) * 100 : 0;
+
+                  return (
+                    <div key={item.categoria} style={{ display: "grid", gap: 6 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          gap: 10,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: 13,
+                            fontWeight: 950,
+                            color: "rgba(15,23,42,0.92)",
+                          }}
+                        >
+                          {item.categoria}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 1000,
+                            color: "rgba(15,23,42,0.84)",
+                          }}
+                        >
+                          {euro(item.totale)}
+                        </div>
+                      </div>
+
+                      <div
+                        style={{
+                          height: 16,
+                          borderRadius: 999,
+                          background: "rgba(226,232,240,0.92)",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: `${Math.max(8, perc)}%`,
+                            height: "100%",
+                            borderRadius: 999,
+                            background: `linear-gradient(90deg, ${pieColors[index % pieColors.length]}, rgba(15,23,42,0.88))`,
+                            boxShadow: "0 10px 18px rgba(15,23,42,0.10)",
+                            transition: "width .25s ease",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div
+        style={{
+          ...ui.card,
+          padding: 16,
+          border: "1px solid rgba(255,255,255,0.58)",
+          background:
+            "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
+          boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
+          display: "grid",
+          gap: 16,
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            display: "grid",
+            gap: 6,
+          }}
+        >
+          <div
+            style={{
+              fontSize: 20,
+              fontWeight: 1000,
+              letterSpacing: -0.3,
+              color: "rgba(15,23,42,0.98)",
+            }}
+          >
+            Lista movimenti
+          </div>
+
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 850,
+              color: "rgba(71,85,105,0.82)",
+              lineHeight: 1.45,
+            }}
+          >
+            Uscite del mese selezionato, ordinate per data, con card premium compatte, importo sempre in evidenza e azioni rapide.
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gap: 10,
+            width: "100%",
+            minWidth: 0,
+          }}
+        >
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(0, 1fr))",
+              gap: 10,
+              width: "100%",
+              minWidth: 0,
+            }}
+          >
+            <div style={{ minWidth: 0 }}>
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 900,
+                  color: "rgba(71,85,105,0.86)",
+                  marginBottom: 6,
+                }}
+              >
+                Dal
+              </div>
+              <input
+                type="date"
+                value={filtroFinanzaLista.dal}
+                onChange={(e) => setFiltroFinanzaLista((prev) => ({ ...prev, dal: e.target.value }))}
+                style={{
+                  ...inputLight(false),
+                  width: "100%",
+                  minWidth: 0,
+                  maxWidth: "100%",
+                  height: typeof window !== "undefined" && window.innerWidth <= 640 ? 56 : 52,
+                  padding: "10px 14px",
+                  boxSizing: "border-box",
+                  appearance: "none",
+                  WebkitAppearance: "none",
+                  background: "rgba(255,255,255,1)",
+                  color: "rgba(15,23,42,0.98)",
+                  WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                  caretColor: "rgba(15,23,42,0.98)",
+                  border: "1px solid rgba(148,163,184,0.22)",
+                  fontSize: 15,
+                  fontWeight: 900,
+                  borderRadius: 18,
+                }}
+              />
+            </div>
+
+            <div style={{ minWidth: 0 }}>
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 900,
+                  color: "rgba(71,85,105,0.86)",
+                  marginBottom: 6,
+                }}
+              >
+                Al
+              </div>
+              <input
+                type="date"
+                value={filtroFinanzaLista.al}
+                onChange={(e) => setFiltroFinanzaLista((prev) => ({ ...prev, al: e.target.value }))}
+                style={{
+                  ...inputLight(false),
+                  width: "100%",
+                  minWidth: 0,
+                  maxWidth: "100%",
+                  height: typeof window !== "undefined" && window.innerWidth <= 640 ? 56 : 52,
+                  padding: "10px 14px",
+                  boxSizing: "border-box",
+                  appearance: "none",
+                  WebkitAppearance: "none",
+                  background: "rgba(255,255,255,1)",
+                  color: "rgba(15,23,42,0.98)",
+                  WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                  caretColor: "rgba(15,23,42,0.98)",
+                  border: "1px solid rgba(148,163,184,0.22)",
+                  fontSize: 15,
+                  fontWeight: 900,
+                  borderRadius: 18,
+                }}
+              />
+            </div>
+
+            <div style={{ minWidth: 0 }}>
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 900,
+                  color: "rgba(71,85,105,0.86)",
+                  marginBottom: 6,
+                }}
+              >
+                Categoria
+              </div>
+              <select
+                value={filtroFinanzaLista.categoria}
+                onChange={(e) => setFiltroFinanzaLista((prev) => ({ ...prev, categoria: e.target.value }))}
+                style={{
+                  ...inputLight(false),
+                  width: "100%",
+                  minWidth: 0,
+                  maxWidth: "100%",
+                  height: typeof window !== "undefined" && window.innerWidth <= 640 ? 56 : 52,
+                  padding: "10px 14px",
+                  boxSizing: "border-box",
+                  background: "rgba(255,255,255,1)",
+                  color: "rgba(15,23,42,0.98)",
+                  WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                  caretColor: "rgba(15,23,42,0.98)",
+                  border: "1px solid rgba(148,163,184,0.22)",
+                  fontSize: 15,
+                  fontWeight: 900,
+                  borderRadius: 18,
+                }}
+              >
+                <option value="">Tutte</option>
+                {categorieUscitaFinanza.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setFiltroFinanzaLista({ dal: "", al: "", categoria: "" })}
+            style={{
+              border: "1px solid rgba(148,163,184,0.18)",
+              background:
+                "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
+              borderRadius: 16,
+              fontWeight: 900,
+              cursor: "pointer",
+              color: "rgba(15,23,42,0.86)",
+              minHeight: 46,
+              width: "100%",
+              minWidth: 0,
+              boxSizing: "border-box",
+              transition: "transform .16s ease, box-shadow .16s ease",
+              boxShadow: "0 8px 18px rgba(15,23,42,0.05)",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-1px)";
+              e.currentTarget.style.boxShadow = "0 12px 22px rgba(15,23,42,0.08)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 8px 18px rgba(15,23,42,0.05)";
+            }}
+          >
+            Reset filtri
+          </button>
+        </div>
+
+        {(() => {
+          const listaMovimentiFinanzaVisibili = listaMovimentiFinanza.filter((mov) => {
+            const [annoMov, meseMov] = mov.data.split("-").map(Number);
+            return (
+              annoMov === meseCorrente.getFullYear() &&
+              meseMov - 1 === meseCorrente.getMonth()
+            );
+          });
+
+          return (
+            <div
+              style={{
+                display: "grid",
+                gap: 10,
+              }}
+            >
+              {listaMovimentiFinanzaVisibili.length === 0 ? (
+                <div
+                  style={{
+                    padding: 16,
+                    borderRadius: 18,
+                    border: "1px solid rgba(148,163,184,0.16)",
+                    background:
+                      "linear-gradient(180deg, rgba(255,255,255,0.92), rgba(248,250,252,0.88))",
+                    fontSize: 13,
+                    fontWeight: 850,
+                    color: "rgba(100,116,139,0.86)",
+                    textAlign: "center",
+                  }}
+                >
+                  Nessun movimento trovato per il mese selezionato.
+                </div>
+              ) : (
+                listaMovimentiFinanzaVisibili.map((mov) => (
+                  <div
+                    key={`${mov.origine}_${mov.id}`}
+                    style={{
+                      padding: typeof window !== "undefined" && window.innerWidth <= 640 ? 12 : 14,
+                      borderRadius: 20,
+                      border: "1px solid rgba(239,68,68,0.14)",
+                      background:
+                        "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.95))",
+                      boxShadow:
+                        "0 10px 22px rgba(15,23,42,0.06), inset 0 1px 0 rgba(255,255,255,0.75)",
+                      display: "grid",
+                      gridTemplateColumns:
+                        typeof window !== "undefined" && window.innerWidth <= 640
+                          ? "minmax(0, 1fr)"
+                          : "minmax(0, 1fr) auto",
+                      gap: 12,
+                      alignItems: "start",
+                      position: "relative",
+                      overflow: "hidden",
+                      transition: "transform .18s ease, box-shadow .18s ease, border-color .18s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "translateY(-2px)";
+                      e.currentTarget.style.boxShadow =
+                        "0 16px 28px rgba(15,23,42,0.08), inset 0 1px 0 rgba(255,255,255,0.75)";
+                      e.currentTarget.style.borderColor = "rgba(239,68,68,0.22)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "translateY(0)";
+                      e.currentTarget.style.boxShadow =
+                        "0 10px 22px rgba(15,23,42,0.06), inset 0 1px 0 rgba(255,255,255,0.75)";
+                      e.currentTarget.style.borderColor = "rgba(239,68,68,0.14)";
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: -24,
+                        right: -24,
+                        width: 90,
+                        height: 90,
+                        borderRadius: 999,
+                        background: "radial-gradient(circle, rgba(239,68,68,0.14), transparent 68%)",
+                        pointerEvents: "none",
+                      }}
+                    />
+
+                    <div
+                      style={{
+                        minWidth: 0,
+                        display: "grid",
+                        gap: 7,
+                        position: "relative",
+                        zIndex: 1,
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: 10,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                            flexWrap: "wrap",
+                            minWidth: 0,
+                          }}
+                        >
+                          <span
+                            style={{
+                              padding: "6px 10px",
+                              borderRadius: 999,
+                              fontSize: 11,
+                              fontWeight: 950,
+                              background:
+                                "linear-gradient(180deg, rgba(254,226,226,0.98), rgba(254,242,242,0.98))",
+                              border: "1px solid rgba(239,68,68,0.18)",
+                              color: "rgba(153,27,27,0.96)",
+                              boxShadow: "0 6px 14px rgba(239,68,68,0.06)",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {mov.categoria}
+                          </span>
+
+                          <span
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 900,
+                              color: "rgba(100,116,139,0.84)",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {formattaDataBreve(mov.data)}
+                          </span>
+                        </div>
+
+                        {typeof window !== "undefined" && window.innerWidth <= 640 && (
+                          <div
+                            style={{
+                              padding: "7px 11px",
+                              borderRadius: 999,
+                              border: "1px solid rgba(239,68,68,0.18)",
+                              background:
+                                "linear-gradient(180deg, rgba(254,242,242,0.98), rgba(254,226,226,0.96))",
+                              fontSize: 12,
+                              fontWeight: 1000,
+                              color: "rgba(153,27,27,0.96)",
+                              whiteSpace: "nowrap",
+                              boxShadow: "0 8px 16px rgba(239,68,68,0.06)",
+                            }}
+                          >
+                            {euro(mov.importo)}
+                          </div>
+                        )}
+                      </div>
+
+                      <div
+                        style={{
+                          fontSize: 15,
+                          fontWeight: 1000,
+                          color: "rgba(15,23,42,0.97)",
+                          lineHeight: 1.25,
+                          letterSpacing: -0.1,
+                        }}
+                      >
+                        {mov.dettaglio || mov.descrizione}
+                      </div>
+
+                      {mov.nota && (
+                        <div
+                          style={{
+                            padding: "8px 10px",
+                            borderRadius: 14,
+                            background: "rgba(241,245,249,0.88)",
+                            border: "1px solid rgba(148,163,184,0.14)",
+                            fontSize: 12,
+                            fontWeight: 800,
+                            color: "rgba(71,85,105,0.84)",
+                            lineHeight: 1.4,
+                          }}
+                        >
+                          <span style={{ fontWeight: 950, color: "rgba(51,65,85,0.92)" }}>Nota:</span> {mov.nota}
+                        </div>
+                      )}
+                    </div>
+
+                    <div
+                      style={{
+                        display: "grid",
+                        gap: 8,
+                        justifyItems:
+                          typeof window !== "undefined" && window.innerWidth <= 640 ? "stretch" : "end",
+                        minWidth: typeof window !== "undefined" && window.innerWidth <= 640 ? 0 : 112,
+                        position: "relative",
+                        zIndex: 1,
+                      }}
+                    >
+                      {!(typeof window !== "undefined" && window.innerWidth <= 640) && (
+                        <div
+                          style={{
+                            padding: "7px 11px",
+                            borderRadius: 999,
+                            border: "1px solid rgba(239,68,68,0.18)",
+                            background:
+                              "linear-gradient(180deg, rgba(254,242,242,0.98), rgba(254,226,226,0.96))",
+                            fontSize: 12,
+                            fontWeight: 1000,
+                            color: "rgba(153,27,27,0.96)",
+                            whiteSpace: "nowrap",
+                            boxShadow: "0 8px 16px rgba(239,68,68,0.06)",
+                          }}
+                        >
+                          {euro(mov.importo)}
+                        </div>
+                      )}
+
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 6,
+                          flexWrap: "wrap",
+                          justifyContent:
+                            typeof window !== "undefined" && window.innerWidth <= 640 ? "stretch" : "flex-end",
+                        }}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => apriModificaMovimentoFinanza(mov)}
+                          style={{
+                            ...chip(false),
+                            minWidth: typeof window !== "undefined" && window.innerWidth <= 640 ? 0 : 92,
+                            flex: typeof window !== "undefined" && window.innerWidth <= 640 ? 1 : undefined,
+                            justifyContent: "center",
+                            display: "inline-flex",
+                            alignItems: "center",
+                          }}
+                        >
+                          Modifica
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => eliminaMovimentoFinanza(mov)}
+                          style={{
+                            ...chip(false),
+                            minWidth: typeof window !== "undefined" && window.innerWidth <= 640 ? 0 : 86,
+                            flex: typeof window !== "undefined" && window.innerWidth <= 640 ? 1 : undefined,
+                            justifyContent: "center",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            border: "1px solid rgba(239,68,68,0.22)",
+                            color: "rgba(185,28,28,0.96)",
+                            background:
+                              "linear-gradient(180deg, rgba(254,242,242,0.96), rgba(254,226,226,0.88))",
+                          }}
+                        >
+                          Elimina
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          );
+        })()}
       </div>
     </div>
 
@@ -8574,6 +9646,19 @@ function MiniCalendarioEventi({
       </div>
     )}
   </>
+
+
+
+
+
+
+
+
+
+
+
+
+
 ) : consultaSezione === "eventi" ? (
   <>
     <div
