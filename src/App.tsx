@@ -7096,74 +7096,6 @@ function MiniCalendarioEventi({
                       </div>
                     </div>
 
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-                        gap: 10,
-                      }}
-                    >
-                      <div
-                        style={{
-                          padding: 13,
-                          borderRadius: 18,
-                          background:
-                            "linear-gradient(180deg, rgba(79,70,229,0.18), rgba(79,70,229,0.08))",
-                          border: "1px solid rgba(79,70,229,0.18)",
-                          display: "grid",
-                          gap: 5,
-                          boxShadow: "0 14px 28px rgba(79,70,229,0.10)",
-                        }}
-                      >
-                        <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(199,210,254,0.95)" }}>
-                          Eventi
-                        </div>
-                        <div style={{ fontSize: 22, fontWeight: 1000, color: "rgba(255,255,255,0.98)" }}>
-                          {tabCorrente.eventi.length}
-                        </div>
-                      </div>
-
-                      <div
-                        style={{
-                          padding: 13,
-                          borderRadius: 18,
-                          background:
-                            "linear-gradient(180deg, rgba(249,115,22,0.18), rgba(249,115,22,0.08))",
-                          border: "1px solid rgba(249,115,22,0.18)",
-                          display: "grid",
-                          gap: 5,
-                          boxShadow: "0 14px 28px rgba(249,115,22,0.10)",
-                        }}
-                      >
-                        <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(254,215,170,0.95)" }}>
-                          Turni
-                        </div>
-                        <div style={{ fontSize: 22, fontWeight: 1000, color: "rgba(255,255,255,0.98)" }}>
-                          {tabCorrente.turni.length}
-                        </div>
-                      </div>
-
-                      <div
-                        style={{
-                          padding: 13,
-                          borderRadius: 18,
-                          background:
-                            "linear-gradient(180deg, rgba(239,68,68,0.18), rgba(239,68,68,0.08))",
-                          border: "1px solid rgba(239,68,68,0.18)",
-                          display: "grid",
-                          gap: 5,
-                          boxShadow: "0 14px 28px rgba(239,68,68,0.10)",
-                        }}
-                      >
-                        <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(254,202,202,0.95)" }}>
-                          Uscite
-                        </div>
-                        <div style={{ fontSize: 22, fontWeight: 1000, color: "rgba(255,255,255,0.98)" }}>
-                          {tabCorrente.uscite.length}
-                        </div>
-                      </div>
-                    </div>
-
                     <div style={{ display: "grid", gap: 10 }}>
                       {totaleElementi === 0 ? (
                         <div
@@ -7178,12 +7110,13 @@ function MiniCalendarioEventi({
                             textAlign: "center",
                           }}
                         >
-                          Nessun elemento previsto per {tabCorrente.titolo.toLowerCase()}.
+                          Nulla da ricordare per {tabCorrente.titolo.toLowerCase()}.
                         </div>
                       ) : (
                         <>
                           {tabCorrente.eventi.map((ev) => {
                             const giorni = giorniMancanti(ev.data);
+
                             return (
                               <div
                                 key={ev.id}
@@ -7207,7 +7140,13 @@ function MiniCalendarioEventi({
                                     flexWrap: "wrap",
                                   }}
                                 >
-                                  <div style={{ fontSize: 11, fontWeight: 950, color: "rgba(199,210,254,0.96)" }}>
+                                  <div
+                                    style={{
+                                      fontSize: 11,
+                                      fontWeight: 950,
+                                      color: "rgba(199,210,254,0.96)",
+                                    }}
+                                  >
                                     EVENTO
                                   </div>
 
@@ -7216,48 +7155,81 @@ function MiniCalendarioEventi({
                                   </span>
                                 </div>
 
-                                <div style={{ fontSize: 14, fontWeight: 950, color: "rgba(255,255,255,0.98)" }}>
+                                <div
+                                  style={{
+                                    fontSize: 14,
+                                    fontWeight: 950,
+                                    color: "rgba(255,255,255,0.98)",
+                                  }}
+                                >
                                   {ev.titolo}
                                 </div>
 
-                                <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(191,219,254,0.84)" }}>
+                                <div
+                                  style={{
+                                    fontSize: 12,
+                                    fontWeight: 800,
+                                    color: "rgba(191,219,254,0.84)",
+                                  }}
+                                >
                                   {ev.ora}
                                 </div>
                               </div>
                             );
                           })}
 
-                          {tabCorrente.turni.map((t) => (
-                            <div
-                              key={t.id}
-                              style={{
-                                padding: 13,
-                                borderRadius: 18,
-                                background:
-                                  "linear-gradient(180deg, rgba(249,115,22,0.14), rgba(249,115,22,0.06))",
-                                border: "1px solid rgba(249,115,22,0.16)",
-                                display: "grid",
-                                gap: 6,
-                                boxShadow: "0 10px 20px rgba(249,115,22,0.08)",
-                              }}
-                            >
-                              <div style={{ fontSize: 11, fontWeight: 950, color: "rgba(254,215,170,0.96)" }}>
-                                TURNO
-                              </div>
+                          {tabCorrente.turni.map((t) => {
+                            const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
+                            const descrizione = descrizioneTurnoBreve(t.inizio, t.fine, t.note);
 
-                              <div style={{ fontSize: 14, fontWeight: 950, color: "rgba(255,255,255,0.98)" }}>
-                                {descrizioneTurnoBreve(t.inizio, t.fine, t.note)}
-                              </div>
+                            return (
+                              <div
+                                key={t.id}
+                                style={{
+                                  padding: 13,
+                                  borderRadius: 18,
+                                  background:
+                                    "linear-gradient(180deg, rgba(249,115,22,0.14), rgba(249,115,22,0.06))",
+                                  border: "1px solid rgba(249,115,22,0.16)",
+                                  display: "grid",
+                                  gap: 6,
+                                  boxShadow: "0 10px 20px rgba(249,115,22,0.08)",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    fontSize: 11,
+                                    fontWeight: 950,
+                                    color: "rgba(254,215,170,0.96)",
+                                  }}
+                                >
+                                  TURNO
+                                </div>
 
-                              <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(255,237,213,0.84)" }}>
-                                {normalizeTurnoLabel(t.inizio, t.fine, t.note) === "R" ||
-                                normalizeTurnoLabel(t.inizio, t.fine, t.note) === "F" ||
-                                normalizeTurnoLabel(t.inizio, t.fine, t.note) === "A"
-                                  ? t.note || "Giornata speciale"
-                                  : `${t.inizio} • ${t.fine}`}
+                                <div
+                                  style={{
+                                    fontSize: 14,
+                                    fontWeight: 950,
+                                    color: "rgba(255,255,255,0.98)",
+                                  }}
+                                >
+                                  {descrizione}
+                                </div>
+
+                                <div
+                                  style={{
+                                    fontSize: 12,
+                                    fontWeight: 800,
+                                    color: "rgba(255,237,213,0.84)",
+                                  }}
+                                >
+                                  {sigla === "R" || sigla === "F" || sigla === "A"
+                                    ? (t.note || descrizione)
+                                    : `${t.inizio} • ${t.fine}`}
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
 
                           {tabCorrente.uscite.map((u) => (
                             <div
@@ -7273,15 +7245,33 @@ function MiniCalendarioEventi({
                                 boxShadow: "0 10px 20px rgba(239,68,68,0.08)",
                               }}
                             >
-                              <div style={{ fontSize: 11, fontWeight: 950, color: "rgba(254,202,202,0.96)" }}>
+                              <div
+                                style={{
+                                  fontSize: 11,
+                                  fontWeight: 950,
+                                  color: "rgba(254,202,202,0.96)",
+                                }}
+                              >
                                 USCITA
                               </div>
 
-                              <div style={{ fontSize: 14, fontWeight: 950, color: "rgba(255,255,255,0.98)" }}>
+                              <div
+                                style={{
+                                  fontSize: 14,
+                                  fontWeight: 950,
+                                  color: "rgba(255,255,255,0.98)",
+                                }}
+                              >
                                 {u.descrizione}
                               </div>
 
-                              <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(254,226,226,0.84)" }}>
+                              <div
+                                style={{
+                                  fontSize: 12,
+                                  fontWeight: 800,
+                                  color: "rgba(254,226,226,0.84)",
+                                }}
+                              >
                                 {euro(u.importo)}
                                 {u.nota ? ` • ${u.nota}` : ""}
                               </div>
