@@ -6853,43 +6853,41 @@ function MiniCalendarioEventi({
                   }}
                 >
                   <button
-                    type="button"
-                    onClick={() => {
-                      setMostraPreviewHome((prev) => !prev);
-                      setHomePreviewTab("oggi");
-                    }}
-                    title="Riepilogo rapido oggi e domani"
-                    style={{
-                      width: 68,
-                      height: 68,
-                      borderRadius: 999,
-                      border: "1px solid rgba(250,204,21,0.34)",
-                      background:
-                        "linear-gradient(180deg, rgba(250,204,21,0.34), rgba(234,179,8,0.16))",
-                      color: "rgba(255,251,235,0.98)",
-                      fontSize: 30,
-                      fontWeight: 1000,
-                      cursor: "pointer",
-                      boxShadow:
-                        "0 20px 44px rgba(250,204,21,0.26), inset 0 1px 0 rgba(255,255,255,0.24)",
-                      transition: "transform .18s ease, box-shadow .18s ease, filter .18s ease",
-                      position: "relative",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = "translateY(-2px) scale(1.04)";
-                      e.currentTarget.style.boxShadow =
-                        "0 28px 54px rgba(250,204,21,0.34), inset 0 1px 0 rgba(255,255,255,0.24)";
-                      e.currentTarget.style.filter = "brightness(1.04)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = "translateY(0) scale(1)";
-                      e.currentTarget.style.boxShadow =
-                        "0 20px 44px rgba(250,204,21,0.26), inset 0 1px 0 rgba(255,255,255,0.24)";
-                      e.currentTarget.style.filter = "brightness(1)";
-                    }}
-                  >
-                    !
-                  </button>
+  type="button"
+  onClick={() => {
+    setMostraPreviewHome((prev) => !prev);
+    setHomePreviewTab("oggi");
+  }}
+  title="Centro rapido"
+  style={{
+    width: 78,
+    height: 78,
+    borderRadius: 999,
+    border: "1px solid rgba(250,204,21,0.35)",
+    background:
+      "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.6), transparent 40%), linear-gradient(180deg, rgba(250,204,21,0.55), rgba(234,179,8,0.25))",
+    color: "#1e293b",
+    fontSize: 34,
+    fontWeight: 1000,
+    cursor: "pointer",
+    position: "relative",
+    boxShadow:
+      "0 25px 60px rgba(250,204,21,0.45), inset 0 2px 6px rgba(255,255,255,0.6)",
+    transition: "all .25s ease",
+  }}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.transform = "scale(1.1) rotate(-3deg)";
+    e.currentTarget.style.boxShadow =
+      "0 35px 80px rgba(250,204,21,0.6), inset 0 2px 6px rgba(255,255,255,0.7)";
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.transform = "scale(1) rotate(0deg)";
+    e.currentTarget.style.boxShadow =
+      "0 25px 60px rgba(250,204,21,0.45), inset 0 2px 6px rgba(255,255,255,0.6)";
+  }}
+>
+  ⚡
+</button>
                 </div>
               </div>
             </div>
