@@ -6869,7 +6869,7 @@ function MiniCalendarioEventi({
                       lineHeight: 1.08,
                     }}
                   >
-                    Scrivi qui il tuo titolo
+                    Ti amo Luanina
                   </div>
 
                   <div
@@ -6881,7 +6881,7 @@ function MiniCalendarioEventi({
                       lineHeight: 1.35,
                     }}
                   >
-                    Sottotitolo personalizzabile
+                    E non sai quanto 
                   </div>
                 </div>
 
@@ -6891,7 +6891,7 @@ function MiniCalendarioEventi({
                     justifyContent: "center",
                   }}
                 >
-                  <button
+<button
   type="button"
   onClick={() => {
     setMostraPreviewHome((prev) => !prev);
@@ -6913,6 +6913,11 @@ function MiniCalendarioEventi({
     boxShadow:
       "0 25px 60px rgba(250,204,21,0.45), inset 0 2px 6px rgba(255,255,255,0.6)",
     transition: "all .25s ease",
+    display: "grid",
+    placeItems: "center",
+    padding: 0,
+    lineHeight: 1,
+    textAlign: "center",
   }}
   onMouseEnter={(e) => {
     e.currentTarget.style.transform = "scale(1.1) rotate(-3deg)";
@@ -6925,7 +6930,18 @@ function MiniCalendarioEventi({
       "0 25px 60px rgba(250,204,21,0.45), inset 0 2px 6px rgba(255,255,255,0.6)";
   }}
 >
-  ⚡
+  <span
+    style={{
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      width: "100%",
+      height: "100%",
+      transform: "translateY(-1px)",
+    }}
+  >
+    ⚡
+  </span>
 </button>
                 </div>
               </div>
