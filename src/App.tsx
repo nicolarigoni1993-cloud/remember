@@ -762,7 +762,8 @@ const categorieUscitaBase = useMemo(
 );
 
 
-
+const [mostraPreviewHome, setMostraPreviewHome] = useState(false);
+const [homePreviewTab, setHomePreviewTab] = useState<"oggi" | "domani">("oggi");
 
 
 
@@ -6719,269 +6720,554 @@ function MiniCalendarioEventi({
   </div>
 )}
 
-{pagina === "home" && (() => {
-  const oggi = new Date();
-  const oggiKey = oggi.toISOString().slice(0, 10);
 
-  const domani = new Date();
-  domani.setDate(domani.getDate() + 1);
-  const domaniKey = domani.toISOString().slice(0, 10);
 
-  const eventiAvviso = voci
-    .filter((v) => v.tipo === "scadenza" || v.tipo === "appuntamento")
-    .filter((v) => v.data === oggiKey || v.data === domaniKey)
-    .slice()
-    .sort((a, b) => {
-      const d = a.data.localeCompare(b.data);
-      if (d !== 0) return d;
-      return a.ora.localeCompare(b.ora);
-    });
 
-  const titoloAlert =
-    eventiAvviso.length === 0
-      ? "Nessun evento tra oggi e domani."
-      : eventiAvviso
-          .map((ev) => {
-            const when = ev.data === oggiKey ? "OGGI" : "DOMANI";
-            return `${when} • ${ev.ora} • ${ev.titolo}`;
-          })
-          .join("\n");
+{pagina === "home" && (
+  <div style={{ minHeight: "70vh", display: "grid", placeItems: "center", padding: 16 }}>
+    <div style={{ width: "min(520px, 100%)", display: "grid", gap: 20 }}>
+      {(() => {
+        const oggi = new Date();
+        const domani = new Date();
+        domani.setDate(domani.getDate() + 1);
 
-  return (
-    <div style={{ minHeight: "70vh", display: "grid", placeItems: "center", padding: 16 }}>
-      <div style={{ width: "min(520px, 100%)", display: "grid", gap: 20 }}>
-        <div
-          style={{
-            ...ui.card,
-            padding: 26,
-            textAlign: "center",
-            position: "relative",
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              top: 14,
-              right: 14,
-              zIndex: 3,
-            }}
-          >
-            <button
-              type="button"
-              onClick={() => alert(titoloAlert)}
-              title="Eventi di oggi e domani"
-              style={{
-                width: 52,
-                height: 52,
-                borderRadius: 999,
-                border:
-                  eventiAvviso.length > 0
-                    ? "1px solid rgba(245,158,11,0.30)"
-                    : "1px solid rgba(148,163,184,0.24)",
-                background:
-                  eventiAvviso.length > 0
-                    ? "linear-gradient(180deg, rgba(251,191,36,0.98), rgba(245,158,11,0.94))"
-                    : "linear-gradient(180deg, rgba(255,255,255,0.92), rgba(226,232,240,0.88))",
-                color:
-                  eventiAvviso.length > 0
-                    ? "rgba(120,53,15,0.98)"
-                    : "rgba(71,85,105,0.96)",
-                fontSize: 28,
-                fontWeight: 1000,
-                cursor: "pointer",
-                display: "grid",
-                placeItems: "center",
-                boxShadow:
-                  eventiAvviso.length > 0
-                    ? "0 18px 34px rgba(245,158,11,0.22)"
-                    : "0 14px 28px rgba(15,23,42,0.10)",
-                transition: "transform .18s ease, box-shadow .18s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px) scale(1.03)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0) scale(1)";
-              }}
-            >
-              !
-            </button>
+        const oggiKey = oggi.toISOString().slice(0, 10);
+        const domaniKey = domani.toISOString().slice(0, 10);
 
-            {eventiAvviso.length > 0 && (
+        const meseKeyOggi = yyyymmFromDate(oggi);
+        const meseKeyDomani = yyyymmFromDate(domani);
+
+        const eventiOggi = voci
+          .filter((v) => (v.tipo === "scadenza" || v.tipo === "appuntamento") && v.data === oggiKey)
+          .slice()
+          .sort((a, b) => a.ora.localeCompare(b.ora));
+
+        const eventiDomani = voci
+          .filter((v) => (v.tipo === "scadenza" || v.tipo === "appuntamento") && v.data === domaniKey)
+          .slice()
+          .sort((a, b) => a.ora.localeCompare(b.ora));
+
+        const turniOggi = turni
+          .filter((t) => t.data === oggiKey)
+          .slice()
+          .sort((a, b) => a.inizio.localeCompare(b.inizio));
+
+        const turniDomani = turni
+          .filter((t) => t.data === domaniKey)
+          .slice()
+          .sort((a, b) => a.inizio.localeCompare(b.inizio));
+
+        const usciteOggi = (incassi[meseKeyOggi]?.usciteExtra ?? [])
+          .filter((u) => u.data === oggiKey)
+          .slice()
+          .sort((a, b) => a.descrizione.localeCompare(b.descrizione));
+
+        const usciteDomani = (incassi[meseKeyDomani]?.usciteExtra ?? [])
+          .filter((u) => u.data === domaniKey)
+          .slice()
+          .sort((a, b) => a.descrizione.localeCompare(b.descrizione));
+
+        const tabCorrente = homePreviewTab === "oggi"
+          ? {
+              titolo: "Oggi",
+              dataLabel: formattaDataBreve(oggiKey),
+              eventi: eventiOggi,
+              turni: turniOggi,
+              uscite: usciteOggi,
+            }
+          : {
+              titolo: "Domani",
+              dataLabel: formattaDataBreve(domaniKey),
+              eventi: eventiDomani,
+              turni: turniDomani,
+              uscite: usciteDomani,
+            };
+
+        return (
+          <>
+            {/* LOGO + ALERT */}
+            <div style={{ ...ui.card, padding: 26, textAlign: "center" }}>
+              <RememberLogo size={64} centered />
+
               <div
                 style={{
-                  position: "absolute",
-                  top: -4,
-                  right: -4,
-                  minWidth: 22,
-                  height: 22,
-                  padding: "0 6px",
-                  borderRadius: 999,
-                  background: "linear-gradient(180deg, rgba(239,68,68,0.98), rgba(220,38,38,0.95))",
-                  color: "white",
-                  fontSize: 11,
-                  fontWeight: 1000,
+                  marginTop: 18,
                   display: "grid",
-                  placeItems: "center",
-                  boxShadow: "0 10px 20px rgba(239,68,68,0.24)",
-                }}
-              >
-                {eventiAvviso.length}
-              </div>
-            )}
-          </div>
-
-          <RememberLogo size={64} centered />
-
-          <div
-            style={{
-              marginTop: 18,
-              display: "grid",
-              gap: 8,
-              textAlign: "center",
-            }}
-          >
-            <div
-              style={{
-                fontSize: 22,
-                fontWeight: 1000,
-                letterSpacing: -0.4,
-                color: "rgba(241,245,249,0.98)",
-                textShadow: "0 10px 30px rgba(79,70,229,0.18)",
-                lineHeight: 1.08,
-              }}
-            >
-              Scrivi qui il tuo titolo
-            </div>
-
-            <div
-              style={{
-                fontSize: 14,
-                fontWeight: 800,
-                color: "rgba(191,219,254,0.88)",
-                letterSpacing: 0.2,
-                lineHeight: 1.35,
-              }}
-            >
-              Sottotitolo personalizzabile
-            </div>
-          </div>
-
-          {eventiAvviso.length > 0 && (
-            <div
-              style={{
-                marginTop: 18,
-                display: "grid",
-                gap: 8,
-                textAlign: "left",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 12,
-                  fontWeight: 950,
-                  color: "rgba(251,191,36,0.98)",
-                  letterSpacing: 0.35,
-                  textTransform: "uppercase",
+                  gap: 8,
                   textAlign: "center",
                 }}
               >
-                Avvisi rapidi
+                <div
+                  style={{
+                    fontSize: 22,
+                    fontWeight: 1000,
+                    letterSpacing: -0.4,
+                    color: "rgba(241,245,249,0.98)",
+                    textShadow: "0 10px 30px rgba(79,70,229,0.18)",
+                    lineHeight: 1.08,
+                  }}
+                >
+                  Scrivi qui il tuo titolo
+                </div>
+
+                <div
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 800,
+                    color: "rgba(191,219,254,0.88)",
+                    letterSpacing: 0.2,
+                    lineHeight: 1.35,
+                  }}
+                >
+                  Sottotitolo personalizzabile
+                </div>
               </div>
 
-              <div style={{ display: "grid", gap: 8 }}>
-                {eventiAvviso.slice(0, 2).map((ev) => (
-                  <div
-                    key={ev.id}
-                    style={{
-                      padding: "10px 12px",
-                      borderRadius: 16,
-                      border: "1px solid rgba(245,158,11,0.20)",
-                      background:
-                        "linear-gradient(180deg, rgba(255,251,235,0.96), rgba(254,243,199,0.88))",
-                      color: "rgba(120,53,15,0.98)",
-                      fontSize: 12,
-                      fontWeight: 900,
-                      lineHeight: 1.35,
-                      boxShadow: "0 10px 20px rgba(245,158,11,0.10)",
-                    }}
-                  >
-                    <div style={{ fontSize: 11, fontWeight: 1000, opacity: 0.82 }}>
-                      {ev.data === oggiKey ? "OGGI" : "DOMANI"} • {ev.ora}
-                    </div>
-                    <div style={{ marginTop: 2 }}>{ev.titolo}</div>
-                  </div>
-                ))}
+              <div
+                style={{
+                  marginTop: 18,
+                  display: "flex",
+                  justifyContent: "center",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMostraPreviewHome((prev) => !prev);
+                    setHomePreviewTab("oggi");
+                  }}
+                  title="Riepilogo rapido oggi e domani"
+                  style={{
+                    width: 62,
+                    height: 62,
+                    borderRadius: 999,
+                    border: "1px solid rgba(250,204,21,0.34)",
+                    background:
+                      "linear-gradient(180deg, rgba(250,204,21,0.30), rgba(234,179,8,0.18))",
+                    color: "rgba(254,252,232,0.98)",
+                    fontSize: 28,
+                    fontWeight: 1000,
+                    cursor: "pointer",
+                    boxShadow: "0 18px 38px rgba(250,204,21,0.20)",
+                    transition: "transform .18s ease, box-shadow .18s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateY(-2px) scale(1.03)";
+                    e.currentTarget.style.boxShadow = "0 24px 46px rgba(250,204,21,0.28)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateY(0) scale(1)";
+                    e.currentTarget.style.boxShadow = "0 18px 38px rgba(250,204,21,0.20)";
+                  }}
+                >
+                  !
+                </button>
               </div>
             </div>
-          )}
-        </div>
 
-        <div style={{ display: "grid", gap: 14 }}>
-          <button
-            data-chip="1"
-            onClick={() => setPagina("aggiungi")}
-            style={{
-              padding: "22px 18px",
-              borderRadius: 26,
-              border: "1px solid rgba(16,185,129,0.28)",
-              background:
-                "linear-gradient(180deg, rgba(16,185,129,0.30), rgba(5,150,105,0.18))",
-              color: "rgba(6,95,70,0.98)",
-              fontSize: 18,
-              fontWeight: 1000,
-              letterSpacing: 0.3,
-              boxShadow: "0 22px 50px rgba(16,185,129,0.25)",
-            }}
-          >
-            ➕ AGGIUNGI
-          </button>
+            {/* CARD PREVIEW OGGI / DOMANI */}
+            {mostraPreviewHome && (
+              <div
+                style={{
+                  ...ui.card,
+                  padding: 18,
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  background:
+                    "linear-gradient(180deg, rgba(2,6,23,0.94), rgba(15,23,42,0.90))",
+                  boxShadow: "0 24px 60px rgba(0,0,0,0.36)",
+                  display: "grid",
+                  gap: 14,
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 10,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <div>
+                    <div
+                      style={{
+                        fontSize: 18,
+                        fontWeight: 1000,
+                        color: "rgba(241,245,249,0.98)",
+                        letterSpacing: -0.3,
+                      }}
+                    >
+                      Riepilogo rapido
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 4,
+                        fontSize: 12,
+                        fontWeight: 800,
+                        color: "rgba(191,219,254,0.78)",
+                      }}
+                    >
+                      Oggi e domani in un colpo d’occhio
+                    </div>
+                  </div>
 
-          <button
-            data-chip="1"
-            onClick={() => {
-              setConsultaSezione("menu");
-              setPagina("consulta");
-            }}
-            style={{
-              padding: "22px 18px",
-              borderRadius: 26,
-              border: "1px solid rgba(79,70,229,0.28)",
-              background:
-                "linear-gradient(180deg, rgba(79,70,229,0.30), rgba(124,58,237,0.18))",
-              color: "rgba(67,56,202,0.98)",
-              fontSize: 18,
-              fontWeight: 1000,
-              letterSpacing: 0.3,
-              boxShadow: "0 22px 50px rgba(79,70,229,0.25)",
-            }}
-          >
-            📊 CONSULTA
-          </button>
+                  <button
+                    type="button"
+                    onClick={() => setMostraPreviewHome(false)}
+                    style={{
+                      ...chip(false),
+                      justifyContent: "center",
+                      display: "inline-flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    Chiudi
+                  </button>
+                </div>
 
-          <button
-            onClick={() => apriNuova()}
-            style={{
-              padding: "22px 18px",
-              borderRadius: 26,
-              border: "1px solid rgba(249,115,22,0.28)",
-              background:
-                "linear-gradient(180deg, rgba(249,115,22,0.30), rgba(234,88,12,0.18))",
-              color: "rgba(154,52,18,0.98)",
-              fontSize: 18,
-              fontWeight: 1000,
-              letterSpacing: 0.3,
-              boxShadow: "0 22px 50px rgba(249,115,22,0.25)",
-            }}
-          >
-            📝 NOTA RAPIDA
-          </button>
-        </div>
-      </div>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                    gap: 10,
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setHomePreviewTab("oggi")}
+                    style={{
+                      border: homePreviewTab === "oggi"
+                        ? "1px solid rgba(79,70,229,0.34)"
+                        : "1px solid rgba(148,163,184,0.18)",
+                      borderRadius: 18,
+                      padding: "14px 16px",
+                      cursor: "pointer",
+                      fontWeight: 1000,
+                      fontSize: 15,
+                      color:
+                        homePreviewTab === "oggi"
+                          ? "rgba(255,255,255,0.98)"
+                          : "rgba(226,232,240,0.88)",
+                      background:
+                        homePreviewTab === "oggi"
+                          ? "linear-gradient(180deg, rgba(79,70,229,0.34), rgba(124,58,237,0.22))"
+                          : "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))",
+                      boxShadow:
+                        homePreviewTab === "oggi"
+                          ? "0 18px 34px rgba(79,70,229,0.20)"
+                          : "0 10px 20px rgba(0,0,0,0.18)",
+                    }}
+                  >
+                    OGGI
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setHomePreviewTab("domani")}
+                    style={{
+                      border: homePreviewTab === "domani"
+                        ? "1px solid rgba(16,185,129,0.34)"
+                        : "1px solid rgba(148,163,184,0.18)",
+                      borderRadius: 18,
+                      padding: "14px 16px",
+                      cursor: "pointer",
+                      fontWeight: 1000,
+                      fontSize: 15,
+                      color:
+                        homePreviewTab === "domani"
+                          ? "rgba(255,255,255,0.98)"
+                          : "rgba(226,232,240,0.88)",
+                      background:
+                        homePreviewTab === "domani"
+                          ? "linear-gradient(180deg, rgba(16,185,129,0.34), rgba(5,150,105,0.22))"
+                          : "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))",
+                      boxShadow:
+                        homePreviewTab === "domani"
+                          ? "0 18px 34px rgba(16,185,129,0.18)"
+                          : "0 10px 20px rgba(0,0,0,0.18)",
+                    }}
+                  >
+                    DOMANI
+                  </button>
+                </div>
+
+                <div
+                  style={{
+                    padding: 16,
+                    borderRadius: 22,
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    background:
+                      "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))",
+                    display: "grid",
+                    gap: 14,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      gap: 10,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 17,
+                        fontWeight: 1000,
+                        color: "rgba(248,250,252,0.98)",
+                      }}
+                    >
+                      {tabCorrente.titolo}
+                    </div>
+
+                    <div
+                      style={{
+                        padding: "7px 11px",
+                        borderRadius: 999,
+                        background: "rgba(255,255,255,0.10)",
+                        border: "1px solid rgba(255,255,255,0.10)",
+                        fontSize: 12,
+                        fontWeight: 900,
+                        color: "rgba(191,219,254,0.90)",
+                      }}
+                    >
+                      {tabCorrente.dataLabel}
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+                      gap: 10,
+                    }}
+                  >
+                    <div
+                      style={{
+                        padding: 12,
+                        borderRadius: 16,
+                        background: "rgba(79,70,229,0.14)",
+                        border: "1px solid rgba(79,70,229,0.18)",
+                        display: "grid",
+                        gap: 4,
+                      }}
+                    >
+                      <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(199,210,254,0.95)" }}>
+                        Eventi
+                      </div>
+                      <div style={{ fontSize: 20, fontWeight: 1000, color: "rgba(255,255,255,0.98)" }}>
+                        {tabCorrente.eventi.length}
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        padding: 12,
+                        borderRadius: 16,
+                        background: "rgba(249,115,22,0.14)",
+                        border: "1px solid rgba(249,115,22,0.18)",
+                        display: "grid",
+                        gap: 4,
+                      }}
+                    >
+                      <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(254,215,170,0.95)" }}>
+                        Turni
+                      </div>
+                      <div style={{ fontSize: 20, fontWeight: 1000, color: "rgba(255,255,255,0.98)" }}>
+                        {tabCorrente.turni.length}
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        padding: 12,
+                        borderRadius: 16,
+                        background: "rgba(239,68,68,0.14)",
+                        border: "1px solid rgba(239,68,68,0.18)",
+                        display: "grid",
+                        gap: 4,
+                      }}
+                    >
+                      <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(254,202,202,0.95)" }}>
+                        Uscite
+                      </div>
+                      <div style={{ fontSize: 20, fontWeight: 1000, color: "rgba(255,255,255,0.98)" }}>
+                        {tabCorrente.uscite.length}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gap: 10 }}>
+                    {tabCorrente.eventi.length === 0 &&
+                    tabCorrente.turni.length === 0 &&
+                    tabCorrente.uscite.length === 0 ? (
+                      <div
+                        style={{
+                          padding: 14,
+                          borderRadius: 18,
+                          border: "1px solid rgba(148,163,184,0.14)",
+                          background: "rgba(255,255,255,0.06)",
+                          fontSize: 13,
+                          fontWeight: 850,
+                          color: "rgba(226,232,240,0.78)",
+                          textAlign: "center",
+                        }}
+                      >
+                        Nessun elemento previsto.
+                      </div>
+                    ) : (
+                      <>
+                        {tabCorrente.eventi.map((ev) => (
+                          <div
+                            key={ev.id}
+                            style={{
+                              padding: 12,
+                              borderRadius: 16,
+                              background: "rgba(79,70,229,0.10)",
+                              border: "1px solid rgba(79,70,229,0.16)",
+                              display: "grid",
+                              gap: 4,
+                            }}
+                          >
+                            <div style={{ fontSize: 11, fontWeight: 950, color: "rgba(199,210,254,0.96)" }}>
+                              EVENTO
+                            </div>
+                            <div style={{ fontSize: 14, fontWeight: 950, color: "rgba(255,255,255,0.98)" }}>
+                              {ev.titolo}
+                            </div>
+                            <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(191,219,254,0.84)" }}>
+                              {ev.ora}
+                            </div>
+                          </div>
+                        ))}
+
+                        {tabCorrente.turni.map((t) => (
+                          <div
+                            key={t.id}
+                            style={{
+                              padding: 12,
+                              borderRadius: 16,
+                              background: "rgba(249,115,22,0.10)",
+                              border: "1px solid rgba(249,115,22,0.16)",
+                              display: "grid",
+                              gap: 4,
+                            }}
+                          >
+                            <div style={{ fontSize: 11, fontWeight: 950, color: "rgba(254,215,170,0.96)" }}>
+                              TURNO
+                            </div>
+                            <div style={{ fontSize: 14, fontWeight: 950, color: "rgba(255,255,255,0.98)" }}>
+                              {descrizioneTurnoBreve(t.inizio, t.fine, t.note)}
+                            </div>
+                            <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(254,226,226,0.84)" }}>
+                              {normalizeTurnoLabel(t.inizio, t.fine, t.note) === "R" ||
+                              normalizeTurnoLabel(t.inizio, t.fine, t.note) === "F" ||
+                              normalizeTurnoLabel(t.inizio, t.fine, t.note) === "A"
+                                ? t.note || "Giornata speciale"
+                                : `${t.inizio} • ${t.fine}`}
+                            </div>
+                          </div>
+                        ))}
+
+                        {tabCorrente.uscite.map((u) => (
+                          <div
+                            key={u.id}
+                            style={{
+                              padding: 12,
+                              borderRadius: 16,
+                              background: "rgba(239,68,68,0.10)",
+                              border: "1px solid rgba(239,68,68,0.16)",
+                              display: "grid",
+                              gap: 4,
+                            }}
+                          >
+                            <div style={{ fontSize: 11, fontWeight: 950, color: "rgba(254,202,202,0.96)" }}>
+                              USCITA
+                            </div>
+                            <div style={{ fontSize: 14, fontWeight: 950, color: "rgba(255,255,255,0.98)" }}>
+                              {u.descrizione}
+                            </div>
+                            <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(254,226,226,0.84)" }}>
+                              {euro(u.importo)}
+                              {u.nota ? ` • ${u.nota}` : ""}
+                            </div>
+                          </div>
+                        ))}
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* BOTTONI PRINCIPALI */}
+            <div style={{ display: "grid", gap: 14 }}>
+              <button
+                data-chip="1"
+                onClick={() => setPagina("aggiungi")}
+                style={{
+                  padding: "22px 18px",
+                  borderRadius: 26,
+                  border: "1px solid rgba(16,185,129,0.28)",
+                  background:
+                    "linear-gradient(180deg, rgba(16,185,129,0.30), rgba(5,150,105,0.18))",
+                  color: "rgba(6,95,70,0.98)",
+                  fontSize: 18,
+                  fontWeight: 1000,
+                  letterSpacing: 0.3,
+                  boxShadow: "0 22px 50px rgba(16,185,129,0.25)",
+                }}
+              >
+                ➕ AGGIUNGI
+              </button>
+
+              <button
+                data-chip="1"
+                onClick={() => {
+                  setConsultaSezione("menu");
+                  setPagina("consulta");
+                }}
+                style={{
+                  padding: "22px 18px",
+                  borderRadius: 26,
+                  border: "1px solid rgba(79,70,229,0.28)",
+                  background:
+                    "linear-gradient(180deg, rgba(79,70,229,0.30), rgba(124,58,237,0.18))",
+                  color: "rgba(67,56,202,0.98)",
+                  fontSize: 18,
+                  fontWeight: 1000,
+                  letterSpacing: 0.3,
+                  boxShadow: "0 22px 50px rgba(79,70,229,0.25)",
+                }}
+              >
+                📊 CONSULTA
+              </button>
+
+              <button
+                onClick={() => apriNuova()}
+                style={{
+                  padding: "22px 18px",
+                  borderRadius: 26,
+                  border: "1px solid rgba(249,115,22,0.28)",
+                  background:
+                    "linear-gradient(180deg, rgba(249,115,22,0.30), rgba(234,88,12,0.18))",
+                  color: "rgba(154,52,18,0.98)",
+                  fontSize: 18,
+                  fontWeight: 1000,
+                  letterSpacing: 0.3,
+                  boxShadow: "0 22px 50px rgba(249,115,22,0.25)",
+                }}
+              >
+                📝 NOTA RAPIDA
+              </button>
+            </div>
+          </>
+        );
+      })()}
     </div>
-  );
-})()}
+  </div>
+)}
 
 
 
