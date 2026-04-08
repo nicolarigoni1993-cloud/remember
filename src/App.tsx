@@ -712,7 +712,7 @@ export default function App() {
   const [loginNome, setLoginNome] = useState("");
   const [loginPick, setLoginPick] = useState<string | null>(null);
 
- const [pagina, setPagina] = useState<"home" | "aggiungi" | "consulta" | "agenda" | "controllo" | "archivio">("home");
+ const [pagina, setPagina] = useState<"home" | "aggiungi" | "consulta" | "agenda" | "controllo" | "archivio" | "note">("home");
  const [consultaSezione, setConsultaSezione] = useState<"menu" | "turni" | "finanza" | "eventi">("menu");
 const [aggiungiSezione, setAggiungiSezione] = useState<"menu" | "movimenti" | "eventi">("menu");
   const [mostraForm, setMostraForm] = useState(false);
@@ -838,7 +838,14 @@ const [categorieUscitaCustom] = useState<string[]>(() => {
   const [turnoDataFine, setTurnoDataFine] = useState(new Date().toISOString().slice(0, 10));
   const [turnoTipoAssenza, setTurnoTipoAssenza] = useState<"malattia" | "104" | "maternita-facoltativa" | "permesso-sindacale">("malattia");
 
+  const [note, setNote] = useState<{ id: string; testo: string }[]>([]);
+const [notaInput, setNotaInput] = useState("");
+const [notaInModifica, setNotaInModifica] = useState<string | null>(null);
+
   const presetTurni = ["00-06", "06-12", "12-18", "18-24", "6-14", "14-22", "22-06", "8-18", "8-17"];
+
+
+
 
 const applicaPresetTurno = (val: string) => {
   setTurnoPreset(val);
@@ -1139,6 +1146,20 @@ const ui = useMemo(() => {
 
 
 
+useEffect(() => {
+  if (!currentUserId) return;
+  const raw = localStorage.getItem(`remember_note_${currentUserId}`);
+  if (raw) {
+    try {
+      setNote(JSON.parse(raw));
+    } catch {}
+  }
+}, [currentUserId]);
+
+useEffect(() => {
+  if (!currentUserId) return;
+  localStorage.setItem(`remember_note_${currentUserId}`, JSON.stringify(note));
+}, [note, currentUserId]);
 
 
 
@@ -1147,8 +1168,34 @@ const ui = useMemo(() => {
 
 
 
+function salvaNota() {
+  if (!notaInput.trim()) return;
 
+  if (notaInModifica) {
+    setNote((prev) =>
+      prev.map((n) =>
+        n.id === notaInModifica ? { ...n, testo: notaInput } : n
+      )
+    );
+    setNotaInModifica(null);
+  } else {
+    setNote((prev) => [
+      { id: safeUUID(), testo: notaInput },
+      ...prev,
+    ]);
+  }
 
+  setNotaInput("");
+}
+
+function eliminaNota(id: string) {
+  setNote((prev) => prev.filter((n) => n.id !== id));
+}
+
+function modificaNota(n: any) {
+  setNotaInput(n.testo);
+  setNotaInModifica(n.id);
+}
 
 
 
@@ -7350,7 +7397,7 @@ function MiniCalendarioEventi({
               </button>
 
               <button
-                onClick={() => apriNuova()}
+                onClick={() => setPagina("note")}
                 style={{
                   padding: "22px 18px",
                   borderRadius: 28,
@@ -9118,6 +9165,137 @@ function MiniCalendarioEventi({
     </div>
   </div>
 )}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{pagina === "note" && (
+  <div style={{ minHeight: "70vh", display: "grid", placeItems: "center", padding: 16 }}>
+    <div style={{ width: "min(900px, 100%)", display: "grid", gap: 20 }}>
+
+      {/* HEADER */}
+      <div style={{ textAlign: "center" }}>
+        <div style={{
+          fontSize: 34,
+          fontWeight: 1000,
+          color: "rgba(241,245,249,0.98)"
+        }}>
+          ✒️ Le tue Note
+        </div>
+
+        <div style={{
+          fontSize: 14,
+          color: "rgba(191,219,254,0.85)",
+          marginTop: 6
+        }}>
+          Scrivi, salva e gestisci tutto al volo
+        </div>
+      </div>
+
+      {/* INPUT */}
+      <div style={{
+        ...ui.card,
+        padding: 18,
+        display: "grid",
+        gap: 12
+      }}>
+        <textarea
+          value={notaInput}
+          onChange={(e) => setNotaInput(e.target.value)}
+          placeholder="Scrivi qualcosa..."
+          style={{
+            width: "100%",
+            minHeight: 100,
+            borderRadius: 16,
+            border: "1px solid rgba(255,255,255,0.1)",
+            padding: 12,
+            fontSize: 14,
+            background: "rgba(255,255,255,0.05)",
+            color: "white"
+          }}
+        />
+
+        <button
+          onClick={salvaNota}
+          style={{
+            padding: "14px",
+            borderRadius: 16,
+            border: "1px solid rgba(16,185,129,0.3)",
+            background: "linear-gradient(180deg, rgba(16,185,129,0.4), rgba(5,150,105,0.2))",
+            fontWeight: 1000,
+            cursor: "pointer"
+          }}
+        >
+          💾 Salva Nota
+        </button>
+      </div>
+
+      {/* NOTE BOLLE */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+        gap: 14
+      }}>
+        {note.length === 0 ? (
+          <div style={{
+            textAlign: "center",
+            opacity: 0.7,
+            fontWeight: 800
+          }}>
+            Nessuna nota presente
+          </div>
+        ) : (
+          note.map((n) => (
+            <div
+              key={n.id}
+              style={{
+                padding: 16,
+                borderRadius: 20,
+                background: "linear-gradient(180deg, rgba(79,70,229,0.3), rgba(124,58,237,0.15))",
+                border: "1px solid rgba(79,70,229,0.2)",
+                boxShadow: "0 10px 25px rgba(79,70,229,0.2)",
+                cursor: "pointer",
+                transition: "transform .2s"
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.05)"}
+              onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
+            >
+              <div style={{
+                fontSize: 14,
+                fontWeight: 900,
+                color: "white"
+              }}>
+                {n.testo}
+              </div>
+
+              <div style={{
+                marginTop: 10,
+                display: "flex",
+                gap: 8
+              }}>
+                <button onClick={() => modificaNota(n)} style={chip(false)}>Modifica</button>
+                <button onClick={() => eliminaNota(n.id)} style={chip(false)}>Elimina</button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+    </div>
+  </div>
+)}
+
 
 
 
