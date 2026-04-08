@@ -6725,7 +6725,7 @@ function MiniCalendarioEventi({
 
 {pagina === "home" && (
   <div style={{ minHeight: "70vh", display: "grid", placeItems: "center", padding: 16 }}>
-    <div style={{ width: "min(520px, 100%)", display: "grid", gap: 20 }}>
+    <div style={{ width: "min(560px, 100%)", display: "grid", gap: 20 }}>
       {(() => {
         const oggi = new Date();
         const domani = new Date();
@@ -6767,105 +6767,133 @@ function MiniCalendarioEventi({
           .slice()
           .sort((a, b) => a.descrizione.localeCompare(b.descrizione));
 
-        const tabCorrente = homePreviewTab === "oggi"
-          ? {
-              titolo: "Oggi",
-              dataLabel: formattaDataBreve(oggiKey),
-              eventi: eventiOggi,
-              turni: turniOggi,
-              uscite: usciteOggi,
-            }
-          : {
-              titolo: "Domani",
-              dataLabel: formattaDataBreve(domaniKey),
-              eventi: eventiDomani,
-              turni: turniDomani,
-              uscite: usciteDomani,
-            };
+        const tabCorrente =
+          homePreviewTab === "oggi"
+            ? {
+                titolo: "Oggi",
+                dataKey: oggiKey,
+                dataLabel: formattaDataBreve(oggiKey),
+                eventi: eventiOggi,
+                turni: turniOggi,
+                uscite: usciteOggi,
+              }
+            : {
+                titolo: "Domani",
+                dataKey: domaniKey,
+                dataLabel: formattaDataBreve(domaniKey),
+                eventi: eventiDomani,
+                turni: turniDomani,
+                uscite: usciteDomani,
+              };
+
+        const totaleElementi =
+          tabCorrente.eventi.length + tabCorrente.turni.length + tabCorrente.uscite.length;
 
         return (
           <>
-            {/* LOGO + ALERT */}
-            <div style={{ ...ui.card, padding: 26, textAlign: "center" }}>
-              <RememberLogo size={64} centered />
-
+            <div
+              style={{
+                ...ui.card,
+                padding: 26,
+                textAlign: "center",
+                position: "relative",
+                overflow: "hidden",
+              }}
+            >
               <div
                 style={{
-                  marginTop: 18,
-                  display: "grid",
-                  gap: 8,
-                  textAlign: "center",
+                  position: "absolute",
+                  inset: 0,
+                  background:
+                    "radial-gradient(700px 220px at 0% 0%, rgba(79,70,229,0.14), transparent 60%), radial-gradient(700px 220px at 100% 0%, rgba(16,185,129,0.12), transparent 60%), radial-gradient(500px 180px at 50% 100%, rgba(249,115,22,0.10), transparent 60%)",
+                  pointerEvents: "none",
                 }}
-              >
+              />
+
+              <div style={{ position: "relative", zIndex: 1, display: "grid", gap: 18 }}>
+                <RememberLogo size={64} centered />
+
                 <div
                   style={{
-                    fontSize: 22,
-                    fontWeight: 1000,
-                    letterSpacing: -0.4,
-                    color: "rgba(241,245,249,0.98)",
-                    textShadow: "0 10px 30px rgba(79,70,229,0.18)",
-                    lineHeight: 1.08,
+                    display: "grid",
+                    gap: 8,
+                    textAlign: "center",
                   }}
                 >
-                  Scrivi qui il tuo titolo
+                  <div
+                    style={{
+                      fontSize: 22,
+                      fontWeight: 1000,
+                      letterSpacing: -0.4,
+                      color: "rgba(241,245,249,0.98)",
+                      textShadow: "0 10px 30px rgba(79,70,229,0.18)",
+                      lineHeight: 1.08,
+                    }}
+                  >
+                    Scrivi qui il tuo titolo
+                  </div>
+
+                  <div
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 800,
+                      color: "rgba(191,219,254,0.88)",
+                      letterSpacing: 0.2,
+                      lineHeight: 1.35,
+                    }}
+                  >
+                    Sottotitolo personalizzabile
+                  </div>
                 </div>
 
                 <div
                   style={{
-                    fontSize: 14,
-                    fontWeight: 800,
-                    color: "rgba(191,219,254,0.88)",
-                    letterSpacing: 0.2,
-                    lineHeight: 1.35,
+                    display: "flex",
+                    justifyContent: "center",
                   }}
                 >
-                  Sottotitolo personalizzabile
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMostraPreviewHome((prev) => !prev);
+                      setHomePreviewTab("oggi");
+                    }}
+                    title="Riepilogo rapido oggi e domani"
+                    style={{
+                      width: 68,
+                      height: 68,
+                      borderRadius: 999,
+                      border: "1px solid rgba(250,204,21,0.34)",
+                      background:
+                        "linear-gradient(180deg, rgba(250,204,21,0.34), rgba(234,179,8,0.16))",
+                      color: "rgba(255,251,235,0.98)",
+                      fontSize: 30,
+                      fontWeight: 1000,
+                      cursor: "pointer",
+                      boxShadow:
+                        "0 20px 44px rgba(250,204,21,0.26), inset 0 1px 0 rgba(255,255,255,0.24)",
+                      transition: "transform .18s ease, box-shadow .18s ease, filter .18s ease",
+                      position: "relative",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "translateY(-2px) scale(1.04)";
+                      e.currentTarget.style.boxShadow =
+                        "0 28px 54px rgba(250,204,21,0.34), inset 0 1px 0 rgba(255,255,255,0.24)";
+                      e.currentTarget.style.filter = "brightness(1.04)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "translateY(0) scale(1)";
+                      e.currentTarget.style.boxShadow =
+                        "0 20px 44px rgba(250,204,21,0.26), inset 0 1px 0 rgba(255,255,255,0.24)";
+                      e.currentTarget.style.filter = "brightness(1)";
+                    }}
+                  >
+                    !
+                  </button>
                 </div>
-              </div>
-
-              <div
-                style={{
-                  marginTop: 18,
-                  display: "flex",
-                  justifyContent: "center",
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMostraPreviewHome((prev) => !prev);
-                    setHomePreviewTab("oggi");
-                  }}
-                  title="Riepilogo rapido oggi e domani"
-                  style={{
-                    width: 62,
-                    height: 62,
-                    borderRadius: 999,
-                    border: "1px solid rgba(250,204,21,0.34)",
-                    background:
-                      "linear-gradient(180deg, rgba(250,204,21,0.30), rgba(234,179,8,0.18))",
-                    color: "rgba(254,252,232,0.98)",
-                    fontSize: 28,
-                    fontWeight: 1000,
-                    cursor: "pointer",
-                    boxShadow: "0 18px 38px rgba(250,204,21,0.20)",
-                    transition: "transform .18s ease, box-shadow .18s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateY(-2px) scale(1.03)";
-                    e.currentTarget.style.boxShadow = "0 24px 46px rgba(250,204,21,0.28)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "translateY(0) scale(1)";
-                    e.currentTarget.style.boxShadow = "0 18px 38px rgba(250,204,21,0.20)";
-                  }}
-                >
-                  !
-                </button>
               </div>
             </div>
 
-            {/* CARD PREVIEW OGGI / DOMANI */}
             {mostraPreviewHome && (
               <div
                 style={{
@@ -6873,135 +6901,26 @@ function MiniCalendarioEventi({
                   padding: 18,
                   border: "1px solid rgba(255,255,255,0.08)",
                   background:
-                    "linear-gradient(180deg, rgba(2,6,23,0.94), rgba(15,23,42,0.90))",
-                  boxShadow: "0 24px 60px rgba(0,0,0,0.36)",
+                    "linear-gradient(180deg, rgba(2,6,23,0.95), rgba(15,23,42,0.92))",
+                  boxShadow:
+                    "0 26px 64px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.04)",
                   display: "grid",
-                  gap: 14,
+                  gap: 16,
+                  position: "relative",
+                  overflow: "hidden",
                 }}
               >
                 <div
                   style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: 10,
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <div>
-                    <div
-                      style={{
-                        fontSize: 18,
-                        fontWeight: 1000,
-                        color: "rgba(241,245,249,0.98)",
-                        letterSpacing: -0.3,
-                      }}
-                    >
-                      Riepilogo rapido
-                    </div>
-                    <div
-                      style={{
-                        marginTop: 4,
-                        fontSize: 12,
-                        fontWeight: 800,
-                        color: "rgba(191,219,254,0.78)",
-                      }}
-                    >
-                      Oggi e domani in un colpo d’occhio
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setMostraPreviewHome(false)}
-                    style={{
-                      ...chip(false),
-                      justifyContent: "center",
-                      display: "inline-flex",
-                      alignItems: "center",
-                    }}
-                  >
-                    Chiudi
-                  </button>
-                </div>
-
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-                    gap: 10,
-                  }}
-                >
-                  <button
-                    type="button"
-                    onClick={() => setHomePreviewTab("oggi")}
-                    style={{
-                      border: homePreviewTab === "oggi"
-                        ? "1px solid rgba(79,70,229,0.34)"
-                        : "1px solid rgba(148,163,184,0.18)",
-                      borderRadius: 18,
-                      padding: "14px 16px",
-                      cursor: "pointer",
-                      fontWeight: 1000,
-                      fontSize: 15,
-                      color:
-                        homePreviewTab === "oggi"
-                          ? "rgba(255,255,255,0.98)"
-                          : "rgba(226,232,240,0.88)",
-                      background:
-                        homePreviewTab === "oggi"
-                          ? "linear-gradient(180deg, rgba(79,70,229,0.34), rgba(124,58,237,0.22))"
-                          : "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))",
-                      boxShadow:
-                        homePreviewTab === "oggi"
-                          ? "0 18px 34px rgba(79,70,229,0.20)"
-                          : "0 10px 20px rgba(0,0,0,0.18)",
-                    }}
-                  >
-                    OGGI
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setHomePreviewTab("domani")}
-                    style={{
-                      border: homePreviewTab === "domani"
-                        ? "1px solid rgba(16,185,129,0.34)"
-                        : "1px solid rgba(148,163,184,0.18)",
-                      borderRadius: 18,
-                      padding: "14px 16px",
-                      cursor: "pointer",
-                      fontWeight: 1000,
-                      fontSize: 15,
-                      color:
-                        homePreviewTab === "domani"
-                          ? "rgba(255,255,255,0.98)"
-                          : "rgba(226,232,240,0.88)",
-                      background:
-                        homePreviewTab === "domani"
-                          ? "linear-gradient(180deg, rgba(16,185,129,0.34), rgba(5,150,105,0.22))"
-                          : "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))",
-                      boxShadow:
-                        homePreviewTab === "domani"
-                          ? "0 18px 34px rgba(16,185,129,0.18)"
-                          : "0 10px 20px rgba(0,0,0,0.18)",
-                    }}
-                  >
-                    DOMANI
-                  </button>
-                </div>
-
-                <div
-                  style={{
-                    padding: 16,
-                    borderRadius: 22,
-                    border: "1px solid rgba(255,255,255,0.08)",
+                    position: "absolute",
+                    inset: 0,
                     background:
-                      "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))",
-                    display: "grid",
-                    gap: 14,
+                      "radial-gradient(520px 180px at 0% 0%, rgba(79,70,229,0.14), transparent 60%), radial-gradient(520px 180px at 100% 0%, rgba(16,185,129,0.12), transparent 60%), radial-gradient(460px 180px at 50% 100%, rgba(250,204,21,0.08), transparent 60%)",
+                    pointerEvents: "none",
                   }}
-                >
+                />
+
+                <div style={{ position: "relative", zIndex: 1, display: "grid", gap: 16 }}>
                   <div
                     style={{
                       display: "flex",
@@ -7011,204 +6930,378 @@ function MiniCalendarioEventi({
                       flexWrap: "wrap",
                     }}
                   >
-                    <div
-                      style={{
-                        fontSize: 17,
-                        fontWeight: 1000,
-                        color: "rgba(248,250,252,0.98)",
-                      }}
-                    >
-                      {tabCorrente.titolo}
+                    <div style={{ display: "grid", gap: 4, textAlign: "left" }}>
+                      <div
+                        style={{
+                          fontSize: 18,
+                          fontWeight: 1000,
+                          color: "rgba(241,245,249,0.98)",
+                          letterSpacing: -0.3,
+                        }}
+                      >
+                        Centro rapido
+                      </div>
+
+                      <div
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 800,
+                          color: "rgba(191,219,254,0.78)",
+                        }}
+                      >
+                        Eventi, turni e uscite di oggi e domani
+                      </div>
                     </div>
 
-                    <div
+                    <button
+                      type="button"
+                      onClick={() => setMostraPreviewHome(false)}
                       style={{
-                        padding: "7px 11px",
-                        borderRadius: 999,
-                        background: "rgba(255,255,255,0.10)",
-                        border: "1px solid rgba(255,255,255,0.10)",
-                        fontSize: 12,
-                        fontWeight: 900,
-                        color: "rgba(191,219,254,0.90)",
+                        ...chip(false),
+                        justifyContent: "center",
+                        display: "inline-flex",
+                        alignItems: "center",
                       }}
                     >
-                      {tabCorrente.dataLabel}
-                    </div>
+                      Chiudi
+                    </button>
                   </div>
 
                   <div
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+                      gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
                       gap: 10,
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setHomePreviewTab("oggi")}
+                      style={{
+                        border:
+                          homePreviewTab === "oggi"
+                            ? "1px solid rgba(79,70,229,0.34)"
+                            : "1px solid rgba(148,163,184,0.18)",
+                        borderRadius: 20,
+                        padding: "14px 16px",
+                        cursor: "pointer",
+                        fontWeight: 1000,
+                        fontSize: 15,
+                        color:
+                          homePreviewTab === "oggi"
+                            ? "rgba(255,255,255,0.98)"
+                            : "rgba(226,232,240,0.88)",
+                        background:
+                          homePreviewTab === "oggi"
+                            ? "linear-gradient(180deg, rgba(79,70,229,0.36), rgba(124,58,237,0.20))"
+                            : "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))",
+                        boxShadow:
+                          homePreviewTab === "oggi"
+                            ? "0 18px 34px rgba(79,70,229,0.22)"
+                            : "0 10px 20px rgba(0,0,0,0.18)",
+                        transition: "transform .18s ease, box-shadow .18s ease",
+                      }}
+                    >
+                      OGGI
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setHomePreviewTab("domani")}
+                      style={{
+                        border:
+                          homePreviewTab === "domani"
+                            ? "1px solid rgba(16,185,129,0.34)"
+                            : "1px solid rgba(148,163,184,0.18)",
+                        borderRadius: 20,
+                        padding: "14px 16px",
+                        cursor: "pointer",
+                        fontWeight: 1000,
+                        fontSize: 15,
+                        color:
+                          homePreviewTab === "domani"
+                            ? "rgba(255,255,255,0.98)"
+                            : "rgba(226,232,240,0.88)",
+                        background:
+                          homePreviewTab === "domani"
+                            ? "linear-gradient(180deg, rgba(16,185,129,0.36), rgba(5,150,105,0.20))"
+                            : "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))",
+                        boxShadow:
+                          homePreviewTab === "domani"
+                            ? "0 18px 34px rgba(16,185,129,0.20)"
+                            : "0 10px 20px rgba(0,0,0,0.18)",
+                        transition: "transform .18s ease, box-shadow .18s ease",
+                      }}
+                    >
+                      DOMANI
+                    </button>
+                  </div>
+
+                  <div
+                    style={{
+                      padding: 16,
+                      borderRadius: 24,
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      background:
+                        "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))",
+                      display: "grid",
+                      gap: 14,
+                      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)",
                     }}
                   >
                     <div
                       style={{
-                        padding: 12,
-                        borderRadius: 16,
-                        background: "rgba(79,70,229,0.14)",
-                        border: "1px solid rgba(79,70,229,0.18)",
-                        display: "grid",
-                        gap: 4,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: 10,
+                        flexWrap: "wrap",
                       }}
                     >
-                      <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(199,210,254,0.95)" }}>
-                        Eventi
-                      </div>
-                      <div style={{ fontSize: 20, fontWeight: 1000, color: "rgba(255,255,255,0.98)" }}>
-                        {tabCorrente.eventi.length}
-                      </div>
-                    </div>
+                      <div style={{ display: "grid", gap: 4 }}>
+                        <div
+                          style={{
+                            fontSize: 18,
+                            fontWeight: 1000,
+                            color: "rgba(248,250,252,0.98)",
+                          }}
+                        >
+                          {tabCorrente.titolo}
+                        </div>
 
-                    <div
-                      style={{
-                        padding: 12,
-                        borderRadius: 16,
-                        background: "rgba(249,115,22,0.14)",
-                        border: "1px solid rgba(249,115,22,0.18)",
-                        display: "grid",
-                        gap: 4,
-                      }}
-                    >
-                      <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(254,215,170,0.95)" }}>
-                        Turni
+                        <div
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 850,
+                            color: "rgba(191,219,254,0.82)",
+                          }}
+                        >
+                          {tabCorrente.dataLabel}
+                        </div>
                       </div>
-                      <div style={{ fontSize: 20, fontWeight: 1000, color: "rgba(255,255,255,0.98)" }}>
-                        {tabCorrente.turni.length}
-                      </div>
-                    </div>
 
-                    <div
-                      style={{
-                        padding: 12,
-                        borderRadius: 16,
-                        background: "rgba(239,68,68,0.14)",
-                        border: "1px solid rgba(239,68,68,0.18)",
-                        display: "grid",
-                        gap: 4,
-                      }}
-                    >
-                      <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(254,202,202,0.95)" }}>
-                        Uscite
-                      </div>
-                      <div style={{ fontSize: 20, fontWeight: 1000, color: "rgba(255,255,255,0.98)" }}>
-                        {tabCorrente.uscite.length}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style={{ display: "grid", gap: 10 }}>
-                    {tabCorrente.eventi.length === 0 &&
-                    tabCorrente.turni.length === 0 &&
-                    tabCorrente.uscite.length === 0 ? (
                       <div
                         style={{
-                          padding: 14,
-                          borderRadius: 18,
-                          border: "1px solid rgba(148,163,184,0.14)",
-                          background: "rgba(255,255,255,0.06)",
-                          fontSize: 13,
-                          fontWeight: 850,
-                          color: "rgba(226,232,240,0.78)",
-                          textAlign: "center",
+                          padding: "8px 12px",
+                          borderRadius: 999,
+                          border: "1px solid rgba(255,255,255,0.10)",
+                          background: "rgba(255,255,255,0.08)",
+                          fontSize: 12,
+                          fontWeight: 950,
+                          color: "rgba(241,245,249,0.92)",
+                          boxShadow: "0 10px 20px rgba(0,0,0,0.18)",
                         }}
                       >
-                        Nessun elemento previsto.
+                        {totaleElementi} elementi
                       </div>
-                    ) : (
-                      <>
-                        {tabCorrente.eventi.map((ev) => (
-                          <div
-                            key={ev.id}
-                            style={{
-                              padding: 12,
-                              borderRadius: 16,
-                              background: "rgba(79,70,229,0.10)",
-                              border: "1px solid rgba(79,70,229,0.16)",
-                              display: "grid",
-                              gap: 4,
-                            }}
-                          >
-                            <div style={{ fontSize: 11, fontWeight: 950, color: "rgba(199,210,254,0.96)" }}>
-                              EVENTO
-                            </div>
-                            <div style={{ fontSize: 14, fontWeight: 950, color: "rgba(255,255,255,0.98)" }}>
-                              {ev.titolo}
-                            </div>
-                            <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(191,219,254,0.84)" }}>
-                              {ev.ora}
-                            </div>
-                          </div>
-                        ))}
+                    </div>
 
-                        {tabCorrente.turni.map((t) => (
-                          <div
-                            key={t.id}
-                            style={{
-                              padding: 12,
-                              borderRadius: 16,
-                              background: "rgba(249,115,22,0.10)",
-                              border: "1px solid rgba(249,115,22,0.16)",
-                              display: "grid",
-                              gap: 4,
-                            }}
-                          >
-                            <div style={{ fontSize: 11, fontWeight: 950, color: "rgba(254,215,170,0.96)" }}>
-                              TURNO
-                            </div>
-                            <div style={{ fontSize: 14, fontWeight: 950, color: "rgba(255,255,255,0.98)" }}>
-                              {descrizioneTurnoBreve(t.inizio, t.fine, t.note)}
-                            </div>
-                            <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(254,226,226,0.84)" }}>
-                              {normalizeTurnoLabel(t.inizio, t.fine, t.note) === "R" ||
-                              normalizeTurnoLabel(t.inizio, t.fine, t.note) === "F" ||
-                              normalizeTurnoLabel(t.inizio, t.fine, t.note) === "A"
-                                ? t.note || "Giornata speciale"
-                                : `${t.inizio} • ${t.fine}`}
-                            </div>
-                          </div>
-                        ))}
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+                        gap: 10,
+                      }}
+                    >
+                      <div
+                        style={{
+                          padding: 13,
+                          borderRadius: 18,
+                          background:
+                            "linear-gradient(180deg, rgba(79,70,229,0.18), rgba(79,70,229,0.08))",
+                          border: "1px solid rgba(79,70,229,0.18)",
+                          display: "grid",
+                          gap: 5,
+                          boxShadow: "0 14px 28px rgba(79,70,229,0.10)",
+                        }}
+                      >
+                        <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(199,210,254,0.95)" }}>
+                          Eventi
+                        </div>
+                        <div style={{ fontSize: 22, fontWeight: 1000, color: "rgba(255,255,255,0.98)" }}>
+                          {tabCorrente.eventi.length}
+                        </div>
+                      </div>
 
-                        {tabCorrente.uscite.map((u) => (
-                          <div
-                            key={u.id}
-                            style={{
-                              padding: 12,
-                              borderRadius: 16,
-                              background: "rgba(239,68,68,0.10)",
-                              border: "1px solid rgba(239,68,68,0.16)",
-                              display: "grid",
-                              gap: 4,
-                            }}
-                          >
-                            <div style={{ fontSize: 11, fontWeight: 950, color: "rgba(254,202,202,0.96)" }}>
-                              USCITA
+                      <div
+                        style={{
+                          padding: 13,
+                          borderRadius: 18,
+                          background:
+                            "linear-gradient(180deg, rgba(249,115,22,0.18), rgba(249,115,22,0.08))",
+                          border: "1px solid rgba(249,115,22,0.18)",
+                          display: "grid",
+                          gap: 5,
+                          boxShadow: "0 14px 28px rgba(249,115,22,0.10)",
+                        }}
+                      >
+                        <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(254,215,170,0.95)" }}>
+                          Turni
+                        </div>
+                        <div style={{ fontSize: 22, fontWeight: 1000, color: "rgba(255,255,255,0.98)" }}>
+                          {tabCorrente.turni.length}
+                        </div>
+                      </div>
+
+                      <div
+                        style={{
+                          padding: 13,
+                          borderRadius: 18,
+                          background:
+                            "linear-gradient(180deg, rgba(239,68,68,0.18), rgba(239,68,68,0.08))",
+                          border: "1px solid rgba(239,68,68,0.18)",
+                          display: "grid",
+                          gap: 5,
+                          boxShadow: "0 14px 28px rgba(239,68,68,0.10)",
+                        }}
+                      >
+                        <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(254,202,202,0.95)" }}>
+                          Uscite
+                        </div>
+                        <div style={{ fontSize: 22, fontWeight: 1000, color: "rgba(255,255,255,0.98)" }}>
+                          {tabCorrente.uscite.length}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ display: "grid", gap: 10 }}>
+                      {totaleElementi === 0 ? (
+                        <div
+                          style={{
+                            padding: 15,
+                            borderRadius: 18,
+                            border: "1px solid rgba(148,163,184,0.14)",
+                            background: "rgba(255,255,255,0.05)",
+                            fontSize: 13,
+                            fontWeight: 850,
+                            color: "rgba(226,232,240,0.78)",
+                            textAlign: "center",
+                          }}
+                        >
+                          Nessun elemento previsto per {tabCorrente.titolo.toLowerCase()}.
+                        </div>
+                      ) : (
+                        <>
+                          {tabCorrente.eventi.map((ev) => {
+                            const giorni = giorniMancanti(ev.data);
+                            return (
+                              <div
+                                key={ev.id}
+                                style={{
+                                  padding: 13,
+                                  borderRadius: 18,
+                                  background:
+                                    "linear-gradient(180deg, rgba(79,70,229,0.14), rgba(79,70,229,0.06))",
+                                  border: "1px solid rgba(79,70,229,0.16)",
+                                  display: "grid",
+                                  gap: 6,
+                                  boxShadow: "0 10px 20px rgba(79,70,229,0.08)",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    gap: 8,
+                                    flexWrap: "wrap",
+                                  }}
+                                >
+                                  <div style={{ fontSize: 11, fontWeight: 950, color: "rgba(199,210,254,0.96)" }}>
+                                    EVENTO
+                                  </div>
+
+                                  <span style={styleBadgeScadenza(giorni, ev.urgente)}>
+                                    {labelGiorni(giorni)}
+                                  </span>
+                                </div>
+
+                                <div style={{ fontSize: 14, fontWeight: 950, color: "rgba(255,255,255,0.98)" }}>
+                                  {ev.titolo}
+                                </div>
+
+                                <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(191,219,254,0.84)" }}>
+                                  {ev.ora}
+                                </div>
+                              </div>
+                            );
+                          })}
+
+                          {tabCorrente.turni.map((t) => (
+                            <div
+                              key={t.id}
+                              style={{
+                                padding: 13,
+                                borderRadius: 18,
+                                background:
+                                  "linear-gradient(180deg, rgba(249,115,22,0.14), rgba(249,115,22,0.06))",
+                                border: "1px solid rgba(249,115,22,0.16)",
+                                display: "grid",
+                                gap: 6,
+                                boxShadow: "0 10px 20px rgba(249,115,22,0.08)",
+                              }}
+                            >
+                              <div style={{ fontSize: 11, fontWeight: 950, color: "rgba(254,215,170,0.96)" }}>
+                                TURNO
+                              </div>
+
+                              <div style={{ fontSize: 14, fontWeight: 950, color: "rgba(255,255,255,0.98)" }}>
+                                {descrizioneTurnoBreve(t.inizio, t.fine, t.note)}
+                              </div>
+
+                              <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(255,237,213,0.84)" }}>
+                                {normalizeTurnoLabel(t.inizio, t.fine, t.note) === "R" ||
+                                normalizeTurnoLabel(t.inizio, t.fine, t.note) === "F" ||
+                                normalizeTurnoLabel(t.inizio, t.fine, t.note) === "A"
+                                  ? t.note || "Giornata speciale"
+                                  : `${t.inizio} • ${t.fine}`}
+                              </div>
                             </div>
-                            <div style={{ fontSize: 14, fontWeight: 950, color: "rgba(255,255,255,0.98)" }}>
-                              {u.descrizione}
+                          ))}
+
+                          {tabCorrente.uscite.map((u) => (
+                            <div
+                              key={u.id}
+                              style={{
+                                padding: 13,
+                                borderRadius: 18,
+                                background:
+                                  "linear-gradient(180deg, rgba(239,68,68,0.14), rgba(239,68,68,0.06))",
+                                border: "1px solid rgba(239,68,68,0.16)",
+                                display: "grid",
+                                gap: 6,
+                                boxShadow: "0 10px 20px rgba(239,68,68,0.08)",
+                              }}
+                            >
+                              <div style={{ fontSize: 11, fontWeight: 950, color: "rgba(254,202,202,0.96)" }}>
+                                USCITA
+                              </div>
+
+                              <div style={{ fontSize: 14, fontWeight: 950, color: "rgba(255,255,255,0.98)" }}>
+                                {u.descrizione}
+                              </div>
+
+                              <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(254,226,226,0.84)" }}>
+                                {euro(u.importo)}
+                                {u.nota ? ` • ${u.nota}` : ""}
+                              </div>
                             </div>
-                            <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(254,226,226,0.84)" }}>
-                              {euro(u.importo)}
-                              {u.nota ? ` • ${u.nota}` : ""}
-                            </div>
-                          </div>
-                        ))}
-                      </>
-                    )}
+                          ))}
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* BOTTONI PRINCIPALI */}
             <div style={{ display: "grid", gap: 14 }}>
               <button
                 data-chip="1"
                 onClick={() => setPagina("aggiungi")}
                 style={{
                   padding: "22px 18px",
-                  borderRadius: 26,
+                  borderRadius: 28,
                   border: "1px solid rgba(16,185,129,0.28)",
                   background:
                     "linear-gradient(180deg, rgba(16,185,129,0.30), rgba(5,150,105,0.18))",
@@ -7216,7 +7309,19 @@ function MiniCalendarioEventi({
                   fontSize: 18,
                   fontWeight: 1000,
                   letterSpacing: 0.3,
-                  boxShadow: "0 22px 50px rgba(16,185,129,0.25)",
+                  boxShadow:
+                    "0 22px 50px rgba(16,185,129,0.25), inset 0 1px 0 rgba(255,255,255,0.22)",
+                  transition: "transform .18s ease, box-shadow .18s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow =
+                    "0 28px 58px rgba(16,185,129,0.30), inset 0 1px 0 rgba(255,255,255,0.22)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow =
+                    "0 22px 50px rgba(16,185,129,0.25), inset 0 1px 0 rgba(255,255,255,0.22)";
                 }}
               >
                 ➕ AGGIUNGI
@@ -7230,7 +7335,7 @@ function MiniCalendarioEventi({
                 }}
                 style={{
                   padding: "22px 18px",
-                  borderRadius: 26,
+                  borderRadius: 28,
                   border: "1px solid rgba(79,70,229,0.28)",
                   background:
                     "linear-gradient(180deg, rgba(79,70,229,0.30), rgba(124,58,237,0.18))",
@@ -7238,7 +7343,19 @@ function MiniCalendarioEventi({
                   fontSize: 18,
                   fontWeight: 1000,
                   letterSpacing: 0.3,
-                  boxShadow: "0 22px 50px rgba(79,70,229,0.25)",
+                  boxShadow:
+                    "0 22px 50px rgba(79,70,229,0.25), inset 0 1px 0 rgba(255,255,255,0.22)",
+                  transition: "transform .18s ease, box-shadow .18s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow =
+                    "0 28px 58px rgba(79,70,229,0.30), inset 0 1px 0 rgba(255,255,255,0.22)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow =
+                    "0 22px 50px rgba(79,70,229,0.25), inset 0 1px 0 rgba(255,255,255,0.22)";
                 }}
               >
                 📊 CONSULTA
@@ -7248,7 +7365,7 @@ function MiniCalendarioEventi({
                 onClick={() => apriNuova()}
                 style={{
                   padding: "22px 18px",
-                  borderRadius: 26,
+                  borderRadius: 28,
                   border: "1px solid rgba(249,115,22,0.28)",
                   background:
                     "linear-gradient(180deg, rgba(249,115,22,0.30), rgba(234,88,12,0.18))",
@@ -7256,7 +7373,19 @@ function MiniCalendarioEventi({
                   fontSize: 18,
                   fontWeight: 1000,
                   letterSpacing: 0.3,
-                  boxShadow: "0 22px 50px rgba(249,115,22,0.25)",
+                  boxShadow:
+                    "0 22px 50px rgba(249,115,22,0.25), inset 0 1px 0 rgba(255,255,255,0.22)",
+                  transition: "transform .18s ease, box-shadow .18s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow =
+                    "0 28px 58px rgba(249,115,22,0.30), inset 0 1px 0 rgba(255,255,255,0.22)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow =
+                    "0 22px 50px rgba(249,115,22,0.25), inset 0 1px 0 rgba(255,255,255,0.22)";
                 }}
               >
                 📝 NOTA RAPIDA
