@@ -10286,47 +10286,44 @@ function MiniCalendarioEventi({
       <style>
         {`
           @keyframes noteFloatA {
-            0%   { transform: translate3d(0px, 0px, 0); }
-            20%  { transform: translate3d(14px, -10px, 0); }
-            40%  { transform: translate3d(22px, 8px, 0); }
-            60%  { transform: translate3d(-8px, 16px, 0); }
-            80%  { transform: translate3d(-18px, -8px, 0); }
-            100% { transform: translate3d(0px, 0px, 0); }
+            0%   { transform: translate3d(0px, 0px, 0) scale(1); }
+            25%  { transform: translate3d(0px, -8px, 0) scale(1.01); }
+            50%  { transform: translate3d(0px, 4px, 0) scale(0.995); }
+            75%  { transform: translate3d(0px, -10px, 0) scale(1.01); }
+            100% { transform: translate3d(0px, 0px, 0) scale(1); }
           }
 
           @keyframes noteFloatB {
-            0%   { transform: translate3d(0px, 0px, 0); }
-            20%  { transform: translate3d(-16px, 12px, 0); }
-            40%  { transform: translate3d(10px, 22px, 0); }
-            60%  { transform: translate3d(18px, -8px, 0); }
-            80%  { transform: translate3d(-8px, -18px, 0); }
-            100% { transform: translate3d(0px, 0px, 0); }
+            0%   { transform: translate3d(0px, 0px, 0) scale(1); }
+            20%  { transform: translate3d(0px, -10px, 0) scale(1.01); }
+            50%  { transform: translate3d(0px, 6px, 0) scale(0.995); }
+            80%  { transform: translate3d(0px, -7px, 0) scale(1.008); }
+            100% { transform: translate3d(0px, 0px, 0) scale(1); }
           }
 
           @keyframes noteFloatC {
-            0%   { transform: translate3d(0px, 0px, 0); }
-            25%  { transform: translate3d(18px, -12px, 0); }
-            50%  { transform: translate3d(6px, 16px, 0); }
-            75%  { transform: translate3d(-20px, 6px, 0); }
-            100% { transform: translate3d(0px, 0px, 0); }
+            0%   { transform: translate3d(0px, 0px, 0) scale(1); }
+            30%  { transform: translate3d(0px, -7px, 0) scale(1.008); }
+            60%  { transform: translate3d(0px, 5px, 0) scale(0.996); }
+            100% { transform: translate3d(0px, 0px, 0) scale(1); }
           }
 
           @keyframes noteGlowSoft {
             0%, 100% {
               box-shadow:
-                0 20px 40px rgba(79,70,229,0.14),
+                0 22px 44px rgba(79,70,229,0.14),
                 0 0 0 rgba(16,185,129,0);
             }
             50% {
               box-shadow:
-                0 26px 54px rgba(79,70,229,0.18),
-                0 0 24px rgba(16,185,129,0.08);
+                0 28px 58px rgba(79,70,229,0.18),
+                0 0 18px rgba(16,185,129,0.06);
             }
           }
 
           @keyframes noteHalo {
-            0%, 100% { opacity: 0.55; transform: scale(1); }
-            50% { opacity: 0.82; transform: scale(1.06); }
+            0%, 100% { opacity: 0.50; transform: scale(1); }
+            50% { opacity: 0.78; transform: scale(1.05); }
           }
         `}
       </style>
@@ -10645,310 +10642,378 @@ function MiniCalendarioEventi({
         </div>
 
         {/* AREA NOTE */}
-        {(() => {
-          const isMobile = typeof window !== "undefined" && window.innerWidth <= 640;
-          const columns = isMobile ? 1 : note.length <= 2 ? 2 : note.length <= 6 ? 3 : 4;
-          const rows = Math.max(1, Math.ceil(note.length / columns));
-          const stageHeight = isMobile
-            ? Math.max(340, note.length * 190)
-            : Math.max(520, rows * 190 + 120);
+        <div
+          style={{
+            ...ui.card,
+            minHeight: 520,
+            padding: typeof window !== "undefined" && window.innerWidth <= 640 ? 14 : 18,
+            position: "relative",
+            overflow: "hidden",
+            border: "1px solid rgba(255,255,255,0.08)",
+            boxShadow:
+              "0 28px 70px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.04)",
+            background:
+              "radial-gradient(900px 360px at 0% 0%, rgba(79,70,229,0.12), transparent 58%), radial-gradient(900px 360px at 100% 0%, rgba(16,185,129,0.10), transparent 58%), radial-gradient(800px 420px at 50% 100%, rgba(244,114,182,0.08), transparent 58%), linear-gradient(180deg, rgba(2,6,23,0.96), rgba(15,23,42,0.94))",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              pointerEvents: "none",
+              background:
+                "radial-gradient(circle at 8% 14%, rgba(255,255,255,0.08), transparent 14%), radial-gradient(circle at 86% 18%, rgba(255,255,255,0.06), transparent 14%), radial-gradient(circle at 18% 78%, rgba(255,255,255,0.05), transparent 14%), radial-gradient(circle at 82% 72%, rgba(255,255,255,0.05), transparent 14%)",
+            }}
+          />
 
-          return (
+          <div
+            style={{
+              position: "relative",
+              zIndex: 1,
+              display: "grid",
+              gap: 6,
+              marginBottom: 14,
+              justifyItems: "center",
+              textAlign: "center",
+            }}
+          >
             <div
               style={{
-                ...ui.card,
-                minHeight: stageHeight,
-                padding: isMobile ? 14 : 18,
+                fontSize: 20,
+                fontWeight: 1000,
+                letterSpacing: -0.4,
+                color: "rgba(241,245,249,0.98)",
+              }}
+            >
+              Note salvate
+            </div>
+          </div>
+
+          {note.length === 0 ? (
+            <div
+              style={{
+                minHeight: 240,
+                display: "grid",
+                placeItems: "center",
                 position: "relative",
-                overflow: "hidden",
-                border: "1px solid rgba(255,255,255,0.08)",
-                boxShadow:
-                  "0 28px 70px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.04)",
-                background:
-                  "radial-gradient(900px 360px at 0% 0%, rgba(79,70,229,0.12), transparent 58%), radial-gradient(900px 360px at 100% 0%, rgba(16,185,129,0.10), transparent 58%), radial-gradient(800px 420px at 50% 100%, rgba(244,114,182,0.08), transparent 58%), linear-gradient(180deg, rgba(2,6,23,0.96), rgba(15,23,42,0.94))",
+                zIndex: 1,
               }}
             >
               <div
                 style={{
-                  position: "absolute",
-                  inset: 0,
-                  pointerEvents: "none",
-                  background:
-                    "radial-gradient(circle at 8% 14%, rgba(255,255,255,0.08), transparent 14%), radial-gradient(circle at 86% 18%, rgba(255,255,255,0.06), transparent 14%), radial-gradient(circle at 18% 78%, rgba(255,255,255,0.05), transparent 14%), radial-gradient(circle at 82% 72%, rgba(255,255,255,0.05), transparent 14%)",
-                }}
-              />
-
-              <div
-                style={{
-                  position: "relative",
-                  zIndex: 1,
+                  textAlign: "center",
                   display: "grid",
-                  gap: 6,
-                  marginBottom: 8,
-                  justifyItems: isMobile ? "center" : "start",
-                  textAlign: isMobile ? "center" : "left",
+                  gap: 10,
+                  justifyItems: "center",
+                  color: "rgba(226,232,240,0.88)",
                 }}
               >
                 <div
                   style={{
-                    fontSize: 20,
-                    fontWeight: 1000,
-                    letterSpacing: -0.4,
-                    color: "rgba(241,245,249,0.98)",
-                  }}
-                >
-                  Note salvate
-                </div>
-              </div>
-
-              {note.length === 0 ? (
-                <div
-                  style={{
-                    minHeight: 240,
+                    width: 84,
+                    height: 84,
+                    borderRadius: "50%",
                     display: "grid",
                     placeItems: "center",
-                    position: "relative",
-                    zIndex: 1,
+                    fontSize: 30,
+                    border: "1px solid rgba(255,255,255,0.10)",
+                    background:
+                      "linear-gradient(180deg, rgba(79,70,229,0.24), rgba(16,185,129,0.12))",
+                    boxShadow: "0 22px 46px rgba(79,70,229,0.16)",
                   }}
                 >
+                  🫧
+                </div>
+
+                <div style={{ fontSize: 17, fontWeight: 900 }}>
+                  Nessuna nota presente
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div
+              style={{
+                position: "relative",
+                zIndex: 1,
+                display: "grid",
+                gridTemplateColumns:
+                  typeof window !== "undefined" && window.innerWidth <= 640
+                    ? "1fr"
+                    : "repeat(auto-fit, minmax(220px, 1fr))",
+                gap: typeof window !== "undefined" && window.innerWidth <= 640 ? 18 : 20,
+                alignItems: "start",
+                justifyItems: "center",
+              }}
+            >
+              {note.map((n, index) => {
+                const palette = [
+                  {
+                    bg: "linear-gradient(180deg, rgba(99,102,241,0.40), rgba(79,70,229,0.22))",
+                    border: "rgba(129,140,248,0.32)",
+                    glow: "rgba(99,102,241,0.20)",
+                  },
+                  {
+                    bg: "linear-gradient(180deg, rgba(16,185,129,0.34), rgba(5,150,105,0.18))",
+                    border: "rgba(52,211,153,0.28)",
+                    glow: "rgba(16,185,129,0.18)",
+                  },
+                  {
+                    bg: "linear-gradient(180deg, rgba(236,72,153,0.34), rgba(190,24,93,0.18))",
+                    border: "rgba(244,114,182,0.28)",
+                    glow: "rgba(236,72,153,0.16)",
+                  },
+                  {
+                    bg: "linear-gradient(180deg, rgba(251,191,36,0.32), rgba(217,119,6,0.18))",
+                    border: "rgba(252,211,77,0.28)",
+                    glow: "rgba(251,191,36,0.16)",
+                  },
+                ][index % 4];
+
+                const driftName =
+                  index % 3 === 0
+                    ? "noteFloatA"
+                    : index % 3 === 1
+                    ? "noteFloatB"
+                    : "noteFloatC";
+
+                return (
                   <div
+                    key={n.id}
                     style={{
-                      textAlign: "center",
-                      display: "grid",
-                      gap: 10,
-                      justifyItems: "center",
-                      color: "rgba(226,232,240,0.88)",
+                      width: "100%",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "flex-start",
+                      minHeight: 190,
+                      padding: 2,
+                      boxSizing: "border-box",
                     }}
                   >
                     <div
                       style={{
-                        width: 84,
-                        height: 84,
-                        borderRadius: "50%",
-                        display: "grid",
-                        placeItems: "center",
-                        fontSize: 30,
-                        border: "1px solid rgba(255,255,255,0.10)",
-                        background:
-                          "linear-gradient(180deg, rgba(79,70,229,0.24), rgba(16,185,129,0.12))",
-                        boxShadow: "0 22px 46px rgba(79,70,229,0.16)",
+                        width: "min(100%, 250px)",
+                        touchAction: "none",
+                        cursor: "grab",
+                        userSelect: "none",
+                        transform: "translate3d(0px, 0px, 0)",
+                      }}
+                      onPointerDown={(e) => {
+                        const el = e.currentTarget as HTMLDivElement;
+                        el.setPointerCapture?.(e.pointerId);
+                        el.style.cursor = "grabbing";
+                        el.dataset.dragging = "1";
+                        el.dataset.startX = String(e.clientX);
+                        el.dataset.startY = String(e.clientY);
+                        el.dataset.baseX = el.dataset.baseX || "0";
+                        el.dataset.baseY = el.dataset.baseY || "0";
+                      }}
+                      onPointerMove={(e) => {
+                        const el = e.currentTarget as HTMLDivElement;
+                        if (el.dataset.dragging !== "1") return;
+
+                        const startX = Number(el.dataset.startX || 0);
+                        const startY = Number(el.dataset.startY || 0);
+                        const baseX = Number(el.dataset.baseX || 0);
+                        const baseY = Number(el.dataset.baseY || 0);
+
+                        const dx = e.clientX - startX;
+                        const dy = e.clientY - startY;
+
+                        el.style.transform = `translate3d(${baseX + dx}px, ${baseY + dy}px, 0)`;
+                      }}
+                      onPointerUp={(e) => {
+                        const el = e.currentTarget as HTMLDivElement;
+                        const startX = Number(el.dataset.startX || 0);
+                        const startY = Number(el.dataset.startY || 0);
+                        const baseX = Number(el.dataset.baseX || 0);
+                        const baseY = Number(el.dataset.baseY || 0);
+
+                        const dx = e.clientX - startX;
+                        const dy = e.clientY - startY;
+
+                        el.dataset.baseX = String(baseX + dx);
+                        el.dataset.baseY = String(baseY + dy);
+                        el.dataset.dragging = "0";
+                        el.style.cursor = "grab";
+                      }}
+                      onPointerCancel={(e) => {
+                        const el = e.currentTarget as HTMLDivElement;
+                        el.dataset.dragging = "0";
+                        el.style.cursor = "grab";
                       }}
                     >
-                      🫧
-                    </div>
-
-                    <div style={{ fontSize: 17, fontWeight: 900 }}>
-                      Nessuna nota presente
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div
-                  style={{
-                    position: "relative",
-                    zIndex: 1,
-                    minHeight: stageHeight - 80,
-                  }}
-                >
-                  {note.map((n, index) => {
-                    const col = isMobile ? 0 : index % columns;
-                    const row = isMobile ? index : Math.floor(index / columns);
-
-                    const leftPercent = isMobile
-                      ? 50
-                      : columns === 1
-                      ? 50
-                      : 14 + col * (72 / Math.max(1, columns - 1));
-
-                    const topPx = isMobile ? 18 + row * 184 : 18 + row * 180;
-
-                    const palette = [
-                      {
-                        bg: "linear-gradient(180deg, rgba(99,102,241,0.40), rgba(79,70,229,0.22))",
-                        border: "rgba(129,140,248,0.32)",
-                        glow: "rgba(99,102,241,0.20)",
-                      },
-                      {
-                        bg: "linear-gradient(180deg, rgba(16,185,129,0.34), rgba(5,150,105,0.18))",
-                        border: "rgba(52,211,153,0.28)",
-                        glow: "rgba(16,185,129,0.18)",
-                      },
-                      {
-                        bg: "linear-gradient(180deg, rgba(236,72,153,0.34), rgba(190,24,93,0.18))",
-                        border: "rgba(244,114,182,0.28)",
-                        glow: "rgba(236,72,153,0.16)",
-                      },
-                      {
-                        bg: "linear-gradient(180deg, rgba(251,191,36,0.32), rgba(217,119,6,0.18))",
-                        border: "rgba(252,211,77,0.28)",
-                        glow: "rgba(251,191,36,0.16)",
-                      },
-                    ][index % 4];
-
-                    const driftName =
-                      index % 3 === 0
-                        ? "noteFloatA"
-                        : index % 3 === 1
-                        ? "noteFloatB"
-                        : "noteFloatC";
-
-                    const bubbleWidth = isMobile ? "min(250px, 74vw)" : "clamp(190px, 18vw, 240px)";
-                    const bubbleMinHeight = isMobile ? 140 : 150;
-
-                    return (
                       <div
-                        key={n.id}
                         style={{
-                          position: "absolute",
-                          left: `${leftPercent}%`,
-                          top: topPx,
-                          width: bubbleWidth,
-                          minHeight: bubbleMinHeight,
-                          transform: "translateX(-50%)",
-                          animation: `${driftName} ${8 + (index % 4)}s ease-in-out infinite`,
-                          willChange: "transform",
+                          position: "relative",
+                          animation: `${driftName} ${7 + (index % 3)}s ease-in-out infinite`,
                         }}
                       >
-                        <div style={{ position: "relative" }}>
+                        <div
+                          style={{
+                            position: "absolute",
+                            inset: -10,
+                            borderRadius: "50%",
+                            background: `radial-gradient(circle, ${palette.glow}, transparent 72%)`,
+                            filter: "blur(16px)",
+                            pointerEvents: "none",
+                            animation: `noteHalo ${3.2 + (index % 3)}s ease-in-out infinite`,
+                          }}
+                        />
+
+                        <div
+                          style={{
+                            position: "relative",
+                            borderRadius: 40,
+                            background: palette.bg,
+                            border: `1px solid ${palette.border}`,
+                            boxShadow:
+                              "0 24px 44px rgba(15,23,42,0.18), inset 0 1px 0 rgba(255,255,255,0.14), inset 0 -18px 28px rgba(15,23,42,0.10)",
+                            backdropFilter: "blur(16px)",
+                            overflow: "hidden",
+                            padding:
+                              typeof window !== "undefined" && window.innerWidth <= 640
+                                ? "16px 14px 14px"
+                                : "18px 16px 14px",
+                            display: "grid",
+                            gap: 12,
+                            transition: "transform .18s ease, box-shadow .18s ease, filter .18s ease",
+                            animation: "noteGlowSoft 4.6s ease-in-out infinite",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.boxShadow =
+                              "0 30px 54px rgba(15,23,42,0.22), inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -18px 28px rgba(15,23,42,0.12)";
+                            e.currentTarget.style.filter = "brightness(1.03)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.boxShadow =
+                              "0 24px 44px rgba(15,23,42,0.18), inset 0 1px 0 rgba(255,255,255,0.14), inset 0 -18px 28px rgba(15,23,42,0.10)";
+                            e.currentTarget.style.filter = "brightness(1)";
+                          }}
+                        >
                           <div
                             style={{
                               position: "absolute",
-                              inset: -10,
-                              borderRadius: "50%",
-                              background: `radial-gradient(circle, ${palette.glow}, transparent 72%)`,
-                              filter: "blur(16px)",
+                              inset: 0,
                               pointerEvents: "none",
-                              animation: `noteHalo ${3.2 + (index % 3)}s ease-in-out infinite`,
+                              background:
+                                "radial-gradient(circle at 24% 18%, rgba(255,255,255,0.24), transparent 18%), radial-gradient(circle at 74% 24%, rgba(255,255,255,0.08), transparent 18%)",
                             }}
                           />
 
                           <div
                             style={{
-                              position: "relative",
-                              borderRadius: 34,
-                              background: palette.bg,
-                              border: `1px solid ${palette.border}`,
-                              boxShadow:
-                                "0 24px 44px rgba(15,23,42,0.18), inset 0 1px 0 rgba(255,255,255,0.14), inset 0 -18px 28px rgba(15,23,42,0.10)",
-                              backdropFilter: "blur(16px)",
-                              overflow: "hidden",
-                              padding: isMobile ? "16px 14px 14px" : "18px 16px 14px",
-                              display: "grid",
-                              gap: 12,
-                              cursor: "pointer",
-                              transition: "transform .18s ease, box-shadow .18s ease, filter .18s ease",
-                              animation: "noteGlowSoft 4.6s ease-in-out infinite",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              width: 34,
+                              height: 34,
+                              borderRadius: "50%",
+                              background: "rgba(255,255,255,0.12)",
+                              border: "1px solid rgba(255,255,255,0.14)",
+                              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.10)",
+                              fontSize: 15,
                             }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.transform = "scale(1.04)";
-                              e.currentTarget.style.boxShadow =
-                                "0 30px 54px rgba(15,23,42,0.22), inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -18px 28px rgba(15,23,42,0.12)";
-                              e.currentTarget.style.filter = "brightness(1.03)";
+                          >
+                            🫧
+                          </div>
+
+                          <div
+                            style={{
+                              fontSize: 14,
+                              fontWeight: 900,
+                              color: "rgba(255,255,255,0.98)",
+                              lineHeight: 1.55,
+                              whiteSpace: "pre-wrap",
+                              wordBreak: "break-word",
+                              textShadow: "0 8px 20px rgba(15,23,42,0.16)",
+                              minHeight: 42,
                             }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.transform = "scale(1)";
-                              e.currentTarget.style.boxShadow =
-                                "0 24px 44px rgba(15,23,42,0.18), inset 0 1px 0 rgba(255,255,255,0.14), inset 0 -18px 28px rgba(15,23,42,0.10)";
-                              e.currentTarget.style.filter = "brightness(1)";
+                          >
+                            {n.testo}
+                          </div>
+
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              gap: 8,
                             }}
                           >
                             <div
                               style={{
-                                position: "absolute",
-                                inset: 0,
-                                pointerEvents: "none",
-                                background:
-                                  "radial-gradient(circle at 24% 18%, rgba(255,255,255,0.24), transparent 18%), radial-gradient(circle at 74% 24%, rgba(255,255,255,0.08), transparent 18%)",
-                              }}
-                            />
-
-                            <div
-                              style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                width: 34,
-                                height: 34,
-                                borderRadius: "50%",
-                                background: "rgba(255,255,255,0.12)",
-                                border: "1px solid rgba(255,255,255,0.14)",
-                                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.10)",
-                                fontSize: 15,
-                              }}
-                            >
-                              🫧
-                            </div>
-
-                            <div
-                              style={{
-                                fontSize: 14,
+                                fontSize: 10,
                                 fontWeight: 900,
-                                color: "rgba(255,255,255,0.98)",
-                                lineHeight: 1.55,
-                                whiteSpace: "pre-wrap",
-                                wordBreak: "break-word",
-                                textShadow: "0 8px 20px rgba(15,23,42,0.16)",
+                                color: "rgba(255,255,255,0.72)",
+                                letterSpacing: 0.4,
+                                textTransform: "uppercase",
                               }}
                             >
-                              {n.testo}
+                              Trascina
                             </div>
 
                             <div
                               style={{
                                 display: "flex",
                                 gap: 8,
-                                flexWrap: "wrap",
                                 alignItems: "center",
                               }}
                             >
                               <button
                                 onClick={() => modificaNota(n)}
                                 style={{
-                                  padding: "7px 12px",
-                                  borderRadius: 999,
+                                  width: 34,
+                                  height: 34,
+                                  borderRadius: "50%",
                                   border: "1px solid rgba(255,255,255,0.16)",
                                   background: "rgba(255,255,255,0.12)",
                                   color: "rgba(255,255,255,0.98)",
-                                  fontSize: 12,
-                                  fontWeight: 900,
+                                  fontSize: 13,
+                                  fontWeight: 1000,
                                   cursor: "pointer",
                                   backdropFilter: "blur(8px)",
                                   boxShadow: "0 8px 18px rgba(15,23,42,0.10)",
+                                  display: "grid",
+                                  placeItems: "center",
                                 }}
                                 title="Modifica questa nota"
                               >
-                                Modifica
+                                M
                               </button>
 
                               <button
                                 onClick={() => eliminaNota(n.id)}
                                 style={{
-                                  padding: "7px 12px",
-                                  borderRadius: 999,
+                                  width: 34,
+                                  height: 34,
+                                  borderRadius: "50%",
                                   border: "1px solid rgba(255,120,120,0.22)",
                                   background: "rgba(239,68,68,0.20)",
                                   color: "rgba(255,245,245,0.98)",
-                                  fontSize: 12,
-                                  fontWeight: 900,
+                                  fontSize: 16,
+                                  fontWeight: 1000,
                                   cursor: "pointer",
                                   backdropFilter: "blur(8px)",
                                   boxShadow: "0 8px 18px rgba(15,23,42,0.10)",
+                                  display: "grid",
+                                  placeItems: "center",
+                                  lineHeight: 1,
                                 }}
                                 title="Elimina questa nota"
                               >
-                                Elimina
+                                ✕
                               </button>
                             </div>
                           </div>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          );
-        })()}
+          )}
+        </div>
       </div>
     </div>
   </div>
