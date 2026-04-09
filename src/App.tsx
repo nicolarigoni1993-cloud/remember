@@ -10320,24 +10320,24 @@ function MiniCalendarioEventi({
   const bubblePalette = (index: number) =>
     [
       {
-        bg: "linear-gradient(180deg, rgba(99,102,241,0.40), rgba(79,70,229,0.22))",
-        border: "rgba(129,140,248,0.32)",
-        glow: "rgba(99,102,241,0.20)",
+        bg: "linear-gradient(180deg, rgba(99,102,241,0.34), rgba(79,70,229,0.18))",
+        border: "rgba(129,140,248,0.26)",
+        glow: "rgba(99,102,241,0.16)",
       },
       {
-        bg: "linear-gradient(180deg, rgba(16,185,129,0.34), rgba(5,150,105,0.18))",
-        border: "rgba(52,211,153,0.28)",
-        glow: "rgba(16,185,129,0.18)",
+        bg: "linear-gradient(180deg, rgba(16,185,129,0.30), rgba(5,150,105,0.16))",
+        border: "rgba(52,211,153,0.24)",
+        glow: "rgba(16,185,129,0.16)",
       },
       {
-        bg: "linear-gradient(180deg, rgba(236,72,153,0.34), rgba(190,24,93,0.18))",
-        border: "rgba(244,114,182,0.28)",
-        glow: "rgba(236,72,153,0.16)",
+        bg: "linear-gradient(180deg, rgba(236,72,153,0.30), rgba(190,24,93,0.16))",
+        border: "rgba(244,114,182,0.24)",
+        glow: "rgba(236,72,153,0.14)",
       },
       {
-        bg: "linear-gradient(180deg, rgba(251,191,36,0.32), rgba(217,119,6,0.18))",
-        border: "rgba(252,211,77,0.28)",
-        glow: "rgba(251,191,36,0.16)",
+        bg: "linear-gradient(180deg, rgba(251,191,36,0.28), rgba(217,119,6,0.16))",
+        border: "rgba(252,211,77,0.24)",
+        glow: "rgba(251,191,36,0.14)",
       },
     ][index % 4];
 
@@ -10358,14 +10358,14 @@ function MiniCalendarioEventi({
           display: "flex",
           justifyContent: "center",
           alignItems: "flex-start",
-          minHeight: 208,
+          minHeight: isMobileNote ? 176 : 188,
           padding: 2,
           boxSizing: "border-box",
         }}
       >
         <div
           style={{
-            width: "min(100%, 258px)",
+            width: isMobileNote ? "min(100%, 228px)" : "min(100%, 234px)",
             touchAction: "none",
             cursor: "grab",
             userSelect: "none",
@@ -10425,10 +10425,10 @@ function MiniCalendarioEventi({
             <div
               style={{
                 position: "absolute",
-                inset: -10,
+                inset: -8,
                 borderRadius: "50%",
                 background: `radial-gradient(circle, ${palette.glow}, transparent 72%)`,
-                filter: "blur(16px)",
+                filter: "blur(14px)",
                 pointerEvents: "none",
                 animation: `noteHalo ${3.2 + (index % 3)}s ease-in-out infinite`,
               }}
@@ -10437,20 +10437,20 @@ function MiniCalendarioEventi({
             <div
               style={{
                 position: "relative",
-                borderRadius: 42,
+                borderRadius: 999,
                 background: archivio
-                  ? "linear-gradient(180deg, rgba(71,85,105,0.34), rgba(51,65,85,0.18))"
+                  ? "linear-gradient(180deg, rgba(71,85,105,0.28), rgba(51,65,85,0.16))"
                   : palette.bg,
                 border: archivio
-                  ? "1px solid rgba(148,163,184,0.24)"
+                  ? "1px solid rgba(148,163,184,0.20)"
                   : `1px solid ${palette.border}`,
                 boxShadow:
-                  "0 24px 44px rgba(15,23,42,0.18), inset 0 1px 0 rgba(255,255,255,0.14), inset 0 -18px 28px rgba(15,23,42,0.10)",
+                  "0 18px 34px rgba(15,23,42,0.16), inset 0 1px 0 rgba(255,255,255,0.14), inset 0 -12px 22px rgba(15,23,42,0.08)",
                 backdropFilter: "blur(16px)",
                 overflow: "hidden",
-                padding: isMobileNote ? "16px 14px 14px" : "18px 16px 14px",
+                padding: isMobileNote ? "12px 12px 12px" : "13px 13px 12px",
                 display: "grid",
-                gap: 12,
+                gap: 10,
                 transition: "transform .18s ease, box-shadow .18s ease, filter .18s ease",
                 animation: "noteGlowSoft 4.6s ease-in-out infinite",
               }}
@@ -10461,7 +10461,7 @@ function MiniCalendarioEventi({
                   inset: 0,
                   pointerEvents: "none",
                   background:
-                    "radial-gradient(circle at 24% 18%, rgba(255,255,255,0.24), transparent 18%), radial-gradient(circle at 74% 24%, rgba(255,255,255,0.08), transparent 18%)",
+                    "radial-gradient(circle at 24% 18%, rgba(255,255,255,0.22), transparent 18%), radial-gradient(circle at 74% 24%, rgba(255,255,255,0.07), transparent 18%)",
                 }}
               />
 
@@ -10470,7 +10470,7 @@ function MiniCalendarioEventi({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  gap: 10,
+                  gap: 8,
                 }}
               >
                 <div
@@ -10478,13 +10478,13 @@ function MiniCalendarioEventi({
                     display: "inline-flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    width: 34,
-                    height: 34,
+                    width: 30,
+                    height: 30,
                     borderRadius: "50%",
                     background: "rgba(255,255,255,0.12)",
-                    border: "1px solid rgba(255,255,255,0.14)",
-                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.10)",
-                    fontSize: 15,
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08)",
+                    fontSize: 13,
                     flexShrink: 0,
                   }}
                 >
@@ -10493,10 +10493,10 @@ function MiniCalendarioEventi({
 
                 <div
                   style={{
-                    fontSize: 10,
+                    fontSize: 9,
                     fontWeight: 900,
-                    color: "rgba(255,255,255,0.70)",
-                    letterSpacing: 0.45,
+                    color: "rgba(255,255,255,0.68)",
+                    letterSpacing: 0.42,
                     textTransform: "uppercase",
                   }}
                 >
@@ -10518,14 +10518,14 @@ function MiniCalendarioEventi({
                 >
                   <div
                     style={{
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: 900,
                       color: "rgba(255,255,255,0.98)",
-                      lineHeight: 1.55,
+                      lineHeight: 1.45,
                       wordBreak: "break-word",
                       textShadow: "0 8px 20px rgba(15,23,42,0.16)",
                       display: "-webkit-box",
-                      WebkitLineClamp: 3,
+                      WebkitLineClamp: 2,
                       WebkitBoxOrient: "vertical",
                       overflow: "hidden",
                     }}
@@ -10535,11 +10535,11 @@ function MiniCalendarioEventi({
 
                   <div
                     style={{
-                      marginTop: 8,
-                      fontSize: 11,
+                      marginTop: 6,
+                      fontSize: 10,
                       fontWeight: 900,
-                      color: "rgba(255,255,255,0.72)",
-                      letterSpacing: 0.2,
+                      color: "rgba(255,255,255,0.68)",
+                      letterSpacing: 0.16,
                     }}
                   >
                     Tocca per aprire
@@ -10548,9 +10548,9 @@ function MiniCalendarioEventi({
 
                 <div
                   style={{
-                    marginTop: 12,
-                    padding: "12px 12px 10px",
-                    borderRadius: 18,
+                    marginTop: 10,
+                    padding: "10px 10px 9px",
+                    borderRadius: 16,
                     border: "1px solid rgba(255,255,255,0.10)",
                     background: "rgba(255,255,255,0.08)",
                     boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
@@ -10558,10 +10558,10 @@ function MiniCalendarioEventi({
                 >
                   <div
                     style={{
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: 800,
                       color: "rgba(255,255,255,0.96)",
-                      lineHeight: 1.6,
+                      lineHeight: 1.55,
                       whiteSpace: "pre-wrap",
                       wordBreak: "break-word",
                     }}
@@ -10582,30 +10582,32 @@ function MiniCalendarioEventi({
                 <div
                   style={{
                     display: "flex",
-                    gap: 8,
+                    gap: 6,
                     alignItems: "center",
                     marginLeft: "auto",
+                    flexWrap: "nowrap",
                   }}
                 >
                   {!archivio && (
                     <button
                       onClick={() => modificaNota(n)}
                       style={{
-                        width: 36,
-                        height: 36,
+                        width: 32,
+                        height: 32,
                         borderRadius: "50%",
                         border: "1px solid rgba(255,255,255,0.16)",
                         background:
                           "linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08))",
                         color: "rgba(255,255,255,0.98)",
-                        fontSize: 13,
+                        fontSize: 12,
                         fontWeight: 1000,
                         cursor: "pointer",
                         backdropFilter: "blur(8px)",
-                        boxShadow: "0 10px 18px rgba(15,23,42,0.12)",
+                        boxShadow: "0 8px 14px rgba(15,23,42,0.12)",
                         display: "grid",
                         placeItems: "center",
                         lineHeight: 1,
+                        flexShrink: 0,
                       }}
                       title="Modifica nota"
                     >
@@ -10617,21 +10619,22 @@ function MiniCalendarioEventi({
                     <button
                       onClick={() => archiviaNota(n.id)}
                       style={{
-                        width: 36,
-                        height: 36,
+                        width: 32,
+                        height: 32,
                         borderRadius: "50%",
                         border: "1px solid rgba(96,165,250,0.24)",
                         background:
                           "linear-gradient(180deg, rgba(59,130,246,0.22), rgba(37,99,235,0.10))",
                         color: "rgba(239,246,255,0.98)",
-                        fontSize: 13,
+                        fontSize: 12,
                         fontWeight: 1000,
                         cursor: "pointer",
                         backdropFilter: "blur(8px)",
-                        boxShadow: "0 10px 18px rgba(15,23,42,0.12)",
+                        boxShadow: "0 8px 14px rgba(15,23,42,0.12)",
                         display: "grid",
                         placeItems: "center",
                         lineHeight: 1,
+                        flexShrink: 0,
                       }}
                       title="Archivia nota"
                     >
@@ -10643,21 +10646,22 @@ function MiniCalendarioEventi({
                     <button
                       onClick={() => ripristinaNota(n.id)}
                       style={{
-                        width: 36,
-                        height: 36,
+                        width: 32,
+                        height: 32,
                         borderRadius: "50%",
                         border: "1px solid rgba(52,211,153,0.24)",
                         background:
                           "linear-gradient(180deg, rgba(16,185,129,0.22), rgba(5,150,105,0.10))",
                         color: "rgba(236,253,245,0.98)",
-                        fontSize: 13,
+                        fontSize: 12,
                         fontWeight: 1000,
                         cursor: "pointer",
                         backdropFilter: "blur(8px)",
-                        boxShadow: "0 10px 18px rgba(15,23,42,0.12)",
+                        boxShadow: "0 8px 14px rgba(15,23,42,0.12)",
                         display: "grid",
                         placeItems: "center",
                         lineHeight: 1,
+                        flexShrink: 0,
                       }}
                       title="Ripristina nota"
                     >
@@ -10668,21 +10672,22 @@ function MiniCalendarioEventi({
                   <button
                     onClick={() => eliminaNota(n.id)}
                     style={{
-                      width: 36,
-                      height: 36,
+                      width: 32,
+                      height: 32,
                       borderRadius: "50%",
                       border: "1px solid rgba(255,120,120,0.22)",
                       background:
                         "linear-gradient(180deg, rgba(239,68,68,0.24), rgba(185,28,28,0.12))",
                       color: "rgba(255,245,245,0.98)",
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: 1000,
                       cursor: "pointer",
                       backdropFilter: "blur(8px)",
-                      boxShadow: "0 10px 18px rgba(15,23,42,0.12)",
+                      boxShadow: "0 8px 14px rgba(15,23,42,0.12)",
                       display: "grid",
                       placeItems: "center",
                       lineHeight: 1,
+                      flexShrink: 0,
                     }}
                     title="Elimina nota"
                   >
@@ -10733,19 +10738,19 @@ function MiniCalendarioEventi({
             @keyframes noteGlowSoft {
               0%, 100% {
                 box-shadow:
-                  0 22px 44px rgba(79,70,229,0.14),
+                  0 18px 34px rgba(79,70,229,0.12),
                   0 0 0 rgba(16,185,129,0);
               }
               50% {
                 box-shadow:
-                  0 28px 58px rgba(79,70,229,0.18),
-                  0 0 18px rgba(16,185,129,0.06);
+                  0 24px 46px rgba(79,70,229,0.16),
+                  0 0 14px rgba(16,185,129,0.05);
               }
             }
 
             @keyframes noteHalo {
-              0%, 100% { opacity: 0.50; transform: scale(1); }
-              50% { opacity: 0.78; transform: scale(1.05); }
+              0%, 100% { opacity: 0.46; transform: scale(1); }
+              50% { opacity: 0.72; transform: scale(1.04); }
             }
           `}
         </style>
@@ -11092,8 +11097,8 @@ function MiniCalendarioEventi({
                   <div
                     style={{
                       display: "grid",
-                      gridTemplateColumns: isMobileNote ? "1fr" : "repeat(auto-fit, minmax(220px, 1fr))",
-                      gap: 18,
+                      gridTemplateColumns: isMobileNote ? "1fr" : "repeat(auto-fit, minmax(190px, 1fr))",
+                      gap: 14,
                       justifyItems: "center",
                       alignItems: "start",
                     }}
@@ -11156,8 +11161,8 @@ function MiniCalendarioEventi({
                   <div
                     style={{
                       display: "grid",
-                      gridTemplateColumns: isMobileNote ? "1fr" : "repeat(auto-fit, minmax(220px, 1fr))",
-                      gap: 18,
+                      gridTemplateColumns: isMobileNote ? "1fr" : "repeat(auto-fit, minmax(190px, 1fr))",
+                      gap: 14,
                       justifyItems: "center",
                       alignItems: "start",
                     }}
