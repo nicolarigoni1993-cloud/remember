@@ -7610,7 +7610,7 @@ function MiniCalendarioEventi({
         {consultaSezione === "menu" ? (
           <>
             <div style={consultaHeaderWrap}>
-              {consultaSectionBadge("🖋️", "Consulta", "violet")}
+              {consultaSectionBadge("📘", "Consulta", "violet")}
 
               <div style={consultaSubtitleStyle}>
                 Centro di consultazione dell’app. Da qui accedi rapidamente a turni,
@@ -7797,7 +7797,7 @@ function MiniCalendarioEventi({
         ) : consultaSezione === "turni" ? (
           <>
             <div style={consultaHeaderWrap}>
-              {consultaSectionBadge("🖋️", "Consulta turni", "orange")}
+              {consultaSectionBadge("📘", "Consulta turni", "orange")}
 
               <div style={consultaSubtitleStyle}>
                 Vista mensile dei turni con riepiloghi rapidi, ferie e modifica immediata.
@@ -8249,7 +8249,7 @@ function MiniCalendarioEventi({
         ) : consultaSezione === "finanza" ? (
           <>
             <div style={consultaHeaderWrap}>
-              {consultaSectionBadge("🖋️", "Consulta finanza", "green")}
+              {consultaSectionBadge("📘", "Consulta finanza", "green")}
 
               <div style={consultaSubtitleStyle}>
                 Panoramica economica con riepiloghi, grafici, filtri rapidi e movimenti.
@@ -9733,7 +9733,7 @@ function MiniCalendarioEventi({
         ) : consultaSezione === "eventi" ? (
           <>
             <div style={consultaHeaderWrap}>
-              {consultaSectionBadge("🖋️", "Consulta eventi", "violet")}
+              {consultaSectionBadge("📘", "Consulta eventi", "violet")}
 
               <div style={consultaSubtitleStyle}>
                 Calendario eventi collegato ai tuoi elementi con vista futura e archivio automatico.
@@ -10854,11 +10854,11 @@ function MiniCalendarioEventi({
           </div>
         </div>
 
-        {/* HEADER LIBERO */}
+        {/* HEADER NOTE */}
         <div
           style={{
             display: "grid",
-            gap: 10,
+            gap: 12,
             justifyItems: "center",
             textAlign: "center",
             padding: "4px 6px 0",
@@ -10866,14 +10866,19 @@ function MiniCalendarioEventi({
         >
           <div
             style={{
-              display: "flex",
+              display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
               gap: 12,
-              flexWrap: "wrap",
+              padding: isMobileNote ? "12px 18px" : "14px 22px",
+              borderRadius: 999,
+              border: "1px solid rgba(79,70,229,0.18)",
+              background:
+                "linear-gradient(180deg, rgba(79,70,229,0.16), rgba(124,58,237,0.08))",
+              boxShadow: "0 18px 40px rgba(79,70,229,0.14)",
             }}
           >
-            <span style={{ fontSize: 30 }}>🖋️</span>
+            <span style={{ fontSize: isMobileNote ? 22 : 24 }}>🖋️</span>
 
             <div
               style={{
