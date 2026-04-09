@@ -10282,117 +10282,423 @@ function MiniCalendarioEventi({
 
 
 {pagina === "note" && (
-  <div style={{ minHeight: "70vh", display: "grid", placeItems: "center", padding: 16 }}>
-    <div style={{ width: "min(900px, 100%)", display: "grid", gap: 20 }}>
+  <div style={{ minHeight: "70vh", display: "grid", placeItems: "start center", padding: 16 }}>
+    <div style={{ width: "min(1100px, 100%)", display: "grid", gap: 18 }}>
+      <div style={topBar}>
+        <div style={{ ...ui.glass, padding: 22 }}>
+          <div style={{ display: "grid", gap: 18 }}>
+            <div
+              style={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                textAlign: "center",
+              }}
+            >
+              <RememberLogo size={54} centered />
+            </div>
 
-      {/* HEADER */}
-      <div style={{ textAlign: "center" }}>
-        <div style={{
-          fontSize: 34,
-          fontWeight: 1000,
-          color: "rgba(241,245,249,0.98)"
-        }}>
-          ✒️ Le tue Note
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: 10,
+                flexWrap: "wrap",
+              }}
+            >
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "11px 14px",
+                  borderRadius: 999,
+                  border: "1px solid rgba(79,70,229,0.12)",
+                  background: "rgba(255,255,255,0.55)",
+                  boxShadow: "0 18px 34px rgba(79,70,229,0.10)",
+                  fontSize: 13,
+                  fontWeight: 950,
+                  letterSpacing: -0.2,
+                  animation: "softGlow 2.4s ease-in-out infinite",
+                }}
+              >
+                <span style={{ opacity: 0.8 }}>🕒</span>
+                <span style={{ color: "rgba(15,23,42,0.92)" }}>
+                  {formattaDataLunga(adesso)}
+                </span>
+              </div>
+            </div>
+
+            <div
+              style={{
+                textAlign: "center",
+                fontSize: 13,
+                fontWeight: 900,
+                opacity: 0.72,
+              }}
+            >
+              Utente attivo: <span style={{ opacity: 1 }}>{currentUser.nome}</span>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gap: 12,
+                justifyItems: "center",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  gap: 12,
+                  flexWrap: "wrap",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <button
+                  data-chip="1"
+                  onClick={() => setPagina("home")}
+                  style={chip(false)}
+                >
+                  Home
+                </button>
+
+                <button
+                  data-chip="1"
+                  onClick={() => {
+                    setConsultaSezione("menu");
+                    setPagina("consulta");
+                  }}
+                  style={chip(false)}
+                >
+                  Consulta
+                </button>
+
+                <button
+                  data-chip="1"
+                  onClick={() => setPagina("aggiungi")}
+                  style={chip(false)}
+                >
+                  Aggiungi
+                </button>
+              </div>
+
+              <button
+                data-chip="1"
+                onClick={esci}
+                style={chip(false)}
+              >
+                Esci
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gap: 10,
+          justifyItems: "center",
+          textAlign: "center",
+          padding: "8px 6px 2px",
+        }}
+      >
+        <div
+          style={{
+            fontSize: 40,
+            fontWeight: 1000,
+            letterSpacing: -0.9,
+            color: "rgba(241,245,249,0.98)",
+            textShadow: "0 12px 30px rgba(79,70,229,0.20)",
+            lineHeight: 1.04,
+          }}
+        >
+          🖋️ Le tue Note
         </div>
 
-        <div style={{
-          fontSize: 14,
-          color: "rgba(191,219,254,0.85)",
-          marginTop: 6
-        }}>
+        <div
+          style={{
+            maxWidth: 760,
+            fontSize: 16,
+            fontWeight: 800,
+            color: "rgba(191,219,254,0.88)",
+            lineHeight: 1.5,
+            letterSpacing: 0.1,
+          }}
+        >
           Scrivi, salva e gestisci tutto al volo
         </div>
       </div>
 
-      {/* INPUT */}
-      <div style={{
-        ...ui.card,
-        padding: 18,
-        display: "grid",
-        gap: 12
-      }}>
-        <textarea
-          value={notaInput}
-          onChange={(e) => setNotaInput(e.target.value)}
-          placeholder="Scrivi qualcosa..."
+      <div
+        style={{
+          ...ui.card,
+          width: "min(760px, 100%)",
+          margin: "0 auto",
+          padding: typeof window !== "undefined" && window.innerWidth <= 640 ? 16 : 22,
+          display: "grid",
+          gap: 16,
+          border: "1px solid rgba(255,255,255,0.08)",
+          background:
+            "linear-gradient(180deg, rgba(2,6,23,0.96), rgba(15,23,42,0.92))",
+          boxShadow:
+            "0 30px 70px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.04)",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        <div
           style={{
-            width: "100%",
-            minHeight: 100,
-            borderRadius: 16,
-            border: "1px solid rgba(255,255,255,0.1)",
-            padding: 12,
-            fontSize: 14,
-            background: "rgba(255,255,255,0.05)",
-            color: "white"
+            position: "absolute",
+            inset: 0,
+            background:
+              "radial-gradient(700px 220px at 0% 0%, rgba(79,70,229,0.12), transparent 60%), radial-gradient(700px 220px at 100% 0%, rgba(16,185,129,0.10), transparent 60%)",
+            pointerEvents: "none",
           }}
         />
 
-        <button
-          onClick={salvaNota}
+        <div
           style={{
-            padding: "14px",
-            borderRadius: 16,
-            border: "1px solid rgba(16,185,129,0.3)",
-            background: "linear-gradient(180deg, rgba(16,185,129,0.4), rgba(5,150,105,0.2))",
-            fontWeight: 1000,
-            cursor: "pointer"
+            position: "relative",
+            zIndex: 1,
+            display: "grid",
+            gap: 14,
+            width: "100%",
+            maxWidth: "100%",
           }}
         >
-          💾 Salva Nota
-        </button>
+          <div
+            style={{
+              display: "grid",
+              gap: 8,
+              textAlign: "center",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 18,
+                fontWeight: 1000,
+                color: "rgba(241,245,249,0.98)",
+                letterSpacing: -0.3,
+              }}
+            >
+              Nuova nota veloce
+            </div>
+
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 800,
+                color: "rgba(191,219,254,0.78)",
+                lineHeight: 1.45,
+              }}
+            >
+              Appunta un pensiero, un promemoria o qualcosa da sviluppare dopo
+            </div>
+          </div>
+
+          <div
+            style={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            <textarea
+              value={notaDraft}
+              onChange={(e) => setNotaDraft(e.target.value)}
+              placeholder="Scrivi qualcosa..."
+              style={{
+                width: "min(620px, 100%)",
+                minHeight: typeof window !== "undefined" && window.innerWidth <= 640 ? 180 : 200,
+                resize: "vertical",
+                borderRadius: 24,
+                border: "1px solid rgba(255,255,255,0.10)",
+                background: "rgba(15,23,42,0.68)",
+                boxShadow:
+                  "inset 0 1px 0 rgba(255,255,255,0.04), 0 18px 34px rgba(0,0,0,0.20)",
+                padding: typeof window !== "undefined" && window.innerWidth <= 640 ? "20px 18px" : "22px 20px",
+                fontSize: typeof window !== "undefined" && window.innerWidth <= 640 ? 17 : 18,
+                fontWeight: 500,
+                lineHeight: 1.6,
+                color: "rgba(248,250,252,0.98)",
+                outline: "none",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            <button
+              type="button"
+              onClick={salvaNota}
+              style={{
+                width: "min(520px, 100%)",
+                minHeight: 64,
+                borderRadius: 22,
+                border: "1px solid rgba(16,185,129,0.30)",
+                background:
+                  "linear-gradient(180deg, rgba(16,185,129,0.90), rgba(5,150,105,0.74))",
+                color: "rgba(6,12,20,0.96)",
+                fontSize: 17,
+                fontWeight: 1000,
+                letterSpacing: 0.2,
+                cursor: "pointer",
+                boxShadow:
+                  "0 20px 42px rgba(16,185,129,0.22), inset 0 1px 0 rgba(255,255,255,0.26)",
+                transition: "transform .18s ease, box-shadow .18s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow =
+                  "0 26px 52px rgba(16,185,129,0.28), inset 0 1px 0 rgba(255,255,255,0.26)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow =
+                  "0 20px 42px rgba(16,185,129,0.22), inset 0 1px 0 rgba(255,255,255,0.26)";
+              }}
+            >
+              💾 Salva Nota
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* NOTE BOLLE */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-        gap: 14
-      }}>
-        {note.length === 0 ? (
-          <div style={{
-            textAlign: "center",
-            opacity: 0.7,
-            fontWeight: 800
-          }}>
+      <div
+        style={{
+          width: "min(960px, 100%)",
+          margin: "0 auto",
+          display: "grid",
+          gap: 16,
+          minHeight: 140,
+          justifyItems: "center",
+          alignItems: noteItems.length === 0 ? "center" : "start",
+          position: "relative",
+        }}
+      >
+        {noteItems.length === 0 ? (
+          <div
+            style={{
+              fontSize: 18,
+              fontWeight: 900,
+              color: "rgba(226,232,240,0.78)",
+              textAlign: "center",
+            }}
+          >
             Nessuna nota presente
           </div>
         ) : (
-          note.map((n) => (
-            <div
-              key={n.id}
-              style={{
-                padding: 16,
-                borderRadius: 20,
-                background: "linear-gradient(180deg, rgba(79,70,229,0.3), rgba(124,58,237,0.15))",
-                border: "1px solid rgba(79,70,229,0.2)",
-                boxShadow: "0 10px 25px rgba(79,70,229,0.2)",
-                cursor: "pointer",
-                transition: "transform .2s"
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.05)"}
-              onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
-            >
-              <div style={{
-                fontSize: 14,
-                fontWeight: 900,
-                color: "white"
-              }}>
-                {n.testo}
-              </div>
+          <div
+            style={{
+              width: "100%",
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+              gap: 16,
+              alignItems: "start",
+            }}
+          >
+            {noteItems.map((nota, index) => (
+              <div
+                key={nota.id}
+                style={{
+                  padding: 16,
+                  borderRadius: 22,
+                  border: "1px solid rgba(255,255,255,0.10)",
+                  background:
+                    "linear-gradient(180deg, rgba(30,41,59,0.92), rgba(15,23,42,0.88))",
+                  boxShadow:
+                    "0 18px 34px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.04)",
+                  display: "grid",
+                  gap: 12,
+                  transform: `translateY(${(index % 3) * 4}px) rotate(${index % 2 === 0 ? "-1.2deg" : "1.2deg"})`,
+                  transition: "transform .22s ease, box-shadow .22s ease",
+                  cursor: "pointer",
+                }}
+                onClick={() => apriNota(nota)}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-4px) rotate(0deg)";
+                  e.currentTarget.style.boxShadow =
+                    "0 24px 40px rgba(0,0,0,0.34), inset 0 1px 0 rgba(255,255,255,0.05)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = `translateY(${(index % 3) * 4}px) rotate(${index % 2 === 0 ? "-1.2deg" : "1.2deg"})`;
+                  e.currentTarget.style.boxShadow =
+                    "0 18px 34px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.04)";
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 900,
+                    color: "rgba(191,219,254,0.88)",
+                  }}
+                >
+                  Nota
+                </div>
 
-              <div style={{
-                marginTop: 10,
-                display: "flex",
-                gap: 8
-              }}>
-                <button onClick={() => modificaNota(n)} style={chip(false)}>Modifica</button>
-                <button onClick={() => eliminaNota(n.id)} style={chip(false)}>Elimina</button>
+                <div
+                  style={{
+                    fontSize: 15,
+                    fontWeight: 800,
+                    color: "rgba(248,250,252,0.96)",
+                    lineHeight: 1.5,
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-word",
+                  }}
+                >
+                  {nota.testo}
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 8,
+                    flexWrap: "wrap",
+                    justifyContent: "flex-end",
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      apriNota(nota);
+                    }}
+                    style={chip(false)}
+                  >
+                    Modifica
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      eliminaNota(nota.id);
+                    }}
+                    style={{
+                      ...chip(false),
+                      border: "1px solid rgba(239,68,68,0.24)",
+                      color: "rgba(185,28,28,0.96)",
+                      background: "rgba(254,242,242,0.92)",
+                    }}
+                  >
+                    Elimina
+                  </button>
+                </div>
               </div>
-            </div>
-          ))
+            ))}
+          </div>
         )}
       </div>
-
     </div>
   </div>
 )}
