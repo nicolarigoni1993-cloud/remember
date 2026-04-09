@@ -10281,7 +10281,69 @@ function MiniCalendarioEventi({
 
 {pagina === "note" && (
   <div style={{ minHeight: "70vh", display: "grid", placeItems: "start center", padding: 16 }}>
-    <div style={{ width: "min(980px, 100%)", display: "grid", gap: 20 }}>
+    <div style={{ width: "min(1180px, 100%)", display: "grid", gap: 22 }}>
+
+      <style>
+        {`
+          @keyframes noteHeroGlow {
+            0%, 100% {
+              box-shadow:
+                0 24px 60px rgba(79,70,229,0.16),
+                0 0 0 rgba(16,185,129,0);
+            }
+            50% {
+              box-shadow:
+                0 30px 75px rgba(79,70,229,0.22),
+                0 0 28px rgba(16,185,129,0.10);
+            }
+          }
+
+          @keyframes floatingOrbDriftA {
+            0%   { transform: translate3d(0px, 0px, 0) rotate(-2deg); }
+            20%  { transform: translate3d(18px, -16px, 0) rotate(1deg); }
+            40%  { transform: translate3d(34px, 10px, 0) rotate(3deg); }
+            60%  { transform: translate3d(-12px, 22px, 0) rotate(-1deg); }
+            80%  { transform: translate3d(-24px, -10px, 0) rotate(-3deg); }
+            100% { transform: translate3d(0px, 0px, 0) rotate(-2deg); }
+          }
+
+          @keyframes floatingOrbDriftB {
+            0%   { transform: translate3d(0px, 0px, 0) rotate(2deg); }
+            20%  { transform: translate3d(-22px, 18px, 0) rotate(-1deg); }
+            40%  { transform: translate3d(12px, 30px, 0) rotate(2deg); }
+            60%  { transform: translate3d(30px, -10px, 0) rotate(4deg); }
+            80%  { transform: translate3d(-10px, -22px, 0) rotate(0deg); }
+            100% { transform: translate3d(0px, 0px, 0) rotate(2deg); }
+          }
+
+          @keyframes floatingOrbDriftC {
+            0%   { transform: translate3d(0px, 0px, 0) rotate(0deg); }
+            25%  { transform: translate3d(26px, -14px, 0) rotate(3deg); }
+            50%  { transform: translate3d(8px, 20px, 0) rotate(-2deg); }
+            75%  { transform: translate3d(-28px, 8px, 0) rotate(2deg); }
+            100% { transform: translate3d(0px, 0px, 0) rotate(0deg); }
+          }
+
+          @keyframes noteHaloPulse {
+            0%, 100% { opacity: 0.58; transform: scale(1); }
+            50% { opacity: 0.88; transform: scale(1.08); }
+          }
+
+          @keyframes noteFloatShadow {
+            0%, 100% {
+              filter: drop-shadow(0 20px 36px rgba(15,23,42,0.18));
+            }
+            50% {
+              filter: drop-shadow(0 28px 46px rgba(79,70,229,0.22));
+            }
+          }
+
+          @keyframes noteSparkle {
+            0%, 100% { opacity: 0.28; transform: scale(1); }
+            50% { opacity: 0.72; transform: scale(1.18); }
+          }
+        `}
+      </style>
 
       {/* TOP BAR NOTE */}
       <div style={topBar}>
@@ -10315,8 +10377,8 @@ function MiniCalendarioEventi({
                   gap: 10,
                   padding: "11px 14px",
                   borderRadius: 999,
-                  border: "1px solid rgba(79,70,229,0.12)",
-                  background: "rgba(255,255,255,0.55)",
+                  border: "1px solid rgba(79,70,229,0.14)",
+                  background: "linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0.56))",
                   boxShadow: "0 18px 34px rgba(79,70,229,0.10)",
                   fontSize: 13,
                   fontWeight: 950,
@@ -10337,6 +10399,7 @@ function MiniCalendarioEventi({
                 fontSize: 13,
                 fontWeight: 900,
                 opacity: 0.72,
+                color: "rgba(241,245,249,0.92)",
               }}
             >
               Utente attivo: <span style={{ opacity: 1 }}>{currentUser.nome}</span>
@@ -10402,7 +10465,7 @@ function MiniCalendarioEventi({
       <div
         style={{
           display: "grid",
-          gap: 10,
+          gap: 12,
           justifyItems: "center",
           textAlign: "center",
           padding: "8px 6px 2px",
@@ -10410,15 +10473,31 @@ function MiniCalendarioEventi({
       >
         <div
           style={{
-            fontSize: 34,
-            fontWeight: 1000,
-            letterSpacing: -0.8,
-            color: "rgba(241,245,249,0.98)",
-            textShadow: "0 12px 30px rgba(79,70,229,0.22)",
-            lineHeight: 1.05,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 12,
+            padding: "12px 18px",
+            borderRadius: 999,
+            border: "1px solid rgba(99,102,241,0.18)",
+            background:
+              "linear-gradient(180deg, rgba(79,70,229,0.16), rgba(16,185,129,0.08))",
+            boxShadow: "0 18px 40px rgba(79,70,229,0.14)",
+            animation: "noteHeroGlow 3.8s ease-in-out infinite",
           }}
         >
-          ✒️ Le tue Note
+          <span style={{ fontSize: 22 }}>✒️</span>
+          <span
+            style={{
+              fontSize: 34,
+              fontWeight: 1000,
+              letterSpacing: -0.8,
+              color: "rgba(241,245,249,0.98)",
+              textShadow: "0 12px 30px rgba(79,70,229,0.22)",
+              lineHeight: 1.05,
+            }}
+          >
+            Le tue Note
+          </span>
         </div>
 
         <div
@@ -10427,30 +10506,36 @@ function MiniCalendarioEventi({
             fontSize: 15,
             fontWeight: 800,
             color: "rgba(191,219,254,0.88)",
-            lineHeight: 1.5,
+            lineHeight: 1.6,
             letterSpacing: 0.1,
           }}
         >
-          Scrivi, salva e gestisci tutto al volo
+          Uno spazio elegante, vivo e scenografico dove le tue idee diventano bolle luminose,
+          fluttuanti e modificabili al volo.
         </div>
       </div>
 
-      {/* INPUT */}
+      {/* AREA PRINCIPALE */}
       <div
         style={{
-          display: "flex",
-          justifyContent: "center",
-          width: "100%",
+          display: "grid",
+          gridTemplateColumns:
+            typeof window !== "undefined" && window.innerWidth <= 980
+              ? "1fr"
+              : "minmax(320px, 420px) minmax(0, 1fr)",
+          gap: 20,
+          alignItems: "start",
         }}
       >
+        {/* PANNELLO SCRITTURA */}
         <div
           style={{
             ...ui.card,
-            width: "min(760px, 100%)",
             padding: typeof window !== "undefined" && window.innerWidth <= 640 ? 16 : 22,
             display: "grid",
-            gap: 14,
-            position: "relative",
+            gap: 16,
+            position: "sticky",
+            top: 14,
             overflow: "hidden",
             border: "1px solid rgba(255,255,255,0.08)",
             boxShadow:
@@ -10463,22 +10548,41 @@ function MiniCalendarioEventi({
               position: "absolute",
               inset: 0,
               background:
-                "radial-gradient(700px 220px at 0% 0%, rgba(79,70,229,0.12), transparent 60%), radial-gradient(700px 220px at 100% 0%, rgba(16,185,129,0.08), transparent 60%)",
+                "radial-gradient(700px 220px at 0% 0%, rgba(79,70,229,0.14), transparent 60%), radial-gradient(700px 220px at 100% 0%, rgba(16,185,129,0.10), transparent 60%), radial-gradient(500px 220px at 50% 100%, rgba(251,191,36,0.08), transparent 60%)",
               pointerEvents: "none",
             }}
           />
 
-          <div style={{ position: "relative", zIndex: 1, display: "grid", gap: 14 }}>
+          <div style={{ position: "relative", zIndex: 1, display: "grid", gap: 16 }}>
             <div
               style={{
-                textAlign: "center",
-                fontSize: 16,
-                fontWeight: 1000,
-                color: "rgba(241,245,249,0.96)",
-                letterSpacing: -0.2,
+                display: "grid",
+                gap: 6,
               }}
             >
-              Nuova nota rapida
+              <div
+                style={{
+                  textAlign: "center",
+                  fontSize: 18,
+                  fontWeight: 1000,
+                  color: "rgba(241,245,249,0.98)",
+                  letterSpacing: -0.2,
+                }}
+              >
+                {notaInModifica ? "Modifica la tua nota" : "Nuova nota premium"}
+              </div>
+
+              <div
+                style={{
+                  textAlign: "center",
+                  fontSize: 13,
+                  fontWeight: 800,
+                  color: "rgba(191,219,254,0.82)",
+                  lineHeight: 1.5,
+                }}
+              >
+                Scrivila qui. Poi la vedrai comparire come una bolla viva nella tua area note.
+              </div>
             </div>
 
             <div
@@ -10486,10 +10590,10 @@ function MiniCalendarioEventi({
                 width: "100%",
                 maxWidth: "100%",
                 boxSizing: "border-box",
-                borderRadius: 24,
+                borderRadius: 26,
                 padding: typeof window !== "undefined" && window.innerWidth <= 640 ? 10 : 12,
                 background:
-                  "linear-gradient(180deg, rgba(255,248,220,0.97), rgba(245,222,179,0.94))",
+                  "linear-gradient(180deg, rgba(255,248,220,0.98), rgba(245,222,179,0.95))",
                 border: "1px solid rgba(214,170,94,0.45)",
                 boxShadow:
                   "0 18px 34px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.55), inset 0 0 0 1px rgba(160,82,45,0.06)",
@@ -10511,14 +10615,17 @@ function MiniCalendarioEventi({
               <textarea
                 value={notaInput}
                 onChange={(e) => setNotaInput(e.target.value)}
-                placeholder="Scrivi qualcosa..."
+                placeholder="Scrivi qualcosa di importante, un promemoria, un’idea, una frase da ricordare..."
                 style={{
                   width: "100%",
                   maxWidth: "100%",
-                  minHeight: typeof window !== "undefined" && window.innerWidth <= 640 ? 160 : 180,
+                  minHeight: typeof window !== "undefined" && window.innerWidth <= 640 ? 180 : 220,
                   borderRadius: 18,
                   border: "1px solid rgba(160,82,45,0.22)",
-                  padding: typeof window !== "undefined" && window.innerWidth <= 640 ? "16px 14px" : "18px 16px",
+                  padding:
+                    typeof window !== "undefined" && window.innerWidth <= 640
+                      ? "16px 14px"
+                      : "18px 16px",
                   fontSize: typeof window !== "undefined" && window.innerWidth <= 640 ? 16 : 17,
                   fontWeight: 700,
                   lineHeight: 1.65,
@@ -10548,120 +10655,388 @@ function MiniCalendarioEventi({
                 borderRadius: 20,
                 border: "1px solid rgba(16,185,129,0.30)",
                 background:
-                  "linear-gradient(180deg, rgba(16,185,129,0.45), rgba(5,150,105,0.24))",
+                  "linear-gradient(180deg, rgba(16,185,129,0.48), rgba(5,150,105,0.24))",
                 fontWeight: 1000,
                 fontSize: 16,
                 cursor: "pointer",
                 color: "rgba(255,255,255,0.98)",
                 boxShadow:
                   "0 18px 36px rgba(16,185,129,0.20), inset 0 1px 0 rgba(255,255,255,0.10)",
-                transition: "transform .18s ease, box-shadow .18s ease",
+                transition: "transform .18s ease, box-shadow .18s ease, filter .18s ease",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "translateY(-2px)";
                 e.currentTarget.style.boxShadow =
                   "0 24px 42px rgba(16,185,129,0.24), inset 0 1px 0 rgba(255,255,255,0.10)";
+                e.currentTarget.style.filter = "brightness(1.04)";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = "translateY(0)";
                 e.currentTarget.style.boxShadow =
                   "0 18px 36px rgba(16,185,129,0.20), inset 0 1px 0 rgba(255,255,255,0.10)";
+                e.currentTarget.style.filter = "brightness(1)";
               }}
             >
-              💾 Salva Nota
+              {notaInModifica ? "✨ Aggiorna Nota" : "💾 Salva Nota"}
             </button>
           </div>
         </div>
-      </div>
 
-      {/* NOTE BOLLE */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-          gap: 14,
-        }}
-      >
-        {note.length === 0 ? (
-          <div
-            style={{
-              gridColumn: "1 / -1",
-              textAlign: "center",
-              opacity: 0.7,
-              fontWeight: 800,
-              color: "rgba(226,232,240,0.86)",
-              fontSize: 16,
-              padding: "10px 0",
-            }}
-          >
-            Nessuna nota presente
-          </div>
-        ) : (
-          note.map((n) => (
+        {/* STAGE BOLLE NOTE */}
+        {(() => {
+          const isMobile = typeof window !== "undefined" && window.innerWidth <= 640;
+          const columns = isMobile ? 1 : note.length <= 2 ? 2 : note.length <= 6 ? 3 : 4;
+          const rows = Math.max(1, Math.ceil(note.length / columns));
+          const stageHeight = isMobile
+            ? Math.max(360, note.length * 200)
+            : Math.max(520, rows * 190 + 120);
+
+          return (
             <div
-              key={n.id}
               style={{
-                padding: 16,
-                borderRadius: 20,
-                background: "linear-gradient(180deg, rgba(79,70,229,0.3), rgba(124,58,237,0.15))",
-                border: "1px solid rgba(79,70,229,0.2)",
-                boxShadow: "0 10px 25px rgba(79,70,229,0.2)",
-                cursor: "pointer",
-                transition: "transform .2s ease, box-shadow .2s ease",
-                display: "grid",
-                gap: 12,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "scale(1.05)";
-                e.currentTarget.style.boxShadow = "0 16px 34px rgba(79,70,229,0.26)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "scale(1)";
-                e.currentTarget.style.boxShadow = "0 10px 25px rgba(79,70,229,0.2)";
+                ...ui.card,
+                minHeight: stageHeight,
+                padding: isMobile ? 14 : 20,
+                position: "relative",
+                overflow: "hidden",
+                border: "1px solid rgba(255,255,255,0.08)",
+                boxShadow:
+                  "0 28px 70px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.04)",
+                background:
+                  "radial-gradient(900px 360px at 0% 0%, rgba(79,70,229,0.12), transparent 58%), radial-gradient(900px 360px at 100% 0%, rgba(16,185,129,0.10), transparent 58%), radial-gradient(800px 420px at 50% 100%, rgba(244,114,182,0.08), transparent 58%), linear-gradient(180deg, rgba(2,6,23,0.96), rgba(15,23,42,0.94))",
               }}
             >
               <div
                 style={{
-                  fontSize: 14,
-                  fontWeight: 900,
-                  color: "white",
-                  lineHeight: 1.5,
-                  whiteSpace: "pre-wrap",
-                  wordBreak: "break-word",
+                  position: "absolute",
+                  inset: 0,
+                  pointerEvents: "none",
+                  background:
+                    "radial-gradient(circle at 8% 14%, rgba(255,255,255,0.08), transparent 14%), radial-gradient(circle at 86% 18%, rgba(255,255,255,0.06), transparent 14%), radial-gradient(circle at 18% 78%, rgba(255,255,255,0.05), transparent 14%), radial-gradient(circle at 82% 72%, rgba(255,255,255,0.05), transparent 14%)",
                 }}
-              >
-                {n.testo}
-              </div>
+              />
 
               <div
                 style={{
-                  marginTop: 2,
-                  display: "flex",
+                  position: "relative",
+                  zIndex: 1,
+                  display: "grid",
                   gap: 8,
-                  flexWrap: "wrap",
+                  marginBottom: 10,
+                  justifyItems: isMobile ? "center" : "start",
+                  textAlign: isMobile ? "center" : "left",
                 }}
               >
-                <button onClick={() => modificaNota(n)} style={chip(false)}>
-                  Modifica
-                </button>
-
-                <button
-                  onClick={() => eliminaNota(n.id)}
+                <div
                   style={{
-                    ...chip(false),
-                    border: "1px solid rgba(239,68,68,0.22)",
-                    color: "rgba(185,28,28,0.96)",
-                    background: "rgba(254,242,242,0.92)",
+                    fontSize: 24,
+                    fontWeight: 1000,
+                    letterSpacing: -0.5,
+                    color: "rgba(241,245,249,0.98)",
                   }}
                 >
-                  Elimina
-                </button>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+                  Bollaio Note
+                </div>
 
+                <div
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 800,
+                    color: "rgba(191,219,254,0.82)",
+                    maxWidth: 700,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  Le note salvate vivono qui dentro come sfere luminose. Per ora vagano in modo premium;
+                  poi rifiniremo ancora meglio la logica dei movimenti.
+                </div>
+              </div>
+
+              {note.length === 0 ? (
+                <div
+                  style={{
+                    minHeight: 260,
+                    display: "grid",
+                    placeItems: "center",
+                    position: "relative",
+                    zIndex: 1,
+                  }}
+                >
+                  <div
+                    style={{
+                      textAlign: "center",
+                      display: "grid",
+                      gap: 12,
+                      justifyItems: "center",
+                      color: "rgba(226,232,240,0.88)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 86,
+                        height: 86,
+                        borderRadius: "50%",
+                        display: "grid",
+                        placeItems: "center",
+                        fontSize: 32,
+                        border: "1px solid rgba(255,255,255,0.10)",
+                        background:
+                          "linear-gradient(180deg, rgba(79,70,229,0.24), rgba(16,185,129,0.12))",
+                        boxShadow: "0 22px 46px rgba(79,70,229,0.16)",
+                      }}
+                    >
+                      🫧
+                    </div>
+
+                    <div style={{ fontSize: 18, fontWeight: 900 }}>
+                      Nessuna nota presente
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 700,
+                        opacity: 0.76,
+                        maxWidth: 420,
+                        lineHeight: 1.55,
+                      }}
+                    >
+                      Scrivi la tua prima nota e la vedrai comparire qui come una bolla elegante,
+                      modificabile e pronta a prendere vita.
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    position: "relative",
+                    zIndex: 1,
+                    minHeight: stageHeight - 90,
+                  }}
+                >
+                  {note.map((n, index) => {
+                    const col = isMobile ? 0 : index % columns;
+                    const row = isMobile ? index : Math.floor(index / columns);
+
+                    const leftPercent = isMobile
+                      ? 50
+                      : columns === 1
+                      ? 50
+                      : 14 + col * (72 / Math.max(1, columns - 1));
+
+                    const topPx = isMobile ? 20 + row * 190 : 20 + row * 185;
+
+                    const palette = [
+                      {
+                        bg: "linear-gradient(180deg, rgba(99,102,241,0.42), rgba(79,70,229,0.24))",
+                        border: "rgba(129,140,248,0.34)",
+                        glow: "rgba(99,102,241,0.22)",
+                        shine: "rgba(255,255,255,0.34)",
+                      },
+                      {
+                        bg: "linear-gradient(180deg, rgba(16,185,129,0.34), rgba(5,150,105,0.20))",
+                        border: "rgba(52,211,153,0.32)",
+                        glow: "rgba(16,185,129,0.20)",
+                        shine: "rgba(255,255,255,0.32)",
+                      },
+                      {
+                        bg: "linear-gradient(180deg, rgba(236,72,153,0.34), rgba(190,24,93,0.18))",
+                        border: "rgba(244,114,182,0.30)",
+                        glow: "rgba(236,72,153,0.18)",
+                        shine: "rgba(255,255,255,0.30)",
+                      },
+                      {
+                        bg: "linear-gradient(180deg, rgba(251,191,36,0.32), rgba(217,119,6,0.18))",
+                        border: "rgba(252,211,77,0.30)",
+                        glow: "rgba(251,191,36,0.18)",
+                        shine: "rgba(255,255,255,0.30)",
+                      },
+                    ][index % 4];
+
+                    const driftName =
+                      index % 3 === 0
+                        ? "floatingOrbDriftA"
+                        : index % 3 === 1
+                        ? "floatingOrbDriftB"
+                        : "floatingOrbDriftC";
+
+                    const bubbleWidth = isMobile ? "min(280px, 82vw)" : "clamp(220px, 19vw, 280px)";
+                    const bubbleMinHeight = isMobile ? 150 : 165;
+
+                    return (
+                      <div
+                        key={n.id}
+                        style={{
+                          position: "absolute",
+                          left: `${leftPercent}%`,
+                          top: topPx,
+                          width: bubbleWidth,
+                          minHeight: bubbleMinHeight,
+                          transform: "translateX(-50%)",
+                          animation: `${driftName} ${8 + (index % 4)}s ease-in-out infinite`,
+                          willChange: "transform",
+                        }}
+                      >
+                        <div
+                          style={{
+                            position: "relative",
+                            animation: `noteFloatShadow ${4.8 + (index % 3)}s ease-in-out infinite`,
+                          }}
+                        >
+                          <div
+                            style={{
+                              position: "absolute",
+                              inset: -12,
+                              borderRadius: "50%",
+                              background: `radial-gradient(circle, ${palette.glow}, transparent 70%)`,
+                              filter: "blur(16px)",
+                              pointerEvents: "none",
+                              animation: `noteHaloPulse ${3.2 + (index % 3)}s ease-in-out infinite`,
+                            }}
+                          />
+
+                          <div
+                            style={{
+                              position: "relative",
+                              borderRadius: "44% 56% 52% 48% / 50% 42% 58% 50%",
+                              background: palette.bg,
+                              border: `1px solid ${palette.border}`,
+                              boxShadow:
+                                "0 26px 46px rgba(15,23,42,0.18), inset 0 1px 0 rgba(255,255,255,0.14), inset 0 -18px 28px rgba(15,23,42,0.12)",
+                              backdropFilter: "blur(16px)",
+                              overflow: "hidden",
+                              padding: isMobile ? "18px 16px 16px" : "20px 18px 16px",
+                              display: "grid",
+                              gap: 14,
+                              cursor: "pointer",
+                              transition: "transform .18s ease, box-shadow .18s ease, filter .18s ease",
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.transform = "scale(1.04)";
+                              e.currentTarget.style.boxShadow =
+                                "0 34px 58px rgba(15,23,42,0.22), inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -18px 28px rgba(15,23,42,0.14)";
+                              e.currentTarget.style.filter = "brightness(1.03)";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = "scale(1)";
+                              e.currentTarget.style.boxShadow =
+                                "0 26px 46px rgba(15,23,42,0.18), inset 0 1px 0 rgba(255,255,255,0.14), inset 0 -18px 28px rgba(15,23,42,0.12)";
+                              e.currentTarget.style.filter = "brightness(1)";
+                            }}
+                          >
+                            <div
+                              style={{
+                                position: "absolute",
+                                inset: 0,
+                                pointerEvents: "none",
+                                background: `
+                                  radial-gradient(circle at 24% 18%, ${palette.shine}, transparent 18%),
+                                  radial-gradient(circle at 74% 24%, rgba(255,255,255,0.10), transparent 18%),
+                                  radial-gradient(circle at 32% 82%, rgba(255,255,255,0.06), transparent 16%)
+                                `,
+                              }}
+                            />
+
+                            <div
+                              style={{
+                                position: "absolute",
+                                top: 14,
+                                right: 18,
+                                width: 8,
+                                height: 8,
+                                borderRadius: "50%",
+                                background: "rgba(255,255,255,0.76)",
+                                boxShadow: "0 0 0 6px rgba(255,255,255,0.05)",
+                                animation: `noteSparkle ${2.6 + (index % 3)}s ease-in-out infinite`,
+                                pointerEvents: "none",
+                              }}
+                            />
+
+                            <div
+                              style={{
+                                position: "relative",
+                                zIndex: 1,
+                                display: "grid",
+                                gap: 12,
+                              }}
+                            >
+                              <div
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  width: 42,
+                                  height: 42,
+                                  borderRadius: "50%",
+                                  background: "rgba(255,255,255,0.12)",
+                                  border: "1px solid rgba(255,255,255,0.14)",
+                                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.12)",
+                                  fontSize: 18,
+                                }}
+                              >
+                                🫧
+                              </div>
+
+                              <div
+                                style={{
+                                  fontSize: 14,
+                                  fontWeight: 900,
+                                  color: "rgba(255,255,255,0.98)",
+                                  lineHeight: 1.6,
+                                  whiteSpace: "pre-wrap",
+                                  wordBreak: "break-word",
+                                  textShadow: "0 8px 20px rgba(15,23,42,0.18)",
+                                }}
+                              >
+                                {n.testo}
+                              </div>
+
+                              <div
+                                style={{
+                                  display: "flex",
+                                  gap: 8,
+                                  flexWrap: "wrap",
+                                  alignItems: "center",
+                                }}
+                              >
+                                <button
+                                  onClick={() => modificaNota(n)}
+                                  style={{
+                                    ...chip(false),
+                                    border: "1px solid rgba(255,255,255,0.16)",
+                                    background: "rgba(255,255,255,0.10)",
+                                    color: "rgba(255,255,255,0.96)",
+                                    backdropFilter: "blur(8px)",
+                                  }}
+                                >
+                                  Modifica
+                                </button>
+
+                                <button
+                                  onClick={() => eliminaNota(n.id)}
+                                  style={{
+                                    ...chip(false),
+                                    border: "1px solid rgba(255,120,120,0.22)",
+                                    color: "rgba(255,240,240,0.98)",
+                                    background: "rgba(239,68,68,0.18)",
+                                    backdropFilter: "blur(8px)",
+                                  }}
+                                >
+                                  Elimina
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })()}
+      </div>
     </div>
   </div>
 )}
