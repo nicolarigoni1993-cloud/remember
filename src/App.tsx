@@ -6640,8 +6640,7 @@ function MiniCalendarioEventi({
 
 
 
-
-{pagina !== "home" && pagina !== "aggiungi" && (
+{pagina !== "home" && pagina !== "aggiungi" && pagina !== "note" && (
   <div style={topBar}>
     <div style={{ ...ui.glass, padding: 22 }}>
       <div style={{ display: "grid", gap: 18 }}>
@@ -6758,6 +6757,7 @@ function MiniCalendarioEventi({
     </div>
   </div>
 )}
+
 
 
 
