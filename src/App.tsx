@@ -10358,20 +10358,30 @@ function MiniCalendarioEventi({
           display: "flex",
           justifyContent: "center",
           alignItems: "flex-start",
-          minHeight: isMobileNote ? 164 : 174,
+          minHeight: isMobileNote ? 168 : 182,
           padding: 2,
           boxSizing: "border-box",
         }}
       >
         <div
           style={{
-            width: isMobileNote ? "min(100%, 212px)" : "min(100%, 220px)",
+            width: isMobileNote ? "min(100%, 228px)" : "min(100%, 236px)",
+            minWidth: isMobileNote ? 180 : 190,
+            minHeight: isMobileNote ? 150 : 160,
+            maxWidth: isMobileNote ? "92vw" : 320,
+            maxHeight: 420,
             touchAction: "none",
             cursor: "grab",
             userSelect: "none",
             transform: "translate3d(0px, 0px, 0)",
+            resize: archivio ? "none" : "both",
+            overflow: "visible",
+            position: "relative",
           }}
           onPointerDown={(e) => {
+            const target = e.target as HTMLElement;
+            if (target.closest("[data-note-action='1']")) return;
+
             const el = e.currentTarget as HTMLDivElement;
             el.setPointerCapture?.(e.pointerId);
             el.style.cursor = "grabbing";
@@ -10415,17 +10425,20 @@ function MiniCalendarioEventi({
             el.dataset.dragging = "0";
             el.style.cursor = "grab";
           }}
+          title={archivio ? "Nota archiviata" : "Puoi trascinare e ridimensionare la bolla"}
         >
           <div
             style={{
               position: "relative",
               animation: `${driftName} ${7 + (index % 3)}s ease-in-out infinite`,
+              width: "100%",
+              height: "100%",
             }}
           >
             <div
               style={{
                 position: "absolute",
-                inset: -8,
+                inset: -10,
                 borderRadius: "50%",
                 background: `radial-gradient(circle, ${palette.glow}, transparent 72%)`,
                 filter: "blur(14px)",
@@ -10437,7 +10450,10 @@ function MiniCalendarioEventi({
             <div
               style={{
                 position: "relative",
-                borderRadius: "48% 52% 50% 50% / 46% 46% 54% 54%",
+                width: "100%",
+                minHeight: isMobileNote ? 150 : 160,
+                height: "100%",
+                borderRadius: 34,
                 background: archivio
                   ? "linear-gradient(180deg, rgba(71,85,105,0.28), rgba(51,65,85,0.16))"
                   : palette.bg,
@@ -10447,11 +10463,11 @@ function MiniCalendarioEventi({
                 boxShadow:
                   "0 18px 34px rgba(15,23,42,0.16), inset 0 1px 0 rgba(255,255,255,0.14), inset 0 -12px 22px rgba(15,23,42,0.08)",
                 backdropFilter: "blur(16px)",
-                overflow: "hidden",
+                overflow: "visible",
                 padding: isMobileNote ? "14px 12px 12px" : "15px 13px 12px",
                 display: "grid",
+                gridTemplateRows: "auto 1fr auto",
                 gap: 10,
-                minHeight: isMobileNote ? 150 : 156,
                 transition: "transform .18s ease, box-shadow .18s ease, filter .18s ease",
                 animation: "noteGlowSoft 4.6s ease-in-out infinite",
               }}
@@ -10460,6 +10476,7 @@ function MiniCalendarioEventi({
                 style={{
                   position: "absolute",
                   inset: 0,
+                  borderRadius: 34,
                   pointerEvents: "none",
                   background:
                     "radial-gradient(circle at 26% 20%, rgba(255,255,255,0.24), transparent 16%), radial-gradient(circle at 74% 24%, rgba(255,255,255,0.06), transparent 16%)",
@@ -10471,6 +10488,8 @@ function MiniCalendarioEventi({
                   display: "flex",
                   alignItems: "flex-start",
                   justifyContent: "flex-start",
+                  paddingTop: 2,
+                  paddingLeft: 2,
                 }}
               >
                 <div
@@ -10486,8 +10505,6 @@ function MiniCalendarioEventi({
                     boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08)",
                     fontSize: 12,
                     flexShrink: 0,
-                    marginLeft: 2,
-                    marginTop: 2,
                   }}
                 >
                   {archivio ? "🗂️" : "🫧"}
@@ -10497,6 +10514,7 @@ function MiniCalendarioEventi({
               <details
                 style={{
                   width: "100%",
+                  minHeight: 0,
                 }}
               >
                 <summary
@@ -10575,6 +10593,7 @@ function MiniCalendarioEventi({
               >
                 {!archivio && (
                   <button
+                    data-note-action="1"
                     onClick={() => modificaNota(n)}
                     style={{
                       width: 30,
@@ -10602,6 +10621,7 @@ function MiniCalendarioEventi({
 
                 {!archivio && (
                   <button
+                    data-note-action="1"
                     onClick={() => archiviaNota(n.id)}
                     style={{
                       width: 30,
@@ -10629,6 +10649,7 @@ function MiniCalendarioEventi({
 
                 {archivio && (
                   <button
+                    data-note-action="1"
                     onClick={() => ripristinaNota(n.id)}
                     style={{
                       width: 30,
@@ -10655,6 +10676,7 @@ function MiniCalendarioEventi({
                 )}
 
                 <button
+                  data-note-action="1"
                   onClick={() => eliminaNota(n.id)}
                   style={{
                     width: 30,
@@ -10679,6 +10701,25 @@ function MiniCalendarioEventi({
                   <span style={{ transform: "translateY(-1px)" }}>✕</span>
                 </button>
               </div>
+
+              {!archivio && (
+                <div
+                  style={{
+                    position: "absolute",
+                    right: 10,
+                    bottom: 8,
+                    width: 14,
+                    height: 14,
+                    borderRadius: 4,
+                    background:
+                      "linear-gradient(135deg, rgba(255,255,255,0.34), rgba(255,255,255,0.08))",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    boxShadow: "0 4px 10px rgba(15,23,42,0.10)",
+                    pointerEvents: "none",
+                    opacity: 0.75,
+                  }}
+                />
+              )}
             </div>
           </div>
         </div>
