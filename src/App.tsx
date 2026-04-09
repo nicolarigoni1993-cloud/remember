@@ -10282,78 +10282,205 @@ function MiniCalendarioEventi({
 
 
 {pagina === "note" && (
-  <div style={{ minHeight: "70vh", display: "grid", placeItems: "center", padding: 16 }}>
-    <div style={{ width: "min(900px, 100%)", display: "grid", gap: 20 }}>
+  <div style={{ minHeight: "70vh", display: "grid", placeItems: "start center", padding: 16 }}>
+    <div style={{ width: "min(980px, 100%)", display: "grid", gap: 20 }}>
 
       {/* HEADER */}
-      <div style={{ textAlign: "center" }}>
-        <div style={{
-          fontSize: 34,
-          fontWeight: 1000,
-          color: "rgba(241,245,249,0.98)"
-        }}>
+      <div
+        style={{
+          display: "grid",
+          gap: 10,
+          justifyItems: "center",
+          textAlign: "center",
+          padding: "8px 6px 2px",
+        }}
+      >
+        <div
+          style={{
+            fontSize: 34,
+            fontWeight: 1000,
+            letterSpacing: -0.8,
+            color: "rgba(241,245,249,0.98)",
+            textShadow: "0 12px 30px rgba(79,70,229,0.22)",
+            lineHeight: 1.05,
+          }}
+        >
           ✒️ Le tue Note
         </div>
 
-        <div style={{
-          fontSize: 14,
-          color: "rgba(191,219,254,0.85)",
-          marginTop: 6
-        }}>
+        <div
+          style={{
+            maxWidth: 760,
+            fontSize: 15,
+            fontWeight: 800,
+            color: "rgba(191,219,254,0.88)",
+            lineHeight: 1.5,
+            letterSpacing: 0.1,
+          }}
+        >
           Scrivi, salva e gestisci tutto al volo
         </div>
       </div>
 
       {/* INPUT */}
-      <div style={{
-        ...ui.card,
-        padding: 18,
-        display: "grid",
-        gap: 12
-      }}>
-        <textarea
-          value={notaInput}
-          onChange={(e) => setNotaInput(e.target.value)}
-          placeholder="Scrivi qualcosa..."
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          width: "100%",
+        }}
+      >
+        <div
           style={{
-            width: "100%",
-            minHeight: 100,
-            borderRadius: 16,
-            border: "1px solid rgba(255,255,255,0.1)",
-            padding: 12,
-            fontSize: 14,
-            background: "rgba(255,255,255,0.05)",
-            color: "white"
-          }}
-        />
-
-        <button
-          onClick={salvaNota}
-          style={{
-            padding: "14px",
-            borderRadius: 16,
-            border: "1px solid rgba(16,185,129,0.3)",
-            background: "linear-gradient(180deg, rgba(16,185,129,0.4), rgba(5,150,105,0.2))",
-            fontWeight: 1000,
-            cursor: "pointer"
+            ...ui.card,
+            width: "min(760px, 100%)",
+            padding: typeof window !== "undefined" && window.innerWidth <= 640 ? 16 : 22,
+            display: "grid",
+            gap: 14,
+            position: "relative",
+            overflow: "hidden",
+            border: "1px solid rgba(255,255,255,0.08)",
+            boxShadow:
+              "0 28px 70px rgba(0,0,0,0.34), inset 0 1px 0 rgba(255,255,255,0.04)",
+            boxSizing: "border-box",
           }}
         >
-          💾 Salva Nota
-        </button>
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background:
+                "radial-gradient(700px 220px at 0% 0%, rgba(79,70,229,0.12), transparent 60%), radial-gradient(700px 220px at 100% 0%, rgba(16,185,129,0.08), transparent 60%)",
+              pointerEvents: "none",
+            }}
+          />
+
+          <div style={{ position: "relative", zIndex: 1, display: "grid", gap: 14 }}>
+            <div
+              style={{
+                textAlign: "center",
+                fontSize: 16,
+                fontWeight: 1000,
+                color: "rgba(241,245,249,0.96)",
+                letterSpacing: -0.2,
+              }}
+            >
+              Nuova nota rapida
+            </div>
+
+            <div
+              style={{
+                width: "100%",
+                maxWidth: "100%",
+                boxSizing: "border-box",
+                borderRadius: 24,
+                padding: typeof window !== "undefined" && window.innerWidth <= 640 ? 10 : 12,
+                background:
+                  "linear-gradient(180deg, rgba(255,248,220,0.97), rgba(245,222,179,0.94))",
+                border: "1px solid rgba(214,170,94,0.45)",
+                boxShadow:
+                  "0 18px 34px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.55), inset 0 0 0 1px rgba(160,82,45,0.06)",
+                position: "relative",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  pointerEvents: "none",
+                  background:
+                    "radial-gradient(circle at 12% 18%, rgba(255,255,255,0.34), transparent 18%), radial-gradient(circle at 86% 24%, rgba(160,82,45,0.08), transparent 22%), radial-gradient(circle at 28% 78%, rgba(210,180,140,0.18), transparent 24%), radial-gradient(circle at 76% 72%, rgba(139,69,19,0.08), transparent 22%)",
+                  opacity: 0.95,
+                }}
+              />
+
+              <textarea
+                value={notaInput}
+                onChange={(e) => setNotaInput(e.target.value)}
+                placeholder="Scrivi qualcosa..."
+                style={{
+                  width: "100%",
+                  maxWidth: "100%",
+                  minHeight: typeof window !== "undefined" && window.innerWidth <= 640 ? 160 : 180,
+                  borderRadius: 18,
+                  border: "1px solid rgba(160,82,45,0.22)",
+                  padding: typeof window !== "undefined" && window.innerWidth <= 640 ? "16px 14px" : "18px 16px",
+                  fontSize: typeof window !== "undefined" && window.innerWidth <= 640 ? 16 : 17,
+                  fontWeight: 700,
+                  lineHeight: 1.65,
+                  background:
+                    "linear-gradient(180deg, rgba(255,252,240,0.78), rgba(250,240,210,0.72))",
+                  color: "rgba(92,51,23,0.98)",
+                  outline: "none",
+                  resize: "vertical",
+                  boxSizing: "border-box",
+                  boxShadow:
+                    "inset 0 1px 0 rgba(255,255,255,0.55), inset 0 0 18px rgba(160,82,45,0.04)",
+                  fontFamily:
+                    "'Georgia', 'Times New Roman', serif",
+                  letterSpacing: 0.2,
+                  caretColor: "rgba(120,53,15,0.95)",
+                  position: "relative",
+                  zIndex: 1,
+                  display: "block",
+                }}
+              />
+            </div>
+
+            <button
+              onClick={salvaNota}
+              style={{
+                padding: "16px",
+                borderRadius: 20,
+                border: "1px solid rgba(16,185,129,0.30)",
+                background:
+                  "linear-gradient(180deg, rgba(16,185,129,0.45), rgba(5,150,105,0.24))",
+                fontWeight: 1000,
+                fontSize: 16,
+                cursor: "pointer",
+                color: "rgba(255,255,255,0.98)",
+                boxShadow:
+                  "0 18px 36px rgba(16,185,129,0.20), inset 0 1px 0 rgba(255,255,255,0.10)",
+                transition: "transform .18s ease, box-shadow .18s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow =
+                  "0 24px 42px rgba(16,185,129,0.24), inset 0 1px 0 rgba(255,255,255,0.10)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow =
+                  "0 18px 36px rgba(16,185,129,0.20), inset 0 1px 0 rgba(255,255,255,0.10)";
+              }}
+            >
+              💾 Salva Nota
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* NOTE BOLLE */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-        gap: 14
-      }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+          gap: 14,
+        }}
+      >
         {note.length === 0 ? (
-          <div style={{
-            textAlign: "center",
-            opacity: 0.7,
-            fontWeight: 800
-          }}>
+          <div
+            style={{
+              gridColumn: "1 / -1",
+              textAlign: "center",
+              opacity: 0.7,
+              fontWeight: 800,
+              color: "rgba(226,232,240,0.86)",
+              fontSize: 16,
+              padding: "10px 0",
+            }}
+          >
             Nessuna nota presente
           </div>
         ) : (
@@ -10367,26 +10494,55 @@ function MiniCalendarioEventi({
                 border: "1px solid rgba(79,70,229,0.2)",
                 boxShadow: "0 10px 25px rgba(79,70,229,0.2)",
                 cursor: "pointer",
-                transition: "transform .2s"
+                transition: "transform .2s ease, box-shadow .2s ease",
+                display: "grid",
+                gap: 12,
               }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.05)"}
-              onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "scale(1.05)";
+                e.currentTarget.style.boxShadow = "0 16px 34px rgba(79,70,229,0.26)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "scale(1)";
+                e.currentTarget.style.boxShadow = "0 10px 25px rgba(79,70,229,0.2)";
+              }}
             >
-              <div style={{
-                fontSize: 14,
-                fontWeight: 900,
-                color: "white"
-              }}>
+              <div
+                style={{
+                  fontSize: 14,
+                  fontWeight: 900,
+                  color: "white",
+                  lineHeight: 1.5,
+                  whiteSpace: "pre-wrap",
+                  wordBreak: "break-word",
+                }}
+              >
                 {n.testo}
               </div>
 
-              <div style={{
-                marginTop: 10,
-                display: "flex",
-                gap: 8
-              }}>
-                <button onClick={() => modificaNota(n)} style={chip(false)}>Modifica</button>
-                <button onClick={() => eliminaNota(n.id)} style={chip(false)}>Elimina</button>
+              <div
+                style={{
+                  marginTop: 2,
+                  display: "flex",
+                  gap: 8,
+                  flexWrap: "wrap",
+                }}
+              >
+                <button onClick={() => modificaNota(n)} style={chip(false)}>
+                  Modifica
+                </button>
+
+                <button
+                  onClick={() => eliminaNota(n.id)}
+                  style={{
+                    ...chip(false),
+                    border: "1px solid rgba(239,68,68,0.22)",
+                    color: "rgba(185,28,28,0.96)",
+                    background: "rgba(254,242,242,0.92)",
+                  }}
+                >
+                  Elimina
+                </button>
               </div>
             </div>
           ))
