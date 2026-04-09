@@ -10358,14 +10358,14 @@ function MiniCalendarioEventi({
           display: "flex",
           justifyContent: "center",
           alignItems: "flex-start",
-          minHeight: isMobileNote ? 176 : 188,
+          minHeight: isMobileNote ? 164 : 174,
           padding: 2,
           boxSizing: "border-box",
         }}
       >
         <div
           style={{
-            width: isMobileNote ? "min(100%, 228px)" : "min(100%, 234px)",
+            width: isMobileNote ? "min(100%, 212px)" : "min(100%, 220px)",
             touchAction: "none",
             cursor: "grab",
             userSelect: "none",
@@ -10437,7 +10437,7 @@ function MiniCalendarioEventi({
             <div
               style={{
                 position: "relative",
-                borderRadius: 999,
+                borderRadius: "48% 52% 50% 50% / 46% 46% 54% 54%",
                 background: archivio
                   ? "linear-gradient(180deg, rgba(71,85,105,0.28), rgba(51,65,85,0.16))"
                   : palette.bg,
@@ -10448,9 +10448,10 @@ function MiniCalendarioEventi({
                   "0 18px 34px rgba(15,23,42,0.16), inset 0 1px 0 rgba(255,255,255,0.14), inset 0 -12px 22px rgba(15,23,42,0.08)",
                 backdropFilter: "blur(16px)",
                 overflow: "hidden",
-                padding: isMobileNote ? "12px 12px 12px" : "13px 13px 12px",
+                padding: isMobileNote ? "14px 12px 12px" : "15px 13px 12px",
                 display: "grid",
                 gap: 10,
+                minHeight: isMobileNote ? 150 : 156,
                 transition: "transform .18s ease, box-shadow .18s ease, filter .18s ease",
                 animation: "noteGlowSoft 4.6s ease-in-out infinite",
               }}
@@ -10461,16 +10462,15 @@ function MiniCalendarioEventi({
                   inset: 0,
                   pointerEvents: "none",
                   background:
-                    "radial-gradient(circle at 24% 18%, rgba(255,255,255,0.22), transparent 18%), radial-gradient(circle at 74% 24%, rgba(255,255,255,0.07), transparent 18%)",
+                    "radial-gradient(circle at 26% 20%, rgba(255,255,255,0.24), transparent 16%), radial-gradient(circle at 74% 24%, rgba(255,255,255,0.06), transparent 16%)",
                 }}
               />
 
               <div
                 style={{
                   display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 8,
+                  alignItems: "flex-start",
+                  justifyContent: "flex-start",
                 }}
               >
                 <div
@@ -10478,29 +10478,19 @@ function MiniCalendarioEventi({
                     display: "inline-flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    width: 30,
-                    height: 30,
+                    width: 28,
+                    height: 28,
                     borderRadius: "50%",
                     background: "rgba(255,255,255,0.12)",
                     border: "1px solid rgba(255,255,255,0.12)",
                     boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08)",
-                    fontSize: 13,
+                    fontSize: 12,
                     flexShrink: 0,
+                    marginLeft: 2,
+                    marginTop: 2,
                   }}
                 >
                   {archivio ? "🗂️" : "🫧"}
-                </div>
-
-                <div
-                  style={{
-                    fontSize: 9,
-                    fontWeight: 900,
-                    color: "rgba(255,255,255,0.68)",
-                    letterSpacing: 0.42,
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {archivio ? "Archivio" : "Trascina"}
                 </div>
               </div>
 
@@ -10521,13 +10511,14 @@ function MiniCalendarioEventi({
                       fontSize: 13,
                       fontWeight: 900,
                       color: "rgba(255,255,255,0.98)",
-                      lineHeight: 1.45,
+                      lineHeight: 1.42,
                       wordBreak: "break-word",
                       textShadow: "0 8px 20px rgba(15,23,42,0.16)",
                       display: "-webkit-box",
                       WebkitLineClamp: 2,
                       WebkitBoxOrient: "vertical",
                       overflow: "hidden",
+                      textAlign: "left",
                     }}
                   >
                     {n.testo}
@@ -10540,6 +10531,7 @@ function MiniCalendarioEventi({
                       fontWeight: 900,
                       color: "rgba(255,255,255,0.68)",
                       letterSpacing: 0.16,
+                      textAlign: "left",
                     }}
                   >
                     Tocca per aprire
@@ -10574,112 +10566,25 @@ function MiniCalendarioEventi({
               <div
                 style={{
                   display: "flex",
-                  justifyContent: "space-between",
+                  justifyContent: "center",
                   alignItems: "center",
-                  gap: 8,
+                  gap: 6,
+                  flexWrap: "nowrap",
+                  marginTop: "auto",
                 }}
               >
-                <div
-                  style={{
-                    display: "flex",
-                    gap: 6,
-                    alignItems: "center",
-                    marginLeft: "auto",
-                    flexWrap: "nowrap",
-                  }}
-                >
-                  {!archivio && (
-                    <button
-                      onClick={() => modificaNota(n)}
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: "50%",
-                        border: "1px solid rgba(255,255,255,0.16)",
-                        background:
-                          "linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08))",
-                        color: "rgba(255,255,255,0.98)",
-                        fontSize: 12,
-                        fontWeight: 1000,
-                        cursor: "pointer",
-                        backdropFilter: "blur(8px)",
-                        boxShadow: "0 8px 14px rgba(15,23,42,0.12)",
-                        display: "grid",
-                        placeItems: "center",
-                        lineHeight: 1,
-                        flexShrink: 0,
-                      }}
-                      title="Modifica nota"
-                    >
-                      <span style={{ transform: "translateY(-0.5px)" }}>M</span>
-                    </button>
-                  )}
-
-                  {!archivio && (
-                    <button
-                      onClick={() => archiviaNota(n.id)}
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: "50%",
-                        border: "1px solid rgba(96,165,250,0.24)",
-                        background:
-                          "linear-gradient(180deg, rgba(59,130,246,0.22), rgba(37,99,235,0.10))",
-                        color: "rgba(239,246,255,0.98)",
-                        fontSize: 12,
-                        fontWeight: 1000,
-                        cursor: "pointer",
-                        backdropFilter: "blur(8px)",
-                        boxShadow: "0 8px 14px rgba(15,23,42,0.12)",
-                        display: "grid",
-                        placeItems: "center",
-                        lineHeight: 1,
-                        flexShrink: 0,
-                      }}
-                      title="Archivia nota"
-                    >
-                      <span style={{ transform: "translateY(-0.5px)" }}>A</span>
-                    </button>
-                  )}
-
-                  {archivio && (
-                    <button
-                      onClick={() => ripristinaNota(n.id)}
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: "50%",
-                        border: "1px solid rgba(52,211,153,0.24)",
-                        background:
-                          "linear-gradient(180deg, rgba(16,185,129,0.22), rgba(5,150,105,0.10))",
-                        color: "rgba(236,253,245,0.98)",
-                        fontSize: 12,
-                        fontWeight: 1000,
-                        cursor: "pointer",
-                        backdropFilter: "blur(8px)",
-                        boxShadow: "0 8px 14px rgba(15,23,42,0.12)",
-                        display: "grid",
-                        placeItems: "center",
-                        lineHeight: 1,
-                        flexShrink: 0,
-                      }}
-                      title="Ripristina nota"
-                    >
-                      <span style={{ transform: "translateY(-0.5px)" }}>R</span>
-                    </button>
-                  )}
-
+                {!archivio && (
                   <button
-                    onClick={() => eliminaNota(n.id)}
+                    onClick={() => modificaNota(n)}
                     style={{
-                      width: 32,
-                      height: 32,
+                      width: 30,
+                      height: 30,
                       borderRadius: "50%",
-                      border: "1px solid rgba(255,120,120,0.22)",
+                      border: "1px solid rgba(255,255,255,0.16)",
                       background:
-                        "linear-gradient(180deg, rgba(239,68,68,0.24), rgba(185,28,28,0.12))",
-                      color: "rgba(255,245,245,0.98)",
-                      fontSize: 14,
+                        "linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08))",
+                      color: "rgba(255,255,255,0.98)",
+                      fontSize: 12,
                       fontWeight: 1000,
                       cursor: "pointer",
                       backdropFilter: "blur(8px)",
@@ -10689,11 +10594,90 @@ function MiniCalendarioEventi({
                       lineHeight: 1,
                       flexShrink: 0,
                     }}
-                    title="Elimina nota"
+                    title="Modifica nota"
                   >
-                    <span style={{ transform: "translateY(-1px)" }}>✕</span>
+                    <span style={{ transform: "translateY(-0.5px)" }}>M</span>
                   </button>
-                </div>
+                )}
+
+                {!archivio && (
+                  <button
+                    onClick={() => archiviaNota(n.id)}
+                    style={{
+                      width: 30,
+                      height: 30,
+                      borderRadius: "50%",
+                      border: "1px solid rgba(96,165,250,0.24)",
+                      background:
+                        "linear-gradient(180deg, rgba(59,130,246,0.22), rgba(37,99,235,0.10))",
+                      color: "rgba(239,246,255,0.98)",
+                      fontSize: 12,
+                      fontWeight: 1000,
+                      cursor: "pointer",
+                      backdropFilter: "blur(8px)",
+                      boxShadow: "0 8px 14px rgba(15,23,42,0.12)",
+                      display: "grid",
+                      placeItems: "center",
+                      lineHeight: 1,
+                      flexShrink: 0,
+                    }}
+                    title="Archivia nota"
+                  >
+                    <span style={{ transform: "translateY(-0.5px)" }}>A</span>
+                  </button>
+                )}
+
+                {archivio && (
+                  <button
+                    onClick={() => ripristinaNota(n.id)}
+                    style={{
+                      width: 30,
+                      height: 30,
+                      borderRadius: "50%",
+                      border: "1px solid rgba(52,211,153,0.24)",
+                      background:
+                        "linear-gradient(180deg, rgba(16,185,129,0.22), rgba(5,150,105,0.10))",
+                      color: "rgba(236,253,245,0.98)",
+                      fontSize: 12,
+                      fontWeight: 1000,
+                      cursor: "pointer",
+                      backdropFilter: "blur(8px)",
+                      boxShadow: "0 8px 14px rgba(15,23,42,0.12)",
+                      display: "grid",
+                      placeItems: "center",
+                      lineHeight: 1,
+                      flexShrink: 0,
+                    }}
+                    title="Ripristina nota"
+                  >
+                    <span style={{ transform: "translateY(-0.5px)" }}>R</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={() => eliminaNota(n.id)}
+                  style={{
+                    width: 30,
+                    height: 30,
+                    borderRadius: "50%",
+                    border: "1px solid rgba(255,120,120,0.22)",
+                    background:
+                      "linear-gradient(180deg, rgba(239,68,68,0.24), rgba(185,28,28,0.12))",
+                    color: "rgba(255,245,245,0.98)",
+                    fontSize: 14,
+                    fontWeight: 1000,
+                    cursor: "pointer",
+                    backdropFilter: "blur(8px)",
+                    boxShadow: "0 8px 14px rgba(15,23,42,0.12)",
+                    display: "grid",
+                    placeItems: "center",
+                    lineHeight: 1,
+                    flexShrink: 0,
+                  }}
+                  title="Elimina nota"
+                >
+                  <span style={{ transform: "translateY(-1px)" }}>✕</span>
+                </button>
               </div>
             </div>
           </div>
@@ -10909,7 +10893,7 @@ function MiniCalendarioEventi({
               letterSpacing: 0.1,
             }}
           >
-            Archivio personale rapido, ordinato e sempre modificabile.
+            Uno spazio essenziale per raccogliere, consultare e riordinare ciò che conta.
           </div>
         </div>
 
