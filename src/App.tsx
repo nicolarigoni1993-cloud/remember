@@ -10279,11 +10279,124 @@ function MiniCalendarioEventi({
 
 
 
-
-
 {pagina === "note" && (
   <div style={{ minHeight: "70vh", display: "grid", placeItems: "start center", padding: 16 }}>
     <div style={{ width: "min(980px, 100%)", display: "grid", gap: 20 }}>
+
+      {/* TOP BAR NOTE */}
+      <div style={topBar}>
+        <div style={{ ...ui.glass, padding: 22 }}>
+          <div style={{ display: "grid", gap: 18 }}>
+            <div
+              style={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                textAlign: "center",
+              }}
+            >
+              <RememberLogo size={54} centered />
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: 10,
+                flexWrap: "wrap",
+              }}
+            >
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "11px 14px",
+                  borderRadius: 999,
+                  border: "1px solid rgba(79,70,229,0.12)",
+                  background: "rgba(255,255,255,0.55)",
+                  boxShadow: "0 18px 34px rgba(79,70,229,0.10)",
+                  fontSize: 13,
+                  fontWeight: 950,
+                  letterSpacing: -0.2,
+                  animation: "softGlow 2.4s ease-in-out infinite",
+                }}
+              >
+                <span style={{ opacity: 0.8 }}>🕒</span>
+                <span style={{ color: "rgba(15,23,42,0.92)" }}>
+                  {formattaDataLunga(adesso)}
+                </span>
+              </div>
+            </div>
+
+            <div
+              style={{
+                textAlign: "center",
+                fontSize: 13,
+                fontWeight: 900,
+                opacity: 0.72,
+              }}
+            >
+              Utente attivo: <span style={{ opacity: 1 }}>{currentUser.nome}</span>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gap: 12,
+                justifyItems: "center",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  gap: 12,
+                  flexWrap: "wrap",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <button
+                  data-chip="1"
+                  onClick={() => setPagina("home")}
+                  style={chip(false)}
+                >
+                  Home
+                </button>
+
+                <button
+                  data-chip="1"
+                  onClick={() => {
+                    setConsultaSezione("menu");
+                    setPagina("consulta");
+                  }}
+                  style={chip(false)}
+                >
+                  Consulta
+                </button>
+
+                <button
+                  data-chip="1"
+                  onClick={() => setPagina("aggiungi")}
+                  style={chip(false)}
+                >
+                  Aggiungi
+                </button>
+              </div>
+
+              <button
+                data-chip="1"
+                onClick={esci}
+                style={chip(false)}
+              >
+                Esci
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* HEADER */}
       <div
@@ -10411,14 +10524,14 @@ function MiniCalendarioEventi({
                   lineHeight: 1.65,
                   background:
                     "linear-gradient(180deg, rgba(255,252,240,0.78), rgba(250,240,210,0.72))",
-                  color: "rgba(92,51,23,0.98)",
+                  color: "rgba(45,23,12,0.98)",
+                  WebkitTextFillColor: "rgba(45,23,12,0.98)",
                   outline: "none",
                   resize: "vertical",
                   boxSizing: "border-box",
                   boxShadow:
                     "inset 0 1px 0 rgba(255,255,255,0.55), inset 0 0 18px rgba(160,82,45,0.04)",
-                  fontFamily:
-                    "'Georgia', 'Times New Roman', serif",
+                  fontFamily: "'Georgia', 'Times New Roman', serif",
                   letterSpacing: 0.2,
                   caretColor: "rgba(120,53,15,0.95)",
                   position: "relative",
