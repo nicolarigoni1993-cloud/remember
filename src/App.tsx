@@ -10292,13 +10292,6 @@ function MiniCalendarioEventi({
 
 
 
-
-
-
-
-
-
-
 {pagina === "note" && (() => {
   const isMobileNote = typeof window !== "undefined" && window.innerWidth <= 640;
 
@@ -11203,6 +11196,12 @@ function MiniCalendarioEventi({
     </div>
   );
 })()}
+
+
+
+
+
+
 
 
 
