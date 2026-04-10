@@ -10351,7 +10351,7 @@ function MiniCalendarioEventi({
           display: "flex",
           justifyContent: "center",
           alignItems: "flex-start",
-          minHeight: isMobileNote ? 154 : 166,
+          minHeight: isMobileNote ? 148 : 156,
           padding: 2,
           boxSizing: "border-box",
         }}
@@ -10359,10 +10359,10 @@ function MiniCalendarioEventi({
         <div
           className="note-bubble-shell"
           style={{
-            width: isMobileNote ? "min(100%, 194px)" : "min(100%, 202px)",
-            minWidth: isMobileNote ? 168 : 176,
-            minHeight: isMobileNote ? 138 : 146,
-            maxWidth: isMobileNote ? "94vw" : 330,
+            width: isMobileNote ? "min(100%, 176px)" : "min(100%, 184px)",
+            minWidth: isMobileNote ? 154 : 162,
+            minHeight: isMobileNote ? 132 : 138,
+            maxWidth: isMobileNote ? "94vw" : 300,
             touchAction: "none",
             cursor: "grab",
             userSelect: "none",
@@ -10444,9 +10444,9 @@ function MiniCalendarioEventi({
               style={{
                 position: "relative",
                 width: "100%",
-                minHeight: isMobileNote ? 138 : 146,
+                minHeight: isMobileNote ? 132 : 138,
                 height: "100%",
-                borderRadius: 30,
+                borderRadius: 28,
                 background: archivio
                   ? "linear-gradient(180deg, rgba(71,85,105,0.28), rgba(51,65,85,0.16))"
                   : palette.bg,
@@ -10457,10 +10457,10 @@ function MiniCalendarioEventi({
                   "0 18px 34px rgba(15,23,42,0.16), inset 0 1px 0 rgba(255,255,255,0.14), inset 0 -12px 22px rgba(15,23,42,0.08)",
                 backdropFilter: "blur(16px)",
                 overflow: "visible",
-                padding: isMobileNote ? "12px 11px 10px" : "12px 11px 10px",
+                padding: isMobileNote ? "11px 10px 9px" : "11px 10px 9px",
                 display: "grid",
                 gridTemplateRows: "auto 1fr auto",
-                gap: 8,
+                gap: 7,
                 transition: "transform .18s ease, box-shadow .18s ease, filter .18s ease",
                 animation: "noteGlowSoft 4.6s ease-in-out infinite",
               }}
@@ -10469,7 +10469,7 @@ function MiniCalendarioEventi({
                 style={{
                   position: "absolute",
                   inset: 0,
-                  borderRadius: 30,
+                  borderRadius: 28,
                   pointerEvents: "none",
                   background:
                     "radial-gradient(circle at 26% 20%, rgba(255,255,255,0.24), transparent 16%), radial-gradient(circle at 74% 24%, rgba(255,255,255,0.06), transparent 16%)",
@@ -10490,13 +10490,13 @@ function MiniCalendarioEventi({
                     display: "inline-flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    width: 26,
-                    height: 26,
+                    width: 24,
+                    height: 24,
                     borderRadius: "50%",
                     background: "rgba(255,255,255,0.12)",
                     border: "1px solid rgba(255,255,255,0.12)",
                     boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08)",
-                    fontSize: 11,
+                    fontSize: 10,
                     flexShrink: 0,
                   }}
                 >
@@ -10519,10 +10519,10 @@ function MiniCalendarioEventi({
                 >
                   <div
                     style={{
-                      fontSize: 13,
+                      fontSize: 12,
                       fontWeight: 900,
                       color: "rgba(255,255,255,0.98)",
-                      lineHeight: 1.4,
+                      lineHeight: 1.38,
                       wordBreak: "break-word",
                       textShadow: "0 8px 20px rgba(15,23,42,0.16)",
                       display: "-webkit-box",
@@ -10538,7 +10538,7 @@ function MiniCalendarioEventi({
                   <div
                     style={{
                       marginTop: 5,
-                      fontSize: 10,
+                      fontSize: 9,
                       fontWeight: 900,
                       color: "rgba(255,255,255,0.68)",
                       letterSpacing: 0.16,
@@ -10580,7 +10580,7 @@ function MiniCalendarioEventi({
                   display: "flex",
                   justifyContent: "flex-start",
                   alignItems: "center",
-                  gap: 6,
+                  gap: 5,
                   flexWrap: "nowrap",
                   marginTop: "auto",
                   paddingLeft: 2,
@@ -10591,19 +10591,20 @@ function MiniCalendarioEventi({
                     data-note-action="1"
                     onClick={() => modificaNota(n)}
                     style={{
-                      width: 26,
-                      height: 26,
+                      width: 24,
+                      height: 24,
                       borderRadius: "50%",
                       border: "1px solid rgba(255,255,255,0.16)",
                       background:
                         "linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08))",
-                      fontSize: 12,
+                      fontSize: 11,
                       fontWeight: 1000,
                       cursor: "pointer",
                       backdropFilter: "blur(8px)",
                       boxShadow: "0 8px 14px rgba(15,23,42,0.12)",
                       display: "grid",
                       placeItems: "center",
+                      padding: 0,
                       lineHeight: 1,
                       flexShrink: 0,
                     }}
@@ -10611,7 +10612,12 @@ function MiniCalendarioEventi({
                   >
                     <span
                       style={{
-                        transform: "translateY(-0.5px)",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: "100%",
+                        height: "100%",
+                        transform: "translateY(0px)",
                         color: "rgba(238,242,255,0.98)",
                         textShadow: "0 0 10px rgba(167,139,250,0.45)",
                         fontFamily: "'Trebuchet MS', 'Segoe UI', sans-serif",
@@ -10627,19 +10633,20 @@ function MiniCalendarioEventi({
                     data-note-action="1"
                     onClick={() => archiviaNota(n.id)}
                     style={{
-                      width: 26,
-                      height: 26,
+                      width: 24,
+                      height: 24,
                       borderRadius: "50%",
                       border: "1px solid rgba(96,165,250,0.24)",
                       background:
                         "linear-gradient(180deg, rgba(59,130,246,0.22), rgba(37,99,235,0.10))",
-                      fontSize: 12,
+                      fontSize: 11,
                       fontWeight: 1000,
                       cursor: "pointer",
                       backdropFilter: "blur(8px)",
                       boxShadow: "0 8px 14px rgba(15,23,42,0.12)",
                       display: "grid",
                       placeItems: "center",
+                      padding: 0,
                       lineHeight: 1,
                       flexShrink: 0,
                     }}
@@ -10647,7 +10654,12 @@ function MiniCalendarioEventi({
                   >
                     <span
                       style={{
-                        transform: "translateY(-0.5px)",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: "100%",
+                        height: "100%",
+                        transform: "translateY(0px)",
                         color: "rgba(219,234,254,0.98)",
                         textShadow: "0 0 10px rgba(96,165,250,0.45)",
                         fontFamily: "'Trebuchet MS', 'Segoe UI', sans-serif",
@@ -10663,19 +10675,20 @@ function MiniCalendarioEventi({
                     data-note-action="1"
                     onClick={() => ripristinaNota(n.id)}
                     style={{
-                      width: 26,
-                      height: 26,
+                      width: 24,
+                      height: 24,
                       borderRadius: "50%",
                       border: "1px solid rgba(52,211,153,0.24)",
                       background:
                         "linear-gradient(180deg, rgba(16,185,129,0.22), rgba(5,150,105,0.10))",
-                      fontSize: 12,
+                      fontSize: 11,
                       fontWeight: 1000,
                       cursor: "pointer",
                       backdropFilter: "blur(8px)",
                       boxShadow: "0 8px 14px rgba(15,23,42,0.12)",
                       display: "grid",
                       placeItems: "center",
+                      padding: 0,
                       lineHeight: 1,
                       flexShrink: 0,
                     }}
@@ -10683,7 +10696,12 @@ function MiniCalendarioEventi({
                   >
                     <span
                       style={{
-                        transform: "translateY(-0.5px)",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: "100%",
+                        height: "100%",
+                        transform: "translateY(0px)",
                         color: "rgba(220,252,231,0.98)",
                         textShadow: "0 0 10px rgba(74,222,128,0.38)",
                         fontFamily: "'Trebuchet MS', 'Segoe UI', sans-serif",
@@ -10698,19 +10716,20 @@ function MiniCalendarioEventi({
                   data-note-action="1"
                   onClick={() => eliminaNota(n.id)}
                   style={{
-                    width: 26,
-                    height: 26,
+                    width: 24,
+                    height: 24,
                     borderRadius: "50%",
                     border: "1px solid rgba(255,120,120,0.22)",
                     background:
                       "linear-gradient(180deg, rgba(239,68,68,0.24), rgba(185,28,28,0.12))",
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: 1000,
                     cursor: "pointer",
                     backdropFilter: "blur(8px)",
                     boxShadow: "0 8px 14px rgba(15,23,42,0.12)",
                     display: "grid",
                     placeItems: "center",
+                    padding: 0,
                     lineHeight: 1,
                     flexShrink: 0,
                   }}
@@ -10718,6 +10737,11 @@ function MiniCalendarioEventi({
                 >
                   <span
                     style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "100%",
+                      height: "100%",
                       transform: "translateY(-1px)",
                       color: "rgba(254,226,226,0.98)",
                       textShadow: "0 0 10px rgba(248,113,113,0.4)",
@@ -10746,8 +10770,8 @@ function MiniCalendarioEventi({
             }
 
             .note-bubble-shell:has(details[open]) {
-              width: ${isMobileNote ? "min(100%, 270px)" : "min(100%, 320px)"} !important;
-              max-width: ${isMobileNote ? "94vw" : "320px"} !important;
+              width: ${isMobileNote ? "min(100%, 260px)" : "min(100%, 300px)"} !important;
+              max-width: ${isMobileNote ? "94vw" : "300px"} !important;
             }
 
             .note-bubble-shell:has(details[open]) .note-bubble-open-box {
