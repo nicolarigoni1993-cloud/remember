@@ -10334,6 +10334,17 @@ function MiniCalendarioEventi({
       },
     ][index % 4];
 
+  const estraiAnteprimaNota = (testo: string) => {
+    const pulito = String(testo || "").replace(/\s+/g, " ").trim();
+    if (!pulito) return "Nota";
+
+    const parole = pulito.split(" ").filter(Boolean);
+    if (parole.length <= 4) return pulito;
+
+    const keyword = parole.slice(0, 4).join(" ");
+    return `${keyword}...`;
+  };
+
   const renderBollaNota = (
     n: any,
     index: number,
@@ -10342,6 +10353,7 @@ function MiniCalendarioEventi({
     const palette = bubblePalette(index);
     const driftName =
       index % 3 === 0 ? "noteFloatA" : index % 3 === 1 ? "noteFloatB" : "noteFloatC";
+    const anteprima = estraiAnteprimaNota(n.testo);
 
     return (
       <div
@@ -10525,14 +10537,10 @@ function MiniCalendarioEventi({
                       lineHeight: 1.38,
                       wordBreak: "break-word",
                       textShadow: "0 8px 20px rgba(15,23,42,0.16)",
-                      display: "-webkit-box",
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
                       textAlign: "left",
                     }}
                   >
-                    {n.testo}
+                    {anteprima}
                   </div>
 
                   <div
