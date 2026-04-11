@@ -10641,9 +10641,9 @@ function MiniCalendarioEventi({
                       width: 24,
                       height: 24,
                       borderRadius: "50%",
-                      border: "1px solid rgba(255,255,255,0.16)",
+                      border: "1px solid rgba(167,139,250,0.18)",
                       background:
-                        "linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08))",
+                        "linear-gradient(180deg, rgba(99,102,241,0.12), rgba(79,70,229,0.06))",
                       fontSize: 11,
                       fontWeight: 1000,
                       cursor: "pointer",
@@ -10683,9 +10683,9 @@ function MiniCalendarioEventi({
                       width: 24,
                       height: 24,
                       borderRadius: "50%",
-                      border: "1px solid rgba(96,165,250,0.24)",
+                      border: "1px solid rgba(96,165,250,0.18)",
                       background:
-                        "linear-gradient(180deg, rgba(59,130,246,0.22), rgba(37,99,235,0.10))",
+                        "linear-gradient(180deg, rgba(59,130,246,0.12), rgba(37,99,235,0.06))",
                       fontSize: 11,
                       fontWeight: 1000,
                       cursor: "pointer",
@@ -10725,9 +10725,9 @@ function MiniCalendarioEventi({
                       width: 24,
                       height: 24,
                       borderRadius: "50%",
-                      border: "1px solid rgba(52,211,153,0.24)",
+                      border: "1px solid rgba(52,211,153,0.18)",
                       background:
-                        "linear-gradient(180deg, rgba(16,185,129,0.22), rgba(5,150,105,0.10))",
+                        "linear-gradient(180deg, rgba(16,185,129,0.12), rgba(5,150,105,0.06))",
                       fontSize: 11,
                       fontWeight: 1000,
                       cursor: "pointer",
@@ -10766,9 +10766,9 @@ function MiniCalendarioEventi({
                     width: 24,
                     height: 24,
                     borderRadius: "50%",
-                    border: "1px solid rgba(255,120,120,0.22)",
+                    border: "1px solid rgba(248,113,113,0.18)",
                     background:
-                      "linear-gradient(180deg, rgba(239,68,68,0.24), rgba(185,28,28,0.12))",
+                      "linear-gradient(180deg, rgba(239,68,68,0.12), rgba(185,28,28,0.06))",
                     fontSize: 12,
                     fontWeight: 1000,
                     cursor: "pointer",
@@ -11226,25 +11226,25 @@ function MiniCalendarioEventi({
             <div
               style={{
                 ...ui.card,
-                padding: isMobileNote ? 12 : 14,
-                borderRadius: 22,
-                border: "1px solid rgba(255,255,255,0.08)",
+                padding: isMobileNote ? 10 : 12,
+                borderRadius: 18,
+                border: "1px solid rgba(255,255,255,0.07)",
                 background:
-                  "linear-gradient(180deg, rgba(15,23,42,0.88), rgba(30,41,59,0.78))",
+                  "linear-gradient(180deg, rgba(15,23,42,0.76), rgba(30,41,59,0.68))",
                 boxShadow:
-                  "0 22px 48px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.04)",
+                  "0 16px 32px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.04)",
                 display: "grid",
-                gap: 10,
+                gap: 8,
                 overflow: "hidden",
               }}
             >
               <div
                 style={{
                   textAlign: "center",
-                  fontSize: 13,
+                  fontSize: 12,
                   fontWeight: 1000,
                   letterSpacing: -0.2,
-                  color: "rgba(241,245,249,0.96)",
+                  color: "rgba(241,245,249,0.94)",
                 }}
               >
                 Legenda pulsanti
@@ -11253,42 +11253,46 @@ function MiniCalendarioEventi({
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: isMobileNote ? "repeat(2, minmax(0, 1fr))" : "repeat(4, minmax(0, 1fr))",
-                  gap: 8,
+                  gridTemplateColumns: isMobileNote
+                    ? "repeat(2, minmax(0, 1fr))"
+                    : "repeat(4, minmax(0, 1fr))",
+                  gap: 6,
                 }}
               >
                 <div
                   style={{
-                    padding: "9px 10px",
-                    borderRadius: 16,
-                    border: "1px solid rgba(167,139,250,0.18)",
+                    padding: "7px 8px",
+                    borderRadius: 14,
+                    border: "1px solid rgba(167,139,250,0.14)",
                     background:
-                      "linear-gradient(180deg, rgba(99,102,241,0.12), rgba(79,70,229,0.06))",
+                      "linear-gradient(180deg, rgba(99,102,241,0.10), rgba(79,70,229,0.05))",
                     display: "flex",
                     alignItems: "center",
-                    gap: 8,
+                    gap: 6,
                     justifyContent: "center",
                   }}
                 >
                   <span
                     style={{
-                      width: 22,
-                      height: 22,
+                      width: 18,
+                      height: 18,
                       borderRadius: "50%",
                       display: "inline-grid",
                       placeItems: "center",
-                      background: "rgba(255,255,255,0.10)",
-                      border: "1px solid rgba(255,255,255,0.12)",
+                      background:
+                        "linear-gradient(180deg, rgba(99,102,241,0.12), rgba(79,70,229,0.06))",
+                      border: "1px solid rgba(167,139,250,0.18)",
                       color: "rgba(238,242,255,0.98)",
-                      fontSize: 11,
+                      fontSize: 10,
                       fontWeight: 1000,
+                      lineHeight: 1,
                     }}
                   >
                     M
                   </span>
                   <span
                     style={{
-                      fontSize: 11,
+                      fontSize: 10,
                       fontWeight: 900,
                       color: "rgba(226,232,240,0.92)",
                     }}
@@ -11299,36 +11303,38 @@ function MiniCalendarioEventi({
 
                 <div
                   style={{
-                    padding: "9px 10px",
-                    borderRadius: 16,
-                    border: "1px solid rgba(96,165,250,0.18)",
+                    padding: "7px 8px",
+                    borderRadius: 14,
+                    border: "1px solid rgba(96,165,250,0.14)",
                     background:
-                      "linear-gradient(180deg, rgba(59,130,246,0.12), rgba(37,99,235,0.06))",
+                      "linear-gradient(180deg, rgba(59,130,246,0.10), rgba(37,99,235,0.05))",
                     display: "flex",
                     alignItems: "center",
-                    gap: 8,
+                    gap: 6,
                     justifyContent: "center",
                   }}
                 >
                   <span
                     style={{
-                      width: 22,
-                      height: 22,
+                      width: 18,
+                      height: 18,
                       borderRadius: "50%",
                       display: "inline-grid",
                       placeItems: "center",
-                      background: "rgba(255,255,255,0.10)",
-                      border: "1px solid rgba(255,255,255,0.12)",
+                      background:
+                        "linear-gradient(180deg, rgba(59,130,246,0.12), rgba(37,99,235,0.06))",
+                      border: "1px solid rgba(96,165,250,0.18)",
                       color: "rgba(219,234,254,0.98)",
-                      fontSize: 11,
+                      fontSize: 10,
                       fontWeight: 1000,
+                      lineHeight: 1,
                     }}
                   >
                     A
                   </span>
                   <span
                     style={{
-                      fontSize: 11,
+                      fontSize: 10,
                       fontWeight: 900,
                       color: "rgba(226,232,240,0.92)",
                     }}
@@ -11339,36 +11345,38 @@ function MiniCalendarioEventi({
 
                 <div
                   style={{
-                    padding: "9px 10px",
-                    borderRadius: 16,
-                    border: "1px solid rgba(52,211,153,0.18)",
+                    padding: "7px 8px",
+                    borderRadius: 14,
+                    border: "1px solid rgba(52,211,153,0.14)",
                     background:
-                      "linear-gradient(180deg, rgba(16,185,129,0.12), rgba(5,150,105,0.06))",
+                      "linear-gradient(180deg, rgba(16,185,129,0.10), rgba(5,150,105,0.05))",
                     display: "flex",
                     alignItems: "center",
-                    gap: 8,
+                    gap: 6,
                     justifyContent: "center",
                   }}
                 >
                   <span
                     style={{
-                      width: 22,
-                      height: 22,
+                      width: 18,
+                      height: 18,
                       borderRadius: "50%",
                       display: "inline-grid",
                       placeItems: "center",
-                      background: "rgba(255,255,255,0.10)",
-                      border: "1px solid rgba(255,255,255,0.12)",
+                      background:
+                        "linear-gradient(180deg, rgba(16,185,129,0.12), rgba(5,150,105,0.06))",
+                      border: "1px solid rgba(52,211,153,0.18)",
                       color: "rgba(220,252,231,0.98)",
-                      fontSize: 11,
+                      fontSize: 10,
                       fontWeight: 1000,
+                      lineHeight: 1,
                     }}
                   >
                     R
                   </span>
                   <span
                     style={{
-                      fontSize: 11,
+                      fontSize: 10,
                       fontWeight: 900,
                       color: "rgba(226,232,240,0.92)",
                     }}
@@ -11379,36 +11387,38 @@ function MiniCalendarioEventi({
 
                 <div
                   style={{
-                    padding: "9px 10px",
-                    borderRadius: 16,
-                    border: "1px solid rgba(248,113,113,0.18)",
+                    padding: "7px 8px",
+                    borderRadius: 14,
+                    border: "1px solid rgba(248,113,113,0.14)",
                     background:
-                      "linear-gradient(180deg, rgba(239,68,68,0.12), rgba(185,28,28,0.06))",
+                      "linear-gradient(180deg, rgba(239,68,68,0.10), rgba(185,28,28,0.05))",
                     display: "flex",
                     alignItems: "center",
-                    gap: 8,
+                    gap: 6,
                     justifyContent: "center",
                   }}
                 >
                   <span
                     style={{
-                      width: 22,
-                      height: 22,
+                      width: 18,
+                      height: 18,
                       borderRadius: "50%",
                       display: "inline-grid",
                       placeItems: "center",
-                      background: "rgba(255,255,255,0.10)",
-                      border: "1px solid rgba(255,255,255,0.12)",
+                      background:
+                        "linear-gradient(180deg, rgba(239,68,68,0.12), rgba(185,28,28,0.06))",
+                      border: "1px solid rgba(248,113,113,0.18)",
                       color: "rgba(254,226,226,0.98)",
-                      fontSize: 11,
+                      fontSize: 10,
                       fontWeight: 1000,
+                      lineHeight: 1,
                     }}
                   >
                     ✕
                   </span>
                   <span
                     style={{
-                      fontSize: 11,
+                      fontSize: 10,
                       fontWeight: 900,
                       color: "rgba(226,232,240,0.92)",
                     }}
