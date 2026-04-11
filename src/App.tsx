@@ -3187,6 +3187,11 @@ const sx = useMemo(() => {
 }, []);
 
   async function authSignIn() {
+    if (!supabase) {
+      alert("Supabase non è ancora configurato correttamente.");
+      return;
+    }
+
     const email = authEmail.trim();
     const password = authPassword;
 
@@ -3216,6 +3221,11 @@ const sx = useMemo(() => {
   }
 
   async function authSignUp() {
+    if (!supabase) {
+      alert("Supabase non è ancora configurato correttamente.");
+      return;
+    }
+
     const email = authEmail.trim();
     const password = authPassword;
 
