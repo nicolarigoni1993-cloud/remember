@@ -643,13 +643,13 @@ function RememberLogo({ size = 44, centered = false }: { size?: number; centered
               letterSpacing: centered ? -1.5 : -1.2,
               lineHeight: 1,
               background:
-                "linear-gradient(90deg, #e2e8f0 0%, #93c5fd 22%, #818cf8 52%, #c084fc 78%, #f8fafc 100%)",
+                "linear-gradient(90deg, #e2e8f0 0%, #93c5fd 22%, #818cf8 52%, #c084fc 78%, #25303a 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               textShadow: "0 0 24px rgba(99,102,241,0.12)",
             }}
           >
-            REMEMBER
+            REMEMBEЯ
           </div>
 
           <div
@@ -727,7 +727,7 @@ const [, setLoginPick] = useState<string | null>(null);
 
 
 
- const [pagina, setPagina] = useState<"home" | "aggiungi" | "consulta" | "agenda" | "controllo" | "archivio" | "note">("home");
+ const [pagina, setPagina] = useState<"home" | "aggiungi" | "consulta" | "agenda" | "controllo" | "archivio" | "note" | "account">("home");
  const [consultaSezione, setConsultaSezione] = useState<"menu" | "turni" | "finanza" | "eventi">("menu");
 const [aggiungiSezione, setAggiungiSezione] = useState<"menu" | "movimenti" | "eventi">("menu");
   const [mostraForm, setMostraForm] = useState(false);
@@ -6711,7 +6711,7 @@ function MiniCalendarioEventi({
             <button
               data-chip="1"
               onClick={() => setPagina("home")}
-              style={chip(false)}
+              style={chip(pagina === "home")}
             >
               Home
             </button>
@@ -6735,6 +6735,14 @@ function MiniCalendarioEventi({
               style={chip(false)}
             >
               Aggiungi
+            </button>
+
+            <button
+              data-chip="1"
+              onClick={() => setPagina("account")}
+              style={chip(pagina === "account")}
+            >
+              Account
             </button>
           </div>
 
@@ -12862,6 +12870,350 @@ function MiniCalendarioEventi({
         
        
 
+
+
+
+
+
+{pagina === "account" && (
+  <div style={{ minHeight: "70vh", display: "grid", placeItems: "start center", padding: 16 }}>
+    <div style={{ width: "min(1060px, 100%)", display: "grid", gap: 18 }}>
+      <div
+        style={{
+          ...ui.card,
+          padding: 22,
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "radial-gradient(760px 260px at 0% 0%, rgba(79,70,229,0.10), transparent 58%), radial-gradient(760px 260px at 100% 0%, rgba(14,165,233,0.08), transparent 56%)",
+            pointerEvents: "none",
+          }}
+        />
+
+        <div
+          style={{
+            position: "relative",
+            zIndex: 1,
+            display: "grid",
+            gap: 18,
+            justifyItems: "center",
+            textAlign: "center",
+          }}
+        >
+          <div
+            style={{
+              padding: "12px 18px",
+              borderRadius: 999,
+              background: "rgba(226,232,240,0.88)",
+              color: "rgba(15,23,42,0.92)",
+              fontWeight: 900,
+              fontSize: 14,
+              boxShadow: "0 16px 34px rgba(79,70,229,0.14)",
+              border: "1px solid rgba(203,213,225,0.95)",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 10,
+              maxWidth: "100%",
+              flexWrap: "wrap",
+              justifyContent: "center",
+            }}
+          >
+            <span style={{ fontSize: 16 }}>🕒</span>
+            <span>{dataOraCorrenteLabel.replace(/\balle\b/gi, "").replace(/\s+/g, " ").trim()}</span>
+          </div>
+
+          <div
+            style={{
+              fontSize: 16,
+              fontWeight: 900,
+              color: "rgba(241,245,249,0.92)",
+            }}
+          >
+            Utente attivo: {currentUser.nome}
+          </div>
+
+          <div
+            style={{
+              fontSize: 15,
+              fontWeight: 850,
+              color: "rgba(191,219,254,0.88)",
+              maxWidth: 760,
+              lineHeight: 1.6,
+            }}
+          >
+            Qui prepariamo il profilo utente vero della futura app. Per ora è una base locale premium, stabile e pronta ad accogliere il collegamento account senza rompere nulla.
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+          gap: 16,
+        }}
+        className="remember-grid-2"
+      >
+        <div
+          style={{
+            ...ui.card,
+            padding: 22,
+            border: "1px solid rgba(79,70,229,0.18)",
+            background:
+              "linear-gradient(180deg, rgba(79,70,229,0.12), rgba(255,255,255,0.96))",
+            boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
+            display: "grid",
+            gap: 16,
+          }}
+        >
+          <div style={{ display: "grid", gap: 6 }}>
+            <div
+              style={{
+                fontSize: 20,
+                fontWeight: 1000,
+                letterSpacing: -0.3,
+                color: "rgba(15,23,42,0.96)",
+              }}
+            >
+              Profilo attuale
+            </div>
+
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 800,
+                color: "rgba(15,23,42,0.72)",
+                lineHeight: 1.5,
+              }}
+            >
+              Base locale attuale dell’utente attivo.
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gap: 12,
+              padding: 16,
+              borderRadius: 20,
+              border: "1px solid rgba(15,23,42,0.08)",
+              background: "rgba(255,255,255,0.78)",
+              boxShadow: "0 10px 22px rgba(15,23,42,0.05)",
+            }}
+          >
+            <div style={{ display: "grid", gap: 4 }}>
+              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.62)" }}>
+                Nome utente
+              </div>
+              <div style={{ fontSize: 18, fontWeight: 1000, color: "rgba(15,23,42,0.96)" }}>
+                {currentUser.nome || "Utente"}
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gap: 4 }}>
+              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.62)" }}>
+                ID locale attuale
+              </div>
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 900,
+                  color: "rgba(67,56,202,0.94)",
+                  wordBreak: "break-all",
+                }}
+              >
+                {currentUserId || "Nessun ID attivo"}
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gap: 4 }}>
+              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.62)" }}>
+                Stato account vero
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 950, color: "rgba(180,83,9,0.96)" }}>
+                Non ancora collegato
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              data-chip="1"
+              onClick={() => setPagina("home")}
+              style={chip(false)}
+            >
+              Torna a Home
+            </button>
+
+            <button
+              type="button"
+              data-chip="1"
+              onClick={esci}
+              style={chip(false)}
+            >
+              Esci
+            </button>
+          </div>
+        </div>
+
+        <div
+          style={{
+            ...ui.card,
+            padding: 22,
+            border: "1px solid rgba(14,165,233,0.18)",
+            background:
+              "linear-gradient(180deg, rgba(14,165,233,0.10), rgba(255,255,255,0.96))",
+            boxShadow: "0 18px 40px rgba(14,165,233,0.10)",
+            display: "grid",
+            gap: 16,
+          }}
+        >
+          <div style={{ display: "grid", gap: 6 }}>
+            <div
+              style={{
+                fontSize: 20,
+                fontWeight: 1000,
+                letterSpacing: -0.3,
+                color: "rgba(15,23,42,0.96)",
+              }}
+            >
+              Stato app personale
+            </div>
+
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 800,
+                color: "rgba(15,23,42,0.72)",
+                lineHeight: 1.5,
+              }}
+            >
+              Mini riepilogo locale dell’utente attivo, utile come base per il futuro profilo cloud.
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+              gap: 12,
+            }}
+          >
+            <div
+              style={{
+                padding: 14,
+                borderRadius: 18,
+                background: "rgba(255,255,255,0.82)",
+                border: "1px solid rgba(15,23,42,0.08)",
+                boxShadow: "0 8px 18px rgba(15,23,42,0.04)",
+                display: "grid",
+                gap: 4,
+              }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.62)" }}>
+                Eventi
+              </div>
+              <div style={{ fontSize: 22, fontWeight: 1000, color: "rgba(15,23,42,0.96)" }}>
+                {voci.length}
+              </div>
+            </div>
+
+            <div
+              style={{
+                padding: 14,
+                borderRadius: 18,
+                background: "rgba(255,255,255,0.82)",
+                border: "1px solid rgba(15,23,42,0.08)",
+                boxShadow: "0 8px 18px rgba(15,23,42,0.04)",
+                display: "grid",
+                gap: 4,
+              }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.62)" }}>
+                Turni
+              </div>
+              <div style={{ fontSize: 22, fontWeight: 1000, color: "rgba(15,23,42,0.96)" }}>
+                {turni.length}
+              </div>
+            </div>
+
+            <div
+              style={{
+                padding: 14,
+                borderRadius: 18,
+                background: "rgba(255,255,255,0.82)",
+                border: "1px solid rgba(15,23,42,0.08)",
+                boxShadow: "0 8px 18px rgba(15,23,42,0.04)",
+                display: "grid",
+                gap: 4,
+              }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.62)" }}>
+                Note
+              </div>
+              <div style={{ fontSize: 22, fontWeight: 1000, color: "rgba(15,23,42,0.96)" }}>
+                {note.length}
+              </div>
+            </div>
+
+            <div
+              style={{
+                padding: 14,
+                borderRadius: 18,
+                background: "rgba(255,255,255,0.82)",
+                border: "1px solid rgba(15,23,42,0.08)",
+                boxShadow: "0 8px 18px rgba(15,23,42,0.04)",
+                display: "grid",
+                gap: 4,
+              }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.62)" }}>
+                Mesi finanza
+              </div>
+              <div style={{ fontSize: 22, fontWeight: 1000, color: "rgba(15,23,42,0.96)" }}>
+                {Object.keys(incassi).length}
+              </div>
+            </div>
+          </div>
+
+          <div
+            style={{
+              padding: 16,
+              borderRadius: 20,
+              border: "1px solid rgba(14,165,233,0.16)",
+              background:
+                "linear-gradient(180deg, rgba(14,165,233,0.08), rgba(255,255,255,0.78))",
+              display: "grid",
+              gap: 8,
+            }}
+          >
+            <div style={{ fontSize: 14, fontWeight: 950, color: "rgba(15,23,42,0.92)" }}>
+              Prossimo step previsto
+            </div>
+
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 800,
+                lineHeight: 1.6,
+                color: "rgba(15,23,42,0.76)",
+              }}
+            >
+              Collegare qui il vero account, ma in modo isolato e sicuro, senza più toccare il cuore dell’app fino a quando non è tutto stabile.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
 
 
