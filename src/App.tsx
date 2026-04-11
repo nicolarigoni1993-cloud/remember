@@ -710,7 +710,7 @@ type MovimentoFinanzaItem = {
 
 export default function App() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [authSession, setAuthSession] = useState<Session | null>(null);
+  const [, setAuthSession] = useState<Session | null>(null);
   const [authUser, setAuthUser] = useState<SupabaseAuthUser | null>(null);
 
   const currentUser = useMemo(() => {
