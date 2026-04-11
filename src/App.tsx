@@ -737,9 +737,9 @@ export default function App() {
 
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
-  const [authMode, setAuthMode] = useState<"login" | "register">("login");
-  const [authLoading, setAuthLoading] = useState(false);
-  const [authMessage, setAuthMessage] = useState("");
+  const [, setAuthMode] = useState<"login" | "register">("login");
+  const [, setAuthLoading] = useState(false);
+  const [, setAuthMessage] = useState("");
 
 
 
@@ -3257,6 +3257,9 @@ const sx = useMemo(() => {
     setAuthMessage("Account creato. Controlla la tua email per confermare l’accesso.");
     setAuthMode("login");
   }
+
+  void authSignIn;
+  void authSignUp;
 
   async function esci() {
     const { error } = await supabase.auth.signOut();
