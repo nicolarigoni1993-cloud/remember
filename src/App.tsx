@@ -1091,6 +1091,11 @@ const eventiProssimiAggiungi = useMemo(() => {
   }, []);
 
   useEffect(() => {
+    if (!supabase) {
+      setCurrentUserId("remember_local_user");
+      return;
+    }
+
     let mounted = true;
 
     supabase.auth.getSession().then(({ data, error }) => {
@@ -3262,16 +3267,18 @@ const sx = useMemo(() => {
   void authSignUp;
 
   async function esci() {
-    const { error } = await supabase.auth.signOut();
+    if (supabase) {
+      const { error } = await supabase.auth.signOut();
 
-    if (error) {
-      alert(error.message);
-      return;
+      if (error) {
+        alert(error.message);
+        return;
+      }
     }
 
     setAuthSession(null);
     setAuthUser(null);
-    setCurrentUserId(null);
+    setCurrentUserId("remember_local_user");
     setPagina("home");
     setFiltro(null);
     setMeseCorrente(new Date());
