@@ -98,10 +98,7 @@ function parseOreItaliane(input: string): number | null {
   return n;
 }
 
-function formatOreItalianeFromMin(min: number): string {
-  const ore = min / 60;
-  return ore.toLocaleString("it-IT", { maximumFractionDigits: 2 });
-}
+
 
 function formatNumeroOre(n: number) {
   return n.toLocaleString("it-IT", { maximumFractionDigits: 2 });
