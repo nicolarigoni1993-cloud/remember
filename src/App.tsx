@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
+
+
 type Filtro = "oggi" | "7giorni" | "30giorni";
 type Movimento = "uscita" | "entrata" | "nessuno";
 
@@ -707,12 +709,15 @@ type MovimentoFinanzaItem = {
 
 
 export default function App() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const currentUser = useMemo(() => users.find((u) => u.id === currentUserId) ?? null, [users, currentUserId]);
+const [users, setUsers] = useState<User[]>([]);
+const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+const currentUser = useMemo(
+  () => users.find((u) => u.id === currentUserId) ?? { id: "guest", nome: "Utente" },
+  [users, currentUserId]
+);
 
-  const [loginNome, setLoginNome] = useState("");
-  const [loginPick, setLoginPick] = useState<string | null>(null);
+const [loginNome, setLoginNome] = useState("");
+const [, setLoginPick] = useState<string | null>(null);
 
 
 
