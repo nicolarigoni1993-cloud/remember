@@ -1068,37 +1068,7 @@ const eventiProssimiAggiungi = useMemo(() => {
     return () => clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    if (!supabase) {
-      setCurrentUserId("remember_local_user");
-      return;
-    }
 
-    let mounted = true;
-
-  useEffect(() => {
-    const u = caricaUtenti();
-    setUsers(u);
-
-    const curr = caricaUtenteCorrente();
-    if (curr && u.some((x) => x.id === curr)) setCurrentUserId(curr);
-    else setCurrentUserId(null);
-  }, []);
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      const user = session?.user ?? null;
-
-      setAuthSession(session ?? null);
-      setAuthUser(user);
-      setCurrentUserId(user?.id ?? "remember_local_user");
-    });
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
 
   useEffect(() => {
     clearAllScheduled();
@@ -3173,6 +3143,8 @@ const sx = useMemo(() => {
     salvaUtenti(next);
     entraCome(u.id);
   }
+
+  void creaEUentra;
 
   function esci() {
     salvaUtenteCorrente(null);
