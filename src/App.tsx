@@ -726,8 +726,8 @@ const [aggiungiSezione, setAggiungiSezione] = useState<"menu" | "movimenti" | "e
   const [, setNota] = useState("");
   const [, setImporto] = useState<string>("");
 
-  const [, setNotificheMinutiPrima] = useState<number[]>([]);
-  const [, setCustomNotificaOre] = useState<string>("");
+  const [notificheMinutiPrima, setNotificheMinutiPrima] = useState<number[]>([]);
+  const [customNotificaOre, setCustomNotificaOre] = useState<string>("");
   const [voci, setVoci] = useState<Voce[]>([]);
   const [turni, setTurni] = useState<Turno[]>([]);
   const [caricato, setCaricato] = useState(false);
@@ -1222,8 +1222,6 @@ function resetForm() {
   setCustomNotificaOre("");
 }
 
-
-
 function apriNuovaConData(dataSelezionata: string) {
   resetForm();
   setPagina("aggiungi");
@@ -1244,7 +1242,9 @@ function apriModifica(v: Voce) {
   setUrgente(Boolean(v.urgente));
   setNota(typeof v.nota === "string" ? v.nota : "");
   setImporto(v.importo !== null ? String(v.importo) : "");
-  setNotificheMinutiPrima(Array.isArray(v.notificheMinutiPrima) ? v.notificheMinutiPrima : []);
+  setNotificheMinutiPrima(
+    Array.isArray(v.notificheMinutiPrima) ? [...v.notificheMinutiPrima].sort((a, b) => b - a) : []
+  );
   setCustomNotificaOre("");
   setPagina("aggiungi");
   setAggiungiSezione("eventi");
@@ -1266,6 +1266,34 @@ function salva() {
     return;
   }
 
+  const customOrePulite = customNotificaOre.trim();
+  let customMinuti = 0;
+
+  if (customOrePulite !== "") {
+    const parsedOre = Number(customOrePulite.replace(",", "."));
+
+    if (!Number.isFinite(parsedOre) || parsedOre <= 0) {
+      alert("Inserisci un numero valido di ore personalizzate.");
+      return;
+    }
+
+    customMinuti = Math.round(parsedOre * 60);
+
+    if (customMinuti <= 0) {
+      alert("Le ore personalizzate devono essere maggiori di zero.");
+      return;
+    }
+  }
+
+  const notificheFinali = Array.from(
+    new Set([
+      ...notificheMinutiPrima,
+      ...(customMinuti > 0 ? [customMinuti] : []),
+    ])
+  )
+    .filter((n) => Number.isFinite(n) && n > 0)
+    .sort((a, b) => b - a);
+
   const eraModifica = Boolean(idInModifica);
 
   if (idInModifica) {
@@ -1283,7 +1311,7 @@ function salva() {
               importo: null,
               movimento: "nessuno" as Movimento,
               fatto: vocePassata(dataFinale, oraFinale),
-              notificheMinutiPrima: [],
+              notificheMinutiPrima: notificheFinali,
             }
           : x
       )
@@ -1300,7 +1328,7 @@ function salva() {
       importo: null,
       movimento: "nessuno",
       fatto: vocePassata(dataFinale, oraFinale),
-      notificheMinutiPrima: [],
+      notificheMinutiPrima: notificheFinali,
     };
 
     setVoci((prev) => [nuova, ...prev]);
@@ -6760,8 +6788,6 @@ function MiniCalendarioEventi({
 
 
 
-
-
 {pagina === "home" && (
   <div style={{ minHeight: "70vh", display: "grid", placeItems: "center", padding: 16 }}>
     <div style={{ width: "min(560px, 100%)", display: "grid", gap: 20 }}>
@@ -7440,6 +7466,9 @@ function MiniCalendarioEventi({
     </div>
   </div>
 )}
+
+
+
 
 
 
@@ -10292,6 +10321,16 @@ function MiniCalendarioEventi({
 
 
 
+
+
+
+
+
+
+
+
+
+
 {pagina === "note" && (() => {
   const isMobileNote = typeof window !== "undefined" && window.innerWidth <= 640;
 
@@ -11187,6 +11226,202 @@ function MiniCalendarioEventi({
             <div
               style={{
                 ...ui.card,
+                padding: isMobileNote ? 12 : 14,
+                borderRadius: 22,
+                border: "1px solid rgba(255,255,255,0.08)",
+                background:
+                  "linear-gradient(180deg, rgba(15,23,42,0.88), rgba(30,41,59,0.78))",
+                boxShadow:
+                  "0 22px 48px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.04)",
+                display: "grid",
+                gap: 10,
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  textAlign: "center",
+                  fontSize: 13,
+                  fontWeight: 1000,
+                  letterSpacing: -0.2,
+                  color: "rgba(241,245,249,0.96)",
+                }}
+              >
+                Legenda pulsanti
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: isMobileNote ? "repeat(2, minmax(0, 1fr))" : "repeat(4, minmax(0, 1fr))",
+                  gap: 8,
+                }}
+              >
+                <div
+                  style={{
+                    padding: "9px 10px",
+                    borderRadius: 16,
+                    border: "1px solid rgba(167,139,250,0.18)",
+                    background:
+                      "linear-gradient(180deg, rgba(99,102,241,0.12), rgba(79,70,229,0.06))",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    justifyContent: "center",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: "50%",
+                      display: "inline-grid",
+                      placeItems: "center",
+                      background: "rgba(255,255,255,0.10)",
+                      border: "1px solid rgba(255,255,255,0.12)",
+                      color: "rgba(238,242,255,0.98)",
+                      fontSize: 11,
+                      fontWeight: 1000,
+                    }}
+                  >
+                    M
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 900,
+                      color: "rgba(226,232,240,0.92)",
+                    }}
+                  >
+                    Modifica
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    padding: "9px 10px",
+                    borderRadius: 16,
+                    border: "1px solid rgba(96,165,250,0.18)",
+                    background:
+                      "linear-gradient(180deg, rgba(59,130,246,0.12), rgba(37,99,235,0.06))",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    justifyContent: "center",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: "50%",
+                      display: "inline-grid",
+                      placeItems: "center",
+                      background: "rgba(255,255,255,0.10)",
+                      border: "1px solid rgba(255,255,255,0.12)",
+                      color: "rgba(219,234,254,0.98)",
+                      fontSize: 11,
+                      fontWeight: 1000,
+                    }}
+                  >
+                    A
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 900,
+                      color: "rgba(226,232,240,0.92)",
+                    }}
+                  >
+                    Archivia
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    padding: "9px 10px",
+                    borderRadius: 16,
+                    border: "1px solid rgba(52,211,153,0.18)",
+                    background:
+                      "linear-gradient(180deg, rgba(16,185,129,0.12), rgba(5,150,105,0.06))",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    justifyContent: "center",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: "50%",
+                      display: "inline-grid",
+                      placeItems: "center",
+                      background: "rgba(255,255,255,0.10)",
+                      border: "1px solid rgba(255,255,255,0.12)",
+                      color: "rgba(220,252,231,0.98)",
+                      fontSize: 11,
+                      fontWeight: 1000,
+                    }}
+                  >
+                    R
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 900,
+                      color: "rgba(226,232,240,0.92)",
+                    }}
+                  >
+                    Ripristina
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    padding: "9px 10px",
+                    borderRadius: 16,
+                    border: "1px solid rgba(248,113,113,0.18)",
+                    background:
+                      "linear-gradient(180deg, rgba(239,68,68,0.12), rgba(185,28,28,0.06))",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    justifyContent: "center",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: "50%",
+                      display: "inline-grid",
+                      placeItems: "center",
+                      background: "rgba(255,255,255,0.10)",
+                      border: "1px solid rgba(255,255,255,0.12)",
+                      color: "rgba(254,226,226,0.98)",
+                      fontSize: 11,
+                      fontWeight: 1000,
+                    }}
+                  >
+                    ✕
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 900,
+                      color: "rgba(226,232,240,0.92)",
+                    }}
+                  >
+                    Elimina
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div
+              style={{
+                ...ui.card,
                 minHeight: 220,
                 padding: isMobileNote ? 14 : 18,
                 position: "relative",
@@ -11253,6 +11488,7 @@ function MiniCalendarioEventi({
     </div>
   );
 })()}
+
 
 
 
@@ -12133,6 +12369,13 @@ function MiniCalendarioEventi({
             }}
             className="remember-grid-2"
           >
+           
+           
+           
+           
+           
+           
+           
             <div
               style={{
                 ...ui.card,
@@ -12183,7 +12426,7 @@ function MiniCalendarioEventi({
                       color: "rgba(15,23,42,0.70)",
                     }}
                   >
-                    Inserisci un evento semplice con descrizione, data e ora.
+                    Inserisci un evento semplice con descrizione, data, ora e promemoria personalizzabili.
                   </div>
                 </div>
 
@@ -12230,6 +12473,207 @@ function MiniCalendarioEventi({
                         onChange={(e) => setOra(e.target.value)}
                         style={inputLight(false)}
                       />
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "grid",
+                      gap: 10,
+                      padding: 14,
+                      borderRadius: 18,
+                      background: "rgba(255,255,255,0.52)",
+                      border: "1px solid rgba(79,70,229,0.14)",
+                      boxShadow: "0 10px 24px rgba(79,70,229,0.06)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 950,
+                        color: "rgba(15,23,42,0.90)",
+                      }}
+                    >
+                      Promemoria notifiche
+                    </div>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: 8,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      {[
+                        { label: "15 min", value: 15 },
+                        { label: "30 min", value: 30 },
+                        { label: "1 ora", value: 60 },
+                        { label: "2 ore", value: 120 },
+                        { label: "6 ore", value: 360 },
+                        { label: "24 ore", value: 1440 },
+                      ].map((opt) => {
+                        const attiva = notificheMinutiPrima.includes(opt.value);
+
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() =>
+                              setNotificheMinutiPrima((prev) =>
+                                prev.includes(opt.value)
+                                  ? prev.filter((x) => x !== opt.value)
+                                  : [...prev, opt.value].sort((a, b) => b - a)
+                              )
+                            }
+                            style={{
+                              padding: "10px 12px",
+                              borderRadius: 999,
+                              border: attiva
+                                ? "1px solid rgba(79,70,229,0.30)"
+                                : "1px solid rgba(148,163,184,0.20)",
+                              background: attiva
+                                ? "linear-gradient(180deg, rgba(79,70,229,0.18), rgba(124,58,237,0.12))"
+                                : "rgba(255,255,255,0.88)",
+                              color: attiva
+                                ? "rgba(67,56,202,0.98)"
+                                : "rgba(15,23,42,0.82)",
+                              fontSize: 12,
+                              fontWeight: 900,
+                              cursor: "pointer",
+                              boxShadow: attiva
+                                ? "0 10px 20px rgba(79,70,229,0.10)"
+                                : "0 6px 12px rgba(15,23,42,0.04)",
+                            }}
+                          >
+                            {opt.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "minmax(0, 1fr) auto",
+                        gap: 10,
+                        alignItems: "end",
+                      }}
+                    >
+                      <div style={{ display: "grid", gap: 8 }}>
+                        <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+                          Ore personalizzate
+                        </label>
+                        <input
+                          type="number"
+                          inputMode="decimal"
+                          min="0"
+                          step="0.5"
+                          value={customNotificaOre}
+                          onChange={(e) => setCustomNotificaOre(e.target.value)}
+                          placeholder="Es. 3 oppure 1.5"
+                          style={inputLight(false)}
+                        />
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const raw = customNotificaOre.trim();
+                          if (!raw) return;
+
+                          const parsedOre = Number(raw.replace(",", "."));
+                          if (!Number.isFinite(parsedOre) || parsedOre <= 0) {
+                            alert("Inserisci ore personalizzate valide.");
+                            return;
+                          }
+
+                          const minuti = Math.round(parsedOre * 60);
+                          if (minuti <= 0) {
+                            alert("Inserisci ore personalizzate valide.");
+                            return;
+                          }
+
+                          setNotificheMinutiPrima((prev) =>
+                            Array.from(new Set([...prev, minuti])).sort((a, b) => b - a)
+                          );
+                          setCustomNotificaOre("");
+                        }}
+                        style={{
+                          border: "none",
+                          borderRadius: 16,
+                          padding: "14px 14px",
+                          fontSize: 13,
+                          fontWeight: 1000,
+                          cursor: "pointer",
+                          color: "white",
+                          background:
+                            "linear-gradient(180deg, rgba(79,70,229,0.98), rgba(124,58,237,0.95))",
+                          boxShadow: "0 14px 26px rgba(79,70,229,0.18)",
+                          minWidth: 110,
+                        }}
+                      >
+                        Aggiungi
+                      </button>
+                    </div>
+
+                    <div style={{ display: "grid", gap: 8 }}>
+                      <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+                        Promemoria selezionati
+                      </div>
+
+                      {notificheMinutiPrima.length === 0 ? (
+                        <div
+                          style={{
+                            padding: "10px 12px",
+                            borderRadius: 14,
+                            border: "1px dashed rgba(148,163,184,0.28)",
+                            background: "rgba(255,255,255,0.62)",
+                            fontSize: 12,
+                            fontWeight: 800,
+                            color: "rgba(15,23,42,0.62)",
+                          }}
+                        >
+                          Nessun promemoria selezionato.
+                        </div>
+                      ) : (
+                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                          {notificheMinutiPrima
+                            .slice()
+                            .sort((a, b) => b - a)
+                            .map((minuti) => {
+                              const label =
+                                minuti % 1440 === 0
+                                  ? `${minuti / 1440} g`
+                                  : minuti % 60 === 0
+                                  ? `${minuti / 60} h`
+                                  : `${minuti} min`;
+
+                              return (
+                                <button
+                                  key={minuti}
+                                  type="button"
+                                  onClick={() =>
+                                    setNotificheMinutiPrima((prev) => prev.filter((x) => x !== minuti))
+                                  }
+                                  style={{
+                                    padding: "9px 12px",
+                                    borderRadius: 999,
+                                    border: "1px solid rgba(79,70,229,0.20)",
+                                    background:
+                                      "linear-gradient(180deg, rgba(79,70,229,0.14), rgba(124,58,237,0.10))",
+                                    color: "rgba(67,56,202,0.98)",
+                                    fontSize: 12,
+                                    fontWeight: 900,
+                                    cursor: "pointer",
+                                  }}
+                                  title="Tocca per rimuovere"
+                                >
+                                  {label} ✕
+                                </button>
+                              );
+                            })}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -12442,6 +12886,14 @@ function MiniCalendarioEventi({
 
         
        
+
+
+
+
+
+
+
+
 
 
 
@@ -12930,7 +13382,17 @@ function MiniCalendarioEventi({
 )}
      
      
-          
+
+
+
+
+
+
+
+
+
+
+
 
   
 
