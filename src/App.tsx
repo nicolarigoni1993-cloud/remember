@@ -714,19 +714,24 @@ export default function App() {
   const [authUser, setAuthUser] = useState<SupabaseAuthUser | null>(null);
 
   const currentUser = useMemo(() => {
-    if (!authUser) return null;
+    if (authUser) {
+      const nomeCustom =
+        typeof authUser.user_metadata?.display_name === "string"
+          ? authUser.user_metadata.display_name.trim()
+          : "";
 
-    const nomeCustom =
-      typeof authUser.user_metadata?.display_name === "string"
-        ? authUser.user_metadata.display_name.trim()
-        : "";
+      const email = authUser.email?.trim() ?? "";
+      const fallbackNome = email ? email.split("@")[0] : "Utente";
 
-    const email = authUser.email?.trim() ?? "";
-    const fallbackNome = email ? email.split("@")[0] : "Utente";
+      return {
+        id: authUser.id,
+        nome: nomeCustom || fallbackNome,
+      };
+    }
 
     return {
-      id: authUser.id,
-      nome: nomeCustom || fallbackNome,
+      id: "remember_local_user",
+      nome: "Nicola",
     };
   }, [authUser]);
 
@@ -1090,8 +1095,10 @@ const eventiProssimiAggiungi = useMemo(() => {
 
     supabase.auth.getSession().then(({ data, error }) => {
       if (!mounted) return;
+
       if (error) {
         console.error("Errore getSession:", error.message);
+        setCurrentUserId("remember_local_user");
         return;
       }
 
@@ -1100,7 +1107,7 @@ const eventiProssimiAggiungi = useMemo(() => {
 
       setAuthSession(session);
       setAuthUser(user);
-      setCurrentUserId(user?.id ?? null);
+      setCurrentUserId(user?.id ?? "remember_local_user");
     });
 
     const {
@@ -1110,7 +1117,7 @@ const eventiProssimiAggiungi = useMemo(() => {
 
       setAuthSession(session ?? null);
       setAuthUser(user);
-      setCurrentUserId(user?.id ?? null);
+      setCurrentUserId(user?.id ?? "remember_local_user");
     });
 
     return () => {
@@ -6728,135 +6735,7 @@ function MiniCalendarioEventi({
   `}</style>
 );
 
-   if (!currentUser) {
-    return (
-      <div style={pageBg}>
-        {GlobalStyle}
-        <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 18 }}>
-          <div style={{ width: "min(560px, 100%)" }}>
-            <div style={{ ...ui.card, padding: 26 }}>
-              <RememberLogo size={52} centered />
-
-              <div
-                style={{
-                  opacity: 0.72,
-                  fontWeight: 850,
-                  marginTop: 18,
-                  textAlign: "center",
-                  fontSize: 14,
-                }}
-              >
-                Il tuo spazio personale per ricordare tutto, in modo bello.
-              </div>
-
-              <div
-                style={{
-                  marginTop: 24,
-                  display: "flex",
-                  gap: 10,
-                  justifyContent: "center",
-                  flexWrap: "wrap",
-                }}
-              >
-                <button
-                  data-chip="1"
-                  onClick={() => {
-                    setAuthMode("login");
-                    setAuthMessage("");
-                  }}
-                  style={chip(authMode === "login")}
-                >
-                  Accedi
-                </button>
-
-                <button
-                  data-chip="1"
-                  onClick={() => {
-                    setAuthMode("register");
-                    setAuthMessage("");
-                  }}
-                  style={chip(authMode === "register")}
-                >
-                  Registrati
-                </button>
-              </div>
-
-              <div style={{ marginTop: 18, display: "grid", gap: 10 }}>
-                <input
-                  type="email"
-                  value={authEmail}
-                  onChange={(e) => setAuthEmail(e.target.value)}
-                  placeholder="Email"
-                  autoComplete="email"
-                  style={inputLight(false)}
-                />
-
-                <input
-                  type="password"
-                  value={authPassword}
-                  onChange={(e) => setAuthPassword(e.target.value)}
-                  placeholder="Password"
-                  autoComplete={authMode === "login" ? "current-password" : "new-password"}
-                  style={inputLight(false)}
-                />
-
-                <button
-                  data-chip="1"
-                  onClick={authMode === "login" ? authSignIn : authSignUp}
-                  disabled={authLoading}
-                  style={{
-                    ...chip(true),
-                    opacity: authLoading ? 0.7 : 1,
-                    cursor: authLoading ? "wait" : "pointer",
-                  }}
-                >
-                  {authLoading
-                    ? "Attendi..."
-                    : authMode === "login"
-                    ? "Entra"
-                    : "Crea account"}
-                </button>
-
-                <div
-                  style={{
-                    fontSize: 12,
-                    opacity: 0.68,
-                    fontWeight: 800,
-                    lineHeight: 1.45,
-                    textAlign: "center",
-                  }}
-                >
-                  {authMode === "login"
-                    ? "Accedi con email e password del tuo account Remember."
-                    : "Crea un account vero per usare Remember su più dispositivi."}
-                </div>
-
-                {authMessage ? (
-                  <div
-                    style={{
-                      marginTop: 4,
-                      padding: "12px 14px",
-                      borderRadius: 16,
-                      border: "1px solid rgba(79,70,229,0.18)",
-                      background:
-                        "linear-gradient(180deg, rgba(79,70,229,0.10), rgba(124,58,237,0.06))",
-                      color: "rgba(226,232,240,0.96)",
-                      fontSize: 13,
-                      fontWeight: 850,
-                      lineHeight: 1.45,
-                      textAlign: "center",
-                    }}
-                  >
-                    {authMessage}
-                  </div>
-                ) : null}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+ 
 
   return (
    <div style={pageBg}>
