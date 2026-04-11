@@ -1,6 +1,4 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import type { Session, User as SupabaseAuthUser } from "@supabase/supabase-js";
-import { supabase } from "./lib/supabase";
 
 type Filtro = "oggi" | "7giorni" | "30giorni";
 type Movimento = "uscita" | "entrata" | "nessuno";
@@ -709,37 +707,12 @@ type MovimentoFinanzaItem = {
 
 
 export default function App() {
+  const [users, setUsers] = useState<User[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [, setAuthSession] = useState<Session | null>(null);
-  const [authUser, setAuthUser] = useState<SupabaseAuthUser | null>(null);
+  const currentUser = useMemo(() => users.find((u) => u.id === currentUserId) ?? null, [users, currentUserId]);
 
-  const currentUser = useMemo(() => {
-    if (authUser) {
-      const nomeCustom =
-        typeof authUser.user_metadata?.display_name === "string"
-          ? authUser.user_metadata.display_name.trim()
-          : "";
-
-      const email = authUser.email?.trim() ?? "";
-      const fallbackNome = email ? email.split("@")[0] : "Utente";
-
-      return {
-        id: authUser.id,
-        nome: nomeCustom || fallbackNome,
-      };
-    }
-
-    return {
-      id: "remember_local_user",
-      nome: "Nicola",
-    };
-  }, [authUser]);
-
-  const [authEmail, setAuthEmail] = useState("");
-  const [authPassword, setAuthPassword] = useState("");
-  const [, setAuthMode] = useState<"login" | "register">("login");
-  const [, setAuthLoading] = useState(false);
-  const [, setAuthMessage] = useState("");
+  const [loginNome, setLoginNome] = useState("");
+  const [loginPick, setLoginPick] = useState<string | null>(null);
 
 
 
@@ -1098,23 +1071,14 @@ const eventiProssimiAggiungi = useMemo(() => {
 
     let mounted = true;
 
-    supabase.auth.getSession().then(({ data, error }) => {
-      if (!mounted) return;
+  useEffect(() => {
+    const u = caricaUtenti();
+    setUsers(u);
 
-      if (error) {
-        console.error("Errore getSession:", error.message);
-        setCurrentUserId("remember_local_user");
-        return;
-      }
-
-      const session = data.session ?? null;
-      const user = session?.user ?? null;
-
-      setAuthSession(session);
-      setAuthUser(user);
-      setCurrentUserId(user?.id ?? "remember_local_user");
-    });
-
+    const curr = caricaUtenteCorrente();
+    if (curr && u.some((x) => x.id === curr)) setCurrentUserId(curr);
+    else setCurrentUserId(null);
+  }, []);
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -3186,115 +3150,31 @@ const sx = useMemo(() => {
   };
 }, []);
 
-  async function authSignIn() {
-    if (!supabase) {
-      alert("Supabase non è ancora configurato correttamente.");
+  function entraCome(userId: string) {
+    setCurrentUserId(userId);
+    setLoginNome("");
+    setLoginPick(null);
+  }
+
+  function creaEUentra() {
+    const nome = loginNome.trim();
+    if (nome.length < 2) {
+      alert("Inserisci un nome utente valido (min 2 caratteri).");
       return;
     }
+    const u: User = { id: safeUUID(), nome };
+    const next = [u, ...users];
+    setUsers(next);
+    salvaUtenti(next);
+    entraCome(u.id);
+  }
 
-    const email = authEmail.trim();
-    const password = authPassword;
-
-    if (!email || !password) {
-      alert("Inserisci email e password.");
-      return;
-    }
-
-    setAuthLoading(true);
-    setAuthMessage("");
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    setAuthLoading(false);
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
+  function esci() {
+    salvaUtenteCorrente(null);
+    setCurrentUserId(null);
     setPagina("home");
     setFiltro(null);
     setMeseCorrente(new Date());
-  }
-
-  async function authSignUp() {
-    if (!supabase) {
-      alert("Supabase non è ancora configurato correttamente.");
-      return;
-    }
-
-    const email = authEmail.trim();
-    const password = authPassword;
-
-    if (!email || !password) {
-      alert("Inserisci email e password.");
-      return;
-    }
-
-    if (password.length < 6) {
-      alert("La password deve avere almeno 6 caratteri.");
-      return;
-    }
-
-    setAuthLoading(true);
-    setAuthMessage("");
-
-    const nomeBase = email.includes("@") ? email.split("@")[0] : "Utente";
-
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          display_name: nomeBase,
-        },
-      },
-    });
-
-    setAuthLoading(false);
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    if (data.session) {
-      setAuthMessage("Account creato ed accesso effettuato.");
-      setPagina("home");
-      setFiltro(null);
-      setMeseCorrente(new Date());
-      return;
-    }
-
-    setAuthMessage("Account creato. Controlla la tua email per confermare l’accesso.");
-    setAuthMode("login");
-  }
-
-  void authSignIn;
-  void authSignUp;
-
-  async function esci() {
-    if (supabase) {
-      const { error } = await supabase.auth.signOut();
-
-      if (error) {
-        alert(error.message);
-        return;
-      }
-    }
-
-    setAuthSession(null);
-    setAuthUser(null);
-    setCurrentUserId("remember_local_user");
-    setPagina("home");
-    setFiltro(null);
-    setMeseCorrente(new Date());
-    setAuthEmail("");
-    setAuthPassword("");
-    setAuthMessage("");
   }
 
 
