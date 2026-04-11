@@ -898,6 +898,10 @@ const eventiProssimiAggiungi = useMemo(() => {
 
   const [hoverCloseTurno, setHoverCloseTurno] = useState(false);
 
+
+
+
+
   const scheduledRef = useRef<Record<string, number[]>>({});
 
   function clearScheduledForVoce(voceId: string) {
@@ -910,8 +914,75 @@ const eventiProssimiAggiungi = useMemo(() => {
     Object.keys(scheduledRef.current).forEach(clearScheduledForVoce);
   }
 
+  function formatLeadTimeLabel(min: number) {
+    if (min % 1440 === 0) {
+      const giorni = min / 1440;
+      return giorni === 1 ? "1 giorno" : `${giorni} giorni`;
+    }
+
+    if (min % 60 === 0) {
+      const ore = min / 60;
+      return ore === 1 ? "1 ora" : `${ore} ore`;
+    }
+
+    return min === 1 ? "1 minuto" : `${min} minuti`;
+  }
+
+  async function showVoceNotification(v: Voce, min: number, firedKey?: string) {
+    if (!("Notification" in window)) return;
+    if (Notification.permission !== "granted") return;
+
+    const tipoLabel =
+      v.tipo === "scadenza"
+        ? "Scadenza"
+        : v.tipo === "appuntamento"
+        ? "Appuntamento"
+        : "Nota";
+
+    const leadLabel = formatLeadTimeLabel(min);
+    const titoloNotifica = `${tipoLabel}: ${v.titolo}`;
+    const corpoNotifica = `Promemoria ${leadLabel} prima • ${formattaDataBreve(v.data)} • ${v.ora}`;
+
+    const notificationOptions = {
+      body: corpoNotifica,
+      tag: `remember_${v.id}_${min}`,
+      renotify: false,
+      data: {
+        url: "/",
+        voceId: v.id,
+        tipo: v.tipo,
+      },
+    };
+
+    try {
+      if ("serviceWorker" in navigator) {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.showNotification(titoloNotifica, notificationOptions);
+      } else {
+        new Notification(titoloNotifica, {
+          body: corpoNotifica,
+        });
+      }
+
+      if (firedKey) {
+        sessionStorage.setItem(firedKey, "1");
+      }
+    } catch {
+      try {
+        new Notification(titoloNotifica, {
+          body: corpoNotifica,
+        });
+
+        if (firedKey) {
+          sessionStorage.setItem(firedKey, "1");
+        }
+      } catch {}
+    }
+  }
+
   function requestNotifyPermission() {
     if (!("Notification" in window)) return;
+
     if (Notification.permission === "default") {
       Notification.requestPermission().catch(() => {});
     }
@@ -938,24 +1009,18 @@ const eventiProssimiAggiungi = useMemo(() => {
       if (diff > 30 * 24 * 60 * 60 * 1000) continue;
 
       const id = window.setTimeout(() => {
-        try {
-          const tipoLabel =
-            v.tipo === "scadenza"
-              ? "Scadenza"
-              : v.tipo === "appuntamento"
-              ? "Appuntamento"
-              : "Nota";
+        const firedKey = `remember_notifica_fired_${v.id}_${min}`;
+        if (sessionStorage.getItem(firedKey) === "1") return;
 
-          new Notification(`${tipoLabel}: ${v.titolo}`, {
-            body: `Tra ${formatOreItalianeFromMin(min)} ore • ${formattaDataBreve(v.data)} ${v.ora}`,
-          });
-        } catch {}
+        void showVoceNotification(v, min, firedKey);
       }, diff);
 
       ids.push(id);
     }
 
-    if (ids.length) scheduledRef.current[v.id] = ids;
+    if (ids.length) {
+      scheduledRef.current[v.id] = ids;
+    }
   }
 
   function checkDueNotifications() {
@@ -973,25 +1038,11 @@ const eventiProssimiAggiungi = useMemo(() => {
       v.notificheMinutiPrima.forEach((min) => {
         const at = dt - min * 60_000;
         const diff = now - at;
+        const firedKey = `remember_notifica_fired_${v.id}_${min}`;
 
         if (diff >= 0 && diff <= 60_000) {
-          const firedKey = `remember_notifica_fired_${v.id}_${min}`;
           if (sessionStorage.getItem(firedKey) === "1") return;
-
-          try {
-            const tipoLabel =
-              v.tipo === "scadenza"
-                ? "Scadenza"
-                : v.tipo === "appuntamento"
-                ? "Appuntamento"
-                : "Nota";
-
-            new Notification(`${tipoLabel}: ${v.titolo}`, {
-              body: `Tra ${formatOreItalianeFromMin(min)} ore • ${formattaDataBreve(v.data)} ${v.ora}`,
-            });
-
-            sessionStorage.setItem(firedKey, "1");
-          } catch {}
+          void showVoceNotification(v, min, firedKey);
         }
       });
     });

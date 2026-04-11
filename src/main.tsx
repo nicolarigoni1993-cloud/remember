@@ -3,13 +3,22 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.tsx";
 
-// REGISTRA SERVICE WORKER
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker
-      .register("/sw.js")
-      .then(() => console.log("SW registrato"))
-      .catch((err) => console.log("SW errore:", err));
+  window.addEventListener("load", async () => {
+    try {
+      const registration = await navigator.serviceWorker.register("/sw.js");
+      console.log("Service Worker registrato:", registration.scope);
+
+      navigator.serviceWorker.addEventListener("message", (event) => {
+        const data = event.data;
+
+        if (data?.type === "REMEMBER_NOTIFICATION_CLICK") {
+          window.focus();
+        }
+      });
+    } catch (error) {
+      console.error("Errore registrazione Service Worker:", error);
+    }
   });
 }
 
