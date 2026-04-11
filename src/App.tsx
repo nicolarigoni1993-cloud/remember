@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import type { Session, User as SupabaseAuthUser } from "@supabase/supabase-js";
+import { supabase } from "./lib/supabase";
 
 type Filtro = "oggi" | "7giorni" | "30giorni";
 type Movimento = "uscita" | "entrata" | "nessuno";
@@ -230,6 +232,11 @@ function salvaUtenteCorrente(userId: string | null) {
   if (!userId) localStorage.removeItem(K_CURR);
   else localStorage.setItem(K_CURR, userId);
 }
+
+void caricaUtenti;
+void salvaUtenti;
+void caricaUtenteCorrente;
+void salvaUtenteCorrente;
 
 function normalizeVoce(x: any): Voce {
   const importoNum =
@@ -702,12 +709,40 @@ type MovimentoFinanzaItem = {
 
 
 export default function App() {
-  const [users, setUsers] = useState<User[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const currentUser = useMemo(() => users.find((u) => u.id === currentUserId) ?? null, [users, currentUserId]);
+  const [authSession, setAuthSession] = useState<Session | null>(null);
+  const [authUser, setAuthUser] = useState<SupabaseAuthUser | null>(null);
 
-  const [loginNome, setLoginNome] = useState("");
-  const [loginPick, setLoginPick] = useState<string | null>(null);
+  const currentUser = useMemo(() => {
+    if (!authUser) return null;
+
+    const nomeCustom =
+      typeof authUser.user_metadata?.display_name === "string"
+        ? authUser.user_metadata.display_name.trim()
+        : "";
+
+    const email = authUser.email?.trim() ?? "";
+    const fallbackNome = email ? email.split("@")[0] : "Utente";
+
+    return {
+      id: authUser.id,
+      nome: nomeCustom || fallbackNome,
+    };
+  }, [authUser]);
+
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authMode, setAuthMode] = useState<"login" | "register">("login");
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authMessage, setAuthMessage] = useState("");
+
+
+
+
+
+
+
+
 
  const [pagina, setPagina] = useState<"home" | "aggiungi" | "consulta" | "agenda" | "controllo" | "archivio" | "note">("home");
  const [consultaSezione, setConsultaSezione] = useState<"menu" | "turni" | "finanza" | "eventi">("menu");
@@ -1051,12 +1086,37 @@ const eventiProssimiAggiungi = useMemo(() => {
   }, []);
 
   useEffect(() => {
-    const u = caricaUtenti();
-    setUsers(u);
+    let mounted = true;
 
-    const curr = caricaUtenteCorrente();
-    if (curr && u.some((x) => x.id === curr)) setCurrentUserId(curr);
-    else setCurrentUserId(null);
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (!mounted) return;
+      if (error) {
+        console.error("Errore getSession:", error.message);
+        return;
+      }
+
+      const session = data.session ?? null;
+      const user = session?.user ?? null;
+
+      setAuthSession(session);
+      setAuthUser(user);
+      setCurrentUserId(user?.id ?? null);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      const user = session?.user ?? null;
+
+      setAuthSession(session ?? null);
+      setAuthUser(user);
+      setCurrentUserId(user?.id ?? null);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -3114,31 +3174,100 @@ const sx = useMemo(() => {
   };
 }, []);
 
-  function entraCome(userId: string) {
-    setCurrentUserId(userId);
-    setLoginNome("");
-    setLoginPick(null);
-  }
+  async function authSignIn() {
+    const email = authEmail.trim();
+    const password = authPassword;
 
-  function creaEUentra() {
-    const nome = loginNome.trim();
-    if (nome.length < 2) {
-      alert("Inserisci un nome utente valido (min 2 caratteri).");
+    if (!email || !password) {
+      alert("Inserisci email e password.");
       return;
     }
-    const u: User = { id: safeUUID(), nome };
-    const next = [u, ...users];
-    setUsers(next);
-    salvaUtenti(next);
-    entraCome(u.id);
+
+    setAuthLoading(true);
+    setAuthMessage("");
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    setAuthLoading(false);
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    setPagina("home");
+    setFiltro(null);
+    setMeseCorrente(new Date());
   }
 
-  function esci() {
-    salvaUtenteCorrente(null);
+  async function authSignUp() {
+    const email = authEmail.trim();
+    const password = authPassword;
+
+    if (!email || !password) {
+      alert("Inserisci email e password.");
+      return;
+    }
+
+    if (password.length < 6) {
+      alert("La password deve avere almeno 6 caratteri.");
+      return;
+    }
+
+    setAuthLoading(true);
+    setAuthMessage("");
+
+    const nomeBase = email.includes("@") ? email.split("@")[0] : "Utente";
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          display_name: nomeBase,
+        },
+      },
+    });
+
+    setAuthLoading(false);
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    if (data.session) {
+      setAuthMessage("Account creato ed accesso effettuato.");
+      setPagina("home");
+      setFiltro(null);
+      setMeseCorrente(new Date());
+      return;
+    }
+
+    setAuthMessage("Account creato. Controlla la tua email per confermare l’accesso.");
+    setAuthMode("login");
+  }
+
+  async function esci() {
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    setAuthSession(null);
+    setAuthUser(null);
     setCurrentUserId(null);
     setPagina("home");
     setFiltro(null);
     setMeseCorrente(new Date());
+    setAuthEmail("");
+    setAuthPassword("");
+    setAuthMessage("");
   }
 
 
@@ -6599,12 +6728,12 @@ function MiniCalendarioEventi({
   `}</style>
 );
 
-  if (!currentUser) {
+   if (!currentUser) {
     return (
       <div style={pageBg}>
         {GlobalStyle}
         <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 18 }}>
-          <div style={{ width: "min(520px, 100%)" }}>
+          <div style={{ width: "min(560px, 100%)" }}>
             <div style={{ ...ui.card, padding: 26 }}>
               <RememberLogo size={52} centered />
 
@@ -6622,73 +6751,105 @@ function MiniCalendarioEventi({
 
               <div
                 style={{
-                  marginTop: 22,
-                  fontSize: 16,
-                  fontWeight: 950,
-                  letterSpacing: -0.2,
+                  marginTop: 24,
+                  display: "flex",
+                  gap: 10,
+                  justifyContent: "center",
+                  flexWrap: "wrap",
                 }}
               >
-                Accedi
-              </div>
-
-              {users.length === 0 ? (
-                <div style={{ marginTop: 10, opacity: 0.75, fontWeight: 800, fontSize: 13 }}>
-                  Nessun utente creato su questo dispositivo.
-                </div>
-              ) : (
-                <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
-                  <select
-                    value={loginPick ?? ""}
-                    onChange={(e) => setLoginPick(e.target.value || null)}
-                    style={{
-                      ...inputLight(false),
-                      height: 48,
-                      background: "rgba(255,255,255,0.90)",
-                      fontWeight: 850,
-                    }}
-                  >
-                    <option value="">Seleziona utente…</option>
-                    {users.map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.nome}
-                      </option>
-                    ))}
-                  </select>
-
-                  <button
-                    data-chip="1"
-                    onClick={() => {
-                      if (!loginPick) {
-                        alert("Seleziona un utente.");
-                        return;
-                      }
-                      entraCome(loginPick);
-                    }}
-                    style={chip(true)}
-                  >
-                    Entra
-                  </button>
-                </div>
-              )}
-
-              <div style={{ height: 1, background: "rgba(15,23,42,0.08)", margin: "18px 0" }} />
-
-              <div style={{ fontSize: 16, fontWeight: 950, letterSpacing: -0.2 }}>Crea nuovo utente</div>
-
-              <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
-                <input
-                  value={loginNome}
-                  onChange={(e) => setLoginNome(e.target.value)}
-                  placeholder="Nome utente"
-                  style={inputLight(false)}
-                />
-                <button data-chip="1" onClick={creaEUentra} style={chip(true)}>
-                  Crea & Entra
+                <button
+                  data-chip="1"
+                  onClick={() => {
+                    setAuthMode("login");
+                    setAuthMessage("");
+                  }}
+                  style={chip(authMode === "login")}
+                >
+                  Accedi
                 </button>
 
-                <div style={{ fontSize: 12, opacity: 0.65, fontWeight: 800, lineHeight: 1.35 }}>
-                  Profilo locale sul dispositivo.
+                <button
+                  data-chip="1"
+                  onClick={() => {
+                    setAuthMode("register");
+                    setAuthMessage("");
+                  }}
+                  style={chip(authMode === "register")}
+                >
+                  Registrati
+                </button>
+              </div>
+
+              <div style={{ marginTop: 18, display: "grid", gap: 10 }}>
+                <input
+                  type="email"
+                  value={authEmail}
+                  onChange={(e) => setAuthEmail(e.target.value)}
+                  placeholder="Email"
+                  autoComplete="email"
+                  style={inputLight(false)}
+                />
+
+                <input
+                  type="password"
+                  value={authPassword}
+                  onChange={(e) => setAuthPassword(e.target.value)}
+                  placeholder="Password"
+                  autoComplete={authMode === "login" ? "current-password" : "new-password"}
+                  style={inputLight(false)}
+                />
+
+                <button
+                  data-chip="1"
+                  onClick={authMode === "login" ? authSignIn : authSignUp}
+                  disabled={authLoading}
+                  style={{
+                    ...chip(true),
+                    opacity: authLoading ? 0.7 : 1,
+                    cursor: authLoading ? "wait" : "pointer",
+                  }}
+                >
+                  {authLoading
+                    ? "Attendi..."
+                    : authMode === "login"
+                    ? "Entra"
+                    : "Crea account"}
+                </button>
+
+                <div
+                  style={{
+                    fontSize: 12,
+                    opacity: 0.68,
+                    fontWeight: 800,
+                    lineHeight: 1.45,
+                    textAlign: "center",
+                  }}
+                >
+                  {authMode === "login"
+                    ? "Accedi con email e password del tuo account Remember."
+                    : "Crea un account vero per usare Remember su più dispositivi."}
                 </div>
+
+                {authMessage ? (
+                  <div
+                    style={{
+                      marginTop: 4,
+                      padding: "12px 14px",
+                      borderRadius: 16,
+                      border: "1px solid rgba(79,70,229,0.18)",
+                      background:
+                        "linear-gradient(180deg, rgba(79,70,229,0.10), rgba(124,58,237,0.06))",
+                      color: "rgba(226,232,240,0.96)",
+                      fontSize: 13,
+                      fontWeight: 850,
+                      lineHeight: 1.45,
+                      textAlign: "center",
+                    }}
+                  >
+                    {authMessage}
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>
