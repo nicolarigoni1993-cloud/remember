@@ -2746,10 +2746,46 @@ function eliminaUscitaExtra(id: string) {
 
 const totaleEntrateExtra = useMemo(() => entrateExtraVal.reduce((s, x) => s + x.importo, 0), [entrateExtraVal]);
 
-const turniMese = useMemo(() => turni.filter((t) => stessoMeseSelezionato(t.data)), [turni, meseCorrente]);
-const oreOrdMese = useMemo(() => turniMese.reduce((s, t) => s + t.oreOrdinarie, 0), [turniMese]);
-const oreStraMese = useMemo(() => turniMese.reduce((s, t) => s + t.oreStraordinarie, 0), [turniMese]);
-const oreTotMese = useMemo(() => oreOrdMese + oreStraMese, [oreOrdMese, oreStraMese]);
+
+
+
+
+
+
+
+
+
+
+const turniMese = useMemo(
+  () => turni.filter((t) => stessoMeseSelezionato(t.data)),
+  [turni, meseCorrente]
+);
+
+// 🔥 SOLO TURNI LAVORATI (NO ferie, NO assenze, NO riposo)
+const turniLavoratiMese = useMemo(() => {
+  return turniMese.filter((t) => {
+    const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
+    return sigla !== "F" && sigla !== "A" && sigla !== "R";
+  });
+}, [turniMese]);
+
+const oreOrdMese = useMemo(
+  () => turniLavoratiMese.reduce((s, t) => s + t.oreOrdinarie, 0),
+  [turniLavoratiMese]
+);
+
+const oreStraMese = useMemo(
+  () => turniLavoratiMese.reduce((s, t) => s + t.oreStraordinarie, 0),
+  [turniLavoratiMese]
+);
+
+const oreTotMese = useMemo(
+  () => oreOrdMese + oreStraMese,
+  [oreOrdMese, oreStraMese]
+);
+
+
+
 
 const vociMese = useMemo(() => voci.filter((v) => stessoMeseSelezionato(v.data)), [voci, meseCorrente]);
 
