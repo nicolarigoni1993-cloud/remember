@@ -867,7 +867,6 @@ const [categorieUscitaCustom] = useState<string[]>(() => {
 
 
 
-const [showFeriePanel, setShowFeriePanel] = useState(false);
 
 const [filtroFerieDa, setFiltroFerieDa] = useState("");
 const [filtroFerieA, setFiltroFerieA] = useState("");
@@ -2866,9 +2865,7 @@ const ferieFiltrate = useMemo(() => {
   });
 }, [turni, filtroFerieDa, filtroFerieA]);
 
-const ferieGiorniFiltrati = ferieFiltrate.length;
 
-const ferieOreFiltrate = ferieFiltrate.length * ferieTotaliOreBase;
 
 
 
