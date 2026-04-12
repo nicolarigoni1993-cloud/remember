@@ -2078,7 +2078,7 @@ function MiniCalendarioSettimanaTurni({
                 : "0 6px 14px rgba(15,23,42,0.05)",
               transition: "transform .18s ease, box-shadow .18s ease",
               position: "relative",
-              overflow: "hidden",
+             
             }}
             onMouseEnter={(e) => {
               if (!turno) return;
