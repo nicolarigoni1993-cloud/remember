@@ -719,7 +719,25 @@ const currentUser = useMemo(
 const [loginNome, setLoginNome] = useState("");
 const [, setLoginPick] = useState<string | null>(null);
 
+useEffect(() => {
+  const u = caricaUtenti();
+  setUsers(u);
 
+  const curr = caricaUtenteCorrente();
+
+  if (curr && u.some((x) => x.id === curr)) {
+    setCurrentUserId(curr);
+    return;
+  }
+
+  if (u.length === 1) {
+    setCurrentUserId(u[0].id);
+    salvaUtenteCorrente(u[0].id);
+    return;
+  }
+
+  setCurrentUserId(null);
+}, []);
 
 
 
@@ -3146,13 +3164,11 @@ const sx = useMemo(() => {
 
   void creaEUentra;
 
-  function esci() {
-    salvaUtenteCorrente(null);
-    setCurrentUserId(null);
-    setPagina("home");
-    setFiltro(null);
-    setMeseCorrente(new Date());
-  }
+function esci() {
+  setPagina("home");
+  setFiltro(null);
+  setMeseCorrente(new Date());
+}
 
 
 
@@ -6737,13 +6753,7 @@ function MiniCalendarioEventi({
               Aggiungi
             </button>
 
-            <button
-              data-chip="1"
-              onClick={() => setPagina("account")}
-              style={chip(pagina === "account")}
-            >
-              Account
-            </button>
+           
           </div>
 
           <button
