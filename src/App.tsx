@@ -941,7 +941,7 @@ const eventiProssimiAggiungi = useMemo(() => {
 }, [voci]);
 
 
-  const [hoverCloseTurno, setHoverCloseTurno] = useState(false);
+  
 
 
 
