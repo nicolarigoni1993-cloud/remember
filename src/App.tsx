@@ -2853,17 +2853,7 @@ const oreTotMese = useMemo(
 );
 
 
-const ferieFiltrate = useMemo(() => {
-  return turni.filter((t) => {
-    const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
-    if (sigla !== "F") return false;
 
-    if (filtroFerieDa && t.data < filtroFerieDa) return false;
-    if (filtroFerieA && t.data > filtroFerieA) return false;
-
-    return true;
-  });
-}, [turni, filtroFerieDa, filtroFerieA]);
 
 
 
