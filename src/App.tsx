@@ -865,6 +865,15 @@ const [categorieUscitaCustom] = useState<string[]>(() => {
   }
 });
 
+
+
+const [showFeriePanel, setShowFeriePanel] = useState(false);
+
+const [filtroFerieDa, setFiltroFerieDa] = useState("");
+const [filtroFerieA, setFiltroFerieA] = useState("");
+
+
+
    const [mostraTurnoForm, setMostraTurnoForm] = useState(false);
   const [turnoData, setTurnoData] = useState(new Date().toISOString().slice(0, 10));
   const [turnoInizio, setTurnoInizio] = useState("08:00");
@@ -2024,7 +2033,7 @@ function MiniCalendarioSettimanaTurni({
       style={{
         display: "grid",
         gridTemplateColumns: "repeat(7, 1fr)",
-        gap: 8,
+        gap: window.innerWidth <= 640 ? 4 : 8,
         marginTop: 12,
       }}
     >
@@ -2046,7 +2055,7 @@ function MiniCalendarioSettimanaTurni({
               if (turno) onEditTurno(turno);
             }}
             style={{
-              padding: "10px 6px",
+              padding: window.innerWidth <= 640 ? "6px 4px" : "10px 6px",
               borderRadius: 18,
               border: hasTurno
                 ? "1px solid rgba(15,23,42,0.08)"
@@ -2061,6 +2070,8 @@ function MiniCalendarioSettimanaTurni({
               display: "grid",
               justifyItems: "center",
               gap: 6,
+              minWidth: 0,
+              overflow: "hidden",
               cursor: turno ? "pointer" : "default",
               boxShadow: hasTurno
                 ? `0 10px 22px ${getTurnoGlow(sigla)}, inset 0 1px 0 rgba(255,255,255,0.70)`
@@ -2783,6 +2794,23 @@ const oreTotMese = useMemo(
   () => oreOrdMese + oreStraMese,
   [oreOrdMese, oreStraMese]
 );
+
+
+const ferieFiltrate = useMemo(() => {
+  return turni.filter((t) => {
+    const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
+    if (sigla !== "F") return false;
+
+    if (filtroFerieDa && t.data < filtroFerieDa) return false;
+    if (filtroFerieA && t.data > filtroFerieA) return false;
+
+    return true;
+  });
+}, [turni, filtroFerieDa, filtroFerieA]);
+
+const ferieGiorniFiltrati = ferieFiltrate.length;
+
+const ferieOreFiltrate = ferieFiltrate.length * ferieTotaliOreBase;
 
 
 
@@ -8161,6 +8189,15 @@ function MiniCalendarioEventi({
           </>
 
 
+
+
+
+
+
+
+
+
+
         ) : consultaSezione === "turni" ? (
   (() => {
     const turniLavoroMese = turniMese.filter((t) => {
@@ -8444,15 +8481,106 @@ function MiniCalendarioEventi({
                 >
                   Monitoraggio ferie
                 </div>
-                <div
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 850,
-                    color: "rgba(71,85,105,0.80)",
-                  }}
-                >
-                  Riepilogo aggiornato di giorni e ore residue.
-                </div>
+               <div
+  style={{
+    ...ui.card,
+    padding: 16,
+    display: "grid",
+    gap: 14,
+    border: "1px solid rgba(255,255,255,0.6)",
+    background:
+      "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
+    boxShadow: "0 20px 50px rgba(15,23,42,0.12)",
+  }}
+>
+  {/* HEADER CON MEGA INGRANAGGIO */}
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+    }}
+  >
+    <div>
+      <div style={{ fontSize: 18, fontWeight: 1000 }}>
+        Monitoraggio mese
+      </div>
+      <div style={{ fontSize: 12, opacity: 0.7 }}>
+        Riepilogo generale attività
+      </div>
+    </div>
+
+    <button
+      onClick={() => setShowFeriePanel((p) => !p)}
+      style={{
+        width: 52,
+        height: 52,
+        borderRadius: 18,
+        border: "none",
+        background:
+          "linear-gradient(180deg, #6366f1, #7c3aed)",
+        color: "white",
+        fontSize: 22,
+        cursor: "pointer",
+        boxShadow: "0 12px 25px rgba(99,102,241,0.3)",
+      }}
+    >
+      ⚙️
+    </button>
+  </div>
+
+  {/* TOTALI MESE */}
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+      gap: 10,
+    }}
+  >
+    <div style={{ fontWeight: 900 }}>Turni: {turniLavoratiMese.length}</div>
+    <div style={{ fontWeight: 900 }}>Ore: {formatNumeroOre(oreTotMese)} h</div>
+    <div style={{ fontWeight: 900 }}>Straordinari: {formatNumeroOre(oreStraMese)} h</div>
+  </div>
+
+  {/* PANEL NASCOSTO FERIE */}
+  {showFeriePanel && (
+    <div
+      style={{
+        marginTop: 10,
+        padding: 14,
+        borderRadius: 18,
+        background: "rgba(241,245,249,0.9)",
+        border: "1px solid rgba(148,163,184,0.2)",
+        display: "grid",
+        gap: 12,
+      }}
+    >
+      <div style={{ fontWeight: 1000 }}>Monitoraggio ferie</div>
+
+      {/* FILTRI */}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <input
+          type="date"
+          value={filtroFerieDa}
+          onChange={(e) => setFiltroFerieDa(e.target.value)}
+        />
+        <input
+          type="date"
+          value={filtroFerieA}
+          onChange={(e) => setFiltroFerieA(e.target.value)}
+        />
+      </div>
+
+      {/* TOTALI */}
+      <div style={{ fontWeight: 900 }}>
+        Giorni: {ferieGiorniFiltrati}
+      </div>
+      <div style={{ fontWeight: 900 }}>
+        Ore: {formatNumeroOre(ferieOreFiltrate)} h
+      </div>
+    </div>
+  )}
+</div>
               </div>
 
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
