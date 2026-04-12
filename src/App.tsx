@@ -878,8 +878,7 @@ const [categorieUscitaCustom] = useState<string[]>(() => {
  
 
 const [turnoTipo, setTurnoTipo] = useState<"lavoro" | "ferie" | "riposo" | "assenza">("lavoro");
-const [turnoModoOreFerie, setTurnoModoOreFerie] = useState<"giorni" | "ore">("giorni");
-const [turnoQuantitaFerie, setTurnoQuantitaFerie] = useState("");
+
 const [turnoManuale, setTurnoManuale] = useState(false);
 const [turnoModalitaPeriodo, setTurnoModalitaPeriodo] = useState<"singolo" | "intervallo">("singolo");
 const [turnoDataFine, setTurnoDataFine] = useState(new Date().toISOString().slice(0, 10));
