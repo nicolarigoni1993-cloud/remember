@@ -1981,7 +1981,7 @@ function MiniCalendarioSettimanaTurni({
   const oggi = new Date();
 
   const inizioSettimana = new Date(oggi);
-  const giorno = (oggi.getDay() + 6) % 7; // lunedì = 0
+  const giorno = (oggi.getDay() + 6) % 7;
   inizioSettimana.setDate(oggi.getDate() - giorno);
 
   const giorniSettimana: Date[] = [];
@@ -1995,6 +1995,28 @@ function MiniCalendarioSettimanaTurni({
 
   function getTurnoGiorno(data: string) {
     return turni.find((t) => t.data === data);
+  }
+
+  function getTurnoColor(sigla: string) {
+    if (sigla === "R") return "linear-gradient(180deg, #64748b, #475569)";
+    if (sigla === "F") return "linear-gradient(180deg, #8b5cf6, #7c3aed)";
+    if (sigla === "A") return "linear-gradient(180deg, #ef4444, #dc2626)";
+    if (sigla === "N") return "linear-gradient(180deg, #2563eb, #1d4ed8)";
+    if (sigla === "M") return "linear-gradient(180deg, #f59e0b, #d97706)";
+    if (sigla === "P") return "linear-gradient(180deg, #f97316, #ea580c)";
+    if (sigla === "S") return "linear-gradient(180deg, #a855f7, #7e22ce)";
+    return "linear-gradient(180deg, #3b82f6, #2563eb)";
+  }
+
+  function getTurnoGlow(sigla: string) {
+    if (sigla === "R") return "rgba(100,116,139,0.22)";
+    if (sigla === "F") return "rgba(124,58,237,0.24)";
+    if (sigla === "A") return "rgba(239,68,68,0.24)";
+    if (sigla === "N") return "rgba(37,99,235,0.24)";
+    if (sigla === "M") return "rgba(245,158,11,0.24)";
+    if (sigla === "P") return "rgba(249,115,22,0.24)";
+    if (sigla === "S") return "rgba(168,85,247,0.24)";
+    return "rgba(59,130,246,0.20)";
   }
 
   return (
@@ -2014,6 +2036,9 @@ function MiniCalendarioSettimanaTurni({
           ? normalizeTurnoLabel(turno.inizio, turno.fine, turno.note)
           : "";
 
+        const isToday = key === new Date().toISOString().slice(0, 10);
+        const hasTurno = Boolean(turno);
+
         return (
           <div
             key={key}
@@ -2022,43 +2047,153 @@ function MiniCalendarioSettimanaTurni({
             }}
             style={{
               padding: "10px 6px",
-              borderRadius: 14,
-              border: "1px solid rgba(15,23,42,0.08)",
-              background: "rgba(255,255,255,0.9)",
+              borderRadius: 18,
+              border: hasTurno
+                ? "1px solid rgba(15,23,42,0.08)"
+                : isToday
+                ? "1px solid rgba(99,102,241,0.20)"
+                : "1px solid rgba(15,23,42,0.06)",
+              background: hasTurno
+                ? "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96))"
+                : isToday
+                ? "linear-gradient(180deg, rgba(238,242,255,0.98), rgba(245,243,255,0.95))"
+                : "rgba(255,255,255,0.88)",
               display: "grid",
               justifyItems: "center",
-              gap: 4,
+              gap: 6,
               cursor: turno ? "pointer" : "default",
-              boxShadow: "0 6px 14px rgba(15,23,42,0.06)",
+              boxShadow: hasTurno
+                ? `0 10px 22px ${getTurnoGlow(sigla)}, inset 0 1px 0 rgba(255,255,255,0.70)`
+                : "0 6px 14px rgba(15,23,42,0.05)",
+              transition: "transform .18s ease, box-shadow .18s ease",
+              position: "relative",
+              overflow: "hidden",
+            }}
+            onMouseEnter={(e) => {
+              if (!turno) return;
+              e.currentTarget.style.transform = "translateY(-2px)";
+              e.currentTarget.style.boxShadow =
+                `0 14px 28px ${getTurnoGlow(sigla)}, inset 0 1px 0 rgba(255,255,255,0.70)`;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = hasTurno
+                ? `0 10px 22px ${getTurnoGlow(sigla)}, inset 0 1px 0 rgba(255,255,255,0.70)`
+                : "0 6px 14px rgba(15,23,42,0.05)";
             }}
           >
-            {/* giorno */}
-            <div style={{ fontSize: 10, fontWeight: 900, opacity: 0.7 }}>
+            {hasTurno && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: -18,
+                  right: -18,
+                  width: 54,
+                  height: 54,
+                  borderRadius: 999,
+                  background: `radial-gradient(circle, ${getTurnoGlow(sigla)}, transparent 68%)`,
+                  pointerEvents: "none",
+                }}
+              />
+            )}
+
+            <div
+              style={{
+                fontSize: 10,
+                fontWeight: 900,
+                opacity: 0.72,
+                color: "rgba(71,85,105,0.92)",
+                position: "relative",
+                zIndex: 1,
+              }}
+            >
               {giorniLabel[idx]}
             </div>
 
-            {/* numero */}
-            <div style={{ fontSize: 16, fontWeight: 1000 }}>
+            <div
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: "50%",
+                display: "grid",
+                placeItems: "center",
+                fontSize: 15,
+                fontWeight: 1000,
+                color: isToday ? "rgba(49,46,129,0.98)" : "rgba(15,23,42,0.96)",
+                background: isToday
+                  ? "rgba(129,140,248,0.12)"
+                  : "rgba(255,255,255,0.82)",
+                border: isToday
+                  ? "2px solid rgba(129,140,248,0.42)"
+                  : "1px solid rgba(15,23,42,0.06)",
+                boxShadow: isToday ? "0 8px 16px rgba(99,102,241,0.12)" : "none",
+                position: "relative",
+                zIndex: 1,
+              }}
+            >
               {d.getDate()}
             </div>
 
-            {/* turno */}
             <div
               style={{
-                fontSize: 13,
-                fontWeight: 1000,
-                marginTop: 2,
-                color:
-                  sigla === "R"
-                    ? "#6b7280"
-                    : sigla === "F"
-                    ? "#7c3aed"
-                    : sigla === "A"
-                    ? "#ef4444"
-                    : "#2563eb",
+                minHeight: 28,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                position: "relative",
+                zIndex: 1,
+                width: "100%",
               }}
             >
-              {sigla || "-"}
+              {sigla ? (
+                <div
+                  style={{
+                    display: "inline-flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    minWidth: 28,
+                    height: 28,
+                    padding: "0 8px",
+                    borderRadius: 999,
+                    fontSize: 12,
+                    fontWeight: 1000,
+                    color: "white",
+                    background: getTurnoColor(sigla),
+                    boxShadow:
+                      "0 8px 16px rgba(15,23,42,0.16), inset 0 1px 0 rgba(255,255,255,0.20)",
+                    lineHeight: 1,
+                    letterSpacing: 0.2,
+                  }}
+                >
+                  {sigla}
+                </div>
+              ) : (
+                <div
+                  style={{
+                    display: "inline-flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    minWidth: 28,
+                    height: 28,
+                    padding: "0 8px",
+                    borderRadius: 999,
+                    background: isToday
+                      ? "rgba(99,102,241,0.12)"
+                      : "rgba(148,163,184,0.10)",
+                    border: isToday
+                      ? "1px solid rgba(99,102,241,0.16)"
+                      : "1px solid rgba(148,163,184,0.08)",
+                    fontSize: 14,
+                    color: isToday
+                      ? "rgba(79,70,229,0.92)"
+                      : "rgba(148,163,184,0.90)",
+                    fontWeight: 900,
+                    lineHeight: 1,
+                  }}
+                >
+                  +
+                </div>
+              )}
             </div>
           </div>
         );
@@ -7996,458 +8131,576 @@ function MiniCalendarioEventi({
 
 
         ) : consultaSezione === "turni" ? (
-          <>
-            <div style={consultaHeaderWrap}>
-              {consultaSectionBadge("📘", "Consulta turni", "orange")}
+  (() => {
+    const turniLavoroMese = turniMese.filter((t) => {
+      const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
+      return sigla !== "F" && sigla !== "A" && sigla !== "R";
+    });
 
-              <div style={consultaSubtitleStyle}>
-                Vista mensile dei turni con riepiloghi rapidi, ferie e modifica immediata.
+    const ferieMese = turniMese.filter((t) => {
+      const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
+      return sigla === "F";
+    });
+
+    const assenzeMese = turniMese.filter((t) => {
+      const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
+      return sigla === "A";
+    });
+
+    const riposiMese = turniMese.filter((t) => {
+      const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
+      return sigla === "R";
+    });
+
+    const totaleTurniLavoratiMese = turniLavoroMese.length;
+    const ferieGiorniMese = ferieMese.length;
+    const ferieOreMese = ferieMese.reduce((sum, t) => sum + (Number(t.oreOrdinarie) || 0), 0);
+    const assenzeGiorniMese = assenzeMese.length;
+    const riposiGiorniMese = riposiMese.length;
+
+    return (
+      <>
+        <div style={consultaHeaderWrap}>
+          {consultaSectionBadge("📘", "Consulta turni", "orange")}
+
+          <div style={consultaSubtitleStyle}>
+            Vista mensile dei turni con riepiloghi rapidi, ferie e modifica immediata.
+          </div>
+        </div>
+
+        <div
+          style={{
+            maxWidth: 1060,
+            margin: "0 auto",
+            marginTop: 14,
+            display: "grid",
+            gap: 14,
+          }}
+        >
+          <MiniCalendario
+            mese={meseCorrente}
+            vociDelMese={[]}
+            turniDelMese={turniMese}
+            onPrevMonth={mesePrecedente}
+            onNextMonth={meseSuccessivo}
+            onEditTurno={apriModificaTurno}
+          />
+
+          <div
+            style={{
+              ...ui.card,
+              padding: 14,
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+              gap: 10,
+              border: "1px solid rgba(255,255,255,0.55)",
+              boxShadow: "0 18px 40px rgba(15,23,42,0.08)",
+              background:
+                "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.94))",
+            }}
+          >
+            <div
+              style={{
+                padding: 12,
+                borderRadius: 18,
+                border: "1px solid rgba(14,165,233,0.14)",
+                background:
+                  "linear-gradient(180deg, rgba(14,165,233,0.10), rgba(14,165,233,0.04))",
+                boxShadow: "0 8px 20px rgba(14,165,233,0.06)",
+              }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(8,47,73,0.82)" }}>
+                Turni lavorati
+              </div>
+              <div
+                style={{
+                  marginTop: 6,
+                  fontSize: 18,
+                  fontWeight: 1000,
+                  color: "rgba(15,23,42,0.96)",
+                }}
+              >
+                {totaleTurniLavoratiMese}
               </div>
             </div>
 
             <div
               style={{
-                maxWidth: 1060,
-                margin: "0 auto",
-                marginTop: 14,
-                display: "grid",
-                gap: 14,
+                padding: 12,
+                borderRadius: 18,
+                border: "1px solid rgba(16,185,129,0.14)",
+                background:
+                  "linear-gradient(180deg, rgba(16,185,129,0.10), rgba(16,185,129,0.04))",
+                boxShadow: "0 8px 20px rgba(16,185,129,0.06)",
               }}
             >
-              <MiniCalendario
-                mese={meseCorrente}
-                vociDelMese={[]}
-                turniDelMese={turniMese}
-                onPrevMonth={mesePrecedente}
-                onNextMonth={meseSuccessivo}
-                onEditTurno={apriModificaTurno}
-              />
-
+              <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(6,78,59,0.82)" }}>
+                Ore ordinarie lavorate
+              </div>
               <div
                 style={{
-                  ...ui.card,
-                  padding: 14,
+                  marginTop: 6,
+                  fontSize: 18,
+                  fontWeight: 1000,
+                  color: "rgba(15,23,42,0.96)",
+                }}
+              >
+                {formatNumeroOre(oreOrdMese)} h
+              </div>
+            </div>
+
+            <div
+              style={{
+                padding: 12,
+                borderRadius: 18,
+                border: "1px solid rgba(249,115,22,0.14)",
+                background:
+                  "linear-gradient(180deg, rgba(249,115,22,0.10), rgba(249,115,22,0.04))",
+                boxShadow: "0 8px 20px rgba(249,115,22,0.06)",
+              }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(124,45,18,0.82)" }}>
+                Ore straordinarie
+              </div>
+              <div
+                style={{
+                  marginTop: 6,
+                  fontSize: 18,
+                  fontWeight: 1000,
+                  color: "rgba(15,23,42,0.96)",
+                }}
+              >
+                {formatNumeroOre(oreStraMese)} h
+              </div>
+            </div>
+
+            <div
+              style={{
+                padding: 12,
+                borderRadius: 18,
+                border: "1px solid rgba(124,58,237,0.14)",
+                background:
+                  "linear-gradient(180deg, rgba(124,58,237,0.10), rgba(124,58,237,0.04))",
+                boxShadow: "0 8px 20px rgba(124,58,237,0.06)",
+              }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(76,29,149,0.82)" }}>
+                Ore totali lavorate
+              </div>
+              <div
+                style={{
+                  marginTop: 6,
+                  fontSize: 18,
+                  fontWeight: 1000,
+                  color: "rgba(15,23,42,0.96)",
+                }}
+              >
+                {formatNumeroOre(oreTotMese)} h
+              </div>
+            </div>
+
+            <div
+              style={{
+                padding: 12,
+                borderRadius: 18,
+                border: "1px solid rgba(168,85,247,0.18)",
+                background:
+                  "linear-gradient(180deg, rgba(243,232,255,0.98), rgba(250,245,255,0.94))",
+                boxShadow: "0 8px 20px rgba(168,85,247,0.08)",
+              }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(107,33,168,0.92)" }}>
+                Ferie effettuate
+              </div>
+              <div
+                style={{
+                  marginTop: 6,
+                  fontSize: 17,
+                  fontWeight: 1000,
+                  color: "rgba(15,23,42,0.96)",
+                  lineHeight: 1.2,
+                }}
+              >
+                {ferieGiorniMese} g • {formatNumeroOre(ferieOreMese)} h
+              </div>
+            </div>
+
+            <div
+              style={{
+                padding: 12,
+                borderRadius: 18,
+                border: "1px solid rgba(239,68,68,0.16)",
+                background:
+                  "linear-gradient(180deg, rgba(254,242,242,0.98), rgba(254,226,226,0.94))",
+                boxShadow: "0 8px 20px rgba(239,68,68,0.08)",
+              }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(153,27,27,0.92)" }}>
+                Assenze mese
+              </div>
+              <div
+                style={{
+                  marginTop: 6,
+                  fontSize: 18,
+                  fontWeight: 1000,
+                  color: "rgba(15,23,42,0.96)",
+                }}
+              >
+                {assenzeGiorniMese}
+              </div>
+            </div>
+
+            <div
+              style={{
+                padding: 12,
+                borderRadius: 18,
+                border: "1px solid rgba(100,116,139,0.16)",
+                background:
+                  "linear-gradient(180deg, rgba(241,245,249,0.98), rgba(248,250,252,0.94))",
+                boxShadow: "0 8px 20px rgba(100,116,139,0.08)",
+              }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(71,85,105,0.92)" }}>
+                Riposi mese
+              </div>
+              <div
+                style={{
+                  marginTop: 6,
+                  fontSize: 18,
+                  fontWeight: 1000,
+                  color: "rgba(15,23,42,0.96)",
+                }}
+              >
+                {riposiGiorniMese}
+              </div>
+            </div>
+          </div>
+
+          <div
+            style={{
+              ...ui.card,
+              padding: 14,
+              display: "grid",
+              gap: 12,
+              border: "1px solid rgba(255,255,255,0.58)",
+              boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
+              background:
+                "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 12,
+                flexWrap: "wrap",
+              }}
+            >
+              <div
+                style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-                  gap: 10,
-                  border: "1px solid rgba(255,255,255,0.55)",
-                  boxShadow: "0 18px 40px rgba(15,23,42,0.08)",
-                  background:
-                    "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.94))",
+                  gap: 4,
                 }}
               >
                 <div
                   style={{
-                    padding: 12,
-                    borderRadius: 18,
-                    border: "1px solid rgba(14,165,233,0.14)",
-                    background:
-                      "linear-gradient(180deg, rgba(14,165,233,0.10), rgba(14,165,233,0.04))",
-                    boxShadow: "0 8px 20px rgba(14,165,233,0.06)",
+                    fontSize: 19,
+                    fontWeight: 1000,
+                    letterSpacing: -0.3,
+                    color: "rgba(15,23,42,0.98)",
                   }}
                 >
-                  <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(8,47,73,0.82)" }}>
-                    Totale turni
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 6,
-                      fontSize: 18,
-                      fontWeight: 1000,
-                      color: "rgba(15,23,42,0.96)",
-                    }}
-                  >
-                    {totaleTurniMese}
-                  </div>
+                  Monitoraggio ferie
                 </div>
-
                 <div
                   style={{
-                    padding: 12,
-                    borderRadius: 18,
-                    border: "1px solid rgba(16,185,129,0.14)",
-                    background:
-                      "linear-gradient(180deg, rgba(16,185,129,0.10), rgba(16,185,129,0.04))",
-                    boxShadow: "0 8px 20px rgba(16,185,129,0.06)",
+                    fontSize: 12,
+                    fontWeight: 850,
+                    color: "rgba(71,85,105,0.80)",
                   }}
                 >
-                  <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(6,78,59,0.82)" }}>
-                    Ore ordinarie
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 6,
-                      fontSize: 18,
-                      fontWeight: 1000,
-                      color: "rgba(15,23,42,0.96)",
-                    }}
-                  >
-                    {formatNumeroOre(oreOrdMese)} h
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    padding: 12,
-                    borderRadius: 18,
-                    border: "1px solid rgba(249,115,22,0.14)",
-                    background:
-                      "linear-gradient(180deg, rgba(249,115,22,0.10), rgba(249,115,22,0.04))",
-                    boxShadow: "0 8px 20px rgba(249,115,22,0.06)",
-                  }}
-                >
-                  <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(124,45,18,0.82)" }}>
-                    Ore straordinarie
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 6,
-                      fontSize: 18,
-                      fontWeight: 1000,
-                      color: "rgba(15,23,42,0.96)",
-                    }}
-                  >
-                    {formatNumeroOre(oreStraMese)} h
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    padding: 12,
-                    borderRadius: 18,
-                    border: "1px solid rgba(124,58,237,0.14)",
-                    background:
-                      "linear-gradient(180deg, rgba(124,58,237,0.10), rgba(124,58,237,0.04))",
-                    boxShadow: "0 8px 20px rgba(124,58,237,0.06)",
-                  }}
-                >
-                  <div style={{ fontSize: 12, fontWeight: 950, color: "rgba(76,29,149,0.82)" }}>
-                    Ore totali
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 6,
-                      fontSize: 18,
-                      fontWeight: 1000,
-                      color: "rgba(15,23,42,0.96)",
-                    }}
-                  >
-                    {formatNumeroOre(oreTotMese)} h
-                  </div>
+                  Riepilogo aggiornato di giorni e ore residue.
                 </div>
               </div>
 
-              <div
-                style={{
-                  ...ui.card,
-                  padding: 14,
-                  display: "grid",
-                  gap: 12,
-                  border: "1px solid rgba(255,255,255,0.58)",
-                  boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
-                  background:
-                    "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
-                }}
-              >
-                <div
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                <button
+                  type="button"
+                  onClick={() => setApriConfigFerie((prev) => !prev)}
                   style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: 12,
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "grid",
-                      gap: 4,
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: 19,
-                        fontWeight: 1000,
-                        letterSpacing: -0.3,
-                        color: "rgba(15,23,42,0.98)",
-                      }}
-                    >
-                      Monitoraggio ferie
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 850,
-                        color: "rgba(71,85,105,0.80)",
-                      }}
-                    >
-                      Riepilogo aggiornato di giorni e ore residue.
-                    </div>
-                  </div>
-
-                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                    <button
-                      type="button"
-                      onClick={() => setApriConfigFerie((prev) => !prev)}
-                      style={{
-                        width: 42,
-                        height: 42,
-                        borderRadius: 14,
-                        border: "1px solid rgba(148,163,184,0.18)",
-                        background:
-                          "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
-                        boxShadow: "0 8px 18px rgba(15,23,42,0.08)",
-                        cursor: "pointer",
-                        display: "grid",
-                        placeItems: "center",
-                        fontSize: 18,
-                      }}
-                      title="Configura basi ferie"
-                    >
-                      ⚙️
-                    </button>
-
-                    <div
-                      style={{
-                        padding: "8px 12px",
-                        borderRadius: 999,
-                        border: "1px solid rgba(16,185,129,0.22)",
-                        background:
-                          "linear-gradient(180deg, rgba(220,252,231,1), rgba(240,253,244,0.98))",
-                        fontSize: 12,
-                        fontWeight: 950,
-                        color: "rgba(21,128,61,0.98)",
-                        boxShadow: "0 8px 18px rgba(34,197,94,0.10)",
-                      }}
-                    >
-                      Sigla calendario: F
-                    </div>
-                  </div>
-                </div>
-
-                {apriConfigFerie && (
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                      gap: 12,
-                    }}
-                  >
-                    <div
-                      style={{
-                        padding: 14,
-                        borderRadius: 18,
-                        border: "1px solid rgba(59,130,246,0.24)",
-                        background:
-                          "linear-gradient(180deg, rgba(219,234,254,1), rgba(239,246,255,1))",
-                        boxShadow: "0 8px 18px rgba(59,130,246,0.10)",
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 950,
-                          color: "rgba(30,64,175,0.98)",
-                        }}
-                      >
-                        Base ferie giorni
-                      </div>
-                      <input
-                        value={String(ferieTotaliGiorniBase)}
-                        onChange={(e) => {
-                          const n = Number(e.target.value);
-                          setFerieTotaliGiorniBase(Number.isFinite(n) && n >= 0 ? n : 0);
-                        }}
-                        inputMode="numeric"
-                        style={{
-                          ...inputLight(false),
-                          marginTop: 10,
-                          background: "rgba(255,255,255,1)",
-                          fontWeight: 900,
-                          color: "rgba(15,23,42,0.98)",
-                          WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                          caretColor: "rgba(15,23,42,0.98)",
-                          border: "1px solid rgba(59,130,246,0.22)",
-                        }}
-                      />
-                    </div>
-
-                    <div
-                      style={{
-                        padding: 14,
-                        borderRadius: 18,
-                        border: "1px solid rgba(168,85,247,0.24)",
-                        background:
-                          "linear-gradient(180deg, rgba(243,232,255,1), rgba(250,245,255,1))",
-                        boxShadow: "0 8px 18px rgba(168,85,247,0.10)",
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 950,
-                          color: "rgba(107,33,168,0.98)",
-                        }}
-                      >
-                        Base ferie ore
-                      </div>
-                      <input
-                        value={String(ferieTotaliOreBase)}
-                        onChange={(e) => {
-                          const n = Number(e.target.value.replace(",", "."));
-                          setFerieTotaliOreBase(Number.isFinite(n) && n >= 0 ? n : 0);
-                        }}
-                        inputMode="decimal"
-                        style={{
-                          ...inputLight(false),
-                          marginTop: 10,
-                          background: "rgba(255,255,255,1)",
-                          fontWeight: 900,
-                          color: "rgba(15,23,42,0.98)",
-                          WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                          caretColor: "rgba(15,23,42,0.98)",
-                          border: "1px solid rgba(168,85,247,0.22)",
-                        }}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <div
-                  style={{
+                    width: 46,
+                    height: 46,
+                    borderRadius: 16,
+                    border: "1px solid rgba(148,163,184,0.18)",
+                    background:
+                      "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94))",
+                    boxShadow:
+                      "0 10px 22px rgba(15,23,42,0.08), inset 0 1px 0 rgba(255,255,255,0.95)",
+                    cursor: "pointer",
                     display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(145px, 1fr))",
-                    gap: 10,
+                    placeItems: "center",
+                    fontSize: 18,
+                    color: "rgba(15,23,42,0.92)",
+                    transition: "transform .18s ease, box-shadow .18s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateY(-2px) rotate(10deg)";
+                    e.currentTarget.style.boxShadow =
+                      "0 14px 26px rgba(15,23,42,0.12), inset 0 1px 0 rgba(255,255,255,0.95)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateY(0) rotate(0deg)";
+                    e.currentTarget.style.boxShadow =
+                      "0 10px 22px rgba(15,23,42,0.08), inset 0 1px 0 rgba(255,255,255,0.95)";
+                  }}
+                  title="Configura basi ferie"
+                >
+                  ⚙️
+                </button>
+
+                <div
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: 999,
+                    border: "1px solid rgba(16,185,129,0.22)",
+                    background:
+                      "linear-gradient(180deg, rgba(220,252,231,1), rgba(240,253,244,0.98))",
+                    fontSize: 12,
+                    fontWeight: 950,
+                    color: "rgba(21,128,61,0.98)",
+                    boxShadow: "0 8px 18px rgba(34,197,94,0.10)",
                   }}
                 >
-                  <div
-                    style={{
-                      padding: 12,
-                      borderRadius: 16,
-                      border: "1px solid rgba(34,197,94,0.24)",
-                      background:
-                        "linear-gradient(180deg, rgba(220,252,231,1), rgba(240,253,244,1))",
-                      boxShadow: "0 8px 18px rgba(34,197,94,0.10)",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 950,
-                        color: "rgba(21,128,61,0.98)",
-                      }}
-                    >
-                      Giorni ferie effettuati
-                    </div>
-                    <div
-                      style={{
-                        marginTop: 8,
-                        fontSize: 18,
-                        fontWeight: 1000,
-                        color: "rgba(15,23,42,0.98)",
-                      }}
-                    >
-                      {ferieGiorniEffettuati}
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      padding: 12,
-                      borderRadius: 16,
-                      border: "1px solid rgba(59,130,246,0.24)",
-                      background:
-                        "linear-gradient(180deg, rgba(219,234,254,1), rgba(239,246,255,1))",
-                      boxShadow: "0 8px 18px rgba(59,130,246,0.10)",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 950,
-                        color: "rgba(30,64,175,0.98)",
-                      }}
-                    >
-                      Giorni ferie residui
-                    </div>
-                    <div
-                      style={{
-                        marginTop: 8,
-                        fontSize: 18,
-                        fontWeight: 1000,
-                        color: "rgba(15,23,42,0.98)",
-                      }}
-                    >
-                      {ferieGiorniResidui}
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      padding: 12,
-                      borderRadius: 16,
-                      border: "1px solid rgba(168,85,247,0.24)",
-                      background:
-                        "linear-gradient(180deg, rgba(243,232,255,1), rgba(250,245,255,1))",
-                      boxShadow: "0 8px 18px rgba(168,85,247,0.10)",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 950,
-                        color: "rgba(107,33,168,0.98)",
-                      }}
-                    >
-                      Ore ferie effettuate
-                    </div>
-                    <div
-                      style={{
-                        marginTop: 8,
-                        fontSize: 18,
-                        fontWeight: 1000,
-                        color: "rgba(15,23,42,0.98)",
-                      }}
-                    >
-                      {formatNumeroOre(ferieOreEffettuate)} h
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      padding: 12,
-                      borderRadius: 16,
-                      border: "1px solid rgba(244,114,182,0.24)",
-                      background:
-                        "linear-gradient(180deg, rgba(252,231,243,1), rgba(253,242,248,1))",
-                      boxShadow: "0 8px 18px rgba(244,114,182,0.10)",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 950,
-                        color: "rgba(190,24,93,0.98)",
-                      }}
-                    >
-                      Ore ferie residue
-                    </div>
-                    <div
-                      style={{
-                        marginTop: 8,
-                        fontSize: 18,
-                        fontWeight: 1000,
-                        color: "rgba(15,23,42,0.98)",
-                      }}
-                    >
-                      {formatNumeroOre(ferieOreResidue)} h
-                    </div>
-                  </div>
+                  Sigla calendario: F
                 </div>
               </div>
             </div>
-          </>
 
+            {apriConfigFerie && (
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                  gap: 12,
+                }}
+              >
+                <div
+                  style={{
+                    padding: 14,
+                    borderRadius: 18,
+                    border: "1px solid rgba(59,130,246,0.24)",
+                    background:
+                      "linear-gradient(180deg, rgba(219,234,254,1), rgba(239,246,255,1))",
+                    boxShadow: "0 8px 18px rgba(59,130,246,0.10)",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 950,
+                      color: "rgba(30,64,175,0.98)",
+                    }}
+                  >
+                    Base ferie giorni
+                  </div>
+                  <input
+                    value={String(ferieTotaliGiorniBase)}
+                    onChange={(e) => {
+                      const n = Number(e.target.value);
+                      setFerieTotaliGiorniBase(Number.isFinite(n) && n >= 0 ? n : 0);
+                    }}
+                    inputMode="numeric"
+                    style={{
+                      ...inputLight(false),
+                      marginTop: 10,
+                      background: "rgba(255,255,255,1)",
+                      fontWeight: 900,
+                      color: "rgba(15,23,42,0.98)",
+                      WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                      caretColor: "rgba(15,23,42,0.98)",
+                      border: "1px solid rgba(59,130,246,0.22)",
+                    }}
+                  />
+                </div>
+
+                <div
+                  style={{
+                    padding: 14,
+                    borderRadius: 18,
+                    border: "1px solid rgba(168,85,247,0.24)",
+                    background:
+                      "linear-gradient(180deg, rgba(243,232,255,1), rgba(250,245,255,1))",
+                    boxShadow: "0 8px 18px rgba(168,85,247,0.10)",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 950,
+                      color: "rgba(107,33,168,0.98)",
+                    }}
+                  >
+                    Base ferie ore
+                  </div>
+                  <input
+                    value={String(ferieTotaliOreBase)}
+                    onChange={(e) => {
+                      const n = Number(e.target.value.replace(",", "."));
+                      setFerieTotaliOreBase(Number.isFinite(n) && n >= 0 ? n : 0);
+                    }}
+                    inputMode="decimal"
+                    style={{
+                      ...inputLight(false),
+                      marginTop: 10,
+                      background: "rgba(255,255,255,1)",
+                      fontWeight: 900,
+                      color: "rgba(15,23,42,0.98)",
+                      WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                      caretColor: "rgba(15,23,42,0.98)",
+                      border: "1px solid rgba(168,85,247,0.22)",
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(145px, 1fr))",
+                gap: 10,
+              }}
+            >
+              <div
+                style={{
+                  padding: 12,
+                  borderRadius: 16,
+                  border: "1px solid rgba(34,197,94,0.24)",
+                  background:
+                    "linear-gradient(180deg, rgba(220,252,231,1), rgba(240,253,244,1))",
+                  boxShadow: "0 8px 18px rgba(34,197,94,0.10)",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 950,
+                    color: "rgba(21,128,61,0.98)",
+                  }}
+                >
+                  Giorni ferie effettuati
+                </div>
+                <div
+                  style={{
+                    marginTop: 8,
+                    fontSize: 18,
+                    fontWeight: 1000,
+                    color: "rgba(15,23,42,0.98)",
+                  }}
+                >
+                  {ferieGiorniEffettuati}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  padding: 12,
+                  borderRadius: 16,
+                  border: "1px solid rgba(59,130,246,0.24)",
+                  background:
+                    "linear-gradient(180deg, rgba(219,234,254,1), rgba(239,246,255,1))",
+                  boxShadow: "0 8px 18px rgba(59,130,246,0.10)",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 950,
+                    color: "rgba(30,64,175,0.98)",
+                  }}
+                >
+                  Giorni ferie residui
+                </div>
+                <div
+                  style={{
+                    marginTop: 8,
+                    fontSize: 18,
+                    fontWeight: 1000,
+                    color: "rgba(15,23,42,0.98)",
+                  }}
+                >
+                  {ferieGiorniResidui}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  padding: 12,
+                  borderRadius: 16,
+                  border: "1px solid rgba(168,85,247,0.24)",
+                  background:
+                    "linear-gradient(180deg, rgba(243,232,255,1), rgba(250,245,255,1))",
+                  boxShadow: "0 8px 18px rgba(168,85,247,0.10)",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 950,
+                    color: "rgba(107,33,168,0.98)",
+                  }}
+                >
+                  Ore ferie effettuate
+                </div>
+                <div
+                  style={{
+                    marginTop: 8,
+                    fontSize: 18,
+                    fontWeight: 1000,
+                    color: "rgba(15,23,42,0.98)",
+                  }}
+                >
+                  {formatNumeroOre(ferieOreEffettuate)} h
+                </div>
+              </div>
+
+              <div
+                style={{
+                  padding: 12,
+                  borderRadius: 16,
+                  border: "1px solid rgba(244,114,182,0.24)",
+                  background:
+                    "linear-gradient(180deg, rgba(252,231,243,1), rgba(253,242,248,1))",
+                  boxShadow: "0 8px 18px rgba(244,114,182,0.10)",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 950,
+                    color: "rgba(190,24,93,0.98)",
+                  }}
+                >
+                  Ore ferie residue
+                </div>
+                <div
+                  style={{
+                    marginTop: 8,
+                    fontSize: 18,
+                    fontWeight: 1000,
+                    color: "rgba(15,23,42,0.98)",
+                  }}
+                >
+                  {formatNumeroOre(ferieOreResidue)} h
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  })()
 
 
 
