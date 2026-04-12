@@ -6711,7 +6711,7 @@ function MiniCalendarioEventi({
             <button
               data-chip="1"
               onClick={() => setPagina("home")}
-              style={chip(pagina === "home")}
+              style={chip(false)}
             >
               Home
             </button>
@@ -6880,7 +6880,7 @@ function MiniCalendarioEventi({
                       lineHeight: 1.35,
                     }}
                   >
-                    E non sai quanto 
+                    E non sai quanto
                   </div>
                 </div>
 
@@ -6890,58 +6890,58 @@ function MiniCalendarioEventi({
                     justifyContent: "center",
                   }}
                 >
-<button
-  type="button"
-  onClick={() => {
-    setMostraPreviewHome((prev) => !prev);
-    setHomePreviewTab("oggi");
-  }}
-  title="Centro rapido"
-  style={{
-    width: 78,
-    height: 78,
-    borderRadius: 999,
-    border: "1px solid rgba(250,204,21,0.35)",
-    background:
-      "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.6), transparent 40%), linear-gradient(180deg, rgba(250,204,21,0.55), rgba(234,179,8,0.25))",
-    color: "#1e293b",
-    fontSize: 34,
-    fontWeight: 1000,
-    cursor: "pointer",
-    position: "relative",
-    boxShadow:
-      "0 25px 60px rgba(250,204,21,0.45), inset 0 2px 6px rgba(255,255,255,0.6)",
-    transition: "all .25s ease",
-    display: "grid",
-    placeItems: "center",
-    padding: 0,
-    lineHeight: 1,
-    textAlign: "center",
-  }}
-  onMouseEnter={(e) => {
-    e.currentTarget.style.transform = "scale(1.1) rotate(-3deg)";
-    e.currentTarget.style.boxShadow =
-      "0 35px 80px rgba(250,204,21,0.6), inset 0 2px 6px rgba(255,255,255,0.7)";
-  }}
-  onMouseLeave={(e) => {
-    e.currentTarget.style.transform = "scale(1) rotate(0deg)";
-    e.currentTarget.style.boxShadow =
-      "0 25px 60px rgba(250,204,21,0.45), inset 0 2px 6px rgba(255,255,255,0.6)";
-  }}
->
-  <span
-    style={{
-      display: "inline-flex",
-      alignItems: "center",
-      justifyContent: "center",
-      width: "100%",
-      height: "100%",
-      transform: "translateY(-1px)",
-    }}
-  >
-    ⚡
-  </span>
-</button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMostraPreviewHome((prev) => !prev);
+                      setHomePreviewTab("oggi");
+                    }}
+                    title="Centro rapido"
+                    style={{
+                      width: 78,
+                      height: 78,
+                      borderRadius: 999,
+                      border: "1px solid rgba(250,204,21,0.35)",
+                      background:
+                        "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.6), transparent 40%), linear-gradient(180deg, rgba(250,204,21,0.55), rgba(234,179,8,0.25))",
+                      color: "#1e293b",
+                      fontSize: 34,
+                      fontWeight: 1000,
+                      cursor: "pointer",
+                      position: "relative",
+                      boxShadow:
+                        "0 25px 60px rgba(250,204,21,0.45), inset 0 2px 6px rgba(255,255,255,0.6)",
+                      transition: "all .25s ease",
+                      display: "grid",
+                      placeItems: "center",
+                      padding: 0,
+                      lineHeight: 1,
+                      textAlign: "center",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "scale(1.1) rotate(-3deg)";
+                      e.currentTarget.style.boxShadow =
+                        "0 35px 80px rgba(250,204,21,0.6), inset 0 2px 6px rgba(255,255,255,0.7)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "scale(1) rotate(0deg)";
+                      e.currentTarget.style.boxShadow =
+                        "0 25px 60px rgba(250,204,21,0.45), inset 0 2px 6px rgba(255,255,255,0.6)";
+                    }}
+                  >
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: "100%",
+                        height: "100%",
+                        transform: "translateY(-1px)",
+                      }}
+                    >
+                      ⚡
+                    </span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -7431,6 +7431,36 @@ function MiniCalendarioEventi({
                 }}
               >
                 📝 NOTA RAPIDA
+              </button>
+
+              <button
+                onClick={() => setPagina("account")}
+                style={{
+                  padding: "22px 18px",
+                  borderRadius: 28,
+                  border: "1px solid rgba(14,165,233,0.28)",
+                  background:
+                    "linear-gradient(180deg, rgba(14,165,233,0.30), rgba(2,132,199,0.18))",
+                  color: "rgba(3,105,161,0.98)",
+                  fontSize: 18,
+                  fontWeight: 1000,
+                  letterSpacing: 0.3,
+                  boxShadow:
+                    "0 22px 50px rgba(14,165,233,0.25), inset 0 1px 0 rgba(255,255,255,0.22)",
+                  transition: "transform .18s ease, box-shadow .18s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow =
+                    "0 28px 58px rgba(14,165,233,0.30), inset 0 1px 0 rgba(255,255,255,0.22)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow =
+                    "0 22px 50px rgba(14,165,233,0.25), inset 0 1px 0 rgba(255,255,255,0.22)";
+                }}
+              >
+                👤 ACCOUNT
               </button>
             </div>
           </>
