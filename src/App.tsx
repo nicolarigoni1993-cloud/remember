@@ -801,7 +801,7 @@ const [mostraPreviewHome, setMostraPreviewHome] = useState(false);
 const [homePreviewTab, setHomePreviewTab] = useState<"oggi" | "domani">("oggi");
 
 
-const [turnoAvanzato, setTurnoAvanzato] = useState(false);
+
 
 const [dataOraCorrenteLabel, setDataOraCorrenteLabel] = useState("");
 
