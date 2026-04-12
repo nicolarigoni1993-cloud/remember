@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { supabase } from "./lib/supabase";
 
 
 
@@ -719,6 +720,14 @@ const currentUser = useMemo(
 const [loginNome, setLoginNome] = useState("");
 const [, setLoginPick] = useState<string | null>(null);
 
+const [accountEmail, setAccountEmail] = useState("");
+const [accountPassword, setAccountPassword] = useState("");
+const [accountMode, setAccountMode] = useState<"login" | "register">("login");
+const [accountBusy, setAccountBusy] = useState(false);
+const [accountMessage, setAccountMessage] = useState("");
+const [accountCloudUserEmail, setAccountCloudUserEmail] = useState<string | null>(null);
+const [accountCloudUserId, setAccountCloudUserId] = useState<string | null>(null);
+
 useEffect(() => {
   const u = caricaUtenti();
   setUsers(u);
@@ -823,6 +832,149 @@ useEffect(() => {
 
   return () => window.clearInterval(timer);
 }, []);
+
+
+
+
+useEffect(() => {
+  if (!supabase) {
+    setAccountCloudUserEmail(null);
+    setAccountCloudUserId(null);
+    return;
+  }
+
+  let attivo = true;
+
+  supabase.auth.getUser().then(({ data, error }) => {
+    if (!attivo) return;
+
+    if (error) {
+      setAccountCloudUserEmail(null);
+      setAccountCloudUserId(null);
+      return;
+    }
+
+    const user = data.user;
+    setAccountCloudUserEmail(user?.email ?? null);
+    setAccountCloudUserId(user?.id ?? null);
+  });
+
+  const {
+    data: { subscription },
+  } = supabase.auth.onAuthStateChange((_event, session) => {
+    const user = session?.user ?? null;
+    setAccountCloudUserEmail(user?.email ?? null);
+    setAccountCloudUserId(user?.id ?? null);
+  });
+
+  return () => {
+    attivo = false;
+    subscription.unsubscribe();
+  };
+}, []);
+
+async function accountSignUp() {
+  if (!supabase) {
+    setAccountMessage("Supabase non è configurato correttamente.");
+    return;
+  }
+
+  const email = accountEmail.trim();
+  const password = accountPassword.trim();
+
+  if (!email || !password) {
+    setAccountMessage("Inserisci email e password.");
+    return;
+  }
+
+  if (password.length < 6) {
+    setAccountMessage("La password deve avere almeno 6 caratteri.");
+    return;
+  }
+
+  setAccountBusy(true);
+  setAccountMessage("");
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+  });
+
+  setAccountBusy(false);
+
+  if (error) {
+    setAccountMessage(error.message);
+    return;
+  }
+
+  if (data.user) {
+    setAccountMessage(
+      data.session
+        ? "Account creato e accesso effettuato."
+        : "Account creato. Se richiesto, controlla la tua email per confermare."
+    );
+  } else {
+    setAccountMessage("Registrazione completata.");
+  }
+}
+
+async function accountSignIn() {
+  if (!supabase) {
+    setAccountMessage("Supabase non è configurato correttamente.");
+    return;
+  }
+
+  const email = accountEmail.trim();
+  const password = accountPassword.trim();
+
+  if (!email || !password) {
+    setAccountMessage("Inserisci email e password.");
+    return;
+  }
+
+  setAccountBusy(true);
+  setAccountMessage("");
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  setAccountBusy(false);
+
+  if (error) {
+    setAccountMessage(error.message);
+    return;
+  }
+
+  setAccountMessage("Accesso effettuato correttamente.");
+}
+
+async function accountSignOut() {
+  if (!supabase) {
+    setAccountMessage("Supabase non è configurato correttamente.");
+    return;
+  }
+
+  setAccountBusy(true);
+  setAccountMessage("");
+
+  const { error } = await supabase.auth.signOut();
+
+  setAccountBusy(false);
+
+  if (error) {
+    setAccountMessage(error.message);
+    return;
+  }
+
+  setAccountMessage("Disconnessione effettuata.");
+}
+
+
+
+
+
 
 
 
@@ -12975,7 +13127,7 @@ function MiniCalendarioEventi({
           >
             <div style={{ display: "grid", gap: 4 }}>
               <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.62)" }}>
-                Nome utente
+                Nome utente locale
               </div>
               <div style={{ fontSize: 18, fontWeight: 1000, color: "rgba(15,23,42,0.96)" }}>
                 {currentUser.nome || "Utente"}
@@ -13000,12 +13152,49 @@ function MiniCalendarioEventi({
 
             <div style={{ display: "grid", gap: 4 }}>
               <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.62)" }}>
-                Stato account vero
+                Account cloud
               </div>
-              <div style={{ fontSize: 14, fontWeight: 950, color: "rgba(180,83,9,0.96)" }}>
-                Non ancora collegato
+              <div
+                style={{
+                  fontSize: 14,
+                  fontWeight: 950,
+                  color: accountCloudUserEmail
+                    ? "rgba(5,150,105,0.96)"
+                    : "rgba(180,83,9,0.96)",
+                }}
+              >
+                {accountCloudUserEmail ? "Collegato" : "Non collegato"}
               </div>
             </div>
+
+            {accountCloudUserEmail && (
+              <div style={{ display: "grid", gap: 4 }}>
+                <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.62)" }}>
+                  Email cloud
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 900, color: "rgba(15,23,42,0.92)" }}>
+                  {accountCloudUserEmail}
+                </div>
+              </div>
+            )}
+
+            {accountCloudUserId && (
+              <div style={{ display: "grid", gap: 4 }}>
+                <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.62)" }}>
+                  ID cloud
+                </div>
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 900,
+                    color: "rgba(3,105,161,0.94)",
+                    wordBreak: "break-all",
+                  }}
+                >
+                  {accountCloudUserId}
+                </div>
+              </div>
+            )}
           </div>
 
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -13016,15 +13205,6 @@ function MiniCalendarioEventi({
               style={chip(false)}
             >
               Torna a Home
-            </button>
-
-            <button
-              type="button"
-              data-chip="1"
-              onClick={esci}
-              style={chip(false)}
-            >
-              Esci
             </button>
           </div>
         </div>
@@ -13050,7 +13230,7 @@ function MiniCalendarioEventi({
                 color: "rgba(15,23,42,0.96)",
               }}
             >
-              Stato app personale
+              Accesso account cloud
             </div>
 
             <div
@@ -13061,90 +13241,130 @@ function MiniCalendarioEventi({
                 lineHeight: 1.5,
               }}
             >
-              Mini riepilogo locale dell’utente attivo, utile come base per il futuro profilo cloud.
+              Questa parte usa Supabase, ma resta isolata dalla logica locale dell’app.
             </div>
           </div>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-              gap: 12,
-            }}
-          >
-            <div
-              style={{
-                padding: 14,
-                borderRadius: 18,
-                background: "rgba(255,255,255,0.82)",
-                border: "1px solid rgba(15,23,42,0.08)",
-                boxShadow: "0 8px 18px rgba(15,23,42,0.04)",
-                display: "grid",
-                gap: 4,
-              }}
-            >
-              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.62)" }}>
-                Eventi
-              </div>
-              <div style={{ fontSize: 22, fontWeight: 1000, color: "rgba(15,23,42,0.96)" }}>
-                {voci.length}
-              </div>
+          <div style={{ display: "grid", gap: 10 }}>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <button
+                type="button"
+                data-chip="1"
+                onClick={() => setAccountMode("login")}
+                style={chip(accountMode === "login")}
+              >
+                Accedi
+              </button>
+
+              <button
+                type="button"
+                data-chip="1"
+                onClick={() => setAccountMode("register")}
+                style={chip(accountMode === "register")}
+              >
+                Registrati
+              </button>
+            </div>
+
+            <input
+              type="email"
+              value={accountEmail}
+              onChange={(e) => setAccountEmail(e.target.value)}
+              placeholder="Email account"
+              style={inputLight(false)}
+            />
+
+            <input
+              type="password"
+              value={accountPassword}
+              onChange={(e) => setAccountPassword(e.target.value)}
+              placeholder="Password"
+              style={inputLight(false)}
+            />
+
+            <div style={{ display: "grid", gap: 10 }}>
+              {accountMode === "login" ? (
+                <button
+                  type="button"
+                  onClick={accountSignIn}
+                  disabled={accountBusy}
+                  style={{
+                    border: "none",
+                    borderRadius: 18,
+                    padding: "14px 16px",
+                    fontSize: 15,
+                    fontWeight: 1000,
+                    cursor: accountBusy ? "wait" : "pointer",
+                    color: "white",
+                    background:
+                      "linear-gradient(180deg, rgba(79,70,229,0.98), rgba(124,58,237,0.95))",
+                    boxShadow: "0 18px 34px rgba(79,70,229,0.20)",
+                    opacity: accountBusy ? 0.7 : 1,
+                  }}
+                >
+                  {accountBusy ? "Attendi..." : "Accedi"}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={accountSignUp}
+                  disabled={accountBusy}
+                  style={{
+                    border: "none",
+                    borderRadius: 18,
+                    padding: "14px 16px",
+                    fontSize: 15,
+                    fontWeight: 1000,
+                    cursor: accountBusy ? "wait" : "pointer",
+                    color: "white",
+                    background:
+                      "linear-gradient(180deg, rgba(14,165,233,0.98), rgba(2,132,199,0.95))",
+                    boxShadow: "0 18px 34px rgba(14,165,233,0.20)",
+                    opacity: accountBusy ? 0.7 : 1,
+                  }}
+                >
+                  {accountBusy ? "Attendi..." : "Crea account"}
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={accountSignOut}
+                disabled={accountBusy || !accountCloudUserEmail}
+                style={{
+                  border: "none",
+                  borderRadius: 18,
+                  padding: "14px 16px",
+                  fontSize: 15,
+                  fontWeight: 1000,
+                  cursor: accountBusy || !accountCloudUserEmail ? "not-allowed" : "pointer",
+                  color: "white",
+                  background:
+                    "linear-gradient(180deg, rgba(239,68,68,0.98), rgba(220,38,38,0.95))",
+                  boxShadow: "0 18px 34px rgba(239,68,68,0.20)",
+                  opacity: accountBusy || !accountCloudUserEmail ? 0.6 : 1,
+                }}
+              >
+                Disconnetti account cloud
+              </button>
             </div>
 
             <div
               style={{
                 padding: 14,
                 borderRadius: 18,
-                background: "rgba(255,255,255,0.82)",
                 border: "1px solid rgba(15,23,42,0.08)",
+                background: "rgba(255,255,255,0.82)",
                 boxShadow: "0 8px 18px rgba(15,23,42,0.04)",
                 display: "grid",
-                gap: 4,
+                gap: 6,
               }}
             >
               <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.62)" }}>
-                Turni
+                Stato
               </div>
-              <div style={{ fontSize: 22, fontWeight: 1000, color: "rgba(15,23,42,0.96)" }}>
-                {turni.length}
-              </div>
-            </div>
-
-            <div
-              style={{
-                padding: 14,
-                borderRadius: 18,
-                background: "rgba(255,255,255,0.82)",
-                border: "1px solid rgba(15,23,42,0.08)",
-                boxShadow: "0 8px 18px rgba(15,23,42,0.04)",
-                display: "grid",
-                gap: 4,
-              }}
-            >
-              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.62)" }}>
-                Note
-              </div>
-              <div style={{ fontSize: 22, fontWeight: 1000, color: "rgba(15,23,42,0.96)" }}>
-                {note.length}
-              </div>
-            </div>
-
-            <div
-              style={{
-                padding: 14,
-                borderRadius: 18,
-                background: "rgba(255,255,255,0.82)",
-                border: "1px solid rgba(15,23,42,0.08)",
-                boxShadow: "0 8px 18px rgba(15,23,42,0.04)",
-                display: "grid",
-                gap: 4,
-              }}
-            >
-              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.62)" }}>
-                Mesi finanza
-              </div>
-              <div style={{ fontSize: 22, fontWeight: 1000, color: "rgba(15,23,42,0.96)" }}>
-                {Object.keys(incassi).length}
+              <div style={{ fontSize: 13, fontWeight: 900, color: "rgba(15,23,42,0.90)" }}>
+                {accountMessage || "Nessuna operazione eseguita."}
               </div>
             </div>
           </div>
@@ -13161,7 +13381,7 @@ function MiniCalendarioEventi({
             }}
           >
             <div style={{ fontSize: 14, fontWeight: 950, color: "rgba(15,23,42,0.92)" }}>
-              Prossimo step previsto
+              Nota importante
             </div>
 
             <div
@@ -13172,7 +13392,7 @@ function MiniCalendarioEventi({
                 color: "rgba(15,23,42,0.76)",
               }}
             >
-              Collegare qui il vero account, ma in modo isolato e sicuro, senza più toccare il cuore dell’app fino a quando non è tutto stabile.
+              Per ora il login cloud è solo collegato alla pagina Account. Non modifica ancora il salvataggio locale di eventi, note, movimenti e turni.
             </div>
           </div>
         </div>
