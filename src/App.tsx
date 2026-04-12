@@ -2831,12 +2831,7 @@ function vociFiltrate() {
 }
 void vociFiltrate;
 
-const totaleTurniMese = useMemo(() => {
-  return turniMese.filter((t) => {
-    const sigla = normalizeTurnoLabel(t.inizio, t.fine, t.note);
-    return sigla !== "R";
-  }).length;
-}, [turniMese]);
+
 
 const turniFerie = useMemo(() => {
   return turni.filter((t) => normalizeTurnoLabel(t.inizio, t.fine, t.note) === "F");
