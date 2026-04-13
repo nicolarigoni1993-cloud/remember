@@ -12936,16 +12936,7 @@ function renderAreaControllo() {
 
               {aggiungiSezione !== "menu" && (
                 <div style={{ display: "flex", justifyContent: "center" }}>
-                  <button
-                    data-chip="1"
-                    onClick={() => {
-                      resetForm();
-                      setAggiungiSezione("menu");
-                    }}
-                    style={chip(false)}
-                  >
-                    Torna ad Aggiungi
-                  </button>
+                
                 </div>
               )}
             </div>
