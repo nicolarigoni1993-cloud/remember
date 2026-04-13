@@ -9278,273 +9278,303 @@ function MiniCalendarioEventi({
       </div>
 
       <div
+  style={{
+    ...ui.card,
+    padding: isMobileConsulta ? 14 : 18,
+    border: "1px solid rgba(255,255,255,0.58)",
+    background:
+      "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
+    boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
+    display: "grid",
+    gap: 14,
+    overflow: "hidden",
+    position: "relative",
+  }}
+>
+  <div
+    style={{
+      position: "absolute",
+      inset: 0,
+      background:
+        "radial-gradient(600px 200px at 0% 0%, rgba(16,185,129,0.06), transparent 60%), radial-gradient(600px 200px at 100% 0%, rgba(59,130,246,0.06), transparent 60%)",
+      pointerEvents: "none",
+    }}
+  />
+
+  <div style={{ position: "relative", zIndex: 1, display: "grid", gap: 14 }}>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        gap: 12,
+        flexWrap: "wrap",
+      }}
+    >
+      <div style={{ display: "grid", gap: 4 }}>
+        <div
+          style={{
+            fontSize: isMobileConsulta ? 18 : 20,
+            fontWeight: 1000,
+            letterSpacing: -0.3,
+            color: "rgba(15,23,42,0.98)",
+          }}
+        >
+          Entrate rapide
+        </div>
+        <div
+          style={{
+            fontSize: 12,
+            fontWeight: 850,
+            color: "rgba(71,85,105,0.82)",
+          }}
+        >
+          Tocca il simbolo per aprire o chiudere il riepilogo delle entrate inserite.
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setMostraEntrateMini((prev) => !prev)}
+        title={mostraEntrateMini ? "Chiudi entrate rapide" : "Apri entrate rapide"}
         style={{
-          ...ui.card,
-          padding: isMobileConsulta ? 14 : 18,
-          border: "1px solid rgba(255,255,255,0.58)",
-          background:
-            "linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97))",
-          boxShadow: "0 18px 40px rgba(15,23,42,0.10)",
+          width: isMobileConsulta ? 58 : 64,
+          height: isMobileConsulta ? 58 : 64,
+          borderRadius: 20,
+          border: "1px solid rgba(16,185,129,0.22)",
+          background: mostraEntrateMini
+            ? "linear-gradient(180deg, rgba(16,185,129,0.98), rgba(5,150,105,0.94))"
+            : "linear-gradient(180deg, rgba(236,253,245,0.98), rgba(209,250,229,0.94))",
+          color: mostraEntrateMini ? "white" : "rgba(6,95,70,0.98)",
+          fontSize: isMobileConsulta ? 28 : 32,
+          fontWeight: 1000,
+          cursor: "pointer",
+          boxShadow: mostraEntrateMini
+            ? "0 18px 34px rgba(16,185,129,0.22)"
+            : "0 14px 28px rgba(16,185,129,0.12)",
+          transition: "transform .18s ease, box-shadow .18s ease",
           display: "grid",
-          gap: 14,
-          overflow: "hidden",
-          position: "relative",
+          placeItems: "center",
+          lineHeight: 1,
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = "translateY(-2px) scale(1.02)";
+          e.currentTarget.style.boxShadow = mostraEntrateMini
+            ? "0 22px 38px rgba(16,185,129,0.26)"
+            : "0 18px 32px rgba(16,185,129,0.16)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = "translateY(0) scale(1)";
+          e.currentTarget.style.boxShadow = mostraEntrateMini
+            ? "0 18px 34px rgba(16,185,129,0.22)"
+            : "0 14px 28px rgba(16,185,129,0.12)";
+        }}
+      >
+        $
+      </button>
+    </div>
+
+    {mostraEntrateMini && (
+      <div
+        style={{
+          display: "grid",
+          gap: 12,
+          padding: isMobileConsulta ? 12 : 14,
+          borderRadius: 24,
+          border: "1px solid rgba(16,185,129,0.18)",
+          background:
+            "linear-gradient(180deg, rgba(240,253,244,0.98), rgba(236,253,245,0.92))",
+          boxShadow: "0 14px 30px rgba(16,185,129,0.10)",
         }}
       >
         <div
           style={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "radial-gradient(600px 200px at 0% 0%, rgba(16,185,129,0.06), transparent 60%), radial-gradient(600px 200px at 100% 0%, rgba(59,130,246,0.06), transparent 60%)",
-            pointerEvents: "none",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+            gap: 10,
           }}
-        />
-
-        <div style={{ position: "relative", zIndex: 1, display: "grid", gap: 14 }}>
+        >
           <div
             style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: 12,
-              flexWrap: "wrap",
+              padding: 14,
+              borderRadius: 18,
+              border: "1px solid rgba(16,185,129,0.18)",
+              background: "rgba(255,255,255,0.82)",
+              boxShadow: "0 8px 18px rgba(16,185,129,0.08)",
             }}
           >
-            <div style={{ display: "grid", gap: 4 }}>
-              <div
-                style={{
-                  fontSize: isMobileConsulta ? 18 : 20,
-                  fontWeight: 1000,
-                  letterSpacing: -0.3,
-                  color: "rgba(15,23,42,0.98)",
-                }}
-              >
-                Entrate rapide
-              </div>
-              <div
-                style={{
-                  fontSize: 12,
-                  fontWeight: 850,
-                  color: "rgba(71,85,105,0.82)",
-                }}
-              >
-                Tocca il pulsante per aprire o chiudere il riepilogo delle entrate inserite.
-              </div>
+            <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(6,95,70,0.82)" }}>
+              Numero entrate mese
             </div>
-
-            <button
-              type="button"
-              onClick={() => setMostraEntrateMini((prev) => !prev)}
-              title={mostraEntrateMini ? "Chiudi entrate rapide" : "Apri entrate rapide"}
-              style={{
-                width: isMobileConsulta ? 58 : 64,
-                height: isMobileConsulta ? 58 : 64,
-                borderRadius: 20,
-                border: "1px solid rgba(16,185,129,0.22)",
-                background: mostraEntrateMini
-                  ? "linear-gradient(180deg, rgba(16,185,129,0.98), rgba(5,150,105,0.94))"
-                  : "linear-gradient(180deg, rgba(236,253,245,0.98), rgba(209,250,229,0.94))",
-                color: mostraEntrateMini ? "white" : "rgba(6,95,70,0.98)",
-                fontSize: isMobileConsulta ? 26 : 30,
-                cursor: "pointer",
-                boxShadow: mostraEntrateMini
-                  ? "0 18px 34px rgba(16,185,129,0.22)"
-                  : "0 14px 28px rgba(16,185,129,0.12)",
-                transition: "transform .18s ease, box-shadow .18s ease",
-                display: "grid",
-                placeItems: "center",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px) scale(1.02)";
-                e.currentTarget.style.boxShadow = mostraEntrateMini
-                  ? "0 22px 38px rgba(16,185,129,0.26)"
-                  : "0 18px 32px rgba(16,185,129,0.16)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0) scale(1)";
-                e.currentTarget.style.boxShadow = mostraEntrateMini
-                  ? "0 18px 34px rgba(16,185,129,0.22)"
-                  : "0 14px 28px rgba(16,185,129,0.12)";
-              }}
-            >
-              💵
-            </button>
-          </div>
-
-          {mostraEntrateMini && (
             <div
               style={{
-                display: "grid",
-                gap: 12,
-                padding: isMobileConsulta ? 12 : 14,
-                borderRadius: 24,
-                border: "1px solid rgba(16,185,129,0.18)",
-                background:
-                  "linear-gradient(180deg, rgba(240,253,244,0.98), rgba(236,253,245,0.92))",
-                boxShadow: "0 14px 30px rgba(16,185,129,0.10)",
+                marginTop: 6,
+                fontSize: 22,
+                fontWeight: 1000,
+                color: "rgba(15,23,42,0.96)",
               }}
             >
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
-                  gap: 10,
-                }}
-              >
-                <div
-                  style={{
-                    padding: 14,
-                    borderRadius: 18,
-                    border: "1px solid rgba(16,185,129,0.18)",
-                    background: "rgba(255,255,255,0.82)",
-                    boxShadow: "0 8px 18px rgba(16,185,129,0.08)",
-                  }}
-                >
-                  <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(6,95,70,0.82)" }}>
-                    Numero entrate mese
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 6,
-                      fontSize: 22,
-                      fontWeight: 1000,
-                      color: "rgba(15,23,42,0.96)",
-                    }}
-                  >
-                    {entrateControlloMese.length}
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    padding: 14,
-                    borderRadius: 18,
-                    border: "1px solid rgba(59,130,246,0.18)",
-                    background: "rgba(255,255,255,0.82)",
-                    boxShadow: "0 8px 18px rgba(59,130,246,0.08)",
-                  }}
-                >
-                  <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(30,64,175,0.82)" }}>
-                    Totale entrate mese
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 6,
-                      fontSize: 22,
-                      fontWeight: 1000,
-                      color: "rgba(15,23,42,0.96)",
-                    }}
-                  >
-                    {euro(totaleEntrateExtra)}
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ display: "grid", gap: 10 }}>
-                {entrateExtraVal.length === 0 ? (
-                  <div
-                    style={{
-                      padding: 14,
-                      borderRadius: 18,
-                      border: "1px solid rgba(148,163,184,0.16)",
-                      background: "rgba(255,255,255,0.84)",
-                      fontSize: 13,
-                      fontWeight: 850,
-                      color: "rgba(100,116,139,0.84)",
-                      textAlign: "center",
-                    }}
-                  >
-                    Nessuna entrata inserita.
-                  </div>
-                ) : (
-                  entrateExtraVal
-                    .slice()
-                    .sort((a, b) => a.data.localeCompare(b.data))
-                    .map((x) => (
-                      <div
-                        key={x.id}
-                        style={{
-                          padding: isMobileConsulta ? 12 : 14,
-                          borderRadius: 18,
-                          border: "1px solid rgba(16,185,129,0.16)",
-                          background:
-                            "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(236,253,245,0.90))",
-                          boxShadow: "0 10px 22px rgba(16,185,129,0.08)",
-                          display: "grid",
-                          gridTemplateColumns: isMobileConsulta
-                            ? "minmax(0, 1fr)"
-                            : "minmax(0, 1fr) auto",
-                          gap: 10,
-                          alignItems: "start",
-                        }}
-                      >
-                        <div style={{ minWidth: 0, display: "grid", gap: 4 }}>
-                          <div
-                            style={{
-                              fontSize: 11,
-                              fontWeight: 900,
-                              color: "rgba(100,116,139,0.82)",
-                            }}
-                          >
-                            {formattaDataBreve(x.data)}
-                          </div>
-                          <div
-                            style={{
-                              fontSize: 14,
-                              fontWeight: 950,
-                              color: "rgba(15,23,42,0.96)",
-                              lineHeight: 1.25,
-                            }}
-                          >
-                            {x.descrizione || "Entrata"}
-                          </div>
-                          <div
-                            style={{
-                              fontSize: 12,
-                              fontWeight: 1000,
-                              color: "rgba(5,150,105,0.96)",
-                            }}
-                          >
-                            {euro(x.importo)}
-                          </div>
-                        </div>
-
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: 8,
-                            flexWrap: "wrap",
-                            justifyContent: isMobileConsulta ? "stretch" : "flex-end",
-                          }}
-                        >
-                          <button
-                            type="button"
-                            onClick={() => eliminaEntrataExtra(x.id)}
-                            style={{
-                              ...chip(false),
-                              minWidth: isMobileConsulta ? 0 : 86,
-                              flex: isMobileConsulta ? 1 : undefined,
-                              justifyContent: "center",
-                              display: "inline-flex",
-                              alignItems: "center",
-                              border: "1px solid rgba(239,68,68,0.20)",
-                              color: "rgba(185,28,28,0.96)",
-                              background:
-                                "linear-gradient(180deg, rgba(254,242,242,0.96), rgba(254,226,226,0.90))",
-                            }}
-                          >
-                            Elimina
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                )}
-              </div>
+              {entrateControlloMese.length}
             </div>
+          </div>
+
+          <div
+            style={{
+              padding: 14,
+              borderRadius: 18,
+              border: "1px solid rgba(59,130,246,0.18)",
+              background: "rgba(255,255,255,0.82)",
+              boxShadow: "0 8px 18px rgba(59,130,246,0.08)",
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(30,64,175,0.82)" }}>
+              Totale entrate mese
+            </div>
+            <div
+              style={{
+                marginTop: 6,
+                fontSize: 22,
+                fontWeight: 1000,
+                color: "rgba(15,23,42,0.96)",
+              }}
+            >
+              {euro(totaleEntrateExtra)}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gap: 10 }}>
+          {entrateExtraVal.length === 0 ? (
+            <div
+              style={{
+                padding: 14,
+                borderRadius: 18,
+                border: "1px solid rgba(148,163,184,0.16)",
+                background: "rgba(255,255,255,0.84)",
+                fontSize: 13,
+                fontWeight: 850,
+                color: "rgba(100,116,139,0.84)",
+                textAlign: "center",
+              }}
+            >
+              Nessuna entrata inserita.
+            </div>
+          ) : (
+            entrateExtraVal
+              .slice()
+              .sort((a, b) => a.data.localeCompare(b.data))
+              .map((x) => (
+                <div
+                  key={x.id}
+                  style={{
+                    padding: isMobileConsulta ? 12 : 14,
+                    borderRadius: 18,
+                    border: "1px solid rgba(16,185,129,0.16)",
+                    background:
+                      "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(236,253,245,0.90))",
+                    boxShadow: "0 10px 22px rgba(16,185,129,0.08)",
+                    display: "grid",
+                    gridTemplateColumns: isMobileConsulta
+                      ? "minmax(0, 1fr)"
+                      : "minmax(0, 1fr) auto",
+                    gap: 10,
+                    alignItems: "start",
+                  }}
+                >
+                  <div style={{ minWidth: 0, display: "grid", gap: 4 }}>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 900,
+                        color: "rgba(100,116,139,0.82)",
+                      }}
+                    >
+                      {formattaDataBreve(x.data)}
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 950,
+                        color: "rgba(15,23,42,0.96)",
+                        lineHeight: 1.25,
+                      }}
+                    >
+                      {x.descrizione || "Entrata"}
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 1000,
+                        color: "rgba(5,150,105,0.96)",
+                      }}
+                    >
+                      {euro(x.importo)}
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 8,
+                      flexWrap: "wrap",
+                      justifyContent: isMobileConsulta ? "stretch" : "flex-end",
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() =>
+                        apriModificaMovimentoFinanza({
+                          id: x.id,
+                          origine: "entrata",
+                          data: x.data,
+                          importo: x.importo,
+                          categoria: "Entrata",
+                          descrizione: x.descrizione || "Entrata",
+                          dettaglio: x.descrizione || "Entrata",
+                          nota: "",
+                        } as any)
+                      }
+                      style={{
+                        ...chip(false),
+                        minWidth: isMobileConsulta ? 0 : 92,
+                        flex: isMobileConsulta ? 1 : undefined,
+                        justifyContent: "center",
+                        display: "inline-flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      Modifica
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => eliminaEntrataExtra(x.id)}
+                      style={{
+                        ...chip(false),
+                        minWidth: isMobileConsulta ? 0 : 86,
+                        flex: isMobileConsulta ? 1 : undefined,
+                        justifyContent: "center",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        border: "1px solid rgba(239,68,68,0.20)",
+                        color: "rgba(185,28,28,0.96)",
+                        background:
+                          "linear-gradient(180deg, rgba(254,242,242,0.96), rgba(254,226,226,0.90))",
+                      }}
+                    >
+                      Elimina
+                    </button>
+                  </div>
+                </div>
+              ))
           )}
         </div>
       </div>
+    )}
+  </div>
+</div>
 
       <div
         style={{
