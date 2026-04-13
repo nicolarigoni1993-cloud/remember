@@ -5993,7 +5993,7 @@ function MiniCalendarioEventi({
 
 
 
- function renderAreaControllo() {
+function renderAreaControllo() {
   const controlloCardStyle: React.CSSProperties = {
     ...ui.card,
     padding: 20,
@@ -6080,9 +6080,12 @@ function MiniCalendarioEventi({
             display: "grid",
             placeItems: "center",
             cursor: "pointer",
-            fontSize: 24,
+            fontSize: 28,
+            fontWeight: 1000,
+            color: mostraEntrateMini ? "rgba(5,150,105,0.98)" : "rgba(5,150,105,0.92)",
             zIndex: 2,
             transition: "transform .18s ease, box-shadow .18s ease, background .18s ease",
+            lineHeight: 1,
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = "translateY(-2px) scale(1.04)";
@@ -6097,7 +6100,7 @@ function MiniCalendarioEventi({
               : "0 14px 28px rgba(15,23,42,0.10)";
           }}
         >
-          💸
+          $
         </button>
 
         <div style={{ position: "relative", zIndex: 1 }}>
@@ -6342,15 +6345,39 @@ function MiniCalendarioEventi({
                         </div>
                       </div>
 
-                      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                      <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, flexWrap: "wrap" }}>
                         <button
                           data-chip="1"
-                          onClick={() => eliminaEntrataExtra(x.id)}
+                          onClick={() =>
+                            apriModificaMovimentoFinanza({
+                              id: x.id,
+                              origine: "entrata",
+                              data: x.data,
+                              importo: x.importo,
+                              categoria: "Entrata",
+                              descrizione: x.descrizione || "Entrata",
+                              dettaglio: x.descrizione || "Entrata",
+                              nota: "",
+                            } as any)
+                          }
                           style={{
                             ...chip(false),
                             border: "1px solid rgba(16,185,129,0.18)",
                             color: "rgba(5,150,105,0.96)",
                             background: "rgba(236,253,245,0.92)",
+                          }}
+                        >
+                          Modifica
+                        </button>
+
+                        <button
+                          data-chip="1"
+                          onClick={() => eliminaEntrataExtra(x.id)}
+                          style={{
+                            ...chip(false),
+                            border: "1px solid rgba(239,68,68,0.20)",
+                            color: "rgba(185,28,28,0.96)",
+                            background: "rgba(254,242,242,0.92)",
                           }}
                         >
                           Elimina
@@ -12517,7 +12544,6 @@ function MiniCalendarioEventi({
 
 
 
-
 {pagina === "aggiungi" && (() => {
   const isMobileAggiungi = typeof window !== "undefined" && window.innerWidth <= 640;
 
@@ -12600,33 +12626,33 @@ function MiniCalendarioEventi({
         ? {
             border: "1px solid rgba(16,185,129,0.18)",
             background:
-              "linear-gradient(180deg, rgba(16,185,129,0.10), rgba(255,255,255,0.96))",
+              "linear-gradient(180deg, rgba(16,185,129,0.12), rgba(255,255,255,0.97))",
             boxShadow: "0 24px 54px rgba(16,185,129,0.12)",
           }
         : accent === "orange"
         ? {
             border: "1px solid rgba(249,115,22,0.18)",
             background:
-              "linear-gradient(180deg, rgba(249,115,22,0.10), rgba(255,255,255,0.96))",
+              "linear-gradient(180deg, rgba(249,115,22,0.12), rgba(255,255,255,0.97))",
             boxShadow: "0 24px 54px rgba(249,115,22,0.12)",
           }
         : {
             border: "1px solid rgba(79,70,229,0.18)",
             background:
-              "linear-gradient(180deg, rgba(79,70,229,0.10), rgba(255,255,255,0.96))",
+              "linear-gradient(180deg, rgba(79,70,229,0.12), rgba(255,255,255,0.97))",
             boxShadow: "0 24px 54px rgba(79,70,229,0.12)",
           };
 
     return {
       ...ui.card,
       ...styleSet,
-      padding: 22,
-      minHeight: 220,
+      padding: 24,
+      minHeight: 230,
       textAlign: "left",
       cursor: "pointer",
       display: "grid",
       alignContent: "start",
-      gap: 14,
+      gap: 16,
       position: "relative",
       overflow: "hidden",
       transition: "transform .18s ease, box-shadow .18s ease, border-color .18s ease",
@@ -12656,15 +12682,122 @@ function MiniCalendarioEventi({
           };
 
     return {
-      width: 58,
-      height: 58,
-      borderRadius: 20,
+      width: 62,
+      height: 62,
+      borderRadius: 22,
       display: "grid",
       placeItems: "center",
       color: "white",
-      fontSize: 24,
+      fontSize: 26,
       ...styleSet,
     };
+  };
+
+  const panelCardStyle = (
+    accent: "green" | "red" | "violet"
+  ): React.CSSProperties => {
+    const styleSet =
+      accent === "green"
+        ? {
+            border: "1px solid rgba(16,185,129,0.18)",
+            background:
+              "linear-gradient(180deg, rgba(16,185,129,0.12), rgba(255,255,255,0.97))",
+            boxShadow: "0 22px 48px rgba(16,185,129,0.10)",
+          }
+        : accent === "red"
+        ? {
+            border: "1px solid rgba(239,68,68,0.18)",
+            background:
+              "linear-gradient(180deg, rgba(239,68,68,0.12), rgba(255,255,255,0.97))",
+            boxShadow: "0 22px 48px rgba(239,68,68,0.10)",
+          }
+        : {
+            border: "1px solid rgba(79,70,229,0.18)",
+            background:
+              "linear-gradient(180deg, rgba(79,70,229,0.12), rgba(255,255,255,0.97))",
+            boxShadow: "0 22px 48px rgba(79,70,229,0.10)",
+          };
+
+    return {
+      ...ui.card,
+      ...styleSet,
+      padding: isMobileAggiungi ? 18 : 22,
+      display: "grid",
+      gap: 16,
+      position: "relative",
+      overflow: "hidden",
+    };
+  };
+
+  const collapsibleButtonStyle = (
+    accent: "green" | "red",
+    open: boolean
+  ): React.CSSProperties => ({
+    border: "none",
+    borderRadius: 24,
+    padding: isMobileAggiungi ? "16px 16px" : "18px 20px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    cursor: "pointer",
+    color: "white",
+    fontWeight: 1000,
+    fontSize: isMobileAggiungi ? 17 : 19,
+    background:
+      accent === "green"
+        ? open
+          ? "linear-gradient(180deg, rgba(16,185,129,1), rgba(5,150,105,0.96))"
+          : "linear-gradient(180deg, rgba(34,197,94,0.98), rgba(22,163,74,0.95))"
+        : open
+        ? "linear-gradient(180deg, rgba(239,68,68,1), rgba(220,38,38,0.96))"
+        : "linear-gradient(180deg, rgba(239,68,68,0.98), rgba(220,38,38,0.95))",
+    boxShadow:
+      accent === "green"
+        ? "0 18px 34px rgba(34,197,94,0.20)"
+        : "0 18px 34px rgba(239,68,68,0.20)",
+    transition: "transform .18s ease, box-shadow .18s ease",
+  });
+
+  const movementFormWrap = (accent: "green" | "red"): React.CSSProperties => ({
+    background:
+      accent === "green"
+        ? "linear-gradient(180deg, rgba(255,255,255,0.74), rgba(236,253,245,0.86))"
+        : "linear-gradient(180deg, rgba(255,255,255,0.74), rgba(254,242,242,0.86))",
+    border:
+      accent === "green"
+        ? "1px solid rgba(16,185,129,0.18)"
+        : "1px solid rgba(239,68,68,0.18)",
+    borderRadius: 24,
+    padding: isMobileAggiungi ? 14 : 18,
+    display: "grid",
+    gap: 12,
+    boxShadow:
+      accent === "green"
+        ? "0 12px 30px rgba(16,185,129,0.10)"
+        : "0 12px 30px rgba(239,68,68,0.10)",
+    backdropFilter: "blur(8px)",
+  });
+
+  const fieldLabelStyle: React.CSSProperties = {
+    fontSize: 12,
+    fontWeight: 900,
+    color: "rgba(15,23,42,0.78)",
+    marginBottom: 8,
+  };
+
+  const eventSideCardStyle: React.CSSProperties = {
+    ...ui.card,
+    padding: 22,
+    border: "1px solid rgba(79,70,229,0.18)",
+    background:
+      "linear-gradient(180deg, rgba(79,70,229,0.10), rgba(255,255,255,0.96))",
+    boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
+    display: "grid",
+    gap: 14,
+    alignContent: "start",
+    position: "relative",
+    overflow: "hidden",
   };
 
   return (
@@ -13019,20 +13152,7 @@ function MiniCalendarioEventi({
             </button>
           </div>
         ) : aggiungiSezione === "movimenti" ? (
-          <div
-            style={{
-              ...ui.card,
-              padding: 22,
-              border: "1px solid rgba(16,185,129,0.18)",
-              background:
-                "linear-gradient(180deg, rgba(16,185,129,0.12), rgba(255,255,255,0.96))",
-              boxShadow: "0 18px 40px rgba(16,185,129,0.10)",
-              display: "grid",
-              gap: 16,
-              position: "relative",
-              overflow: "hidden",
-            }}
-          >
+          <div style={panelCardStyle("green")}>
             <div
               style={{
                 position: "absolute",
@@ -13043,18 +13163,13 @@ function MiniCalendarioEventi({
               }}
             />
 
-            <div style={{ position: "relative", zIndex: 1, display: "grid", gap: 16 }}>
-              <div
-                style={{
-                  display: "grid",
-                  gap: 8,
-                }}
-              >
+            <div style={{ position: "relative", zIndex: 1, display: "grid", gap: 18 }}>
+              <div style={{ display: "grid", gap: 8 }}>
                 <div
                   style={{
-                    fontSize: 20,
+                    fontSize: 22,
                     fontWeight: 1000,
-                    letterSpacing: -0.3,
+                    letterSpacing: -0.4,
                     color: "rgba(15,23,42,0.96)",
                   }}
                 >
@@ -13073,28 +13188,12 @@ function MiniCalendarioEventi({
                 </div>
               </div>
 
-              <div style={{ display: "grid", gap: 12 }}>
+              <div style={{ display: "grid", gap: 14 }}>
                 <button
                   type="button"
                   title="Apri o chiudi form entrata"
                   onClick={() => setMovimentoAperto((prev) => (prev === "entrata" ? null : "entrata"))}
-                  style={{
-                    border: "none",
-                    borderRadius: 22,
-                    padding: "16px 18px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 12,
-                    cursor: "pointer",
-                    color: "white",
-                    fontWeight: 1000,
-                    fontSize: 18,
-                    background:
-                      "linear-gradient(180deg, rgba(34,197,94,0.98), rgba(22,163,74,0.95))",
-                    boxShadow: "0 18px 34px rgba(34,197,94,0.20)",
-                    transition: "transform .18s ease, box-shadow .18s ease",
-                  }}
+                  style={collapsibleButtonStyle("green", movimentoAperto === "entrata")}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = "translateY(-2px)";
                     e.currentTarget.style.boxShadow = "0 24px 40px rgba(34,197,94,0.24)";
@@ -13105,59 +13204,54 @@ function MiniCalendarioEventi({
                   }}
                 >
                   <span>Entrata</span>
-                  <span style={{ fontSize: 22 }}>{movimentoAperto === "entrata" ? "−" : "+"}</span>
+                  <span style={{ fontSize: 24 }}>{movimentoAperto === "entrata" ? "−" : "+"}</span>
                 </button>
 
                 {movimentoAperto === "entrata" && (
-                  <div
-                    style={{
-                      background: "rgba(255,255,255,0.18)",
-                      border: "1px solid rgba(16,185,129,0.16)",
-                      borderRadius: 22,
-                      padding: 16,
-                      display: "grid",
-                      gap: 12,
-                      boxShadow: "0 10px 28px rgba(16,185,129,0.10)",
-                      backdropFilter: "blur(8px)",
-                    }}
-                  >
-                    <div style={{ display: "grid", gap: 8 }}>
-                      <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>Data</label>
-                      <input
-                        type="date"
-                        value={nuovaEntrataData}
-                        onChange={(e) => setNuovaEntrataData(e.target.value)}
-                        style={inputLight(false)}
-                      />
-                    </div>
+                  <div style={movementFormWrap("green")}>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                        gap: 12,
+                      }}
+                    >
+                      <div>
+                        <div style={fieldLabelStyle}>Data</div>
+                        <input
+                          type="date"
+                          value={nuovaEntrataData}
+                          onChange={(e) => setNuovaEntrataData(e.target.value)}
+                          style={inputLight(false)}
+                        />
+                      </div>
 
-                    <div style={{ display: "grid", gap: 8 }}>
-                      <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>Categoria</label>
-                      <select
-                        value={categoriaEntrata}
-                        onChange={(e) => setCategoriaEntrata(e.target.value)}
-                        style={inputLight(false)}
-                      >
-                        <option value="">Seleziona categoria</option>
-                        {categorieEntrataBase.map((cat) => (
-                          <option key={cat} value={cat}>
-                            {cat}
-                          </option>
-                        ))}
-                        {categorieEntrataCustom.map((cat) => (
-                          <option key={cat} value={cat}>
-                            {cat}
-                          </option>
-                        ))}
-                        <option value="__altro__">Altro...</option>
-                      </select>
+                      <div>
+                        <div style={fieldLabelStyle}>Categoria</div>
+                        <select
+                          value={categoriaEntrata}
+                          onChange={(e) => setCategoriaEntrata(e.target.value)}
+                          style={inputLight(false)}
+                        >
+                          <option value="">Seleziona categoria</option>
+                          {categorieEntrataBase.map((cat) => (
+                            <option key={cat} value={cat}>
+                              {cat}
+                            </option>
+                          ))}
+                          {categorieEntrataCustom.map((cat) => (
+                            <option key={cat} value={cat}>
+                              {cat}
+                            </option>
+                          ))}
+                          <option value="__altro__">Altro...</option>
+                        </select>
+                      </div>
                     </div>
 
                     {categoriaEntrata === "__altro__" && (
-                      <div style={{ display: "grid", gap: 8 }}>
-                        <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>
-                          Nuova categoria personalizzata
-                        </label>
+                      <div>
+                        <div style={fieldLabelStyle}>Nuova categoria personalizzata</div>
                         <input
                           type="text"
                           value={nuovaCategoriaEntrata}
@@ -13168,30 +13262,36 @@ function MiniCalendarioEventi({
                       </div>
                     )}
 
-                    <div style={{ display: "grid", gap: 8 }}>
-                      <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>
-                        Nota facoltativa
-                      </label>
-                      <input
-                        type="text"
-                        value={nuovaEntrataDesc}
-                        onChange={(e) => setNuovaEntrataDesc(e.target.value)}
-                        placeholder="Es. bonus marzo, regalo, rimborso..."
-                        style={inputLight(false)}
-                      />
-                    </div>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                        gap: 12,
+                      }}
+                    >
+                      <div>
+                        <div style={fieldLabelStyle}>Nota facoltativa</div>
+                        <input
+                          type="text"
+                          value={nuovaEntrataDesc}
+                          onChange={(e) => setNuovaEntrataDesc(e.target.value)}
+                          placeholder="Es. bonus marzo, regalo, rimborso..."
+                          style={inputLight(false)}
+                        />
+                      </div>
 
-                    <div style={{ display: "grid", gap: 8 }}>
-                      <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>Importo</label>
-                      <input
-                        type="number"
-                        inputMode="decimal"
-                        step="0.01"
-                        value={nuovaEntrataImporto}
-                        onChange={(e) => setNuovaEntrataImporto(e.target.value)}
-                        placeholder="0,00"
-                        style={inputLight(false)}
-                      />
+                      <div>
+                        <div style={fieldLabelStyle}>Importo</div>
+                        <input
+                          type="number"
+                          inputMode="decimal"
+                          step="0.01"
+                          value={nuovaEntrataImporto}
+                          onChange={(e) => setNuovaEntrataImporto(e.target.value)}
+                          placeholder="0,00"
+                          style={inputLight(false)}
+                        />
+                      </div>
                     </div>
 
                     <button
@@ -13219,23 +13319,7 @@ function MiniCalendarioEventi({
                   type="button"
                   title="Apri o chiudi form uscita"
                   onClick={() => setMovimentoAperto((prev) => (prev === "uscita" ? null : "uscita"))}
-                  style={{
-                    border: "none",
-                    borderRadius: 22,
-                    padding: "16px 18px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 12,
-                    cursor: "pointer",
-                    color: "white",
-                    fontWeight: 1000,
-                    fontSize: 18,
-                    background:
-                      "linear-gradient(180deg, rgba(239,68,68,0.98), rgba(220,38,38,0.95))",
-                    boxShadow: "0 18px 34px rgba(239,68,68,0.20)",
-                    transition: "transform .18s ease, box-shadow .18s ease",
-                  }}
+                  style={collapsibleButtonStyle("red", movimentoAperto === "uscita")}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = "translateY(-2px)";
                     e.currentTarget.style.boxShadow = "0 24px 40px rgba(239,68,68,0.24)";
@@ -13246,59 +13330,54 @@ function MiniCalendarioEventi({
                   }}
                 >
                   <span>Uscita</span>
-                  <span style={{ fontSize: 22 }}>{movimentoAperto === "uscita" ? "−" : "+"}</span>
+                  <span style={{ fontSize: 24 }}>{movimentoAperto === "uscita" ? "−" : "+"}</span>
                 </button>
 
                 {movimentoAperto === "uscita" && (
-                  <div
-                    style={{
-                      background: "rgba(255,255,255,0.18)",
-                      border: "1px solid rgba(239,68,68,0.16)",
-                      borderRadius: 22,
-                      padding: 16,
-                      display: "grid",
-                      gap: 12,
-                      boxShadow: "0 10px 28px rgba(239,68,68,0.10)",
-                      backdropFilter: "blur(8px)",
-                    }}
-                  >
-                    <div style={{ display: "grid", gap: 8 }}>
-                      <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>Data</label>
-                      <input
-                        type="date"
-                        value={nuovaUscitaData}
-                        onChange={(e) => setNuovaUscitaData(e.target.value)}
-                        style={inputLight(false)}
-                      />
-                    </div>
+                  <div style={movementFormWrap("red")}>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                        gap: 12,
+                      }}
+                    >
+                      <div>
+                        <div style={fieldLabelStyle}>Data</div>
+                        <input
+                          type="date"
+                          value={nuovaUscitaData}
+                          onChange={(e) => setNuovaUscitaData(e.target.value)}
+                          style={inputLight(false)}
+                        />
+                      </div>
 
-                    <div style={{ display: "grid", gap: 8 }}>
-                      <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>Categoria</label>
-                      <select
-                        value={categoriaUscita}
-                        onChange={(e) => setCategoriaUscita(e.target.value)}
-                        style={inputLight(false)}
-                      >
-                        <option value="">Seleziona categoria</option>
-                        {categorieUscitaBase.map((cat) => (
-                          <option key={cat} value={cat}>
-                            {cat}
-                          </option>
-                        ))}
-                        {categorieUscitaCustom.map((cat) => (
-                          <option key={cat} value={cat}>
-                            {cat}
-                          </option>
-                        ))}
-                        <option value="__altro__">Altro...</option>
-                      </select>
+                      <div>
+                        <div style={fieldLabelStyle}>Categoria</div>
+                        <select
+                          value={categoriaUscita}
+                          onChange={(e) => setCategoriaUscita(e.target.value)}
+                          style={inputLight(false)}
+                        >
+                          <option value="">Seleziona categoria</option>
+                          {categorieUscitaBase.map((cat) => (
+                            <option key={cat} value={cat}>
+                              {cat}
+                            </option>
+                          ))}
+                          {categorieUscitaCustom.map((cat) => (
+                            <option key={cat} value={cat}>
+                              {cat}
+                            </option>
+                          ))}
+                          <option value="__altro__">Altro...</option>
+                        </select>
+                      </div>
                     </div>
 
                     {categoriaUscita === "__altro__" && (
-                      <div style={{ display: "grid", gap: 8 }}>
-                        <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>
-                          Nuova categoria personalizzata
-                        </label>
+                      <div>
+                        <div style={fieldLabelStyle}>Nuova categoria personalizzata</div>
                         <input
                           type="text"
                           value={nuovaCategoriaUscita}
@@ -13309,36 +13388,40 @@ function MiniCalendarioEventi({
                       </div>
                     )}
 
-                    <div style={{ display: "grid", gap: 8 }}>
-                      <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>
-                        Descrizione breve
-                      </label>
-                      <input
-                        type="text"
-                        value={nuovaUscitaDesc}
-                        onChange={(e) => setNuovaUscitaDesc(e.target.value)}
-                        placeholder="Es. supermercato, pieno auto..."
-                        style={inputLight(false)}
-                      />
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                        gap: 12,
+                      }}
+                    >
+                      <div>
+                        <div style={fieldLabelStyle}>Descrizione breve</div>
+                        <input
+                          type="text"
+                          value={nuovaUscitaDesc}
+                          onChange={(e) => setNuovaUscitaDesc(e.target.value)}
+                          placeholder="Es. supermercato, pieno auto..."
+                          style={inputLight(false)}
+                        />
+                      </div>
+
+                      <div>
+                        <div style={fieldLabelStyle}>Importo</div>
+                        <input
+                          type="number"
+                          inputMode="decimal"
+                          step="0.01"
+                          value={nuovaUscitaImporto}
+                          onChange={(e) => setNuovaUscitaImporto(e.target.value)}
+                          placeholder="0,00"
+                          style={inputLight(false)}
+                        />
+                      </div>
                     </div>
 
-                    <div style={{ display: "grid", gap: 8 }}>
-                      <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>Importo</label>
-                      <input
-                        type="number"
-                        inputMode="decimal"
-                        step="0.01"
-                        value={nuovaUscitaImporto}
-                        onChange={(e) => setNuovaUscitaImporto(e.target.value)}
-                        placeholder="0,00"
-                        style={inputLight(false)}
-                      />
-                    </div>
-
-                    <div style={{ display: "grid", gap: 8 }}>
-                      <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>
-                        Nota aggiuntiva
-                      </label>
+                    <div>
+                      <div style={fieldLabelStyle}>Nota aggiuntiva</div>
                       <input
                         type="text"
                         value={nuovaUscitaNota}
@@ -13380,13 +13463,6 @@ function MiniCalendarioEventi({
             }}
             className="remember-grid-2"
           >
-           
-           
-           
-           
-           
-           
-           
             <div
               style={{
                 ...ui.card,
@@ -13412,12 +13488,7 @@ function MiniCalendarioEventi({
               />
 
               <div style={{ position: "relative", zIndex: 1, display: "grid", gap: 16 }}>
-                <div
-                  style={{
-                    display: "grid",
-                    gap: 6,
-                  }}
-                >
+                <div style={{ display: "grid", gap: 6 }}>
                   <div
                     style={{
                       fontSize: 20,
@@ -13730,21 +13801,7 @@ function MiniCalendarioEventi({
               </div>
             </div>
 
-            <div
-              style={{
-                ...ui.card,
-                padding: 22,
-                border: "1px solid rgba(79,70,229,0.18)",
-                background:
-                  "linear-gradient(180deg, rgba(79,70,229,0.10), rgba(255,255,255,0.96))",
-                boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
-                display: "grid",
-                gap: 14,
-                alignContent: "start",
-                position: "relative",
-                overflow: "hidden",
-              }}
-            >
+            <div style={eventSideCardStyle}>
               <div
                 style={{
                   position: "absolute",
@@ -13865,6 +13922,9 @@ function MiniCalendarioEventi({
     </div>
   );
 })()}
+
+
+
 
 
 
