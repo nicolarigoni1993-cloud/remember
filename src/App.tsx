@@ -12934,20 +12934,7 @@ function renderAreaControllo() {
                 </button>
               </div>
 
-              {aggiungiSezione !== "menu" && (
-                <div style={{ display: "flex", justifyContent: "center" }}>
-                  <button
-                    data-chip="1"
-                    onClick={() => {
-                      resetForm();
-                      setAggiungiSezione("menu");
-                    }}
-                    style={chip(false)}
-                  >
-                    Torna ad Aggiungi
-                  </button>
-                </div>
-              )}
+    
             </div>
           </div>
         </div>
@@ -12972,489 +12959,492 @@ function renderAreaControllo() {
           </div>
         </div>
 
-        {aggiungiSezione === "menu" ? (
+       {aggiungiSezione === "menu" ? (
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns:
+        typeof window !== "undefined" && window.innerWidth <= 640
+          ? "1fr"
+          : "repeat(auto-fit, minmax(240px, 1fr))",
+      gap: 16,
+    }}
+  >
+    <button
+      data-chip="1"
+      onClick={() => apriTurnoForm()}
+      style={menuCardStyle("orange")}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "translateY(-3px)";
+        e.currentTarget.style.boxShadow = "0 30px 62px rgba(249,115,22,0.16)";
+        e.currentTarget.style.borderColor = "rgba(249,115,22,0.26)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.boxShadow = "0 24px 54px rgba(249,115,22,0.12)";
+        e.currentTarget.style.borderColor = "rgba(249,115,22,0.18)";
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "radial-gradient(500px 180px at 0% 0%, rgba(249,115,22,0.10), transparent 58%), radial-gradient(400px 160px at 100% 100%, rgba(255,255,255,0.16), transparent 60%)",
+          pointerEvents: "none",
+        }}
+      />
+
+      <div style={{ position: "relative", zIndex: 1, display: "grid", gap: 14 }}>
+        <div style={menuIconStyle("orange")}>⏰</div>
+
+        <div>
           <div
             style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-              gap: 16,
+              fontSize: 20,
+              fontWeight: 1000,
+              letterSpacing: -0.3,
+              color: "rgba(15,23,42,0.96)",
             }}
           >
-            <button
-              data-chip="1"
-              onClick={() => setAggiungiSezione("movimenti")}
-              style={menuCardStyle("green")}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-3px)";
-                e.currentTarget.style.boxShadow = "0 30px 62px rgba(16,185,129,0.16)";
-                e.currentTarget.style.borderColor = "rgba(16,185,129,0.26)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 24px 54px rgba(16,185,129,0.12)";
-                e.currentTarget.style.borderColor = "rgba(16,185,129,0.18)";
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background:
-                    "radial-gradient(500px 180px at 0% 0%, rgba(16,185,129,0.10), transparent 58%), radial-gradient(400px 160px at 100% 100%, rgba(255,255,255,0.16), transparent 60%)",
-                  pointerEvents: "none",
-                }}
-              />
-
-              <div style={{ position: "relative", zIndex: 1, display: "grid", gap: 14 }}>
-                <div style={menuIconStyle("green")}>€</div>
-
-                <div>
-                  <div
-                    style={{
-                      fontSize: 20,
-                      fontWeight: 1000,
-                      letterSpacing: -0.3,
-                      color: "rgba(15,23,42,0.96)",
-                    }}
-                  >
-                    Entrata / Uscita
-                  </div>
-
-                  <div
-                    style={{
-                      marginTop: 6,
-                      fontSize: 13,
-                      fontWeight: 800,
-                      opacity: 0.76,
-                      lineHeight: 1.5,
-                      color: "rgba(15,23,42,0.88)",
-                    }}
-                  >
-                    Inserisci nuovi movimenti economici in modo rapido.
-                  </div>
-                </div>
-              </div>
-            </button>
-
-            <button
-              data-chip="1"
-              onClick={() => {
-                resetForm();
-                setAggiungiSezione("eventi");
-              }}
-              style={menuCardStyle("violet")}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-3px)";
-                e.currentTarget.style.boxShadow = "0 30px 62px rgba(79,70,229,0.16)";
-                e.currentTarget.style.borderColor = "rgba(79,70,229,0.26)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 24px 54px rgba(79,70,229,0.12)";
-                e.currentTarget.style.borderColor = "rgba(79,70,229,0.18)";
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background:
-                    "radial-gradient(500px 180px at 0% 0%, rgba(79,70,229,0.10), transparent 58%), radial-gradient(400px 160px at 100% 100%, rgba(255,255,255,0.16), transparent 60%)",
-                  pointerEvents: "none",
-                }}
-              />
-
-              <div style={{ position: "relative", zIndex: 1, display: "grid", gap: 14 }}>
-                <div style={menuIconStyle("violet")}>🗓</div>
-
-                <div>
-                  <div
-                    style={{
-                      fontSize: 20,
-                      fontWeight: 1000,
-                      letterSpacing: -0.3,
-                      color: "rgba(15,23,42,0.96)",
-                    }}
-                  >
-                    Evento
-                  </div>
-
-                  <div
-                    style={{
-                      marginTop: 6,
-                      fontSize: 13,
-                      fontWeight: 800,
-                      opacity: 0.76,
-                      lineHeight: 1.5,
-                      color: "rgba(15,23,42,0.88)",
-                    }}
-                  >
-                    Crea un nuovo evento con un flusso unico e ordinato.
-                  </div>
-                </div>
-              </div>
-            </button>
-
-            <button
-              data-chip="1"
-              onClick={() => apriTurnoForm()}
-              style={menuCardStyle("orange")}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-3px)";
-                e.currentTarget.style.boxShadow = "0 30px 62px rgba(249,115,22,0.16)";
-                e.currentTarget.style.borderColor = "rgba(249,115,22,0.26)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 24px 54px rgba(249,115,22,0.12)";
-                e.currentTarget.style.borderColor = "rgba(249,115,22,0.18)";
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background:
-                    "radial-gradient(500px 180px at 0% 0%, rgba(249,115,22,0.10), transparent 58%), radial-gradient(400px 160px at 100% 100%, rgba(255,255,255,0.16), transparent 60%)",
-                  pointerEvents: "none",
-                }}
-              />
-
-              <div style={{ position: "relative", zIndex: 1, display: "grid", gap: 14 }}>
-                <div style={menuIconStyle("orange")}>⏰</div>
-
-                <div>
-                  <div
-                    style={{
-                      fontSize: 20,
-                      fontWeight: 1000,
-                      letterSpacing: -0.3,
-                      color: "rgba(15,23,42,0.96)",
-                    }}
-                  >
-                    Turno
-                  </div>
-
-                  <div
-                    style={{
-                      marginTop: 6,
-                      fontSize: 13,
-                      fontWeight: 800,
-                      opacity: 0.76,
-                      lineHeight: 1.5,
-                      color: "rgba(15,23,42,0.88)",
-                    }}
-                  >
-                    Inserisci lavoro, ferie o riposo in modo diretto.
-                  </div>
-                </div>
-              </div>
-            </button>
+            Turno
           </div>
-        ) : aggiungiSezione === "movimenti" ? (
-          <div style={panelCardStyle("green")}>
+
+          <div
+            style={{
+              marginTop: 6,
+              fontSize: 13,
+              fontWeight: 800,
+              opacity: 0.76,
+              lineHeight: 1.5,
+              color: "rgba(15,23,42,0.88)",
+            }}
+          >
+            Inserisci lavoro, ferie o riposo in modo diretto.
+          </div>
+        </div>
+      </div>
+    </button>
+
+    <button
+      data-chip="1"
+      onClick={() => setAggiungiSezione("movimenti")}
+      style={menuCardStyle("green")}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "translateY(-3px)";
+        e.currentTarget.style.boxShadow = "0 30px 62px rgba(16,185,129,0.16)";
+        e.currentTarget.style.borderColor = "rgba(16,185,129,0.26)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.boxShadow = "0 24px 54px rgba(16,185,129,0.12)";
+        e.currentTarget.style.borderColor = "rgba(16,185,129,0.18)";
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "radial-gradient(500px 180px at 0% 0%, rgba(16,185,129,0.10), transparent 58%), radial-gradient(400px 160px at 100% 100%, rgba(255,255,255,0.16), transparent 60%)",
+          pointerEvents: "none",
+        }}
+      />
+
+      <div style={{ position: "relative", zIndex: 1, display: "grid", gap: 14 }}>
+        <div style={menuIconStyle("green")}>€</div>
+
+        <div>
+          <div
+            style={{
+              fontSize: 20,
+              fontWeight: 1000,
+              letterSpacing: -0.3,
+              color: "rgba(15,23,42,0.96)",
+            }}
+          >
+            Entrata / Uscita
+          </div>
+
+          <div
+            style={{
+              marginTop: 6,
+              fontSize: 13,
+              fontWeight: 800,
+              opacity: 0.76,
+              lineHeight: 1.5,
+              color: "rgba(15,23,42,0.88)",
+            }}
+          >
+            Inserisci nuovi movimenti economici in modo rapido.
+          </div>
+        </div>
+      </div>
+    </button>
+
+    <button
+      data-chip="1"
+      onClick={() => {
+        resetForm();
+        setAggiungiSezione("eventi");
+      }}
+      style={menuCardStyle("violet")}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "translateY(-3px)";
+        e.currentTarget.style.boxShadow = "0 30px 62px rgba(79,70,229,0.16)";
+        e.currentTarget.style.borderColor = "rgba(79,70,229,0.26)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.boxShadow = "0 24px 54px rgba(79,70,229,0.12)";
+        e.currentTarget.style.borderColor = "rgba(79,70,229,0.18)";
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "radial-gradient(500px 180px at 0% 0%, rgba(79,70,229,0.10), transparent 58%), radial-gradient(400px 160px at 100% 100%, rgba(255,255,255,0.16), transparent 60%)",
+          pointerEvents: "none",
+        }}
+      />
+
+      <div style={{ position: "relative", zIndex: 1, display: "grid", gap: 14 }}>
+        <div style={menuIconStyle("violet")}>🗓</div>
+
+        <div>
+          <div
+            style={{
+              fontSize: 20,
+              fontWeight: 1000,
+              letterSpacing: -0.3,
+              color: "rgba(15,23,42,0.96)",
+            }}
+          >
+            Evento
+          </div>
+
+          <div
+            style={{
+              marginTop: 6,
+              fontSize: 13,
+              fontWeight: 800,
+              opacity: 0.76,
+              lineHeight: 1.5,
+              color: "rgba(15,23,42,0.88)",
+            }}
+          >
+            Crea un nuovo evento con un flusso unico e ordinato.
+          </div>
+        </div>
+      </div>
+    </button>
+  </div>
+) : aggiungiSezione === "movimenti" ? (
+  <div style={panelCardStyle("green")}>
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        background:
+          "radial-gradient(640px 220px at 0% 0%, rgba(16,185,129,0.10), transparent 58%), radial-gradient(480px 180px at 100% 100%, rgba(255,255,255,0.16), transparent 60%)",
+        pointerEvents: "none",
+      }}
+    />
+
+    <div style={{ position: "relative", zIndex: 1, display: "grid", gap: 18 }}>
+      <div style={{ display: "grid", gap: 8 }}>
+        <div
+          style={{
+            fontSize: 22,
+            fontWeight: 1000,
+            letterSpacing: -0.4,
+            color: "rgba(15,23,42,0.96)",
+          }}
+        >
+          Area movimenti economici
+        </div>
+
+        <div
+          style={{
+            fontSize: 13,
+            fontWeight: 800,
+            color: "rgba(15,23,42,0.72)",
+            lineHeight: 1.5,
+          }}
+        >
+          Inserisci entrate e uscite con categorie, importi e note. Le categorie personalizzate restano salvate.
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gap: 14 }}>
+        <button
+          type="button"
+          title="Apri o chiudi form entrata"
+          onClick={() => setMovimentoAperto((prev) => (prev === "entrata" ? null : "entrata"))}
+          style={collapsibleButtonStyle("green", movimentoAperto === "entrata")}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translateY(-2px)";
+            e.currentTarget.style.boxShadow = "0 24px 40px rgba(34,197,94,0.24)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "0 18px 34px rgba(34,197,94,0.20)";
+          }}
+        >
+          <span>Entrata</span>
+          <span style={{ fontSize: 24 }}>{movimentoAperto === "entrata" ? "−" : "+"}</span>
+        </button>
+
+        {movimentoAperto === "entrata" && (
+          <div style={movementFormWrap("green")}>
             <div
               style={{
-                position: "absolute",
-                inset: 0,
-                background:
-                  "radial-gradient(640px 220px at 0% 0%, rgba(16,185,129,0.10), transparent 58%), radial-gradient(480px 180px at 100% 100%, rgba(255,255,255,0.16), transparent 60%)",
-                pointerEvents: "none",
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                gap: 12,
               }}
-            />
-
-            <div style={{ position: "relative", zIndex: 1, display: "grid", gap: 18 }}>
-              <div style={{ display: "grid", gap: 8 }}>
-                <div
-                  style={{
-                    fontSize: 22,
-                    fontWeight: 1000,
-                    letterSpacing: -0.4,
-                    color: "rgba(15,23,42,0.96)",
-                  }}
-                >
-                  Area movimenti economici
-                </div>
-
-                <div
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 800,
-                    color: "rgba(15,23,42,0.72)",
-                    lineHeight: 1.5,
-                  }}
-                >
-                  Inserisci entrate e uscite con categorie, importi e note. Le categorie personalizzate restano salvate.
-                </div>
+            >
+              <div>
+                <div style={fieldLabelStyle}>Data</div>
+                <input
+                  type="date"
+                  value={nuovaEntrataData}
+                  onChange={(e) => setNuovaEntrataData(e.target.value)}
+                  style={inputLight(false)}
+                />
               </div>
 
-              <div style={{ display: "grid", gap: 14 }}>
-                <button
-                  type="button"
-                  title="Apri o chiudi form entrata"
-                  onClick={() => setMovimentoAperto((prev) => (prev === "entrata" ? null : "entrata"))}
-                  style={collapsibleButtonStyle("green", movimentoAperto === "entrata")}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateY(-2px)";
-                    e.currentTarget.style.boxShadow = "0 24px 40px rgba(34,197,94,0.24)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "0 18px 34px rgba(34,197,94,0.20)";
-                  }}
+              <div>
+                <div style={fieldLabelStyle}>Categoria</div>
+                <select
+                  value={categoriaEntrata}
+                  onChange={(e) => setCategoriaEntrata(e.target.value)}
+                  style={inputLight(false)}
                 >
-                  <span>Entrata</span>
-                  <span style={{ fontSize: 24 }}>{movimentoAperto === "entrata" ? "−" : "+"}</span>
-                </button>
-
-                {movimentoAperto === "entrata" && (
-                  <div style={movementFormWrap("green")}>
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                        gap: 12,
-                      }}
-                    >
-                      <div>
-                        <div style={fieldLabelStyle}>Data</div>
-                        <input
-                          type="date"
-                          value={nuovaEntrataData}
-                          onChange={(e) => setNuovaEntrataData(e.target.value)}
-                          style={inputLight(false)}
-                        />
-                      </div>
-
-                      <div>
-                        <div style={fieldLabelStyle}>Categoria</div>
-                        <select
-                          value={categoriaEntrata}
-                          onChange={(e) => setCategoriaEntrata(e.target.value)}
-                          style={inputLight(false)}
-                        >
-                          <option value="">Seleziona categoria</option>
-                          {categorieEntrataBase.map((cat) => (
-                            <option key={cat} value={cat}>
-                              {cat}
-                            </option>
-                          ))}
-                          {categorieEntrataCustom.map((cat) => (
-                            <option key={cat} value={cat}>
-                              {cat}
-                            </option>
-                          ))}
-                          <option value="__altro__">Altro...</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    {categoriaEntrata === "__altro__" && (
-                      <div>
-                        <div style={fieldLabelStyle}>Nuova categoria personalizzata</div>
-                        <input
-                          type="text"
-                          value={nuovaCategoriaEntrata}
-                          onChange={(e) => setNuovaCategoriaEntrata(e.target.value)}
-                          placeholder="Scrivi una nuova categoria"
-                          style={inputLight(false)}
-                        />
-                      </div>
-                    )}
-
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                        gap: 12,
-                      }}
-                    >
-                      <div>
-                        <div style={fieldLabelStyle}>Nota facoltativa</div>
-                        <input
-                          type="text"
-                          value={nuovaEntrataDesc}
-                          onChange={(e) => setNuovaEntrataDesc(e.target.value)}
-                          placeholder="Es. bonus marzo, regalo, rimborso..."
-                          style={inputLight(false)}
-                        />
-                      </div>
-
-                      <div>
-                        <div style={fieldLabelStyle}>Importo</div>
-                        <input
-                          type="number"
-                          inputMode="decimal"
-                          step="0.01"
-                          value={nuovaEntrataImporto}
-                          onChange={(e) => setNuovaEntrataImporto(e.target.value)}
-                          placeholder="0,00"
-                          style={inputLight(false)}
-                        />
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={aggiungiEntrataExtra}
-                      style={{
-                        border: "none",
-                        borderRadius: 18,
-                        padding: "14px 16px",
-                        fontSize: 15,
-                        fontWeight: 1000,
-                        cursor: "pointer",
-                        color: "white",
-                        background:
-                          "linear-gradient(180deg, rgba(34,197,94,0.98), rgba(22,163,74,0.95))",
-                        boxShadow: "0 18px 34px rgba(34,197,94,0.20)",
-                      }}
-                    >
-                      + Aggiungi Entrata
-                    </button>
-                  </div>
-                )}
-
-                <button
-                  type="button"
-                  title="Apri o chiudi form uscita"
-                  onClick={() => setMovimentoAperto((prev) => (prev === "uscita" ? null : "uscita"))}
-                  style={collapsibleButtonStyle("red", movimentoAperto === "uscita")}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateY(-2px)";
-                    e.currentTarget.style.boxShadow = "0 24px 40px rgba(239,68,68,0.24)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "0 18px 34px rgba(239,68,68,0.20)";
-                  }}
-                >
-                  <span>Uscita</span>
-                  <span style={{ fontSize: 24 }}>{movimentoAperto === "uscita" ? "−" : "+"}</span>
-                </button>
-
-                {movimentoAperto === "uscita" && (
-                  <div style={movementFormWrap("red")}>
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                        gap: 12,
-                      }}
-                    >
-                      <div>
-                        <div style={fieldLabelStyle}>Data</div>
-                        <input
-                          type="date"
-                          value={nuovaUscitaData}
-                          onChange={(e) => setNuovaUscitaData(e.target.value)}
-                          style={inputLight(false)}
-                        />
-                      </div>
-
-                      <div>
-                        <div style={fieldLabelStyle}>Categoria</div>
-                        <select
-                          value={categoriaUscita}
-                          onChange={(e) => setCategoriaUscita(e.target.value)}
-                          style={inputLight(false)}
-                        >
-                          <option value="">Seleziona categoria</option>
-                          {categorieUscitaBase.map((cat) => (
-                            <option key={cat} value={cat}>
-                              {cat}
-                            </option>
-                          ))}
-                          {categorieUscitaCustom.map((cat) => (
-                            <option key={cat} value={cat}>
-                              {cat}
-                            </option>
-                          ))}
-                          <option value="__altro__">Altro...</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    {categoriaUscita === "__altro__" && (
-                      <div>
-                        <div style={fieldLabelStyle}>Nuova categoria personalizzata</div>
-                        <input
-                          type="text"
-                          value={nuovaCategoriaUscita}
-                          onChange={(e) => setNuovaCategoriaUscita(e.target.value)}
-                          placeholder="Scrivi una nuova categoria"
-                          style={inputLight(false)}
-                        />
-                      </div>
-                    )}
-
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                        gap: 12,
-                      }}
-                    >
-                      <div>
-                        <div style={fieldLabelStyle}>Descrizione breve</div>
-                        <input
-                          type="text"
-                          value={nuovaUscitaDesc}
-                          onChange={(e) => setNuovaUscitaDesc(e.target.value)}
-                          placeholder="Es. supermercato, pieno auto..."
-                          style={inputLight(false)}
-                        />
-                      </div>
-
-                      <div>
-                        <div style={fieldLabelStyle}>Importo</div>
-                        <input
-                          type="number"
-                          inputMode="decimal"
-                          step="0.01"
-                          value={nuovaUscitaImporto}
-                          onChange={(e) => setNuovaUscitaImporto(e.target.value)}
-                          placeholder="0,00"
-                          style={inputLight(false)}
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <div style={fieldLabelStyle}>Nota aggiuntiva</div>
-                      <input
-                        type="text"
-                        value={nuovaUscitaNota}
-                        onChange={(e) => setNuovaUscitaNota(e.target.value)}
-                        placeholder="Dettaglio extra facoltativo"
-                        style={inputLight(false)}
-                      />
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={aggiungiUscitaExtra}
-                      style={{
-                        border: "none",
-                        borderRadius: 18,
-                        padding: "14px 16px",
-                        fontSize: 15,
-                        fontWeight: 1000,
-                        cursor: "pointer",
-                        color: "white",
-                        background:
-                          "linear-gradient(180deg, rgba(239,68,68,0.98), rgba(220,38,38,0.95))",
-                        boxShadow: "0 18px 34px rgba(239,68,68,0.20)",
-                      }}
-                    >
-                      + Aggiungi Uscita
-                    </button>
-                  </div>
-                )}
+                  <option value="">Seleziona categoria</option>
+                  {categorieEntrataBase.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                  {categorieEntrataCustom.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                  <option value="__altro__">Altro...</option>
+                </select>
               </div>
             </div>
+
+            {categoriaEntrata === "__altro__" && (
+              <div>
+                <div style={fieldLabelStyle}>Nuova categoria personalizzata</div>
+                <input
+                  type="text"
+                  value={nuovaCategoriaEntrata}
+                  onChange={(e) => setNuovaCategoriaEntrata(e.target.value)}
+                  placeholder="Scrivi una nuova categoria"
+                  style={inputLight(false)}
+                />
+              </div>
+            )}
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                gap: 12,
+              }}
+            >
+              <div>
+                <div style={fieldLabelStyle}>Nota facoltativa</div>
+                <input
+                  type="text"
+                  value={nuovaEntrataDesc}
+                  onChange={(e) => setNuovaEntrataDesc(e.target.value)}
+                  placeholder="Es. bonus marzo, regalo, rimborso..."
+                  style={inputLight(false)}
+                />
+              </div>
+
+              <div>
+                <div style={fieldLabelStyle}>Importo</div>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step="0.01"
+                  value={nuovaEntrataImporto}
+                  onChange={(e) => setNuovaEntrataImporto(e.target.value)}
+                  placeholder="0,00"
+                  style={inputLight(false)}
+                />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={aggiungiEntrataExtra}
+              style={{
+                border: "none",
+                borderRadius: 18,
+                padding: "14px 16px",
+                fontSize: 15,
+                fontWeight: 1000,
+                cursor: "pointer",
+                color: "white",
+                background:
+                  "linear-gradient(180deg, rgba(34,197,94,0.98), rgba(22,163,74,0.95))",
+                boxShadow: "0 18px 34px rgba(34,197,94,0.20)",
+              }}
+            >
+              + Aggiungi Entrata
+            </button>
           </div>
-        ) : (
+        )}
+
+        <button
+          type="button"
+          title="Apri o chiudi form uscita"
+          onClick={() => setMovimentoAperto((prev) => (prev === "uscita" ? null : "uscita"))}
+          style={collapsibleButtonStyle("red", movimentoAperto === "uscita")}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translateY(-2px)";
+            e.currentTarget.style.boxShadow = "0 24px 40px rgba(239,68,68,0.24)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "0 18px 34px rgba(239,68,68,0.20)";
+          }}
+        >
+          <span>Uscita</span>
+          <span style={{ fontSize: 24 }}>{movimentoAperto === "uscita" ? "−" : "+"}</span>
+        </button>
+
+        {movimentoAperto === "uscita" && (
+          <div style={movementFormWrap("red")}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                gap: 12,
+              }}
+            >
+              <div>
+                <div style={fieldLabelStyle}>Data</div>
+                <input
+                  type="date"
+                  value={nuovaUscitaData}
+                  onChange={(e) => setNuovaUscitaData(e.target.value)}
+                  style={inputLight(false)}
+                />
+              </div>
+
+              <div>
+                <div style={fieldLabelStyle}>Categoria</div>
+                <select
+                  value={categoriaUscita}
+                  onChange={(e) => setCategoriaUscita(e.target.value)}
+                  style={inputLight(false)}
+                >
+                  <option value="">Seleziona categoria</option>
+                  {categorieUscitaBase.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                  {categorieUscitaCustom.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                  <option value="__altro__">Altro...</option>
+                </select>
+              </div>
+            </div>
+
+            {categoriaUscita === "__altro__" && (
+              <div>
+                <div style={fieldLabelStyle}>Nuova categoria personalizzata</div>
+                <input
+                  type="text"
+                  value={nuovaCategoriaUscita}
+                  onChange={(e) => setNuovaCategoriaUscita(e.target.value)}
+                  placeholder="Scrivi una nuova categoria"
+                  style={inputLight(false)}
+                />
+              </div>
+            )}
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                gap: 12,
+              }}
+            >
+              <div>
+                <div style={fieldLabelStyle}>Descrizione breve</div>
+                <input
+                  type="text"
+                  value={nuovaUscitaDesc}
+                  onChange={(e) => setNuovaUscitaDesc(e.target.value)}
+                  placeholder="Es. supermercato, pieno auto..."
+                  style={inputLight(false)}
+                />
+              </div>
+
+              <div>
+                <div style={fieldLabelStyle}>Importo</div>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step="0.01"
+                  value={nuovaUscitaImporto}
+                  onChange={(e) => setNuovaUscitaImporto(e.target.value)}
+                  placeholder="0,00"
+                  style={inputLight(false)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <div style={fieldLabelStyle}>Nota aggiuntiva</div>
+              <input
+                type="text"
+                value={nuovaUscitaNota}
+                onChange={(e) => setNuovaUscitaNota(e.target.value)}
+                placeholder="Dettaglio extra facoltativo"
+                style={inputLight(false)}
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={aggiungiUscitaExtra}
+              style={{
+                border: "none",
+                borderRadius: 18,
+                padding: "14px 16px",
+                fontSize: 15,
+                fontWeight: 1000,
+                cursor: "pointer",
+                color: "white",
+                background:
+                  "linear-gradient(180deg, rgba(239,68,68,0.98), rgba(220,38,38,0.95))",
+                boxShadow: "0 18px 34px rgba(239,68,68,0.20)",
+              }}
+            >
+              + Aggiungi Uscita
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+) : (
           <div
             style={{
               display: "grid",
