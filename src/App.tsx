@@ -1,14 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 
-
-/*
-import {
-  getCurrentPushSubscriptionInfo,
-  subscribeCurrentDeviceToPush,
-  unsubscribeCurrentDeviceFromPush,
-} from "./lib/push-notifications";
-*/
+import { getCurrentPushSubscriptionInfo } from "./lib/push-notifications";
 
 
 type Filtro = "oggi" | "7giorni" | "30giorni";
@@ -815,12 +808,10 @@ const [mostraEntrateMini, setMostraEntrateMini] = useState(false);
 const [dataOraCorrenteLabel, setDataOraCorrenteLabel] = useState("");
 
 
-/*
+
 const [pushSupported, setPushSupported] = useState(false);
 const [pushSubscribed, setPushSubscribed] = useState(false);
-const [pushBusy, setPushBusy] = useState(false);
-const [pushStatusText, setPushStatusText] = useState("");
-*/
+
 
 
 
@@ -1293,14 +1284,14 @@ useEffect(() => {
 }, [note, currentUserId]);
 
 
-/*
+
 useEffect(() => {
   void refreshPushSubscriptionState();
 }, [currentUserId]);
-*/
 
 
-/*
+
+
 
 async function refreshPushSubscriptionState() {
   try {
@@ -1313,50 +1304,9 @@ async function refreshPushSubscriptionState() {
   }
 }
 
-async function attivaPushSerie() {
-  if (!currentUserId) {
-    alert("Prima seleziona o crea un utente.");
-    return;
-  }
 
-  setPushBusy(true);
-  setPushStatusText("");
 
-  try {
-    const result = await subscribeCurrentDeviceToPush(currentUserId);
-    setPushStatusText(result.message);
 
-    if (!result.ok) {
-      alert(result.message);
-    }
-
-    await refreshPushSubscriptionState();
-  } finally {
-    setPushBusy(false);
-  }
-}
-
-async function disattivaPushSerie() {
-  if (!currentUserId) return;
-
-  setPushBusy(true);
-  setPushStatusText("");
-
-  try {
-    const result = await unsubscribeCurrentDeviceFromPush(currentUserId);
-    setPushStatusText(result.message);
-
-    if (!result.ok) {
-      alert(result.message);
-    }
-
-    await refreshPushSubscriptionState();
-  } finally {
-    setPushBusy(false);
-  }
-}
-
-*/
 
 
 
@@ -13632,7 +13582,29 @@ function renderAreaControllo() {
 
 
 
+<div
+  style={{
+    padding: 14,
+    borderRadius: 18,
+    background: "rgba(255,255,255,0.52)",
+    border: "1px solid rgba(16,185,129,0.16)",
+    boxShadow: "0 10px 24px rgba(16,185,129,0.06)",
+    display: "grid",
+    gap: 8,
+  }}
+>
+  <div style={{ fontSize: 13, fontWeight: 950, color: "rgba(15,23,42,0.90)" }}>
+    Stato push dispositivo
+  </div>
 
+  <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(15,23,42,0.68)" }}>
+    Supporto browser: {pushSupported ? "sì" : "no"}
+  </div>
+
+  <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(15,23,42,0.68)" }}>
+    Iscrizione attiva: {pushSubscribed ? "sì" : "no"}
+  </div>
+</div>
 
 
 
