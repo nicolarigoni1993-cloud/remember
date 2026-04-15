@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 
-import { getCurrentPushSubscriptionInfo } from "./lib/push-notifications";
+
 
 
 type Filtro = "oggi" | "7giorni" | "30giorni";
@@ -1286,24 +1286,39 @@ useEffect(() => {
 
 
 useEffect(() => {
-  void refreshPushSubscriptionState();
+  void refreshPushSubscriptionStateInline();
 }, [currentUserId]);
 
 
 
 
 
-async function refreshPushSubscriptionState() {
+
+
+async function refreshPushSubscriptionStateInline() {
   try {
-    const info = await getCurrentPushSubscriptionInfo();
-    setPushSupported(info.supported);
-    setPushSubscribed(info.subscribed);
+    const supported =
+      typeof window !== "undefined" &&
+      "serviceWorker" in navigator &&
+      "PushManager" in window &&
+      "Notification" in window;
+
+    if (!supported) {
+      setPushSupported(false);
+      setPushSubscribed(false);
+      return;
+    }
+
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.getSubscription();
+
+    setPushSupported(true);
+    setPushSubscribed(Boolean(subscription));
   } catch {
     setPushSupported(false);
     setPushSubscribed(false);
   }
 }
-
 
 
 
