@@ -1,5 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
+import {
+  getCurrentPushSubscriptionInfo,
+  subscribeCurrentDeviceToPush,
+  unsubscribeCurrentDeviceFromPush,
+} from "./lib/push-notifications";
+
 
 
 type Filtro = "oggi" | "7giorni" | "30giorni";
@@ -805,6 +811,15 @@ const [mostraEntrateMini, setMostraEntrateMini] = useState(false);
 
 const [dataOraCorrenteLabel, setDataOraCorrenteLabel] = useState("");
 
+const [pushSupported, setPushSupported] = useState(false);
+const [pushSubscribed, setPushSubscribed] = useState(false);
+const [pushBusy, setPushBusy] = useState(false);
+const [pushStatusText, setPushStatusText] = useState("");
+
+
+
+
+
 useEffect(() => {
   const aggiornaDataOra = () => {
     const adesso = new Date();
@@ -1272,7 +1287,67 @@ useEffect(() => {
   localStorage.setItem(`remember_note_${currentUserId}`, JSON.stringify(note));
 }, [note, currentUserId]);
 
+useEffect(() => {
+  void refreshPushSubscriptionState();
+}, [currentUserId]);
 
+
+
+
+
+async function refreshPushSubscriptionState() {
+  try {
+    const info = await getCurrentPushSubscriptionInfo();
+    setPushSupported(info.supported);
+    setPushSubscribed(info.subscribed);
+  } catch {
+    setPushSupported(false);
+    setPushSubscribed(false);
+  }
+}
+
+async function attivaPushSerie() {
+  if (!currentUserId) {
+    alert("Prima seleziona o crea un utente.");
+    return;
+  }
+
+  setPushBusy(true);
+  setPushStatusText("");
+
+  try {
+    const result = await subscribeCurrentDeviceToPush(currentUserId);
+    setPushStatusText(result.message);
+
+    if (!result.ok) {
+      alert(result.message);
+    }
+
+    await refreshPushSubscriptionState();
+  } finally {
+    setPushBusy(false);
+  }
+}
+
+async function disattivaPushSerie() {
+  if (!currentUserId) return;
+
+  setPushBusy(true);
+  setPushStatusText("");
+
+  try {
+    const result = await unsubscribeCurrentDeviceFromPush(currentUserId);
+    setPushStatusText(result.message);
+
+    if (!result.ok) {
+      alert(result.message);
+    }
+
+    await refreshPushSubscriptionState();
+  } finally {
+    setPushBusy(false);
+  }
+}
 
 
 
@@ -13547,6 +13622,110 @@ function renderAreaControllo() {
                       />
                     </div>
                   </div>
+
+
+
+
+
+
+<div
+  style={{
+    display: "grid",
+    gap: 10,
+    padding: 14,
+    borderRadius: 18,
+    background: "rgba(255,255,255,0.52)",
+    border: "1px solid rgba(16,185,129,0.16)",
+    boxShadow: "0 10px 24px rgba(16,185,129,0.06)",
+  }}
+>
+  <div
+    style={{
+      fontSize: 13,
+      fontWeight: 950,
+      color: "rgba(15,23,42,0.90)",
+    }}
+  >
+    Notifiche push del dispositivo
+  </div>
+
+  <div
+    style={{
+      fontSize: 12,
+      fontWeight: 800,
+      color: "rgba(15,23,42,0.68)",
+      lineHeight: 1.5,
+    }}
+  >
+    Stato:{" "}
+    {pushSupported
+      ? pushSubscribed
+        ? "attive su questo dispositivo"
+        : "disponibili ma non ancora attivate"
+      : "non supportate da questo browser"}
+  </div>
+
+  {pushStatusText ? (
+    <div
+      style={{
+        padding: "10px 12px",
+        borderRadius: 14,
+        border: "1px solid rgba(16,185,129,0.16)",
+        background: "rgba(240,253,244,0.90)",
+        fontSize: 12,
+        fontWeight: 800,
+        color: "rgba(22,101,52,0.92)",
+      }}
+    >
+      {pushStatusText}
+    </div>
+  ) : null}
+
+  <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+    <button
+      type="button"
+      onClick={attivaPushSerie}
+      disabled={!pushSupported || pushBusy}
+      style={{
+        border: "none",
+    borderRadius: 16,
+        padding: "12px 14px",
+        fontSize: 13,
+        fontWeight: 1000,
+        cursor: !pushSupported || pushBusy ? "not-allowed" : "pointer",
+        color: "white",
+        opacity: !pushSupported || pushBusy ? 0.6 : 1,
+        background:
+          "linear-gradient(180deg, rgba(16,185,129,0.98), rgba(5,150,105,0.95))",
+        boxShadow: "0 14px 26px rgba(16,185,129,0.18)",
+      }}
+    >
+      {pushBusy ? "Attendi..." : pushSubscribed ? "Riattiva push" : "Attiva push"}
+    </button>
+
+    <button
+      type="button"
+      onClick={disattivaPushSerie}
+      disabled={!pushSupported || !pushSubscribed || pushBusy}
+      style={{
+        border: "none",
+        borderRadius: 16,
+        padding: "12px 14px",
+        fontSize: 13,
+        fontWeight: 1000,
+        cursor: !pushSupported || !pushSubscribed || pushBusy ? "not-allowed" : "pointer",
+        color: "rgba(15,23,42,0.88)",
+        opacity: !pushSupported || !pushSubscribed || pushBusy ? 0.6 : 1,
+        background: "rgba(255,255,255,0.92)",
+        boxShadow: "0 10px 18px rgba(15,23,42,0.06)",
+      }}
+    >
+      Disattiva push
+    </button>
+  </div>
+</div>
+
+
 
                   <div
                     style={{
