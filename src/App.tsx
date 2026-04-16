@@ -1293,6 +1293,14 @@ useEffect(() => {
 
 
 
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
+}
+
+
 
 
 async function refreshPushSubscriptionStateInline() {
@@ -13492,498 +13500,556 @@ function renderAreaControllo() {
     </div>
   </div>
 ) : (
+<div
+  style={{
+    display: "grid",
+    gridTemplateColumns: "minmax(0, 1.05fr) minmax(280px, 0.95fr)",
+    gap: 16,
+  }}
+  className="remember-grid-2"
+>
+  <div
+    style={{
+      ...ui.card,
+      padding: 22,
+      border: "1px solid rgba(79,70,229,0.18)",
+      background:
+        "linear-gradient(180deg, rgba(79,70,229,0.12), rgba(255,255,255,0.96))",
+      boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
+      display: "grid",
+      gap: 16,
+      position: "relative",
+      overflow: "hidden",
+    }}
+  >
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        background:
+          "radial-gradient(620px 220px at 0% 0%, rgba(79,70,229,0.10), transparent 58%), radial-gradient(420px 180px at 100% 100%, rgba(255,255,255,0.16), transparent 60%)",
+        pointerEvents: "none",
+      }}
+    />
+
+    <div style={{ position: "relative", zIndex: 1, display: "grid", gap: 16 }}>
+      <div style={{ display: "grid", gap: 6 }}>
+        <div
+          style={{
+            fontSize: 20,
+            fontWeight: 1000,
+            letterSpacing: -0.3,
+            color: "rgba(15,23,42,0.96)",
+          }}
+        >
+          {idInModifica ? "Modifica evento" : "Nuovo evento"}
+        </div>
+
+        <div
+          style={{
+            fontSize: 13,
+            fontWeight: 800,
+            lineHeight: 1.5,
+            color: "rgba(15,23,42,0.70)",
+          }}
+        >
+          Inserisci un evento semplice con descrizione, data, ora e promemoria personalizzabili.
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gap: 12 }}>
+        <div style={{ display: "grid", gap: 8 }}>
+          <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+            Evento
+          </label>
+          <input
+            type="text"
+            value={titolo}
+            onChange={(e) => setTitolo(e.target.value)}
+            placeholder="Es. Dentista, bollo, riunione, compleanno..."
+            style={inputLight(false)}
+          />
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: 12,
+          }}
+        >
+          <div style={{ display: "grid", gap: 8 }}>
+            <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+              Data
+            </label>
+            <input
+              type="date"
+              value={data}
+              onChange={(e) => setData(e.target.value)}
+              style={inputLight(false)}
+            />
+          </div>
+
+          <div style={{ display: "grid", gap: 8 }}>
+            <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+              Ora
+            </label>
+            <input
+              type="time"
+              value={ora}
+              onChange={(e) => setOra(e.target.value)}
+              style={inputLight(false)}
+            />
+          </div>
+        </div>
+
+        <div
+          style={{
+            padding: 14,
+            borderRadius: 18,
+            background: "rgba(255,255,255,0.52)",
+            border: "1px solid rgba(16,185,129,0.16)",
+            boxShadow: "0 10px 24px rgba(16,185,129,0.06)",
+            display: "grid",
+            gap: 10,
+          }}
+        >
+          <div style={{ fontSize: 13, fontWeight: 950, color: "rgba(15,23,42,0.90)" }}>
+            Stato push dispositivo
+          </div>
+
+          <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(15,23,42,0.68)" }}>
+            Supporto browser: {pushSupported ? "sì" : "no"}
+          </div>
+
+          <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(15,23,42,0.68)" }}>
+            Iscrizione attiva: {pushSubscribed ? "sì" : "no"}
+          </div>
+
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                if (
+                  typeof window === "undefined" ||
+                  !("serviceWorker" in navigator) ||
+                  !("PushManager" in window) ||
+                  !("Notification" in window)
+                ) {
+                  alert("Questo browser non supporta le notifiche push.");
+                  return;
+                }
+
+                const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined;
+
+                if (!vapidPublicKey) {
+                  alert("Chiave VAPID pubblica mancante nel file .env");
+                  return;
+                }
+
+                const permission = await Notification.requestPermission();
+
+                if (permission !== "granted") {
+                  alert("Permesso notifiche negato");
+                  return;
+                }
+
+                const registration = await navigator.serviceWorker.ready;
+                const existingSubscription = await registration.pushManager.getSubscription();
+
+                if (existingSubscription) {
+                  alert("Notifiche già attivate su questo dispositivo.");
+                  await refreshPushSubscriptionStateInline();
+                  return;
+                }
+
+                await registration.pushManager.subscribe({
+                  userVisibleOnly: true,
+                  applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+                });
+
+                alert("Notifiche attivate!");
+                await refreshPushSubscriptionStateInline();
+              } catch (err) {
+                console.error(err);
+                alert("Errore attivazione notifiche");
+              }
+            }}
+            style={{
+              justifySelf: "start",
+              padding: "10px 14px",
+              borderRadius: 14,
+              background: "linear-gradient(180deg, #10b981, #059669)",
+              color: "white",
+              fontWeight: 900,
+              border: "none",
+              cursor: "pointer",
+              boxShadow: "0 12px 24px rgba(16,185,129,0.18)",
+            }}
+          >
+            Attiva notifiche
+          </button>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gap: 10,
+            padding: 14,
+            borderRadius: 18,
+            background: "rgba(255,255,255,0.52)",
+            border: "1px solid rgba(79,70,229,0.14)",
+            boxShadow: "0 10px 24px rgba(79,70,229,0.06)",
+          }}
+        >
+          <div
+            style={{
+              fontSize: 13,
+              fontWeight: 950,
+              color: "rgba(15,23,42,0.90)",
+            }}
+          >
+            Promemoria notifiche
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              gap: 8,
+              flexWrap: "wrap",
+            }}
+          >
+            {[
+              { label: "15 min", value: 15 },
+              { label: "30 min", value: 30 },
+              { label: "1 ora", value: 60 },
+              { label: "2 ore", value: 120 },
+              { label: "6 ore", value: 360 },
+              { label: "24 ore", value: 1440 },
+            ].map((opt) => {
+              const attiva = notificheMinutiPrima.includes(opt.value);
+
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() =>
+                    setNotificheMinutiPrima((prev) =>
+                      prev.includes(opt.value)
+                        ? prev.filter((x) => x !== opt.value)
+                        : [...prev, opt.value].sort((a, b) => b - a)
+                    )
+                  }
+                  style={{
+                    padding: "10px 12px",
+                    borderRadius: 999,
+                    border: attiva
+                      ? "1px solid rgba(79,70,229,0.30)"
+                      : "1px solid rgba(148,163,184,0.20)",
+                    background: attiva
+                      ? "linear-gradient(180deg, rgba(79,70,229,0.18), rgba(124,58,237,0.12))"
+                      : "rgba(255,255,255,0.88)",
+                    color: attiva
+                      ? "rgba(67,56,202,0.98)"
+                      : "rgba(15,23,42,0.82)",
+                    fontSize: 12,
+                    fontWeight: 900,
+                    cursor: "pointer",
+                    boxShadow: attiva
+                      ? "0 10px 20px rgba(79,70,229,0.10)"
+                      : "0 6px 12px rgba(15,23,42,0.04)",
+                  }}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "minmax(0, 1.05fr) minmax(280px, 0.95fr)",
-              gap: 16,
+              gridTemplateColumns: "minmax(0, 1fr) auto",
+              gap: 10,
+              alignItems: "end",
             }}
-            className="remember-grid-2"
           >
-            <div
+            <div style={{ display: "grid", gap: 8 }}>
+              <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+                Ore personalizzate
+              </label>
+              <input
+                type="number"
+                inputMode="decimal"
+                min="0"
+                step="0.5"
+                value={customNotificaOre}
+                onChange={(e) => setCustomNotificaOre(e.target.value)}
+                placeholder="Es. 3 oppure 1.5"
+                style={inputLight(false)}
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                const raw = customNotificaOre.trim();
+                if (!raw) return;
+
+                const parsedOre = Number(raw.replace(",", "."));
+                if (!Number.isFinite(parsedOre) || parsedOre <= 0) {
+                  alert("Inserisci ore personalizzate valide.");
+                  return;
+                }
+
+                const minuti = Math.round(parsedOre * 60);
+                if (minuti <= 0) {
+                  alert("Inserisci ore personalizzate valide.");
+                  return;
+                }
+
+                setNotificheMinutiPrima((prev) =>
+                  Array.from(new Set([...prev, minuti])).sort((a, b) => b - a)
+                );
+                setCustomNotificaOre("");
+              }}
               style={{
-                ...ui.card,
-                padding: 22,
-                border: "1px solid rgba(79,70,229,0.18)",
+                border: "none",
+                borderRadius: 16,
+                padding: "14px 14px",
+                fontSize: 13,
+                fontWeight: 1000,
+                cursor: "pointer",
+                color: "white",
                 background:
-                  "linear-gradient(180deg, rgba(79,70,229,0.12), rgba(255,255,255,0.96))",
-                boxShadow: "0 18px 40px rgba(79,70,229,0.10)",
-                display: "grid",
-                gap: 16,
-                position: "relative",
-                overflow: "hidden",
+                  "linear-gradient(180deg, rgba(79,70,229,0.98), rgba(124,58,237,0.95))",
+                boxShadow: "0 14px 26px rgba(79,70,229,0.18)",
+                minWidth: 110,
               }}
             >
+              Aggiungi
+            </button>
+          </div>
+
+          <div style={{ display: "grid", gap: 8 }}>
+            <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+              Promemoria selezionati
+            </div>
+
+            {notificheMinutiPrima.length === 0 ? (
               <div
                 style={{
-                  position: "absolute",
-                  inset: 0,
-                  background:
-                    "radial-gradient(620px 220px at 0% 0%, rgba(79,70,229,0.10), transparent 58%), radial-gradient(420px 180px at 100% 100%, rgba(255,255,255,0.16), transparent 60%)",
-                  pointerEvents: "none",
+                  padding: "10px 12px",
+                  borderRadius: 14,
+                  border: "1px dashed rgba(148,163,184,0.28)",
+                  background: "rgba(255,255,255,0.62)",
+                  fontSize: 12,
+                  fontWeight: 800,
+                  color: "rgba(15,23,42,0.62)",
                 }}
-              />
+              >
+                Nessun promemoria selezionato.
+              </div>
+            ) : (
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {notificheMinutiPrima
+                  .slice()
+                  .sort((a, b) => b - a)
+                  .map((minuti) => {
+                    const label =
+                      minuti % 1440 === 0
+                        ? `${minuti / 1440} g`
+                        : minuti % 60 === 0
+                        ? `${minuti / 60} h`
+                        : `${minuti} min`;
 
-              <div style={{ position: "relative", zIndex: 1, display: "grid", gap: 16 }}>
-                <div style={{ display: "grid", gap: 6 }}>
-                  <div
-                    style={{
-                      fontSize: 20,
-                      fontWeight: 1000,
-                      letterSpacing: -0.3,
-                      color: "rgba(15,23,42,0.96)",
-                    }}
-                  >
-                    {idInModifica ? "Modifica evento" : "Nuovo evento"}
-                  </div>
+                    return (
+                      <button
+                        key={minuti}
+                        type="button"
+                        onClick={() =>
+                          setNotificheMinutiPrima((prev) => prev.filter((x) => x !== minuti))
+                        }
+                        style={{
+                          padding: "9px 12px",
+                          borderRadius: 999,
+                          border: "1px solid rgba(79,70,229,0.20)",
+                          background:
+                            "linear-gradient(180deg, rgba(79,70,229,0.14), rgba(124,58,237,0.10))",
+                          color: "rgba(67,56,202,0.98)",
+                          fontSize: 12,
+                          fontWeight: 900,
+                          cursor: "pointer",
+                        }}
+                        title="Tocca per rimuovere"
+                      >
+                        {label} ✕
+                      </button>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
+        </div>
 
-                  <div
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 800,
-                      lineHeight: 1.5,
-                      color: "rgba(15,23,42,0.70)",
-                    }}
-                  >
-                    Inserisci un evento semplice con descrizione, data, ora e promemoria personalizzabili.
-                  </div>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <button
+            type="button"
+            onClick={chiudiForm}
+            style={{
+              border: "none",
+              borderRadius: 18,
+              padding: "14px 16px",
+              fontSize: 15,
+              fontWeight: 1000,
+              cursor: "pointer",
+              color: "rgba(15,23,42,0.88)",
+              background: "rgba(255,255,255,0.90)",
+              boxShadow: "0 14px 28px rgba(15,23,42,0.08)",
+            }}
+          >
+            Annulla
+          </button>
+
+          <button
+            type="button"
+            onClick={salva}
+            style={{
+              border: "none",
+              borderRadius: 18,
+              padding: "14px 16px",
+              fontSize: 15,
+              fontWeight: 1000,
+              cursor: "pointer",
+              color: "white",
+              background:
+                "linear-gradient(180deg, rgba(79,70,229,0.98), rgba(124,58,237,0.95))",
+              boxShadow: "0 18px 34px rgba(79,70,229,0.20)",
+            }}
+          >
+            {idInModifica ? "Salva modifiche" : "+ Aggiungi"}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style={eventSideCardStyle}>
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        background:
+          "radial-gradient(500px 200px at 0% 0%, rgba(79,70,229,0.10), transparent 58%), radial-gradient(360px 160px at 100% 100%, rgba(255,255,255,0.16), transparent 60%)",
+        pointerEvents: "none",
+      }}
+    />
+
+    <div style={{ position: "relative", zIndex: 1, display: "grid", gap: 14 }}>
+      <div>
+        <div
+          style={{
+            fontSize: 18,
+            fontWeight: 1000,
+            letterSpacing: -0.2,
+            color: "rgba(15,23,42,0.96)",
+          }}
+        >
+          Eventi prossimi
+        </div>
+
+        <div
+          style={{
+            marginTop: 6,
+            fontSize: 12,
+            fontWeight: 800,
+            opacity: 0.72,
+            color: "rgba(15,23,42,0.88)",
+          }}
+        >
+          I prossimi eventi salvati nel calendario.
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gap: 10 }}>
+        {eventiProssimiAggiungi.length === 0 ? (
+          <div
+            style={{
+              padding: 12,
+              borderRadius: 16,
+              border: "1px solid rgba(15,23,42,0.08)",
+              background: "rgba(255,255,255,0.72)",
+              fontSize: 13,
+              fontWeight: 800,
+              opacity: 0.65,
+              color: "rgba(15,23,42,0.86)",
+            }}
+          >
+            Nessun evento imminente.
+          </div>
+        ) : (
+          eventiProssimiAggiungi.map((ev) => {
+            const giorni = giorniMancanti(ev.data);
+
+            return (
+              <div
+                key={ev.id}
+                style={{
+                  padding: 14,
+                  borderRadius: 20,
+                  border: "1px solid rgba(79,70,229,0.14)",
+                  background:
+                    "linear-gradient(180deg, rgba(79,70,229,0.08), rgba(79,70,229,0.03))",
+                  display: "grid",
+                  gap: 8,
+                  boxShadow: "0 8px 18px rgba(79,70,229,0.06)",
+                }}
+              >
+                <div style={{ fontSize: 15, fontWeight: 950, color: "rgba(15,23,42,0.96)" }}>
+                  {ev.titolo}
                 </div>
 
-                <div style={{ display: "grid", gap: 12 }}>
-                  <div style={{ display: "grid", gap: 8 }}>
-                    <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
-                      Evento
-                    </label>
-                    <input
-                      type="text"
-                      value={titolo}
-                      onChange={(e) => setTitolo(e.target.value)}
-                      placeholder="Es. Dentista, bollo, riunione, compleanno..."
-                      style={inputLight(false)}
-                    />
-                  </div>
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 850,
+                    opacity: 0.74,
+                    color: "rgba(15,23,42,0.86)",
+                  }}
+                >
+                  {formattaDataBreve(ev.data)} • {ev.ora}
+                </div>
 
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                      gap: 12,
-                    }}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 10,
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <span style={styleBadgeScadenza(giorni, false)}>
+                    {labelGiorni(giorni)}
+                  </span>
+
+                  <button
+                    type="button"
+                    data-chip="1"
+                    onClick={() => apriModifica(ev)}
+                    style={chip(false)}
                   >
-                    <div style={{ display: "grid", gap: 8 }}>
-                      <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
-                        Data
-                      </label>
-                      <input
-                        type="date"
-                        value={data}
-                        onChange={(e) => setData(e.target.value)}
-                        style={inputLight(false)}
-                      />
-                    </div>
-
-                    <div style={{ display: "grid", gap: 8 }}>
-                      <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
-                        Ora
-                      </label>
-                      <input
-                        type="time"
-                        value={ora}
-                        onChange={(e) => setOra(e.target.value)}
-                        style={inputLight(false)}
-                      />
-                    </div>
-                  </div>
-
-
-
-<div
-  style={{
-    padding: 14,
-    borderRadius: 18,
-    background: "rgba(255,255,255,0.52)",
-    border: "1px solid rgba(16,185,129,0.16)",
-    boxShadow: "0 10px 24px rgba(16,185,129,0.06)",
-    display: "grid",
-    gap: 8,
-  }}
->
-  <div style={{ fontSize: 13, fontWeight: 950, color: "rgba(15,23,42,0.90)" }}>
-    Stato push dispositivo
-  </div>
-
-  <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(15,23,42,0.68)" }}>
-    Supporto browser: {pushSupported ? "sì" : "no"}
-  </div>
-
-  <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(15,23,42,0.68)" }}>
-    Iscrizione attiva: {pushSubscribed ? "sì" : "no"}
+                    Modifica
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
   </div>
 </div>
-
-
-
-
-
-                  <div
-                    style={{
-                      display: "grid",
-                      gap: 10,
-                      padding: 14,
-                      borderRadius: 18,
-                      background: "rgba(255,255,255,0.52)",
-                      border: "1px solid rgba(79,70,229,0.14)",
-                      boxShadow: "0 10px 24px rgba(79,70,229,0.06)",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: 13,
-                        fontWeight: 950,
-                        color: "rgba(15,23,42,0.90)",
-                      }}
-                    >
-                      Promemoria notifiche
-                    </div>
-
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: 8,
-                        flexWrap: "wrap",
-                      }}
-                    >
-                      {[
-                        { label: "15 min", value: 15 },
-                        { label: "30 min", value: 30 },
-                        { label: "1 ora", value: 60 },
-                        { label: "2 ore", value: 120 },
-                        { label: "6 ore", value: 360 },
-                        { label: "24 ore", value: 1440 },
-                      ].map((opt) => {
-                        const attiva = notificheMinutiPrima.includes(opt.value);
-
-                        return (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() =>
-                              setNotificheMinutiPrima((prev) =>
-                                prev.includes(opt.value)
-                                  ? prev.filter((x) => x !== opt.value)
-                                  : [...prev, opt.value].sort((a, b) => b - a)
-                              )
-                            }
-                            style={{
-                              padding: "10px 12px",
-                              borderRadius: 999,
-                              border: attiva
-                                ? "1px solid rgba(79,70,229,0.30)"
-                                : "1px solid rgba(148,163,184,0.20)",
-                              background: attiva
-                                ? "linear-gradient(180deg, rgba(79,70,229,0.18), rgba(124,58,237,0.12))"
-                                : "rgba(255,255,255,0.88)",
-                              color: attiva
-                                ? "rgba(67,56,202,0.98)"
-                                : "rgba(15,23,42,0.82)",
-                              fontSize: 12,
-                              fontWeight: 900,
-                              cursor: "pointer",
-                              boxShadow: attiva
-                                ? "0 10px 20px rgba(79,70,229,0.10)"
-                                : "0 6px 12px rgba(15,23,42,0.04)",
-                            }}
-                          >
-                            {opt.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "minmax(0, 1fr) auto",
-                        gap: 10,
-                        alignItems: "end",
-                      }}
-                    >
-                      <div style={{ display: "grid", gap: 8 }}>
-                        <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
-                          Ore personalizzate
-                        </label>
-                        <input
-                          type="number"
-                          inputMode="decimal"
-                          min="0"
-                          step="0.5"
-                          value={customNotificaOre}
-                          onChange={(e) => setCustomNotificaOre(e.target.value)}
-                          placeholder="Es. 3 oppure 1.5"
-                          style={inputLight(false)}
-                        />
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const raw = customNotificaOre.trim();
-                          if (!raw) return;
-
-                          const parsedOre = Number(raw.replace(",", "."));
-                          if (!Number.isFinite(parsedOre) || parsedOre <= 0) {
-                            alert("Inserisci ore personalizzate valide.");
-                            return;
-                          }
-
-                          const minuti = Math.round(parsedOre * 60);
-                          if (minuti <= 0) {
-                            alert("Inserisci ore personalizzate valide.");
-                            return;
-                          }
-
-                          setNotificheMinutiPrima((prev) =>
-                            Array.from(new Set([...prev, minuti])).sort((a, b) => b - a)
-                          );
-                          setCustomNotificaOre("");
-                        }}
-                        style={{
-                          border: "none",
-                          borderRadius: 16,
-                          padding: "14px 14px",
-                          fontSize: 13,
-                          fontWeight: 1000,
-                          cursor: "pointer",
-                          color: "white",
-                          background:
-                            "linear-gradient(180deg, rgba(79,70,229,0.98), rgba(124,58,237,0.95))",
-                          boxShadow: "0 14px 26px rgba(79,70,229,0.18)",
-                          minWidth: 110,
-                        }}
-                      >
-                        Aggiungi
-                      </button>
-                    </div>
-
-                    <div style={{ display: "grid", gap: 8 }}>
-                      <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
-                        Promemoria selezionati
-                      </div>
-
-                      {notificheMinutiPrima.length === 0 ? (
-                        <div
-                          style={{
-                            padding: "10px 12px",
-                            borderRadius: 14,
-                            border: "1px dashed rgba(148,163,184,0.28)",
-                            background: "rgba(255,255,255,0.62)",
-                            fontSize: 12,
-                            fontWeight: 800,
-                            color: "rgba(15,23,42,0.62)",
-                          }}
-                        >
-                          Nessun promemoria selezionato.
-                        </div>
-                      ) : (
-                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                          {notificheMinutiPrima
-                            .slice()
-                            .sort((a, b) => b - a)
-                            .map((minuti) => {
-                              const label =
-                                minuti % 1440 === 0
-                                  ? `${minuti / 1440} g`
-                                  : minuti % 60 === 0
-                                  ? `${minuti / 60} h`
-                                  : `${minuti} min`;
-
-                              return (
-                                <button
-                                  key={minuti}
-                                  type="button"
-                                  onClick={() =>
-                                    setNotificheMinutiPrima((prev) => prev.filter((x) => x !== minuti))
-                                  }
-                                  style={{
-                                    padding: "9px 12px",
-                                    borderRadius: 999,
-                                    border: "1px solid rgba(79,70,229,0.20)",
-                                    background:
-                                      "linear-gradient(180deg, rgba(79,70,229,0.14), rgba(124,58,237,0.10))",
-                                    color: "rgba(67,56,202,0.98)",
-                                    fontSize: 12,
-                                    fontWeight: 900,
-                                    cursor: "pointer",
-                                  }}
-                                  title="Tocca per rimuovere"
-                                >
-                                  {label} ✕
-                                </button>
-                              );
-                            })}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                    <button
-                      type="button"
-                      onClick={chiudiForm}
-                      style={{
-                        border: "none",
-                        borderRadius: 18,
-                        padding: "14px 16px",
-                        fontSize: 15,
-                        fontWeight: 1000,
-                        cursor: "pointer",
-                        color: "rgba(15,23,42,0.88)",
-                        background: "rgba(255,255,255,0.90)",
-                        boxShadow: "0 14px 28px rgba(15,23,42,0.08)",
-                      }}
-                    >
-                      Annulla
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={salva}
-                      style={{
-                        border: "none",
-                        borderRadius: 18,
-                        padding: "14px 16px",
-                        fontSize: 15,
-                        fontWeight: 1000,
-                        cursor: "pointer",
-                        color: "white",
-                        background:
-                          "linear-gradient(180deg, rgba(79,70,229,0.98), rgba(124,58,237,0.95))",
-                        boxShadow: "0 18px 34px rgba(79,70,229,0.20)",
-                      }}
-                    >
-                      {idInModifica ? "Salva modifiche" : "+ Aggiungi"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div style={eventSideCardStyle}>
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background:
-                    "radial-gradient(500px 200px at 0% 0%, rgba(79,70,229,0.10), transparent 58%), radial-gradient(360px 160px at 100% 100%, rgba(255,255,255,0.16), transparent 60%)",
-                  pointerEvents: "none",
-                }}
-              />
-
-              <div style={{ position: "relative", zIndex: 1, display: "grid", gap: 14 }}>
-                <div>
-                  <div
-                    style={{
-                      fontSize: 18,
-                      fontWeight: 1000,
-                      letterSpacing: -0.2,
-                      color: "rgba(15,23,42,0.96)",
-                    }}
-                  >
-                    Eventi prossimi
-                  </div>
-
-                  <div
-                    style={{
-                      marginTop: 6,
-                      fontSize: 12,
-                      fontWeight: 800,
-                      opacity: 0.72,
-                      color: "rgba(15,23,42,0.88)",
-                    }}
-                  >
-                    I prossimi eventi salvati nel calendario.
-                  </div>
-                </div>
-
-                <div style={{ display: "grid", gap: 10 }}>
-                  {eventiProssimiAggiungi.length === 0 ? (
-                    <div
-                      style={{
-                        padding: 12,
-                        borderRadius: 16,
-                        border: "1px solid rgba(15,23,42,0.08)",
-                        background: "rgba(255,255,255,0.72)",
-                        fontSize: 13,
-                        fontWeight: 800,
-                        opacity: 0.65,
-                        color: "rgba(15,23,42,0.86)",
-                      }}
-                    >
-                      Nessun evento imminente.
-                    </div>
-                  ) : (
-                    eventiProssimiAggiungi.map((ev) => {
-                      const giorni = giorniMancanti(ev.data);
-
-                      return (
-                        <div
-                          key={ev.id}
-                          style={{
-                            padding: 14,
-                            borderRadius: 20,
-                            border: "1px solid rgba(79,70,229,0.14)",
-                            background:
-                              "linear-gradient(180deg, rgba(79,70,229,0.08), rgba(79,70,229,0.03))",
-                            display: "grid",
-                            gap: 8,
-                            boxShadow: "0 8px 18px rgba(79,70,229,0.06)",
-                          }}
-                        >
-                          <div style={{ fontSize: 15, fontWeight: 950, color: "rgba(15,23,42,0.96)" }}>
-                            {ev.titolo}
-                          </div>
-
-                          <div
-                            style={{
-                              fontSize: 12,
-                              fontWeight: 850,
-                              opacity: 0.74,
-                              color: "rgba(15,23,42,0.86)",
-                            }}
-                          >
-                            {formattaDataBreve(ev.data)} • {ev.ora}
-                          </div>
-
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              gap: 10,
-                              alignItems: "center",
-                              flexWrap: "wrap",
-                            }}
-                          >
-                            <span style={styleBadgeScadenza(giorni, false)}>
-                              {labelGiorni(giorni)}
-                            </span>
-
-                            <button
-                              type="button"
-                              data-chip="1"
-                              onClick={() => apriModifica(ev)}
-                              style={chip(false)}
-                            >
-                              Modifica
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
         )}
       </div>
     </div>
