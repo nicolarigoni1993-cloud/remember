@@ -1099,30 +1099,7 @@ function scheduleNotificationsForVoce(v: Voce) {
   }
 }
 
-  function checkDueNotifications() {
-    if (!("Notification" in window)) return;
-    if (Notification.permission !== "granted") return;
-
-    const now = Date.now();
-
-    voci.forEach((v) => {
-      if (v.fatto || !v.data || !v.ora || !v.notificheMinutiPrima?.length) return;
-      if (v.tipo !== "scadenza" && v.tipo !== "appuntamento" && v.tipo !== "nota") return;
-
-      const dt = buildDateTime(v.data, v.ora).getTime();
-
-      v.notificheMinutiPrima.forEach((min) => {
-        const at = dt - min * 60_000;
-        const diff = now - at;
-        const firedKey = `remember_notifica_fired_${v.id}_${min}`;
-
-        if (diff >= 0 && diff <= 60_000) {
-          if (sessionStorage.getItem(firedKey) === "1") return;
-          void showVoceNotification(v, min, firedKey);
-        }
-      });
-    });
-  }
+ 
 
   useEffect(() => {
     const timer = setInterval(() => setAdesso(new Date()), 30000);
