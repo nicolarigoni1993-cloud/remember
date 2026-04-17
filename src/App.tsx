@@ -1621,7 +1621,7 @@ function apriModifica(v: Voce) {
   setMostraForm(false);
 }
 
-function salva() {
+async function salva() {
   const titoloFinale = titolo.trim();
   const dataFinale = data.trim();
   const oraFinale = ora.trim() || "09:00";
@@ -1665,43 +1665,70 @@ function salva() {
     .sort((a, b) => b - a);
 
   const eraModifica = Boolean(idInModifica);
+  const voceIdFinale = idInModifica || safeUUID();
+
+  const voceFinale: Voce = {
+    id: voceIdFinale,
+    titolo: titoloFinale,
+    data: dataFinale,
+    ora: oraFinale,
+    tipo: "appuntamento",
+    urgente: false,
+    nota: "",
+    importo: null,
+    movimento: "nessuno",
+    fatto: vocePassata(dataFinale, oraFinale),
+    notificheMinutiPrima: notificheFinali,
+  };
 
   if (idInModifica) {
     setVoci((prev) =>
-      prev.map((x) =>
-        x.id === idInModifica
-          ? {
-              ...x,
-              titolo: titoloFinale,
-              data: dataFinale,
-              ora: oraFinale,
-              tipo: "appuntamento",
-              urgente: false,
-              nota: "",
-              importo: null,
-              movimento: "nessuno" as Movimento,
-              fatto: vocePassata(dataFinale, oraFinale),
-              notificheMinutiPrima: notificheFinali,
-            }
-          : x
-      )
+      prev.map((x) => (x.id === idInModifica ? voceFinale : x))
     );
   } else {
-    const nuova: Voce = {
-      id: safeUUID(),
-      titolo: titoloFinale,
-      data: dataFinale,
-      ora: oraFinale,
-      tipo: "appuntamento",
-      urgente: false,
-      nota: "",
-      importo: null,
-      movimento: "nessuno",
-      fatto: vocePassata(dataFinale, oraFinale),
-      notificheMinutiPrima: notificheFinali,
-    };
+    setVoci((prev) => [voceFinale, ...prev]);
+  }
 
-    setVoci((prev) => [nuova, ...prev]);
+  if (supabase && cloudUserId) {
+    try {
+      await supabase
+        .from("notification_jobs")
+        .delete()
+        .eq("user_id", cloudUserId)
+        .eq("voce_id", voceIdFinale);
+
+      if (notificheFinali.length > 0) {
+        const eventoDate = buildDateTime(dataFinale, oraFinale);
+
+        const jobs = notificheFinali
+          .map((leadMinutes) => {
+            const notifyAt = new Date(eventoDate.getTime() - leadMinutes * 60_000);
+
+            return {
+              user_id: cloudUserId,
+              voce_id: voceIdFinale,
+              titolo: titoloFinale,
+              voce_tipo: "appuntamento",
+              evento_data: dataFinale,
+              evento_ora: oraFinale,
+              notify_at: notifyAt.toISOString(),
+              lead_minutes: leadMinutes,
+              status: "pending",
+            };
+          })
+          .filter((job) => new Date(job.notify_at).getTime() > Date.now());
+
+        if (jobs.length > 0) {
+          const { error } = await supabase.from("notification_jobs").insert(jobs);
+
+          if (error) {
+            console.error("Errore salvataggio notification_jobs:", error);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Errore gestione jobs notifiche:", err);
+    }
   }
 
   if (eraModifica) {
@@ -13712,6 +13739,10 @@ function renderAreaControllo() {
   }}
   className="remember-grid-2"
 >
+
+
+
+
   <div
     style={{
       ...ui.card,
@@ -13808,92 +13839,121 @@ function renderAreaControllo() {
         </div>
 
         <div
-          style={{
-            padding: 14,
-            borderRadius: 18,
-            background: "rgba(255,255,255,0.52)",
-            border: "1px solid rgba(16,185,129,0.16)",
-            boxShadow: "0 10px 24px rgba(16,185,129,0.06)",
-            display: "grid",
-            gap: 10,
-          }}
-        >
-          <div style={{ fontSize: 13, fontWeight: 950, color: "rgba(15,23,42,0.90)" }}>
-            Stato push dispositivo
-          </div>
+  style={{
+    padding: 14,
+    borderRadius: 18,
+    background: "rgba(255,255,255,0.52)",
+    border: "1px solid rgba(16,185,129,0.16)",
+    boxShadow: "0 10px 24px rgba(16,185,129,0.06)",
+    display: "grid",
+    gap: 10,
+  }}
+>
+  <div style={{ fontSize: 13, fontWeight: 950, color: "rgba(15,23,42,0.90)" }}>
+    Stato push dispositivo
+  </div>
 
-          <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(15,23,42,0.68)" }}>
-            Supporto browser: {pushSupported ? "sì" : "no"}
-          </div>
+  <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(15,23,42,0.68)" }}>
+    Supporto browser: {pushSupported ? "sì" : "no"}
+  </div>
 
-          <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(15,23,42,0.68)" }}>
-            Iscrizione attiva: {pushSubscribed ? "sì" : "no"}
-          </div>
+  <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(15,23,42,0.68)" }}>
+    Iscrizione attiva: {pushSubscribed ? "sì" : "no"}
+  </div>
 
-          <button
-            type="button"
-            onClick={async () => {
-              try {
-                if (
-                  typeof window === "undefined" ||
-                  !("serviceWorker" in navigator) ||
-                  !("PushManager" in window) ||
-                  !("Notification" in window)
-                ) {
-                  alert("Questo browser non supporta le notifiche push.");
-                  return;
-                }
+  <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(15,23,42,0.68)", lineHeight: 1.5 }}>
+    {cloudUserId
+      ? "Account cloud collegato: questo dispositivo verrà associato al tuo account."
+      : "Stai usando Remember senza account: le push si attivano sul dispositivo, ma il sync multi-device arriverà dopo il login."}
+  </div>
 
-                const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined;
+  <button
+    type="button"
+    onClick={async () => {
+      try {
+        if (
+          typeof window === "undefined" ||
+          !("serviceWorker" in navigator) ||
+          !("PushManager" in window) ||
+          !("Notification" in window)
+        ) {
+          alert("Questo browser non supporta le notifiche push.");
+          return;
+        }
 
-                if (!vapidPublicKey) {
-                  alert("Chiave VAPID pubblica mancante nel file .env");
-                  return;
-                }
+        const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined;
 
-                const permission = await Notification.requestPermission();
+        if (!vapidPublicKey) {
+          alert("Chiave VAPID pubblica mancante nel file .env");
+          return;
+        }
 
-                if (permission !== "granted") {
-                  alert("Permesso notifiche negato");
-                  return;
-                }
+        const permission = await Notification.requestPermission();
 
-                const registration = await navigator.serviceWorker.ready;
-                const existingSubscription = await registration.pushManager.getSubscription();
+        if (permission !== "granted") {
+          alert("Permesso notifiche negato");
+          return;
+        }
 
-                if (existingSubscription) {
-                  alert("Notifiche già attivate su questo dispositivo.");
-                  await refreshPushSubscriptionStateInline();
-                  return;
-                }
+        const registration = await navigator.serviceWorker.ready;
+        let subscription = await registration.pushManager.getSubscription();
 
-                await registration.pushManager.subscribe({
-                  userVisibleOnly: true,
-                  applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
-                });
+        if (!subscription) {
+          subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+          });
+        }
 
-                alert("Notifiche attivate!");
-                await refreshPushSubscriptionStateInline();
-              } catch (err) {
-                console.error(err);
-                alert("Errore attivazione notifiche");
-              }
-            }}
-            style={{
-              justifySelf: "start",
-              padding: "10px 14px",
-              borderRadius: 14,
-              background: "linear-gradient(180deg, #10b981, #059669)",
-              color: "white",
-              fontWeight: 900,
-              border: "none",
-              cursor: "pointer",
-              boxShadow: "0 12px 24px rgba(16,185,129,0.18)",
-            }}
-          >
-            Attiva notifiche
-          </button>
-        </div>
+        if (supabase && cloudUserId && subscription) {
+          const subscriptionJson = subscription.toJSON();
+          const endpoint = subscription.endpoint;
+          const p256dh = subscriptionJson.keys?.p256dh ?? "";
+          const auth = subscriptionJson.keys?.auth ?? "";
+
+          if (endpoint && p256dh && auth) {
+            const { error } = await supabase.from("push_subscriptions").upsert(
+              {
+                user_id: cloudUserId,
+                endpoint,
+                p256dh,
+                auth,
+                user_agent: navigator.userAgent ?? "",
+              },
+              { onConflict: "endpoint" }
+            );
+
+            if (error) {
+              console.error("Errore salvataggio push_subscriptions:", error);
+              alert("Notifiche attivate sul browser, ma non salvate correttamente nel cloud.");
+              await refreshPushSubscriptionStateInline();
+              return;
+            }
+          }
+        }
+
+        alert("Notifiche attivate!");
+        await refreshPushSubscriptionStateInline();
+      } catch (err) {
+        console.error(err);
+        alert("Errore attivazione notifiche");
+      }
+    }}
+    style={{
+      justifySelf: "start",
+      padding: "10px 14px",
+      borderRadius: 14,
+      background: "linear-gradient(180deg, #10b981, #059669)",
+      color: "white",
+      fontWeight: 900,
+      border: "none",
+      cursor: "pointer",
+      boxShadow: "0 12px 24px rgba(16,185,129,0.18)",
+    }}
+  >
+    Attiva notifiche
+  </button>
+</div>
 
         <div
           style={{
