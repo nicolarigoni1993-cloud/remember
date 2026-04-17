@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 
-
+import { supabase } from "./lib/supabase";
 
 
 type Filtro = "oggi" | "7giorni" | "30giorni";
@@ -814,6 +814,15 @@ const [pushSubscribed, setPushSubscribed] = useState(false);
 
 
 
+const [authMode, setAuthMode] = useState<"login" | "register">("login");
+const [authNome, setAuthNome] = useState("");
+const [authEmail, setAuthEmail] = useState("");
+const [authPassword, setAuthPassword] = useState("");
+const [authBusy, setAuthBusy] = useState(false);
+const [authMessage, setAuthMessage] = useState("");
+const [cloudUserEmail, setCloudUserEmail] = useState<string | null>(null);
+const [cloudUserId, setCloudUserId] = useState<string | null>(null);
+
 
 
 useEffect(() => {
@@ -1293,6 +1302,29 @@ useEffect(() => {
 
 
 
+useEffect(() => {
+  void refreshSupabaseSessionInline();
+
+  if (!supabase) return;
+
+  const {
+    data: { subscription },
+  } = supabase.auth.onAuthStateChange((_event, session) => {
+    setCloudUserEmail(session?.user?.email ?? null);
+    setCloudUserId(session?.user?.id ?? null);
+  });
+
+  return () => {
+    subscription.unsubscribe();
+  };
+}, []);
+
+
+
+
+
+
+
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -1327,6 +1359,178 @@ async function refreshPushSubscriptionStateInline() {
     setPushSubscribed(false);
   }
 }
+
+
+
+
+
+
+
+
+
+async function refreshSupabaseSessionInline() {
+  if (!supabase) {
+    setCloudUserEmail(null);
+    setCloudUserId(null);
+    return;
+  }
+
+  try {
+    const { data, error } = await supabase.auth.getSession();
+
+    if (error) {
+      setCloudUserEmail(null);
+      setCloudUserId(null);
+      return;
+    }
+
+    const session = data.session;
+
+    setCloudUserEmail(session?.user?.email ?? null);
+    setCloudUserId(session?.user?.id ?? null);
+  } catch {
+    setCloudUserEmail(null);
+    setCloudUserId(null);
+  }
+}
+
+async function loginConEmail() {
+  if (!supabase) {
+    alert("Supabase non configurato.");
+    return;
+  }
+
+  const email = authEmail.trim();
+  const password = authPassword.trim();
+
+  if (!email || !password) {
+    alert("Compila email e password.");
+    return;
+  }
+
+  setAuthBusy(true);
+  setAuthMessage("");
+
+  try {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setAuthMessage(error.message);
+      alert(error.message);
+      return;
+    }
+
+    setAuthMessage("Accesso effettuato con successo.");
+    setAuthPassword("");
+    await refreshSupabaseSessionInline();
+  } finally {
+    setAuthBusy(false);
+  }
+}
+
+async function registratiConEmail() {
+  if (!supabase) {
+    alert("Supabase non configurato.");
+    return;
+  }
+
+  const nome = authNome.trim();
+  const email = authEmail.trim();
+  const password = authPassword.trim();
+
+  if (!nome) {
+    alert("Inserisci il nome.");
+    return;
+  }
+
+  if (!email || !password) {
+    alert("Compila email e password.");
+    return;
+  }
+
+  setAuthBusy(true);
+  setAuthMessage("");
+
+  try {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          display_name: nome,
+        },
+      },
+    });
+
+    if (error) {
+      setAuthMessage(error.message);
+      alert(error.message);
+      return;
+    }
+
+    setAuthMessage("Registrazione completata. Controlla la mail se è richiesta conferma.");
+    setAuthPassword("");
+    await refreshSupabaseSessionInline();
+  } finally {
+    setAuthBusy(false);
+  }
+}
+
+async function loginConGoogle() {
+  if (!supabase) {
+    alert("Supabase non configurato.");
+    return;
+  }
+
+  setAuthBusy(true);
+  setAuthMessage("");
+
+  try {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+
+    if (error) {
+      setAuthMessage(error.message);
+      alert(error.message);
+    }
+  } finally {
+    setAuthBusy(false);
+  }
+}
+
+async function logoutCloud() {
+  if (!supabase) return;
+
+  setAuthBusy(true);
+  setAuthMessage("");
+
+  try {
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      setAuthMessage(error.message);
+      alert(error.message);
+      return;
+    }
+
+    setCloudUserEmail(null);
+    setCloudUserId(null);
+    setAuthMessage("Disconnesso correttamente.");
+  } finally {
+    setAuthBusy(false);
+  }
+}
+
+
+
+
 
 
 
@@ -14139,7 +14343,7 @@ function renderAreaControllo() {
                 lineHeight: 1.5,
               }}
             >
-              Base locale attuale dell’utente attivo.
+              Profilo locale e stato account cloud del dispositivo attuale.
             </div>
           </div>
 
@@ -14156,7 +14360,7 @@ function renderAreaControllo() {
           >
             <div style={{ display: "grid", gap: 4 }}>
               <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.62)" }}>
-                Nome utente
+                Nome utente locale
               </div>
               <div style={{ fontSize: 18, fontWeight: 1000, color: "rgba(15,23,42,0.96)" }}>
                 {currentUser.nome || "Utente"}
@@ -14181,12 +14385,54 @@ function renderAreaControllo() {
 
             <div style={{ display: "grid", gap: 4 }}>
               <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.62)" }}>
-                Stato account vero
+                Stato account cloud
               </div>
-              <div style={{ fontSize: 14, fontWeight: 950, color: "rgba(180,83,9,0.96)" }}>
-                Non ancora collegato
+              <div
+                style={{
+                  fontSize: 14,
+                  fontWeight: 950,
+                  color: cloudUserEmail ? "rgba(22,101,52,0.96)" : "rgba(180,83,9,0.96)",
+                }}
+              >
+                {cloudUserEmail ? "Collegato" : "Non collegato"}
               </div>
             </div>
+
+            {cloudUserEmail ? (
+              <>
+                <div style={{ display: "grid", gap: 4 }}>
+                  <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.62)" }}>
+                    Email cloud
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 950,
+                      color: "rgba(15,23,42,0.92)",
+                      wordBreak: "break-all",
+                    }}
+                  >
+                    {cloudUserEmail}
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gap: 4 }}>
+                  <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.62)" }}>
+                    ID cloud
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 900,
+                      color: "rgba(14,116,144,0.92)",
+                      wordBreak: "break-all",
+                    }}
+                  >
+                    {cloudUserId || "Nessun ID cloud"}
+                  </div>
+                </div>
+              </>
+            ) : null}
           </div>
 
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -14222,7 +14468,7 @@ function renderAreaControllo() {
                 color: "rgba(15,23,42,0.96)",
               }}
             >
-              Stato app personale
+              Accesso account
             </div>
 
             <div
@@ -14233,91 +14479,190 @@ function renderAreaControllo() {
                 lineHeight: 1.5,
               }}
             >
-              Mini riepilogo locale dell’utente attivo, utile come base per il futuro profilo cloud.
+              Entra con email/password oppure con Google. L’app continuerà comunque a restare usabile anche senza account.
             </div>
           </div>
 
           <div
             style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-              gap: 12,
+              display: "flex",
+              gap: 8,
+              flexWrap: "wrap",
             }}
           >
-            <div
-              style={{
-                padding: 14,
-                borderRadius: 18,
-                background: "rgba(255,255,255,0.82)",
-                border: "1px solid rgba(15,23,42,0.08)",
-                boxShadow: "0 8px 18px rgba(15,23,42,0.04)",
-                display: "grid",
-                gap: 4,
-              }}
+            <button
+              type="button"
+              onClick={() => setAuthMode("login")}
+              style={chip(authMode === "login")}
             >
-              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.62)" }}>
-                Eventi
+              Login
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setAuthMode("register")}
+              style={chip(authMode === "register")}
+            >
+              Registrazione
+            </button>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gap: 12,
+              padding: 16,
+              borderRadius: 20,
+              border: "1px solid rgba(15,23,42,0.08)",
+              background: "rgba(255,255,255,0.78)",
+              boxShadow: "0 10px 22px rgba(15,23,42,0.05)",
+            }}
+          >
+            {authMode === "register" ? (
+              <div style={{ display: "grid", gap: 8 }}>
+                <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+                  Nome visualizzato
+                </label>
+                <input
+                  type="text"
+                  value={authNome}
+                  onChange={(e) => setAuthNome(e.target.value)}
+                  placeholder="Es. Nicola"
+                  style={inputLight(false)}
+                />
               </div>
-              <div style={{ fontSize: 22, fontWeight: 1000, color: "rgba(15,23,42,0.96)" }}>
-                {voci.length}
-              </div>
+            ) : null}
+
+            <div style={{ display: "grid", gap: 8 }}>
+              <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+                Email
+              </label>
+              <input
+                type="email"
+                value={authEmail}
+                onChange={(e) => setAuthEmail(e.target.value)}
+                placeholder="nome@email.com"
+                style={inputLight(false)}
+              />
             </div>
 
-            <div
-              style={{
-                padding: 14,
-                borderRadius: 18,
-                background: "rgba(255,255,255,0.82)",
-                border: "1px solid rgba(15,23,42,0.08)",
-                boxShadow: "0 8px 18px rgba(15,23,42,0.04)",
-                display: "grid",
-                gap: 4,
-              }}
-            >
-              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.62)" }}>
-                Turni
-              </div>
-              <div style={{ fontSize: 22, fontWeight: 1000, color: "rgba(15,23,42,0.96)" }}>
-                {turni.length}
-              </div>
+            <div style={{ display: "grid", gap: 8 }}>
+              <label style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.72)" }}>
+                Password
+              </label>
+              <input
+                type="password"
+                value={authPassword}
+                onChange={(e) => setAuthPassword(e.target.value)}
+                placeholder="Inserisci password"
+                style={inputLight(false)}
+              />
             </div>
 
-            <div
-              style={{
-                padding: 14,
-                borderRadius: 18,
-                background: "rgba(255,255,255,0.82)",
-                border: "1px solid rgba(15,23,42,0.08)",
-                boxShadow: "0 8px 18px rgba(15,23,42,0.04)",
-                display: "grid",
-                gap: 4,
-              }}
-            >
-              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.62)" }}>
-                Note
+            {authMessage ? (
+              <div
+                style={{
+                  padding: "12px 14px",
+                  borderRadius: 16,
+                  border: "1px solid rgba(14,165,233,0.16)",
+                  background: "rgba(240,249,255,0.92)",
+                  color: "rgba(12,74,110,0.92)",
+                  fontSize: 12,
+                  fontWeight: 900,
+                  lineHeight: 1.5,
+                }}
+              >
+                {authMessage}
               </div>
-              <div style={{ fontSize: 22, fontWeight: 1000, color: "rgba(15,23,42,0.96)" }}>
-                {note.length}
-              </div>
-            </div>
+            ) : null}
 
-            <div
-              style={{
-                padding: 14,
-                borderRadius: 18,
-                background: "rgba(255,255,255,0.82)",
-                border: "1px solid rgba(15,23,42,0.08)",
-                boxShadow: "0 8px 18px rgba(15,23,42,0.04)",
-                display: "grid",
-                gap: 4,
-              }}
-            >
-              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.62)" }}>
-                Mesi finanza
-              </div>
-              <div style={{ fontSize: 22, fontWeight: 1000, color: "rgba(15,23,42,0.96)" }}>
-                {Object.keys(incassi).length}
-              </div>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              {authMode === "login" ? (
+                <button
+                  type="button"
+                  onClick={loginConEmail}
+                  disabled={authBusy}
+                  style={{
+                    border: "none",
+                    borderRadius: 18,
+                    padding: "14px 16px",
+                    fontSize: 15,
+                    fontWeight: 1000,
+                    cursor: authBusy ? "not-allowed" : "pointer",
+                    opacity: authBusy ? 0.7 : 1,
+                    color: "white",
+                    background:
+                      "linear-gradient(180deg, rgba(79,70,229,0.98), rgba(124,58,237,0.95))",
+                    boxShadow: "0 18px 34px rgba(79,70,229,0.20)",
+                  }}
+                >
+                  {authBusy ? "Attendi..." : "Accedi"}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={registratiConEmail}
+                  disabled={authBusy}
+                  style={{
+                    border: "none",
+                    borderRadius: 18,
+                    padding: "14px 16px",
+                    fontSize: 15,
+                    fontWeight: 1000,
+                    cursor: authBusy ? "not-allowed" : "pointer",
+                    opacity: authBusy ? 0.7 : 1,
+                    color: "white",
+                    background:
+                      "linear-gradient(180deg, rgba(14,165,233,0.98), rgba(2,132,199,0.95))",
+                    boxShadow: "0 18px 34px rgba(14,165,233,0.20)",
+                  }}
+                >
+                  {authBusy ? "Attendi..." : "Crea account"}
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={loginConGoogle}
+                disabled={authBusy}
+                style={{
+                  border: "none",
+                  borderRadius: 18,
+                  padding: "14px 16px",
+                  fontSize: 15,
+                  fontWeight: 1000,
+                  cursor: authBusy ? "not-allowed" : "pointer",
+                  opacity: authBusy ? 0.7 : 1,
+                  color: "rgba(15,23,42,0.92)",
+                  background: "rgba(255,255,255,0.94)",
+                  boxShadow: "0 14px 28px rgba(15,23,42,0.08)",
+                }}
+              >
+                Continua con Google
+              </button>
+
+              {cloudUserEmail ? (
+                <button
+                  type="button"
+                  onClick={logoutCloud}
+                  disabled={authBusy}
+                  style={{
+                    border: "none",
+                    borderRadius: 18,
+                    padding: "14px 16px",
+                    fontSize: 15,
+                    fontWeight: 1000,
+                    cursor: authBusy ? "not-allowed" : "pointer",
+                    opacity: authBusy ? 0.7 : 1,
+                    color: "white",
+                    background:
+                      "linear-gradient(180deg, rgba(239,68,68,0.98), rgba(220,38,38,0.95))",
+                    boxShadow: "0 18px 34px rgba(239,68,68,0.18)",
+                  }}
+                >
+                  Disconnetti
+                </button>
+              ) : null}
             </div>
           </div>
 
@@ -14344,7 +14689,128 @@ function renderAreaControllo() {
                 color: "rgba(15,23,42,0.76)",
               }}
             >
-              Collegare qui il vero account, ma in modo isolato e sicuro, senza più toccare il cuore dell’app fino a quando non è tutto stabile.
+              Dopo il login base collegheremo il profilo cloud, le preferenze utente, il tema, la lingua e poi la sincronizzazione identica dei dati tra dispositivi.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          ...ui.card,
+          padding: 22,
+          border: "1px solid rgba(99,102,241,0.14)",
+          background:
+            "linear-gradient(180deg, rgba(99,102,241,0.08), rgba(255,255,255,0.96))",
+          boxShadow: "0 16px 34px rgba(99,102,241,0.10)",
+          display: "grid",
+          gap: 16,
+        }}
+      >
+        <div style={{ display: "grid", gap: 6 }}>
+          <div
+            style={{
+              fontSize: 18,
+              fontWeight: 1000,
+              letterSpacing: -0.2,
+              color: "rgba(15,23,42,0.96)",
+            }}
+          >
+            Stato app personale
+          </div>
+
+          <div
+            style={{
+              fontSize: 13,
+              fontWeight: 800,
+              color: "rgba(15,23,42,0.72)",
+              lineHeight: 1.5,
+            }}
+          >
+            Mini riepilogo locale dell’utente attivo, utile come base per il futuro profilo cloud e per la successiva sincronizzazione multi-dispositivo.
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+            gap: 12,
+          }}
+        >
+          <div
+            style={{
+              padding: 14,
+              borderRadius: 18,
+              background: "rgba(255,255,255,0.82)",
+              border: "1px solid rgba(15,23,42,0.08)",
+              boxShadow: "0 8px 18px rgba(15,23,42,0.04)",
+              display: "grid",
+              gap: 4,
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.62)" }}>
+              Eventi
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 1000, color: "rgba(15,23,42,0.96)" }}>
+              {voci.length}
+            </div>
+          </div>
+
+          <div
+            style={{
+              padding: 14,
+              borderRadius: 18,
+              background: "rgba(255,255,255,0.82)",
+              border: "1px solid rgba(15,23,42,0.08)",
+              boxShadow: "0 8px 18px rgba(15,23,42,0.04)",
+              display: "grid",
+              gap: 4,
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.62)" }}>
+              Turni
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 1000, color: "rgba(15,23,42,0.96)" }}>
+              {turni.length}
+            </div>
+          </div>
+
+          <div
+            style={{
+              padding: 14,
+              borderRadius: 18,
+              background: "rgba(255,255,255,0.82)",
+              border: "1px solid rgba(15,23,42,0.08)",
+              boxShadow: "0 8px 18px rgba(15,23,42,0.04)",
+              display: "grid",
+              gap: 4,
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.62)" }}>
+              Note
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 1000, color: "rgba(15,23,42,0.96)" }}>
+              {note.length}
+            </div>
+          </div>
+
+          <div
+            style={{
+              padding: 14,
+              borderRadius: 18,
+              background: "rgba(255,255,255,0.82)",
+              border: "1px solid rgba(15,23,42,0.08)",
+              boxShadow: "0 8px 18px rgba(15,23,42,0.04)",
+              display: "grid",
+              gap: 4,
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(15,23,42,0.62)" }}>
+              Mesi finanza
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 1000, color: "rgba(15,23,42,0.96)" }}>
+              {Object.keys(incassi).length}
             </div>
           </div>
         </div>
