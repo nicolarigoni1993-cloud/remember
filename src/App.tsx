@@ -989,126 +989,115 @@ const eventiProssimiAggiungi = useMemo(() => {
 
 
 
-  const scheduledRef = useRef<Record<string, number[]>>({});
+const scheduledRef = useRef<Record<string, number[]>>({});
 
-  function clearScheduledForVoce(voceId: string) {
-    const ids = scheduledRef.current[voceId] ?? [];
-    ids.forEach((t) => window.clearTimeout(t));
-    delete scheduledRef.current[voceId];
+function clearScheduledForVoce(voceId: string) {
+  const ids = scheduledRef.current[voceId] ?? [];
+  ids.forEach((t) => window.clearTimeout(t));
+  delete scheduledRef.current[voceId];
+}
+
+function clearAllScheduled() {
+  Object.keys(scheduledRef.current).forEach(clearScheduledForVoce);
+}
+
+function formatLeadTimeLabel(min: number) {
+  if (min % 1440 === 0) {
+    const giorni = min / 1440;
+    return giorni === 1 ? "1 giorno" : `${giorni} giorni`;
   }
 
-  function clearAllScheduled() {
-    Object.keys(scheduledRef.current).forEach(clearScheduledForVoce);
+  if (min % 60 === 0) {
+    const ore = min / 60;
+    return ore === 1 ? "1 ora" : `${ore} ore`;
   }
 
-  function formatLeadTimeLabel(min: number) {
-    if (min % 1440 === 0) {
-      const giorni = min / 1440;
-      return giorni === 1 ? "1 giorno" : `${giorni} giorni`;
+  return min === 1 ? "1 minuto" : `${min} minuti`;
+}
+
+async function showVoceNotification(v: Voce, min: number) {
+  if (!("Notification" in window)) return;
+  if (Notification.permission !== "granted") return;
+
+  const tipoLabel =
+    v.tipo === "scadenza"
+      ? "Scadenza"
+      : v.tipo === "appuntamento"
+      ? "Appuntamento"
+      : "Nota";
+
+  const leadLabel = formatLeadTimeLabel(min);
+  const titoloNotifica = `${tipoLabel}: ${v.titolo}`;
+  const corpoNotifica = `Promemoria ${leadLabel} prima • ${formattaDataBreve(v.data)} • ${v.ora}`;
+
+  const notificationOptions = {
+    body: corpoNotifica,
+    tag: `remember_${v.id}_${min}`,
+    renotify: false,
+    data: {
+      url: "/",
+      voceId: v.id,
+      tipo: v.tipo,
+    },
+  };
+
+  try {
+    if ("serviceWorker" in navigator) {
+      const registration = await navigator.serviceWorker.ready;
+      await registration.showNotification(titoloNotifica, notificationOptions);
+    } else {
+      new Notification(titoloNotifica, {
+        body: corpoNotifica,
+      });
     }
-
-    if (min % 60 === 0) {
-      const ore = min / 60;
-      return ore === 1 ? "1 ora" : `${ore} ore`;
-    }
-
-    return min === 1 ? "1 minuto" : `${min} minuti`;
-  }
-
-  async function showVoceNotification(v: Voce, min: number, firedKey?: string) {
-    if (!("Notification" in window)) return;
-    if (Notification.permission !== "granted") return;
-
-    const tipoLabel =
-      v.tipo === "scadenza"
-        ? "Scadenza"
-        : v.tipo === "appuntamento"
-        ? "Appuntamento"
-        : "Nota";
-
-    const leadLabel = formatLeadTimeLabel(min);
-    const titoloNotifica = `${tipoLabel}: ${v.titolo}`;
-    const corpoNotifica = `Promemoria ${leadLabel} prima • ${formattaDataBreve(v.data)} • ${v.ora}`;
-
-    const notificationOptions = {
-      body: corpoNotifica,
-      tag: `remember_${v.id}_${min}`,
-      renotify: false,
-      data: {
-        url: "/",
-        voceId: v.id,
-        tipo: v.tipo,
-      },
-    };
-
+  } catch {
     try {
-      if ("serviceWorker" in navigator) {
-        const registration = await navigator.serviceWorker.ready;
-        await registration.showNotification(titoloNotifica, notificationOptions);
-      } else {
-        new Notification(titoloNotifica, {
-          body: corpoNotifica,
-        });
-      }
+      new Notification(titoloNotifica, {
+        body: corpoNotifica,
+      });
+    } catch {}
+  }
+}
 
-      if (firedKey) {
-        sessionStorage.setItem(firedKey, "1");
-      }
-    } catch {
-      try {
-        new Notification(titoloNotifica, {
-          body: corpoNotifica,
-        });
+function requestNotifyPermission() {
+  if (!("Notification" in window)) return;
 
-        if (firedKey) {
-          sessionStorage.setItem(firedKey, "1");
-        }
-      } catch {}
-    }
+  if (Notification.permission === "default") {
+    Notification.requestPermission().catch(() => {});
+  }
+}
+
+function scheduleNotificationsForVoce(v: Voce) {
+  if (!("Notification" in window)) return;
+  if (Notification.permission !== "granted") return;
+
+  clearScheduledForVoce(v.id);
+
+  if (v.fatto || !v.data || !v.ora || !v.notificheMinutiPrima?.length) return;
+  if (v.tipo !== "scadenza" && v.tipo !== "appuntamento" && v.tipo !== "nota") return;
+
+  const dt = buildDateTime(v.data, v.ora).getTime();
+  const now = Date.now();
+  const ids: number[] = [];
+
+  for (const min of v.notificheMinutiPrima) {
+    const at = dt - min * 60_000;
+    const diff = at - now;
+
+    if (diff <= 0) continue;
+    if (diff > 30 * 24 * 60 * 60 * 1000) continue;
+
+    const id = window.setTimeout(() => {
+      void showVoceNotification(v, min);
+    }, diff);
+
+    ids.push(id);
   }
 
-  function requestNotifyPermission() {
-    if (!("Notification" in window)) return;
-
-    if (Notification.permission === "default") {
-      Notification.requestPermission().catch(() => {});
-    }
+  if (ids.length) {
+    scheduledRef.current[v.id] = ids;
   }
-
-  function scheduleNotificationsForVoce(v: Voce) {
-    if (!("Notification" in window)) return;
-    if (Notification.permission !== "granted") return;
-
-    clearScheduledForVoce(v.id);
-
-    if (v.fatto || !v.data || !v.ora || !v.notificheMinutiPrima?.length) return;
-    if (v.tipo !== "scadenza" && v.tipo !== "appuntamento" && v.tipo !== "nota") return;
-
-    const dt = buildDateTime(v.data, v.ora).getTime();
-    const now = Date.now();
-    const ids: number[] = [];
-
-    for (const min of v.notificheMinutiPrima) {
-      const at = dt - min * 60_000;
-      const diff = at - now;
-
-      if (diff <= 0) continue;
-      if (diff > 30 * 24 * 60 * 60 * 1000) continue;
-
-      const id = window.setTimeout(() => {
-        const firedKey = `remember_notifica_fired_${v.id}_${min}`;
-        if (sessionStorage.getItem(firedKey) === "1") return;
-
-        void showVoceNotification(v, min, firedKey);
-      }, diff);
-
-      ids.push(id);
-    }
-
-    if (ids.length) {
-      scheduledRef.current[v.id] = ids;
-    }
-  }
+}
 
   function checkDueNotifications() {
     if (!("Notification" in window)) return;
@@ -1193,34 +1182,21 @@ const eventiProssimiAggiungi = useMemo(() => {
     });
   }, [currentUserId, caricato, ferieTotaliGiorniBase, ferieTotaliOreBase]);
 
-  useEffect(() => {
-    if (!currentUserId) return;
-    clearAllScheduled();
-    voci.forEach(scheduleNotificationsForVoce);
-  }, [voci, currentUserId]);
+useEffect(() => {
+  clearAllScheduled();
 
-  useEffect(() => {
-    if (!currentUserId) return;
+  if (!currentUserId) return;
 
-    checkDueNotifications();
+  const usaSoloCloud = Boolean(cloudUserId);
 
-    const interval = window.setInterval(() => {
-      checkDueNotifications();
-    }, 30000);
+  if (usaSoloCloud) {
+    return;
+  }
 
-    const onVisible = () => {
-      if (document.visibilityState === "visible") {
-        checkDueNotifications();
-      }
-    };
+  voci.forEach(scheduleNotificationsForVoce);
+}, [voci, currentUserId, cloudUserId]);
 
-    document.addEventListener("visibilitychange", onVisible);
-
-    return () => {
-      window.clearInterval(interval);
-      document.removeEventListener("visibilitychange", onVisible);
-    };
-  }, [voci, currentUserId]);
+ 
 
   useEffect(() => {
     setVoci((prev) => {
