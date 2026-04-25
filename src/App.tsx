@@ -685,9 +685,11 @@ type FiltroFinanza = {
   categoria: string;
 };
 
+
+
 type MovimentoFinanzaItem = {
   id: string;
-  origine: "entrata-extra" | "uscita-extra" | "voce-uscita";
+  origine: "uscita-extra" | "entrata-extra" | "voce-uscita";
   meseKeyOrigine?: string;
   data: string;
   descrizione: string;
@@ -2808,38 +2810,43 @@ function salvaModificaMovimentoFinanza() {
           : x
       )
     );
-  } else {
-    const nuovoMeseKey = finanzaModData.slice(0, 7);
-    const vecchioMeseKey = movimentoFinanzaInModifica.meseKeyOrigine ?? nuovoMeseKey;
 
-    setIncassi((prev) => {
-      const next = { ...prev };
-
-      next[vecchioMeseKey] = {
-        entrateExtra: next[vecchioMeseKey]?.entrateExtra ?? [],
-        usciteExtra: (next[vecchioMeseKey]?.usciteExtra ?? []).filter(
-          (x) => x.id !== movimentoFinanzaInModifica.id
-        ),
-      };
-
-      const recordAggiornato: UscitaExtra = {
-        id: movimentoFinanzaInModifica.id,
-        data: finanzaModData,
-        descrizione: descrizioneFinale,
-        importo: importoNum,
-        nota: finanzaModNota.trim(),
-      };
-
-      next[nuovoMeseKey] = {
-        entrateExtra: next[nuovoMeseKey]?.entrateExtra ?? [],
-        usciteExtra: [...(next[nuovoMeseKey]?.usciteExtra ?? []), recordAggiornato].sort((a, b) =>
-          a.data.localeCompare(b.data)
-        ),
-      };
-
-      return next;
-    });
+    chiudiModificaMovimentoFinanza();
+    setPagina("consulta");
+    setConsultaSezione("finanza");
+    return;
   }
+
+  const nuovoMeseKey = finanzaModData.slice(0, 7);
+  const vecchioMeseKey = movimentoFinanzaInModifica.meseKeyOrigine ?? nuovoMeseKey;
+
+  setIncassi((prev) => {
+    const next = { ...prev };
+
+    next[vecchioMeseKey] = {
+      entrateExtra: next[vecchioMeseKey]?.entrateExtra ?? [],
+      usciteExtra: (next[vecchioMeseKey]?.usciteExtra ?? []).filter(
+        (x) => x.id !== movimentoFinanzaInModifica.id
+      ),
+    };
+
+    const recordAggiornato: UscitaExtra = {
+      id: movimentoFinanzaInModifica.id,
+      data: finanzaModData,
+      descrizione: descrizioneFinale,
+      importo: importoNum,
+      nota: finanzaModNota.trim(),
+    };
+
+    next[nuovoMeseKey] = {
+      entrateExtra: next[nuovoMeseKey]?.entrateExtra ?? [],
+      usciteExtra: [...(next[nuovoMeseKey]?.usciteExtra ?? []), recordAggiornato].sort((a, b) =>
+        a.data.localeCompare(b.data)
+      ),
+    };
+
+    return next;
+  });
 
   chiudiModificaMovimentoFinanza();
   setPagina("consulta");
