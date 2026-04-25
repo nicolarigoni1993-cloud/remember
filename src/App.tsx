@@ -2156,11 +2156,12 @@ function salvaTurno() {
 
   const pausaMin = Number(turnoPausaMinuti.replace(",", "."));
   const pausaValida = Number.isFinite(pausaMin) && pausaMin >= 0 ? pausaMin : 0;
-  const oreCalcolate = calcolaOreTurnoEffettive(turnoInizio, turnoFine, pausaValida);
+
+  const oreOrdManuali = parseOreItaliane(turnoOreOrd);
   const oreStra = turnoOreStraord.trim() === "" ? 0 : parseOreItaliane(turnoOreStraord);
 
-  if (oreCalcolate <= 0) {
-    alert("Le ore effettive del turno non sono valide.");
+  if (oreOrdManuali === null || oreOrdManuali <= 0) {
+    alert("Inserisci ore ordinarie effettive valide.");
     return;
   }
 
@@ -2174,7 +2175,7 @@ function salvaTurno() {
     data: turnoData,
     inizio: turnoInizio,
     fine: turnoFine,
-    oreOrdinarie: oreCalcolate,
+    oreOrdinarie: oreOrdManuali,
     oreStraordinarie: oreStra,
     note:
       (pausaValida > 0 ? `Pausa ${formatNumeroCompatto(pausaValida)} min` : "") +
@@ -2189,6 +2190,7 @@ function salvaTurno() {
 
   chiudiTurnoForm();
 }
+
 
 function eliminaTurno(id: string) {
   const ok = confirm("Vuoi eliminare questo turno?");
@@ -15437,7 +15439,7 @@ function renderAreaControllo() {
               color: "rgba(15,23,42,0.76)",
             }}
           >
-            Rapido = inserimento essenziale. Avanzato = preview, note e dettagli extra.
+            Rapido = preset turno. Avanzato = orari, pausa, ore, note e dettagli.
           </div>
         </div>
 
@@ -15454,13 +15456,7 @@ function renderAreaControllo() {
 
       <div style={{ ...sx.body, paddingTop: 18 }}>
         <div style={{ ...sx.content, display: "grid", gap: 18 }}>
-          <div
-            style={{
-              display: "flex",
-              gap: 10,
-              flexWrap: "wrap",
-            }}
-          >
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button
               type="button"
               data-chip="1"
@@ -15492,61 +15488,36 @@ function renderAreaControllo() {
                 gap: 12,
               }}
             >
-              <div
-                style={{
-                  fontSize: 13,
-                  fontWeight: 950,
-                  color: "rgba(55,48,163,0.96)",
-                }}
-              >
+              <div style={{ fontSize: 13, fontWeight: 950, color: "rgba(55,48,163,0.96)" }}>
                 Preview settimana
               </div>
 
-              <MiniCalendarioSettimanaTurni
-                turni={turni}
-                onEditTurno={apriModificaTurno}
-              />
+              <MiniCalendarioSettimanaTurni turni={turni} onEditTurno={apriModificaTurno} />
             </div>
           )}
 
           <div
             style={{
+              padding: 16,
+              borderRadius: 22,
+              border: "1px solid rgba(15,23,42,0.08)",
+              background: "rgba(255,255,255,0.82)",
+              boxShadow: "0 10px 24px rgba(15,23,42,0.05)",
               display: "grid",
-              gridTemplateColumns: "1fr",
               gap: 14,
-              alignItems: "end",
             }}
           >
-            <div>
-              <div style={sx.sectionLabel}>Data</div>
-              <input
-                type="date"
-                value={turnoData}
-                onChange={(e) => {
-                  setTurnoData(e.target.value);
-                  if (turnoModalitaPeriodo === "singolo") setTurnoDataFine(e.target.value);
-                }}
-                style={inputLight(false)}
-              />
-            </div>
+            <div style={sx.sectionLabel}>Data turno</div>
 
-            <div
-              style={{
-                padding: "12px 14px",
-                borderRadius: 18,
-                border: "1px solid rgba(79,70,229,0.14)",
-                background: "linear-gradient(180deg, rgba(79,70,229,0.08), rgba(124,58,237,0.04))",
-                fontSize: 12,
-                fontWeight: 850,
-                color: "rgba(55,48,163,0.96)",
-                lineHeight: 1.45,
-                boxSizing: "border-box",
-                maxWidth: "100%",
-                overflowWrap: "break-word",
+            <input
+              type="date"
+              value={turnoData}
+              onChange={(e) => {
+                setTurnoData(e.target.value);
+                if (turnoModalitaPeriodo === "singolo") setTurnoDataFine(e.target.value);
               }}
-            >
-              Inserimento rapido e coerente: lavoro, ferie, riposi e assenze. I riepiloghi restano in Consulta → Turni.
-            </div>
+              style={inputLight(false)}
+            />
           </div>
 
           <div
@@ -15560,7 +15531,7 @@ function renderAreaControllo() {
               gap: 14,
             }}
           >
-            <div style={sx.sectionLabel}>Tipo</div>
+            <div style={sx.sectionLabel}>Tipo turno</div>
 
             <div
               style={{
@@ -15619,21 +15590,7 @@ function renderAreaControllo() {
                         setTurnoOrePerGiornoFerie(oreDefault);
                       }
 
-                      if (tipo === "riposo") {
-                        setTurnoPreset("");
-                        setTurnoManuale(false);
-                        setTurnoQuantitaFerie("");
-                        setTurnoInizio("08:00");
-                        setTurnoFine("16:00");
-                        setTurnoPausaMinuti("0");
-                        setTurnoOreOrd("");
-                        setTurnoOreStraord("");
-                        setTurnoModalitaPeriodo("singolo");
-                        setTurnoDataFine(turnoData);
-                        setTurnoTipoAssenza("malattia");
-                      }
-
-                      if (tipo === "assenza") {
+                      if (tipo === "riposo" || tipo === "assenza") {
                         setTurnoPreset("");
                         setTurnoManuale(false);
                         setTurnoQuantitaFerie("");
@@ -15735,13 +15692,7 @@ function renderAreaControllo() {
               </div>
 
               {turnoModalitaPeriodo === "intervallo" && (
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr",
-                    gap: 12,
-                  }}
-                >
+                <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
                   <div>
                     <div style={sx.sectionLabel}>Dal</div>
                     <input
@@ -15768,90 +15719,60 @@ function renderAreaControllo() {
 
           {turnoTipo === "lavoro" && (
             <>
-              <div
-                style={{
-                  padding: 16,
-                  borderRadius: 22,
-                  border: "1px solid rgba(15,23,42,0.08)",
-                  background: "rgba(255,255,255,0.82)",
-                  boxShadow: "0 10px 24px rgba(15,23,42,0.05)",
-                  display: "grid",
-                  gap: 14,
-                }}
-              >
-                <div style={sx.sectionLabel}>Modalità lavoro</div>
-
+              {!turnoAvanzato && (
                 <div
                   style={{
+                    padding: 16,
+                    borderRadius: 22,
+                    border: "1px solid rgba(16,185,129,0.12)",
+                    background: "linear-gradient(180deg, rgba(236,253,245,0.96), rgba(240,253,250,0.92))",
+                    boxShadow: "0 10px 24px rgba(16,185,129,0.05)",
                     display: "grid",
-                    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-                    gap: 10,
+                    gap: 14,
                   }}
                 >
-                  {presetTurni.map((p) => {
-                    const active = turnoPreset === p && !turnoManuale;
-                    return (
-                      <button
-                        key={p}
-                        type="button"
-                        data-chip="1"
-                        onClick={() => applicaPresetTurno(p)}
-                        style={{
-                          padding: "12px 10px",
-                          borderRadius: 16,
-                          border: active
-                            ? "2px solid rgba(16,185,129,0.36)"
-                            : "1px solid rgba(15,23,42,0.10)",
-                          background: active
-                            ? "linear-gradient(180deg, rgba(220,252,231,0.96), rgba(236,253,245,0.94))"
-                            : "rgba(255,255,255,0.96)",
-                          boxShadow: active
-                            ? "0 10px 24px rgba(16,185,129,0.10)"
-                            : "0 6px 18px rgba(15,23,42,0.04)",
-                          fontWeight: 950,
-                          fontSize: 13,
-                          color: "rgba(15,23,42,0.94)",
-                          cursor: "pointer",
-                        }}
-                      >
-                        {p}
-                      </button>
-                    );
-                  })}
-                </div>
+                  <div style={sx.sectionLabel}>Turno rapido</div>
 
-                <div style={{ display: "flex", justifyContent: "flex-start" }}>
-                  <button
-                    type="button"
-                    data-chip="1"
-                    onClick={() => {
-                      setTurnoManuale((prev) => {
-                        const next = !prev;
-                        if (next) {
-                          setTurnoPreset("");
-                          aggiornaOreLavoroAutomatiche(turnoInizio, turnoFine, turnoPausaMinuti);
-                        }
-                        return next;
-                      });
-                    }}
+                  <div
                     style={{
-                      padding: "10px 14px",
-                      borderRadius: 999,
-                      border: turnoManuale
-                        ? "2px solid rgba(249,115,22,0.34)"
-                        : "1px solid rgba(15,23,42,0.10)",
-                      background: turnoManuale
-                        ? "linear-gradient(180deg, rgba(255,237,213,0.96), rgba(255,247,237,0.94))"
-                        : "rgba(255,255,255,0.96)",
-                      fontWeight: 950,
-                      color: "rgba(15,23,42,0.94)",
-                      cursor: "pointer",
+                      display: "grid",
+                      gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                      gap: 10,
                     }}
                   >
-                    {turnoManuale ? "Manuale attivo" : "Passa a manuale"}
-                  </button>
+                    {presetTurni.map((p) => {
+                      const active = turnoPreset === p;
+                      return (
+                        <button
+                          key={p}
+                          type="button"
+                          data-chip="1"
+                          onClick={() => applicaPresetTurno(p)}
+                          style={{
+                            padding: "12px 10px",
+                            borderRadius: 16,
+                            border: active
+                              ? "2px solid rgba(16,185,129,0.36)"
+                              : "1px solid rgba(15,23,42,0.10)",
+                            background: active
+                              ? "linear-gradient(180deg, rgba(220,252,231,0.96), rgba(236,253,245,0.94))"
+                              : "rgba(255,255,255,0.96)",
+                            boxShadow: active
+                              ? "0 10px 24px rgba(16,185,129,0.10)"
+                              : "0 6px 18px rgba(15,23,42,0.04)",
+                            fontWeight: 950,
+                            fontSize: 13,
+                            color: "rgba(15,23,42,0.94)",
+                            cursor: "pointer",
+                          }}
+                        >
+                          {p}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {turnoAvanzato && (
                 <div
@@ -15862,10 +15783,10 @@ function renderAreaControllo() {
                     background: "rgba(255,255,255,0.82)",
                     boxShadow: "0 10px 24px rgba(15,23,42,0.05)",
                     display: "grid",
-                    gap: 12,
+                    gap: 14,
                   }}
                 >
-                  <div style={sx.sectionLabel}>Dettaglio orario</div>
+                  <div style={sx.sectionLabel}>Orario di lavoro</div>
 
                   <div
                     style={{
@@ -15882,6 +15803,7 @@ function renderAreaControllo() {
                         onChange={(e) => {
                           const val = e.target.value;
                           setTurnoInizio(val);
+                          setTurnoPreset("");
                           aggiornaOreLavoroAutomatiche(val, turnoFine, turnoPausaMinuti);
                         }}
                         style={inputLight(false)}
@@ -15896,6 +15818,7 @@ function renderAreaControllo() {
                         onChange={(e) => {
                           const val = e.target.value;
                           setTurnoFine(val);
+                          setTurnoPreset("");
                           aggiornaOreLavoroAutomatiche(turnoInizio, val, turnoPausaMinuti);
                         }}
                         style={inputLight(false)}
@@ -15940,16 +15863,17 @@ function renderAreaControllo() {
                       <div style={sx.sectionLabel}>Ore ordinarie effettive</div>
                       <input
                         value={turnoOreOrd}
-                        readOnly
+                        onChange={(e) => setTurnoOreOrd(e.target.value)}
+                        placeholder="Es: 8"
                         style={{
                           ...inputLight(false),
-                          background: "rgba(241,245,249,0.95)",
-                          color: "rgba(15,23,42,0.98)",
-                          WebkitTextFillColor: "rgba(15,23,42,0.98)",
                           fontWeight: 950,
-                          cursor: "default",
                         }}
+                        inputMode="decimal"
                       />
+                      <div style={{ marginTop: 8, fontSize: 11, fontWeight: 800, opacity: 0.62, color: "rgba(15,23,42,0.72)" }}>
+                        Si calcola automaticamente dagli orari, ma puoi correggerla manualmente.
+                      </div>
                     </div>
 
                     <div
@@ -15969,15 +15893,7 @@ function renderAreaControllo() {
                         style={inputLight(false)}
                         inputMode="decimal"
                       />
-                      <div
-                        style={{
-                          marginTop: 8,
-                          fontSize: 11,
-                          fontWeight: 800,
-                          opacity: 0.62,
-                          color: "rgba(15,23,42,0.72)",
-                        }}
-                      >
+                      <div style={{ marginTop: 8, fontSize: 11, fontWeight: 800, opacity: 0.62, color: "rgba(15,23,42,0.72)" }}>
                         Campo facoltativo.
                       </div>
                     </div>
@@ -16026,12 +15942,7 @@ function renderAreaControllo() {
                   />
                 </div>
 
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "end",
-                  }}
-                >
+                <div style={{ display: "flex", alignItems: "end" }}>
                   <button
                     type="button"
                     data-chip="1"
@@ -16042,72 +15953,6 @@ function renderAreaControllo() {
                   </button>
                 </div>
               </div>
-
-              {(() => {
-                const orePerGiorno = parseOreItaliane(turnoOrePerGiornoFerie) || 0;
-                const giorniSelezionati =
-                  turnoModalitaPeriodo === "intervallo"
-                    ? giorniFerieSelezionati(turnoData, turnoDataFine, turnoConsideraSabato)
-                    : turnoData
-                    ? [turnoData]
-                    : [];
-
-                const totaleGiorni = giorniSelezionati.length;
-                const totaleOre = totaleGiorni * orePerGiorno;
-
-                return (
-                  <div
-                    style={{
-                      padding: 14,
-                      borderRadius: 18,
-                      border: "1px solid rgba(79,70,229,0.16)",
-                      background: "rgba(255,255,255,0.72)",
-                      display: "grid",
-                      gap: 6,
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: 13,
-                        fontWeight: 950,
-                        color: "rgba(55,48,163,0.96)",
-                      }}
-                    >
-                      Riepilogo ferie selezionate
-                    </div>
-
-                    <div
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 850,
-                        color: "rgba(15,23,42,0.82)",
-                      }}
-                    >
-                      Giorni conteggiati: <strong>{totaleGiorni}</strong>
-                    </div>
-
-                    <div
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 850,
-                        color: "rgba(15,23,42,0.82)",
-                      }}
-                    >
-                      Ore totali ferie: <strong>{formatNumeroCompatto(totaleOre)}</strong>
-                    </div>
-
-                    <div
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 800,
-                        color: "rgba(71,85,105,0.80)",
-                      }}
-                    >
-                      La domenica non viene conteggiata. Il sabato dipende dal pulsante sopra.
-                    </div>
-                  </div>
-                );
-              })()}
             </div>
           )}
 
@@ -16149,39 +15994,12 @@ function renderAreaControllo() {
                           item.key as "malattia" | "104" | "maternita-facoltativa" | "permesso-sindacale"
                         )
                       }
-                      style={{
-                        padding: "14px 12px",
-                        borderRadius: 18,
-                        border: active
-                          ? "2px solid rgba(225,29,72,0.30)"
-                          : "1px solid rgba(15,23,42,0.10)",
-                        background: active
-                          ? "linear-gradient(180deg, rgba(255,228,230,0.96), rgba(255,241,242,0.94))"
-                          : "rgba(255,255,255,0.96)",
-                        boxShadow: active
-                          ? "0 10px 24px rgba(225,29,72,0.10)"
-                          : "0 6px 18px rgba(15,23,42,0.04)",
-                        fontWeight: 950,
-                        fontSize: 13,
-                        color: "rgba(15,23,42,0.94)",
-                        cursor: "pointer",
-                      }}
+                      style={chip(active)}
                     >
                       {item.label}
                     </button>
                   );
                 })}
-              </div>
-
-              <div
-                style={{
-                  fontSize: 11,
-                  fontWeight: 800,
-                  opacity: 0.62,
-                  color: "rgba(15,23,42,0.72)",
-                }}
-              >
-                Nel calendario comparirà la sigla A, mentre il dettaglio vero resta nella nota.
               </div>
             </div>
           )}
@@ -16219,15 +16037,7 @@ function renderAreaControllo() {
                 value={turnoNote}
                 onChange={(e) => setTurnoNote(e.target.value)}
                 rows={4}
-                placeholder={
-                  turnoTipo === "lavoro"
-                    ? "Note turno..."
-                    : turnoTipo === "ferie"
-                    ? "Nota ferie..."
-                    : turnoTipo === "assenza"
-                    ? "Nota assenza..."
-                    : "Nota riposo..."
-                }
+                placeholder="Note turno..."
                 style={{
                   ...inputLight(false),
                   height: "auto",
@@ -16252,12 +16062,7 @@ function renderAreaControllo() {
           flexWrap: "wrap",
         }}
       >
-        <button
-          type="button"
-          data-chip="1"
-          onClick={chiudiTurnoForm}
-          style={sx.actionBtn(false)}
-        >
+        <button type="button" data-chip="1" onClick={chiudiTurnoForm} style={sx.actionBtn(false)}>
           Annulla
         </button>
 
@@ -16280,12 +16085,7 @@ function renderAreaControllo() {
           </button>
         )}
 
-        <button
-          type="button"
-          data-chip="1"
-          onClick={salvaTurno}
-          style={sx.actionBtn(true)}
-        >
+        <button type="button" data-chip="1" onClick={salvaTurno} style={sx.actionBtn(true)}>
           {turnoIdInModifica ? "Salva modifiche" : "Salva turno"}
         </button>
       </div>
