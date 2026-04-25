@@ -2703,10 +2703,20 @@ function applicaFiltroFinanza<T extends { data: string; categoria?: string }>(
 }
 
 function apriModificaMovimentoFinanza(item: MovimentoFinanzaItem) {
+  const categoriaPulita =
+    item.categoria ||
+    estraiCategoriaMovimento(item.descrizione) ||
+    (item.origine === "entrata-extra" ? "Entrata" : "Altro");
+
+  const dettaglioPulito =
+    item.dettaglio ||
+    estraiDettaglioMovimento(item.descrizione) ||
+    "";
+
   setMovimentoFinanzaInModifica(item);
   setFinanzaModData(item.data);
-  setFinanzaModCategoria(item.categoria || "");
-  setFinanzaModDettaglio(item.dettaglio || item.descrizione || "");
+  setFinanzaModCategoria(categoriaPulita);
+  setFinanzaModDettaglio(dettaglioPulito);
   setFinanzaModImporto(String(item.importo ?? ""));
   setFinanzaModNota(item.nota ?? "");
 }
@@ -6747,19 +6757,22 @@ function renderAreaControllo() {
                       <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, flexWrap: "wrap" }}>
                         <button
                           data-chip="1"
-                         onClick={() =>
-                      apriModificaMovimentoFinanza({
-                        id: x.id,
-                        origine: "entrata-extra",
-                        meseKeyOrigine: x.data.slice(0, 7),
-                        data: x.data,
-                        importo: x.importo,
-                        categoria: estraiCategoriaMovimento(x.descrizione) || "Entrata",
-                        descrizione: x.descrizione || "Entrata",
-                        dettaglio: estraiDettaglioMovimento(x.descrizione),
-                        nota: "",
-                      })
-                    }
+                         onClick={() => {
+                            const categoria = estraiCategoriaMovimento(x.descrizione) || "Entrata";
+                            const dettaglio = estraiDettaglioMovimento(x.descrizione);
+
+                            apriModificaMovimentoFinanza({
+                              id: x.id,
+                              origine: "entrata-extra",
+                              meseKeyOrigine: x.data.slice(0, 7),
+                              data: x.data,
+                              importo: x.importo,
+                              categoria,
+                              descrizione: x.descrizione || categoria,
+                              dettaglio,
+                              nota: "",
+                            });
+                          }}
                           style={{
                             ...chip(false),
                             border: "1px solid rgba(16,185,129,0.18)",
@@ -11094,7 +11107,7 @@ function renderAreaControllo() {
 
               <div>
                 <div style={sx.sectionLabel}>Categoria</div>
-            <select
+                    <select
   value={finanzaModCategoria}
   onChange={(e) => setFinanzaModCategoria(e.target.value)}
   style={{
@@ -11107,9 +11120,14 @@ function renderAreaControllo() {
   }}
 >
   <option value="">Seleziona categoria</option>
-  {(movimentoFinanzaInModifica?.origine === "entrata-extra"
-    ? categorieEntrataFinanza
-    : categorieUscitaFinanza
+
+  {Array.from(
+    new Set([
+      finanzaModCategoria,
+      ...(movimentoFinanzaInModifica?.origine === "entrata-extra"
+        ? categorieEntrataFinanza
+        : categorieUscitaFinanza),
+    ].filter(Boolean))
   ).map((cat) => (
     <option key={cat} value={cat}>
       {cat}
