@@ -5912,7 +5912,7 @@ function MiniCalendarioEventi({
 
               const d = cellDate.getDate();
               const items = eventiPerData.get(key) ?? [];
-              const firstEvent = items[0] ?? null;
+              
 
               const isToday = key === oggiKey;
               const jsDay = cellDate.getDay();
