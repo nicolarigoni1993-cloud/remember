@@ -2686,11 +2686,7 @@ const categorieUscitaFinanza = useMemo(() => {
     .sort((a, b) => a.localeCompare(b, "it"));
 }, [categorieUscitaBase, categorieUscitaCustom, tuttiMovimentiFinanza]);
 
-const categorieEntrataFinanza = useMemo(() => {
-  const base = [...categorieEntrataBase, ...categorieEntrataCustom];
-  const dinamiche = tutteEntrateExtraStorico.map((x) => x.categoria).filter(Boolean);
-  return Array.from(new Set([...base, ...dinamiche])).sort((a, b) => a.localeCompare(b, "it"));
-}, [categorieEntrataBase, categorieEntrataCustom, tutteEntrateExtraStorico]);
+
 
 function applicaFiltroFinanza<T extends { data: string; categoria?: string }>(
   lista: T[],
