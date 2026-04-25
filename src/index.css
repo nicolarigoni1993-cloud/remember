@@ -66,3 +66,73 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+
+/* REMEMBER - fix globale iPhone/Safari per input che escono dalle card */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+input,
+select,
+textarea,
+button {
+  max-width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  min-width: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="number"],
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea,
+select {
+  display: block;
+  max-width: 100%;
+}
+
+@supports (-webkit-touch-callout: none) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"],
+  input[type="month"] {
+    min-height: 46px;
+    line-height: 1.2;
+    padding-right: 10px;
+  }
+
+  button,
+  [data-chip="1"] {
+    max-width: 100%;
+  }
+}
