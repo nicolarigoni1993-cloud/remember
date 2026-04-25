@@ -5642,7 +5642,6 @@ function MiniCalendarioControllo({
 
 
 
-
 function MiniCalendarioEventi({
   mese,
   eventi,
@@ -5666,7 +5665,7 @@ function MiniCalendarioEventi({
 }) {
   const isMobile = typeof window !== "undefined" && window.innerWidth <= 640;
 
-  const [previewEventoId, setPreviewEventoId] = useState<string | null>(null);
+  const [previewData, setPreviewData] = useState<string | null>(null);
 
   const y = mese.getFullYear();
   const m0 = mese.getMonth();
@@ -5762,10 +5761,10 @@ function MiniCalendarioEventi({
     return map;
   }, [eventi]);
 
-  const previewEvento = useMemo(() => {
-    if (!previewEventoId) return null;
-    return eventi.find((ev) => ev.id === previewEventoId) ?? null;
-  }, [previewEventoId, eventi]);
+  const previewEventi = useMemo(() => {
+    if (!previewData) return [];
+    return eventiPerData.get(previewData) ?? [];
+  }, [previewData, eventiPerData]);
 
   const navBtnStyle: React.CSSProperties = {
     width: isMobile ? 40 : 46,
@@ -5925,27 +5924,21 @@ function MiniCalendarioEventi({
                   key={key}
                   type="button"
                   onClick={() => {
-                    if (items.length > 0 && firstEvent) {
-                      setPreviewEventoId(firstEvent.id);
+                    if (items.length > 0) {
+                      setPreviewData(key);
                     }
                   }}
                   style={{
                     minHeight: isMobile ? 54 : 86,
                     borderRadius: 18,
                     border: isToday
-                      ? "2px solid rgba(99,102,241,0.24)"
-                      : isFestivo
-                      ? "1px solid rgba(22,101,52,0.24)"
+                      ? "2px solid rgba(79,70,229,0.82)"
                       : "1px solid rgba(148,163,184,0.14)",
                     background: isToday
-                      ? "linear-gradient(180deg, rgba(238,242,255,0.98), rgba(255,255,255,0.96))"
-                      : isFestivo
-                      ? "linear-gradient(180deg, rgba(240,253,244,0.98), rgba(255,255,255,0.96))"
+                      ? "linear-gradient(180deg, rgba(224,231,255,1), rgba(238,242,255,0.98))"
                       : "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.95))",
                     boxShadow: isToday
-                      ? "0 12px 28px rgba(99,102,241,0.10)"
-                      : isFestivo
-                      ? "0 8px 20px rgba(22,101,52,0.08)"
+                      ? "0 16px 34px rgba(79,70,229,0.24), inset 0 0 0 1px rgba(255,255,255,0.9)"
                       : "0 8px 20px rgba(15,23,42,0.05)",
                     padding: isMobile ? "6px 4px" : "8px 6px",
                     display: "grid",
@@ -5958,13 +5951,16 @@ function MiniCalendarioEventi({
                     appearance: "none",
                     WebkitAppearance: "none",
                     textAlign: "initial",
+                    transform: isToday ? "translateY(-1px)" : "none",
                   }}
                 >
                   <div
                     style={{
                       fontSize: isMobile ? 13 : 15,
                       fontWeight: 1000,
-                      color: isFestivo
+                      color: isToday
+                        ? "rgba(49,46,129,0.98)"
+                        : isFestivo
                         ? "rgba(22,101,52,0.98)"
                         : isWeekend
                         ? "rgba(220,38,38,0.98)"
@@ -5985,26 +5981,28 @@ function MiniCalendarioEventi({
                   >
                     {items.length > 0 ? (
                       <div
+                        title={items.length > 1 ? `${items.length} eventi` : "1 evento"}
                         style={{
                           width: isMobile ? 10 : 12,
                           height: isMobile ? 10 : 12,
                           borderRadius: 999,
-                          background: firstEvent?.urgente
+                          background: items.some((ev) => ev.urgente)
                             ? "rgba(239,68,68,0.98)"
                             : "rgba(139,92,246,0.98)",
-                          boxShadow: firstEvent?.urgente
+                          boxShadow: items.some((ev) => ev.urgente)
                             ? "0 0 0 5px rgba(239,68,68,0.12)"
                             : "0 0 0 4px rgba(139,92,246,0.10)",
                         }}
                       />
                     ) : isFestivo ? (
                       <div
+                        title="Festivo"
                         style={{
-                          width: isMobile ? 10 : 12,
-                          height: isMobile ? 10 : 12,
+                          width: isMobile ? 8 : 10,
+                          height: isMobile ? 8 : 10,
                           borderRadius: 999,
                           background: "rgba(22,101,52,0.98)",
-                          boxShadow: "0 0 0 4px rgba(22,101,52,0.10)",
+                          boxShadow: "0 0 0 3px rgba(22,101,52,0.08)",
                         }}
                       />
                     ) : (
@@ -6054,9 +6052,9 @@ function MiniCalendarioEventi({
         </div>
       </div>
 
-      {previewEvento && (
+      {previewData && previewEventi.length > 0 && (
         <div
-          onClick={() => setPreviewEventoId(null)}
+          onClick={() => setPreviewData(null)}
           style={{
             position: "fixed",
             inset: 0,
@@ -6071,7 +6069,9 @@ function MiniCalendarioEventi({
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              width: "min(460px, 100%)",
+              width: "min(520px, 100%)",
+              maxHeight: "min(720px, 86vh)",
+              overflowY: "auto",
               borderRadius: 26,
               border: "1px solid rgba(255,255,255,0.62)",
               background:
@@ -6090,30 +6090,7 @@ function MiniCalendarioEventi({
                 gap: 12,
               }}
             >
-              <div style={{ display: "grid", gap: 8 }}>
-                <div
-                  style={{
-                    display: "flex",
-                    gap: 8,
-                    alignItems: "center",
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <span
-                    style={{
-                      ...pillEventoStyle(previewEvento),
-                      padding: "6px 10px",
-                      borderRadius: 999,
-                      fontSize: 11,
-                      fontWeight: 950,
-                    }}
-                  >
-                    Evento
-                  </span>
-
-                  {previewEvento.urgente && badgeUrgente()}
-                </div>
-
+              <div style={{ display: "grid", gap: 6 }}>
                 <div
                   style={{
                     fontSize: 19,
@@ -6123,7 +6100,7 @@ function MiniCalendarioEventi({
                     lineHeight: 1.2,
                   }}
                 >
-                  {previewEvento.titolo}
+                  Eventi del giorno
                 </div>
 
                 <div
@@ -6131,15 +6108,17 @@ function MiniCalendarioEventi({
                     fontSize: 12,
                     fontWeight: 850,
                     color: "rgba(71,85,105,0.82)",
+                    textTransform: "capitalize",
                   }}
                 >
-                  {formattaDataBreve(previewEvento.data)} • {previewEvento.ora}
+                  {formattaDataBreve(previewData)} • {previewEventi.length}{" "}
+                  {previewEventi.length === 1 ? "evento" : "eventi"}
                 </div>
               </div>
 
               <button
                 type="button"
-                onClick={() => setPreviewEventoId(null)}
+                onClick={() => setPreviewData(null)}
                 style={{
                   width: 38,
                   height: 38,
@@ -6156,68 +6135,138 @@ function MiniCalendarioEventi({
               </button>
             </div>
 
-            {previewEvento.nota && (
-              <div
-                style={{
-                  padding: 12,
-                  borderRadius: 16,
-                  border: "1px solid rgba(148,163,184,0.14)",
-                  background: "rgba(248,250,252,0.92)",
-                  fontSize: 13,
-                  fontWeight: 800,
-                  color: "rgba(51,65,85,0.88)",
-                  lineHeight: 1.45,
-                }}
-              >
-                {previewEvento.nota}
-              </div>
-            )}
+            <div style={{ display: "grid", gap: 10 }}>
+              {previewEventi.map((ev) => (
+                <div
+                  key={ev.id}
+                  style={{
+                    padding: 14,
+                    borderRadius: 20,
+                    border: ev.urgente
+                      ? "1px solid rgba(239,68,68,0.20)"
+                      : "1px solid rgba(139,92,246,0.16)",
+                    background: ev.urgente
+                      ? "linear-gradient(180deg, rgba(254,242,242,0.96), rgba(255,255,255,0.94))"
+                      : "linear-gradient(180deg, rgba(245,243,255,0.96), rgba(255,255,255,0.94))",
+                    display: "grid",
+                    gap: 10,
+                    boxShadow: ev.urgente
+                      ? "0 12px 24px rgba(239,68,68,0.08)"
+                      : "0 12px 24px rgba(139,92,246,0.08)",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 8,
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <span
+                      style={{
+                        ...pillEventoStyle(ev),
+                        padding: "6px 10px",
+                        borderRadius: 999,
+                        fontSize: 11,
+                        fontWeight: 950,
+                      }}
+                    >
+                      Evento
+                    </span>
 
-            <div
+                    {ev.urgente && badgeUrgente()}
+
+                    <span
+                      style={{
+                        marginLeft: "auto",
+                        fontSize: 12,
+                        fontWeight: 950,
+                        color: "rgba(71,85,105,0.82)",
+                      }}
+                    >
+                      {ev.ora}
+                    </span>
+                  </div>
+
+                  <div
+                    style={{
+                      fontSize: 17,
+                      fontWeight: 1000,
+                      letterSpacing: -0.25,
+                      color: "rgba(15,23,42,0.98)",
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {ev.titolo}
+                  </div>
+
+                  {ev.nota ? (
+                    <div
+                      style={{
+                        padding: 12,
+                        borderRadius: 16,
+                        border: "1px solid rgba(148,163,184,0.14)",
+                        background: "rgba(248,250,252,0.92)",
+                        fontSize: 13,
+                        fontWeight: 800,
+                        color: "rgba(51,65,85,0.88)",
+                        lineHeight: 1.45,
+                      }}
+                    >
+                      {ev.nota}
+                    </div>
+                  ) : null}
+
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      gap: 10,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onOpenEvent(ev.id);
+                        setPreviewData(null);
+                      }}
+                      style={{
+                        padding: "10px 13px",
+                        borderRadius: 14,
+                        border: "1px solid rgba(79,70,229,0.20)",
+                        background:
+                          "linear-gradient(180deg, rgba(79,70,229,0.16), rgba(124,58,237,0.12))",
+                        fontWeight: 1000,
+                        cursor: "pointer",
+                        color: "rgba(67,56,202,0.98)",
+                        boxShadow: "0 12px 24px rgba(79,70,229,0.10)",
+                      }}
+                    >
+                      Modifica evento
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setPreviewData(null)}
               style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                gap: 10,
-                flexWrap: "wrap",
+                justifySelf: "end",
+                padding: "11px 14px",
+                borderRadius: 14,
+                border: "1px solid rgba(148,163,184,0.16)",
+                background: "rgba(255,255,255,0.92)",
+                fontWeight: 900,
+                cursor: "pointer",
+                color: "rgba(15,23,42,0.86)",
               }}
             >
-              <button
-                type="button"
-                onClick={() => setPreviewEventoId(null)}
-                style={{
-                  padding: "11px 14px",
-                  borderRadius: 14,
-                  border: "1px solid rgba(148,163,184,0.16)",
-                  background: "rgba(255,255,255,0.92)",
-                  fontWeight: 900,
-                  cursor: "pointer",
-                  color: "rgba(15,23,42,0.86)",
-                }}
-              >
-                Chiudi
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  onOpenEvent(previewEvento.id);
-                  setPreviewEventoId(null);
-                }}
-                style={{
-                  padding: "11px 14px",
-                  borderRadius: 14,
-                  border: "1px solid rgba(79,70,229,0.20)",
-                  background:
-                    "linear-gradient(180deg, rgba(79,70,229,0.16), rgba(124,58,237,0.12))",
-                  fontWeight: 1000,
-                  cursor: "pointer",
-                  color: "rgba(67,56,202,0.98)",
-                  boxShadow: "0 12px 24px rgba(79,70,229,0.10)",
-                }}
-              >
-                Modifica evento
-              </button>
-            </div>
+              Chiudi
+            </button>
           </div>
         </div>
       )}
