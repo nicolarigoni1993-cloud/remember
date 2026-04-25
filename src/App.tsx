@@ -6747,18 +6747,19 @@ function renderAreaControllo() {
                       <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, flexWrap: "wrap" }}>
                         <button
                           data-chip="1"
-                          onClick={() =>
-                            apriModificaMovimentoFinanza({
-                              id: x.id,
-                              origine: "entrata",
-                              data: x.data,
-                              importo: x.importo,
-                              categoria: "Entrata",
-                              descrizione: x.descrizione || "Entrata",
-                              dettaglio: x.descrizione || "Entrata",
-                              nota: "",
-                            } as any)
-                          }
+                         onClick={() =>
+                      apriModificaMovimentoFinanza({
+                        id: x.id,
+                        origine: "entrata-extra",
+                        meseKeyOrigine: x.data.slice(0, 7),
+                        data: x.data,
+                        importo: x.importo,
+                        categoria: estraiCategoriaMovimento(x.descrizione) || "Entrata",
+                        descrizione: x.descrizione || "Entrata",
+                        dettaglio: estraiDettaglioMovimento(x.descrizione),
+                        nota: "",
+                      })
+                    }
                           style={{
                             ...chip(false),
                             border: "1px solid rgba(16,185,129,0.18)",
