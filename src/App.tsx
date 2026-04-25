@@ -2753,22 +2753,27 @@ function salvaModificaMovimentoFinanza() {
     finanzaModDettaglio.trim()
   );
 
-  if (movimentoFinanzaInModifica.origine === "entrata-extra") {
-    const nuovoMeseKey = finanzaModData.slice(0, 7);
-    const vecchioMeseKey = movimentoFinanzaInModifica.meseKeyOrigine ?? nuovoMeseKey;
+  const nuovoMeseKey = finanzaModData.slice(0, 7);
+  const idMovimento = movimentoFinanzaInModifica.id;
+  const origineRaw = String(movimentoFinanzaInModifica.origine);
 
+  const esisteComeEntrata = Object.values(incassi).some((mese) =>
+    (mese.entrateExtra ?? []).some((x) => x.id === idMovimento)
+  );
+
+  if (origineRaw === "entrata-extra" || origineRaw === "entrata" || esisteComeEntrata) {
     setIncassi((prev) => {
-      const next = { ...prev };
+      const next: Record<string, IncassiMese> = { ...prev };
 
-      next[vecchioMeseKey] = {
-        entrateExtra: (next[vecchioMeseKey]?.entrateExtra ?? []).filter(
-          (x) => x.id !== movimentoFinanzaInModifica.id
-        ),
-        usciteExtra: next[vecchioMeseKey]?.usciteExtra ?? [],
-      };
+      for (const key of Object.keys(next)) {
+        next[key] = {
+          entrateExtra: (next[key]?.entrateExtra ?? []).filter((x) => x.id !== idMovimento),
+          usciteExtra: next[key]?.usciteExtra ?? [],
+        };
+      }
 
       const recordAggiornato: EntrataExtra = {
-        id: movimentoFinanzaInModifica.id,
+        id: idMovimento,
         data: finanzaModData,
         descrizione: descrizioneFinale,
         importo: importoNum,
@@ -2776,7 +2781,7 @@ function salvaModificaMovimentoFinanza() {
 
       next[nuovoMeseKey] = {
         entrateExtra: [...(next[nuovoMeseKey]?.entrateExtra ?? []), recordAggiornato].sort((a, b) =>
-          a.data.localeCompare(b.data)
+          b.data.localeCompare(a.data)
         ),
         usciteExtra: next[nuovoMeseKey]?.usciteExtra ?? [],
       };
@@ -2793,7 +2798,7 @@ function salvaModificaMovimentoFinanza() {
   if (movimentoFinanzaInModifica.origine === "voce-uscita") {
     setVoci((prev) =>
       prev.map((x) =>
-        x.id === movimentoFinanzaInModifica.id
+        x.id === idMovimento
           ? {
               ...x,
               data: finanzaModData,
@@ -2813,21 +2818,18 @@ function salvaModificaMovimentoFinanza() {
     return;
   }
 
-  const nuovoMeseKey = finanzaModData.slice(0, 7);
-  const vecchioMeseKey = movimentoFinanzaInModifica.meseKeyOrigine ?? nuovoMeseKey;
-
   setIncassi((prev) => {
-    const next = { ...prev };
+    const next: Record<string, IncassiMese> = { ...prev };
 
-    next[vecchioMeseKey] = {
-      entrateExtra: next[vecchioMeseKey]?.entrateExtra ?? [],
-      usciteExtra: (next[vecchioMeseKey]?.usciteExtra ?? []).filter(
-        (x) => x.id !== movimentoFinanzaInModifica.id
-      ),
-    };
+    for (const key of Object.keys(next)) {
+      next[key] = {
+        entrateExtra: next[key]?.entrateExtra ?? [],
+        usciteExtra: (next[key]?.usciteExtra ?? []).filter((x) => x.id !== idMovimento),
+      };
+    }
 
     const recordAggiornato: UscitaExtra = {
-      id: movimentoFinanzaInModifica.id,
+      id: idMovimento,
       data: finanzaModData,
       descrizione: descrizioneFinale,
       importo: importoNum,
@@ -2837,7 +2839,7 @@ function salvaModificaMovimentoFinanza() {
     next[nuovoMeseKey] = {
       entrateExtra: next[nuovoMeseKey]?.entrateExtra ?? [],
       usciteExtra: [...(next[nuovoMeseKey]?.usciteExtra ?? []), recordAggiornato].sort((a, b) =>
-        a.data.localeCompare(b.data)
+        b.data.localeCompare(a.data)
       ),
     };
 
