@@ -11030,183 +11030,181 @@ function renderAreaControllo() {
       </div>
     </div>
 
-    {movimentoFinanzaInModifica && (
-      <div style={sx.overlay} onClick={chiudiModificaMovimentoFinanza}>
-        <div
-          style={{
-            ...sx.modal,
-            width: "min(640px, 100%)",
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div style={sx.header}>
+
+
+
+
+ {movimentoFinanzaInModifica && (
+  <div style={sx.overlay} onClick={chiudiModificaMovimentoFinanza}>
+    <div
+      style={{
+        ...sx.modal,
+        width: "min(640px, 100%)",
+      }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div style={sx.header}>
+        <div>
+          <div
+            style={{
+              fontSize: 22,
+              fontWeight: 1000,
+              letterSpacing: -0.4,
+              color: "rgba(15,23,42,0.96)",
+            }}
+          >
+            Modifica movimento
+          </div>
+          <div
+            style={{
+              marginTop: 4,
+              fontSize: 12,
+              fontWeight: 850,
+              color: "rgba(71,85,105,0.80)",
+            }}
+          >
+            Salvataggio con ritorno diretto a Consulta → Finanza
+          </div>
+        </div>
+
+        <button type="button" onClick={chiudiModificaMovimentoFinanza} style={sx.closeBtn}>
+          ✕
+        </button>
+      </div>
+
+      <div style={sx.body}>
+        <div style={sx.content}>
+          <div style={sx.row2}>
             <div>
-              <div
+              <div style={sx.sectionLabel}>Data</div>
+              <input
+                type="date"
+                value={finanzaModData}
+                onChange={(e) => setFinanzaModData(e.target.value)}
                 style={{
-                  fontSize: 22,
-                  fontWeight: 1000,
-                  letterSpacing: -0.4,
-                  color: "rgba(15,23,42,0.96)",
+                  ...inputLight(false),
+                  background: "rgba(255,255,255,1)",
+                  color: "rgba(15,23,42,0.98)",
+                  WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                  caretColor: "rgba(15,23,42,0.98)",
+                  border: "1px solid rgba(148,163,184,0.22)",
                 }}
-              >
-                Modifica movimento
-              </div>
-              <div
-                style={{
-                  marginTop: 4,
-                  fontSize: 12,
-                  fontWeight: 850,
-                  color: "rgba(71,85,105,0.80)",
-                }}
-              >
-                Salvataggio con ritorno diretto a Consulta → Finanza
-              </div>
+              />
             </div>
 
-            <button
-              type="button"
-              onClick={chiudiModificaMovimentoFinanza}
-              style={sx.closeBtn}
-            >
-              ✕
-            </button>
-          </div>
-
-          <div style={sx.body}>
-            <div style={sx.content}>
-              <div style={sx.row2}>
-                <div>
-                  <div style={sx.sectionLabel}>Data</div>
-                  <input
-                    type="date"
-                    value={finanzaModData}
-                    onChange={(e) => setFinanzaModData(e.target.value)}
-                    style={{
-                      ...inputLight(false),
-                      background: "rgba(255,255,255,1)",
-                      color: "rgba(15,23,42,0.98)",
-                      WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                      caretColor: "rgba(15,23,42,0.98)",
-                      border: "1px solid rgba(148,163,184,0.22)",
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <div style={sx.sectionLabel}>Importo</div>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    step="0.01"
-                    value={finanzaModImporto}
-                    onChange={(e) => setFinanzaModImporto(e.target.value)}
-                    style={{
-                      ...inputLight(false),
-                      background: "rgba(255,255,255,1)",
-                      color: "rgba(15,23,42,0.98)",
-                      WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                      caretColor: "rgba(15,23,42,0.98)",
-                      border: "1px solid rgba(148,163,184,0.22)",
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <div style={sx.sectionLabel}>Categoria</div>
-                    <select
-  value={finanzaModCategoria}
-  onChange={(e) => setFinanzaModCategoria(e.target.value)}
-  style={{
-    ...inputLight(false),
-    background: "rgba(255,255,255,1)",
-    color: "rgba(15,23,42,0.98)",
-    WebkitTextFillColor: "rgba(15,23,42,0.98)",
-    caretColor: "rgba(15,23,42,0.98)",
-    border: "1px solid rgba(148,163,184,0.22)",
-  }}
->
-  <option value="">Seleziona categoria</option>
-
-  {Array.from(
-    new Set([
-      finanzaModCategoria,
-      ...(movimentoFinanzaInModifica?.origine === "entrata-extra"
-        ? categorieEntrataFinanza
-        : categorieUscitaFinanza),
-    ].filter(Boolean))
-  ).map((cat) => (
-    <option key={cat} value={cat}>
-      {cat}
-    </option>
-  ))}
-</select>
-              </div>
-
-              <div>
-                <div style={sx.sectionLabel}>Descrizione</div>
-                <input
-                  type="text"
-                  value={finanzaModDettaglio}
-                  onChange={(e) => setFinanzaModDettaglio(e.target.value)}
-                  placeholder="Dettaglio movimento"
-                  style={{
-                    ...inputLight(false),
-                    background: "rgba(255,255,255,1)",
-                    color: "rgba(15,23,42,0.98)",
-                    WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                    caretColor: "rgba(15,23,42,0.98)",
-                    border: "1px solid rgba(148,163,184,0.22)",
-                  }}
-                />
-              </div>
-
-              <div>
-                <div style={sx.sectionLabel}>Nota</div>
-                <input
-                  type="text"
-                  value={finanzaModNota}
-                  onChange={(e) => setFinanzaModNota(e.target.value)}
-                  placeholder="Nota facoltativa"
-                  style={{
-                    ...inputLight(false),
-                    background: "rgba(255,255,255,1)",
-                    color: "rgba(15,23,42,0.98)",
-                    WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                    caretColor: "rgba(15,23,42,0.98)",
-                    border: "1px solid rgba(148,163,184,0.22)",
-                  }}
-                />
-              </div>
+            <div>
+              <div style={sx.sectionLabel}>Importo</div>
+              <input
+                type="number"
+                inputMode="decimal"
+                step="0.01"
+                value={finanzaModImporto}
+                onChange={(e) => setFinanzaModImporto(e.target.value)}
+                style={{
+                  ...inputLight(false),
+                  background: "rgba(255,255,255,1)",
+                  color: "rgba(15,23,42,0.98)",
+                  WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                  caretColor: "rgba(15,23,42,0.98)",
+                  border: "1px solid rgba(148,163,184,0.22)",
+                }}
+              />
             </div>
           </div>
 
-          <div style={sx.footer}>
-            <button
-              type="button"
-              onClick={chiudiModificaMovimentoFinanza}
-              style={sx.actionBtn(false)}
-            >
-              Annulla
-            </button>
-
-            <button
-              type="button"
-              onClick={salvaModificaMovimentoFinanza}
+          <div>
+            <div style={sx.sectionLabel}>Categoria</div>
+            <select
+              value={finanzaModCategoria}
+              onChange={(e) => setFinanzaModCategoria(e.target.value)}
               style={{
-                ...sx.actionBtn(true),
-                background:
-                  "linear-gradient(180deg, rgba(79,70,229,0.20), rgba(124,58,237,0.14))",
-                border: "1px solid rgba(79,70,229,0.26)",
-                fontWeight: 1000,
+                ...inputLight(false),
+                background: "rgba(255,255,255,1)",
+                color: "rgba(15,23,42,0.98)",
+                WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                caretColor: "rgba(15,23,42,0.98)",
+                border: "1px solid rgba(148,163,184,0.22)",
               }}
             >
-              Salva modifiche
-            </button>
+              <option value="">Seleziona categoria</option>
+
+              {Array.from(
+                new Set([
+                  finanzaModCategoria,
+                  ...(movimentoFinanzaInModifica.origine === "entrata-extra"
+                    ? [...categorieEntrataBase, ...categorieEntrataCustom]
+                    : categorieUscitaFinanza),
+                ].filter(Boolean))
+              )
+                .sort((a, b) => a.localeCompare(b, "it"))
+                .map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+            </select>
+          </div>
+
+          <div>
+            <div style={sx.sectionLabel}>Descrizione</div>
+            <input
+              type="text"
+              value={finanzaModDettaglio}
+              onChange={(e) => setFinanzaModDettaglio(e.target.value)}
+              placeholder="Dettaglio movimento"
+              style={{
+                ...inputLight(false),
+                background: "rgba(255,255,255,1)",
+                color: "rgba(15,23,42,0.98)",
+                WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                caretColor: "rgba(15,23,42,0.98)",
+                border: "1px solid rgba(148,163,184,0.22)",
+              }}
+            />
+          </div>
+
+          <div>
+            <div style={sx.sectionLabel}>Nota</div>
+            <input
+              type="text"
+              value={finanzaModNota}
+              onChange={(e) => setFinanzaModNota(e.target.value)}
+              placeholder="Nota facoltativa"
+              style={{
+                ...inputLight(false),
+                background: "rgba(255,255,255,1)",
+                color: "rgba(15,23,42,0.98)",
+                WebkitTextFillColor: "rgba(15,23,42,0.98)",
+                caretColor: "rgba(15,23,42,0.98)",
+                border: "1px solid rgba(148,163,184,0.22)",
+              }}
+            />
           </div>
         </div>
       </div>
-    )}
+
+      <div style={sx.footer}>
+        <button type="button" onClick={chiudiModificaMovimentoFinanza} style={sx.actionBtn(false)}>
+          Annulla
+        </button>
+
+        <button
+          type="button"
+          onClick={salvaModificaMovimentoFinanza}
+          style={{
+            ...sx.actionBtn(true),
+            background:
+              "linear-gradient(180deg, rgba(79,70,229,0.20), rgba(124,58,237,0.14))",
+            border: "1px solid rgba(79,70,229,0.26)",
+            fontWeight: 1000,
+          }}
+        >
+          Salva modifiche
+        </button>
+      </div>
+    </div>
+  </div>
+)}
   </>
 
 
