@@ -687,7 +687,7 @@ type FiltroFinanza = {
 
 type MovimentoFinanzaItem = {
   id: string;
-  origine: "uscita-extra" | "voce-uscita";
+  origine: "entrata-extra" | "uscita-extra" | "voce-uscita";
   meseKeyOrigine?: string;
   data: string;
   descrizione: string;
@@ -2593,19 +2593,59 @@ const nomeMesiCompleti = [
   "Dicembre",
 ];
 
-const tutteUsciteExtraStorico = useMemo(() => {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const tutteEntrateExtraStorico = useMemo(() => {
   return Object.entries(incassi).flatMap(([meseKeyStorico, dati]) =>
-    (dati.usciteExtra ?? []).map((x) => ({
+    (dati.entrateExtra ?? []).map((x) => ({
       id: x.id,
-      origine: "uscita-extra" as const,
+      origine: "entrata-extra" as const,
       meseKeyOrigine: meseKeyStorico,
       data: x.data,
       descrizione: x.descrizione,
       importo: x.importo,
-      nota: x.nota,
-      categoria: estraiCategoriaMovimento(x.descrizione) || "Altro",
+      nota: "",
+      categoria: estraiCategoriaMovimento(x.descrizione) || "Entrata",
       dettaglio: estraiDettaglioMovimento(x.descrizione),
     }))
+  );
+}, [incassi]);
+
+const tutteUsciteExtraStorico = useMemo(() => {
+  return Object.entries(incassi).flatMap(([meseKeyStorico, dati]) =>
+    (dati.usciteExtra ?? [])
+      .filter((x) => {
+        const categoria = estraiCategoriaMovimento(x.descrizione).toLowerCase();
+        return categoria !== "entrata";
+      })
+      .map((x) => ({
+        id: x.id,
+        origine: "uscita-extra" as const,
+        meseKeyOrigine: meseKeyStorico,
+        data: x.data,
+        descrizione: x.descrizione,
+        importo: x.importo,
+        nota: x.nota,
+        categoria: estraiCategoriaMovimento(x.descrizione) || "Altro",
+        dettaglio: estraiDettaglioMovimento(x.descrizione),
+      }))
   );
 }, [incassi]);
 
@@ -2639,8 +2679,16 @@ const tuttiMovimentiFinanza = useMemo<MovimentoFinanzaItem[]>(() => {
 const categorieUscitaFinanza = useMemo(() => {
   const base = [...categorieUscitaBase, ...categorieUscitaCustom];
   const dinamiche = tuttiMovimentiFinanza.map((x) => x.categoria).filter(Boolean);
-  return Array.from(new Set([...base, ...dinamiche])).sort((a, b) => a.localeCompare(b, "it"));
+  return Array.from(new Set([...base, ...dinamiche]))
+    .filter((cat) => cat.toLowerCase() !== "entrata")
+    .sort((a, b) => a.localeCompare(b, "it"));
 }, [categorieUscitaBase, categorieUscitaCustom, tuttiMovimentiFinanza]);
+
+const categorieEntrataFinanza = useMemo(() => {
+  const base = [...categorieEntrataBase, ...categorieEntrataCustom];
+  const dinamiche = tutteEntrateExtraStorico.map((x) => x.categoria).filter(Boolean);
+  return Array.from(new Set([...base, ...dinamiche])).sort((a, b) => a.localeCompare(b, "it"));
+}, [categorieEntrataBase, categorieEntrataCustom, tutteEntrateExtraStorico]);
 
 function applicaFiltroFinanza<T extends { data: string; categoria?: string }>(
   lista: T[],
@@ -2658,7 +2706,7 @@ function apriModificaMovimentoFinanza(item: MovimentoFinanzaItem) {
   setMovimentoFinanzaInModifica(item);
   setFinanzaModData(item.data);
   setFinanzaModCategoria(item.categoria || "");
-  setFinanzaModDettaglio(item.dettaglio || "");
+  setFinanzaModDettaglio(item.dettaglio || item.descrizione || "");
   setFinanzaModImporto(String(item.importo ?? ""));
   setFinanzaModNota(item.nota ?? "");
 }
@@ -2696,6 +2744,43 @@ function salvaModificaMovimentoFinanza() {
     finanzaModCategoria.trim(),
     finanzaModDettaglio.trim()
   );
+
+  if (movimentoFinanzaInModifica.origine === "entrata-extra") {
+    const nuovoMeseKey = finanzaModData.slice(0, 7);
+    const vecchioMeseKey = movimentoFinanzaInModifica.meseKeyOrigine ?? nuovoMeseKey;
+
+    setIncassi((prev) => {
+      const next = { ...prev };
+
+      next[vecchioMeseKey] = {
+        entrateExtra: (next[vecchioMeseKey]?.entrateExtra ?? []).filter(
+          (x) => x.id !== movimentoFinanzaInModifica.id
+        ),
+        usciteExtra: next[vecchioMeseKey]?.usciteExtra ?? [],
+      };
+
+      const recordAggiornato: EntrataExtra = {
+        id: movimentoFinanzaInModifica.id,
+        data: finanzaModData,
+        descrizione: descrizioneFinale,
+        importo: importoNum,
+      };
+
+      next[nuovoMeseKey] = {
+        entrateExtra: [...(next[nuovoMeseKey]?.entrateExtra ?? []), recordAggiornato].sort((a, b) =>
+          a.data.localeCompare(b.data)
+        ),
+        usciteExtra: next[nuovoMeseKey]?.usciteExtra ?? [],
+      };
+
+      return next;
+    });
+
+    chiudiModificaMovimentoFinanza();
+    setPagina("consulta");
+    setConsultaSezione("finanza");
+    return;
+  }
 
   if (movimentoFinanzaInModifica.origine === "voce-uscita") {
     setVoci((prev) =>
@@ -2755,6 +2840,20 @@ function eliminaMovimentoFinanza(item: MovimentoFinanzaItem) {
   const ok = confirm("Vuoi eliminare questo movimento?");
   if (!ok) return;
 
+  if (item.origine === "entrata-extra") {
+    const meseKeyOrigine = item.meseKeyOrigine ?? item.data.slice(0, 7);
+
+    setIncassi((prev) => ({
+      ...prev,
+      [meseKeyOrigine]: {
+        entrateExtra: (prev[meseKeyOrigine]?.entrateExtra ?? []).filter((x) => x.id !== item.id),
+        usciteExtra: prev[meseKeyOrigine]?.usciteExtra ?? [],
+      },
+    }));
+
+    return;
+  }
+
   if (item.origine === "voce-uscita") {
     setVoci((prev) => prev.filter((x) => x.id !== item.id));
     return;
@@ -2772,18 +2871,13 @@ function eliminaMovimentoFinanza(item: MovimentoFinanzaItem) {
 }
 
 const entrateMeseSezioneFinanza = useMemo(() => {
-  const base = entrateExtraVal.map((x) => ({
-    ...x,
-    categoria: estraiCategoriaMovimento(x.descrizione) || "",
-  }));
-
-  const filtrate = applicaFiltroFinanza(base, {
-    ...filtroFinanzaMese,
-    categoria: "",
+  const base = tutteEntrateExtraStorico.filter((x) => {
+    const [a, m] = x.data.split("-").map(Number);
+    return a === meseCorrente.getFullYear() && m - 1 === meseCorrente.getMonth();
   });
 
-  return filtrate.reduce((s, x) => s + x.importo, 0);
-}, [entrateExtraVal, filtroFinanzaMese]);
+  return base.reduce((s, x) => s + x.importo, 0);
+}, [tutteEntrateExtraStorico, meseCorrente]);
 
 const usciteMeseSezioneFinanza = useMemo(() => {
   const base = tuttiMovimentiFinanza.filter((x) => {
@@ -2816,6 +2910,7 @@ const uscitePerCategoriaGrafico = useMemo(() => {
   const grouped = new Map<string, number>();
 
   for (const mov of usciteGraficoFiltrate) {
+    if (mov.categoria.toLowerCase() === "entrata") continue;
     grouped.set(mov.categoria, (grouped.get(mov.categoria) ?? 0) + mov.importo);
   }
 
@@ -2876,6 +2971,12 @@ const listaMovimentiFinanza = useMemo(() => {
       return b.importo - a.importo;
     });
 }, [tuttiMovimentiFinanza, filtroFinanzaLista]);
+
+
+
+
+
+
 
 
 void setFiltroFinanzaGrafico;
@@ -2969,13 +3070,21 @@ function aggiungiEntrataExtra() {
 }
 
 function eliminaEntrataExtra(id: string) {
-  setIncassi((prev) => ({
-    ...prev,
-    [meseKey]: {
-      entrateExtra: (prev[meseKey]?.entrateExtra ?? []).filter((x) => x.id !== id),
-      usciteExtra: prev[meseKey]?.usciteExtra ?? [],
-    },
-  }));
+  const ok = confirm("Vuoi eliminare questa entrata?");
+  if (!ok) return;
+
+  setIncassi((prev) => {
+    const next = { ...prev };
+
+    for (const key of Object.keys(next)) {
+      next[key] = {
+        entrateExtra: (next[key]?.entrateExtra ?? []).filter((x) => x.id !== id),
+        usciteExtra: next[key]?.usciteExtra ?? [],
+      };
+    }
+
+    return next;
+  });
 }
 
 function aggiungiUscitaExtra() {
@@ -10984,25 +11093,28 @@ function renderAreaControllo() {
 
               <div>
                 <div style={sx.sectionLabel}>Categoria</div>
-                <select
-                  value={finanzaModCategoria}
-                  onChange={(e) => setFinanzaModCategoria(e.target.value)}
-                  style={{
-                    ...inputLight(false),
-                    background: "rgba(255,255,255,1)",
-                    color: "rgba(15,23,42,0.98)",
-                    WebkitTextFillColor: "rgba(15,23,42,0.98)",
-                    caretColor: "rgba(15,23,42,0.98)",
-                    border: "1px solid rgba(148,163,184,0.22)",
-                  }}
-                >
-                  <option value="">Seleziona categoria</option>
-                  {categorieUscitaFinanza.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
+            <select
+  value={finanzaModCategoria}
+  onChange={(e) => setFinanzaModCategoria(e.target.value)}
+  style={{
+    ...inputLight(false),
+    background: "rgba(255,255,255,1)",
+    color: "rgba(15,23,42,0.98)",
+    WebkitTextFillColor: "rgba(15,23,42,0.98)",
+    caretColor: "rgba(15,23,42,0.98)",
+    border: "1px solid rgba(148,163,184,0.22)",
+  }}
+>
+  <option value="">Seleziona categoria</option>
+  {(movimentoFinanzaInModifica?.origine === "entrata-extra"
+    ? categorieEntrataFinanza
+    : categorieUscitaFinanza
+  ).map((cat) => (
+    <option key={cat} value={cat}>
+      {cat}
+    </option>
+  ))}
+</select>
               </div>
 
               <div>
